@@ -77,3 +77,44 @@ mysql>
 			validate_password_policy=0
 			validate_password_length=6	 
 			:wq
+
+
+   2 数据库基本管理
+	2.1 连接数据库的连接方式
+	2.2 把数据存储到数据库服务器上 过程
+	2.3 SQL（结构化查询语言）命令的使用规则
+	    SQL命令的分类
+	2.4 库的管理命令 及 库名命名规则
+
+	2.5 表的管理命令  3分钟 到 15:05  休息到 15:20
+ mysql> create database db1;
+ mysql> create table  db1.stuinfo( name char(3) , home char(10) , tel char(11) );
+ mysql> use db1;
+ mysql> show  tables;
+ mysql> desc stuinfo;
+
+	2.6 表记录管理命令：select | insert into  |  update  |  delete from
+练习5分钟到 15:40
+
+一起插入2行记录
+mysql> insert into stuinfo values("bob","usa","119"),("tom","boy","usa");
+mysql> select  * from db1.stuinfo; 查看所有表记录
+mysql> select  name from db1.stuinfo; 只查看name列的记录
+mysql> update db1.stuinfo set home="china"; 修改所有行home列的值
+mysql> delete from db1.stuinfo; 删除表里的所有行
+
+使用中文字符集 可以存储汉字 时间到 15:56 
+mysql> create table db1.stuinfo2(name char(3) , home char(15) )default charset=utf8;
+
+mysql> show create table db1.stuinfo2；
+
+mysql> insert into stuinfo2 values ("张三疯","武当山") ;
+Query OK, 1 row affected (0.00 sec)
+
+ mysql> select  * from stuinfo2 ;
++-----------+-----------+
+| name      | home      |
++-----------+-----------+
+| 张三疯    | 武当山    |
++-----------+-----------+
+1 row in set (0.00 sec)
