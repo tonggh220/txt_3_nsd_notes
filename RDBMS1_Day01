@@ -118,3 +118,213 @@ Query OK, 1 row affected (0.00 sec)
 | 张三疯    | 武当山    |
 +-----------+-----------+
 1 row in set (0.00 sec)
+
+
+休息10分钟到 16:10 
+   3 MySQL数据类型
+	字符类型 char  varchar   blob|text
+
+mysql> create table db1.t2 (name char(2) , email varchar(15) );
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> desc db1.t2;
++-------+-------------+------+-----+---------+-------+
+| Field | Type        | Null | Key | Default | Extra |
++-------+-------------+------+-----+---------+-------+
+| name  | char(2)     | YES  |     | NULL    |       |
+| email | varchar(15) | YES  |     | NULL    |       |
++-------+-------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> insert into db1.t2 values ("jim"  , "jim@163.com");
+ERROR 1406 (22001): Data too long for column 'name' at row 1
+mysql> 
+mysql> insert into db1.t2 values ("ab"  , "jim@163.com");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t2;
++------+-------------+
+| name | email       |
++------+-------------+
+| ab   | jim@163.com |
++------+-------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+ 
+	数值类型
+	  整数类型 
+	  浮点型
+mysql> create table db1.t3 (name  char(3) , level  tinyint unsigned , money  int);
+mysql> desc db1.t3;
+mysql> insert into db1.t3 values ("jim", -1 , 290000 );
+ERROR 1264 (22003): Out of range value for column 'level' at row 1
+mysql> 
+mysql> insert into db1.t3 values ("jim", 256 , 290000 );
+ERROR 1264 (22003): Out of range value for column 'level' at row 1
+mysql> 
+mysql> insert into db1.t3 values ("jim", 25 , 290000 );
+Query OK, 1 row affected (0.02 sec)
+
+mysql> select  * from db1.t3;
++------+-------+--------+
+| name | level | money  |
++------+-------+--------+
+| jim  |    25 | 290000 |
++------+-------+--------+
+1 row in set (0.00 sec)
+
+mysql> insert into db1.t3 values ("tom", 36 , -1000000 );
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t3;
++------+-------+----------+
+| name | level | money    |
++------+-------+----------+
+| jim  |    25 |   290000 |
+| tom  |    36 | -1000000 |
++------+-------+----------+
+2 rows in set (0.00 sec)
+
+mysql> insert into db1.t3 values ("bob", 19.23 , -1000000.54 );
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t3;
++------+-------+----------+
+| name | level | money    |
++------+-------+----------+
+| jim  |    25 |   290000 |
+| tom  |    36 | -1000000 |
+| bob  |    19 | -1000001 |
++------+-------+----------+
+3 rows in set (0.00 sec)
+
+mysql> 	
+
+	休息一下到 17:20
+	
+
+	整数.小数 总位数
+	xxx.xx    5
+        999.99
+         -999.99
+	pay double
+	pay double 
+
+mysql> create table  t4 (pay float(5,2));
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> desc t4;
++-------+------------+------+-----+---------+-------+
+| Field | Type       | Null | Key | Default | Extra |
++-------+------------+------+-----+---------+-------+
+| pay   | float(5,2) | YES  |     | NULL    |       |
++-------+------------+------+-----+---------+-------+
+1 row in set (0.00 sec)
+
+mysql> insert into t4 values (1000);
+ERROR 1264 (22003): Out of range value for column 'pay' at row 1
+mysql> 
+mysql> insert into t4 values (999);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from t4;
++--------+
+| pay    |
++--------+
+| 999.00 |
++--------+
+1 row in set (0.00 sec)
+
+mysql> insert into t4 values (1.23);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from t4;
++--------+
+| pay    |
++--------+
+| 999.00 |
+|   1.23 |
++--------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> insert into t4 values (1.2356);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from t4;
++--------+
+| pay    |
++--------+
+| 999.00 |
+|   1.23 |
+|   1.24 |
++--------+
+3 rows in set (0.00 sec)
+
+mysql> create table  db1.t5 (pay double );
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> desc db1.t5;
++-------+--------+------+-----+---------+-------+
+| Field | Type   | Null | Key | Default | Extra |
++-------+--------+------+-----+---------+-------+
+| pay   | double | YES  |     | NULL    |       |
++-------+--------+------+-----+---------+-------+
+1 row in set (0.00 sec)
+
+mysql> insert into  db1.t5 values (11.2789);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t5;
++---------+
+| pay     |
++---------+
+| 11.2789 |
++---------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+ 
+
+	
+
+	枚举类型 字段的值只能在类型列举的范围里选择
+		enum（"","",""）  单选
+		set（"" , "" ,""）   多选
+ 
+ mysql> create table t5 (name char(3) , sex enum("man","woman","no") , likes set("eat","sleep","game","money") );
+Query OK, 0 rows affected (0.13 sec)
+
+mysql> desc t5;
++-------+-----------------------------------+------+-----+---------+-------+
+| Field | Type                              | Null | Key | Default | Extra |
++-------+-----------------------------------+------+-----+---------+-------+
+| name  | char(3)                           | YES  |     | NULL    |       |
+| sex   | enum('man','woman','no')          | YES  |     | NULL    |       |
+| likes | set('eat','sleep','game','money') | YES  |     | NULL    |       |
++-------+-----------------------------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> insert into t5 values ("bob","girl","a,b");
+ERROR 1265 (01000): Data truncated for column 'sex' at row 1
+mysql> 
+mysql> insert into t5 values ("bob","no","a,b");
+ERROR 1265 (01000): Data truncated for column 'likes' at row 1
+mysql> 
+mysql> insert into t5 values ("bob","no","eat,sleep,money");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from t5;
++------+------+-----------------+
+| name | sex  | likes           |
++------+------+-----------------+
+| bob  | no   | eat,sleep,money |
++------+------+-----------------+
+1 row in set (0.00 sec)
+
+mysql>
+
+日期时间类型 明天讲 
