@@ -1,1 +1,79 @@
 学习任务列表
+
+学习任务：
+   1 构建MySQL服务
+	1.1 相关概念
+		数据库介绍 ： 是存储数据的服务（存储数据的仓库）
+		专业术语：DB     DBMS    DBS
+		mysql的发展历史
+		MySQL的特点
+		应用场景
+	1.2 搭建mysql数据库服务器 ，步骤如下：
+		1.2.1 安装软件
+		1.2.2 启动服务
+		1.2.3 管理员root登录
+		1.2.4 修改登录密码 并退出登录
+		1.2.5 使用新密码登录
+		1.2.6 相关参数和文件
+
+   12  ls /var/ftp/upload/mysql-5.7.17.tar 
+   13  tar -xvf /var/ftp/upload/mysql-5.7.17.tar 
+   14  ls
+   15  yum -y install mysql-community-*.rpm
+   16  rpm -qa  | grep -i mysql
+   17  ls
+   
+     									10:55讲课
+   20  systemctl start mysqld
+
+   21  systemctl status mysqld
+
+   22  ls /var/lib/mysql   查看数据目录文件列表
+
+   23  systemctl enable mysqld
+   24  netstat -utnlp | grep 3306  查看端口
+   25  ps -C mysqld       查看进程
+
+[root@mysql50 ~]# grep  password /var/log/mysqld.log  #查看初始登录密码
+2020-05-13T10:31:03.144952Z 1 [Note] A temporary password is generated for root@localhost: (GNhIipcY7V4
+
+ 
+[root@mysql50 ~]# mysql -uroot -p'(GNhIipcY7V4' 使用初始密码登录
+
+
+[root@mysql50 ~]# mysql -uroot -p123qqq...A
+
+mysql> alter user  root@"localhost" identified  by  "123qqq...A";  #修改登录密码
+mysql> exit
+Bye
+
+[root@mysql50 ~]# mysql -uroot -p123qqq...A  使用修改的密码登录
+mysql>
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.04 sec)
+
+		修改密码策略 练习10分钟到 11:48
+			命令行设置好处 不用重启 马上有效
+mysql> show variables like "%password%";
+mysql> set global validate_password_policy=0 ;
+mysql> set global validate_password_length=6 ;
+mysql> show variables like "%password%";
+mysql> alter user root@"localhost" identified by "abc123";
+mysql> exit
+
+[root@mysql50 ~]# mysql -uroot  -pabc123
+mysql>
+			配置永久有效
+			vim /etc/my.cnf
+			[mysqld]
+			validate_password_policy=0
+			validate_password_length=6	 
+			:wq
