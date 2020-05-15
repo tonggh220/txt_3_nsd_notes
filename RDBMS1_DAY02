@@ -1,1 +1,65 @@
 学习任务列表：
+
+
+mysql> create table db1.t23 (class  char(7), name char(10) not null default  "" , age int not null  default 399 , likes  set("a","b","c","d") default "a,b");
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> desc db1.t23;
++-------+----------------------+------+-----+---------+-------+
+| Field | Type                 | Null | Key | Default | Extra |
++-------+----------------------+------+-----+---------+-------+
+| class | char(7)              | YES  |     | NULL    |       |
+| name  | char(10)             | NO   |     |         |       |
+| age   | int(11)              | NO   |     | 399     |       |
+| likes | set('a','b','c','d') | YES  |     | a,b     |       |
++-------+----------------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> insert into db1.t23(class) values ("nsd2002");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from db1.t23;
++---------+------+-----+-------+
+| class   | name | age | likes |
++---------+------+-----+-------+
+| nsd2002 |      | 399 | a,b   |
++---------+------+-----+-------+
+1 row in set (0.00 sec)
+
+mysql> insert into db1.t23(class,name,age) values ("nsd2002","bob",37);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t23;
++---------+------+-----+-------+
+| class   | name | age | likes |
++---------+------+-----+-------+
+| nsd2002 |      | 399 | a,b   |
+| nsd2002 | bob  |  37 | a,b   |
++---------+------+-----+-------+
+2 rows in set (0.00 sec)
+
+mysql> insert into db1.t23 values ("nsd2002",null,null,"b,c,d");
+ERROR 1048 (23000): Column 'name' cannot be null
+mysql> 
+mysql> insert into db1.t23 values ("nsd2002","nb",null,"b,c,d");
+ERROR 1048 (23000): Column 'age' cannot be null
+mysql> 
+mysql> insert into db1.t23 values ("nsd2002","nb",25,"b,c,d");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> 
+mysql> insert into db1.t23 values ("nsd2002","dc",19,null);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t23;
++---------+------+-----+-------+
+| class   | name | age | likes |
++---------+------+-----+-------+
+| nsd2002 |      | 399 | a,b   |
+| nsd2002 | bob  |  37 | a,b   |
+| nsd2002 | nb   |  25 | b,c,d |
+| nsd2002 | dc   |  19 | NULL  |
++---------+------+-----+-------+
+4 rows in set (0.00 sec)
+
+mysql> );
