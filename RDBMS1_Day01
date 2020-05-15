@@ -327,4 +327,85 @@ mysql> select  * from t5;
 
 mysql>
 
-日期时间类型 明天讲 
+	日期时间类型
+		年    year   YYYY  2020  1990 
+		时间  time   HHMMSS    091428    211428
+		日期  date   YYYYMMDD  20200515
+		日期时间  datetime/timestamp  YYYYMMDDHHMMSS
+					      20200515190000
+
+
+
+mysql> create table  t6 (name char(10) , csnf  year  , birthday date , upclass time , party datetime );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> desc t6;
++----------+----------+------+-----+---------+-------+
+| Field    | Type     | Null | Key | Default | Extra |
++----------+----------+------+-----+---------+-------+
+| name     | char(10) | YES  |     | NULL    |       |
+| csnf     | year(4)  | YES  |     | NULL    |       |
+| birthday | date     | YES  |     | NULL    |       |
+| upclass  | time     | YES  |     | NULL    |       |
+| party    | datetime | YES  |     | NULL    |       |
++----------+----------+------+-----+---------+-------+
+5 rows in set (0.00 sec)
+
+mysql> insert into t6 values ("bob" , 1990 , 20201120 , 090000 , 20200618203000) ;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from t6;
++------+------+------------+----------+---------------------+
+| name | csnf | birthday   | upclass  | party               |
++------+------+------------+----------+---------------------+
+| bob  | 1990 | 2020-11-20 | 09:00:00 | 2020-06-18 20:30:00 |
++------+------+------------+----------+---------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+日期时间类型 datetime 与timestamp的区别
+
+mysql> create table db1.t7(meetting  datetime  ,  party  timestamp);
+Query OK, 0 rows affected (0.12 sec)
+
+mysql> insert into db1.t7 values (20211224093000,20211225223000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t7;
++---------------------+---------------------+
+| meetting            | party               |
++---------------------+---------------------+
+| 2021-12-24 09:30:00 | 2021-12-25 22:30:00 |
++---------------------+---------------------+
+1 row in set (0.00 sec)
+
+mysql> insert into db1.t7(meetting) values (19901023180000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from db1.t7;
++---------------------+---------------------+
+| meetting            | party               |
++---------------------+---------------------+
+| 2021-12-24 09:30:00 | 2021-12-25 22:30:00 |
+| 1990-10-23 18:00:00 | 2020-05-15 17:40:55 |
++---------------------+---------------------+
+2 rows in set (0.00 sec)
+
+mysql> system  date
+2020年 05月 15日 星期五 17:41:48 CST
+mysql> 
+mysql> insert into db1.t7(party) values (20231125070000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from db1.t7;
++---------------------+---------------------+
+| meetting            | party               |
++---------------------+---------------------+
+| 2021-12-24 09:30:00 | 2021-12-25 22:30:00 |
+| 1990-10-23 18:00:00 | 2020-05-15 17:40:55 |
+| NULL                | 2023-11-25 07:00:00 |
++---------------------+---------------------+
+3 rows in set (0.00 sec)
+
+mysql> 
