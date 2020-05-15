@@ -125,3 +125,70 @@ mysql> alter table  db1.t2 change  home address  varchar(30) ;
 				3.4 删除索引
 				drop index class on db1.t24; 
 				drop  index  xh on  t3;
+
+		主键的使用
+			1 主键使用规则
+			2 主键的使用
+				2.1 建表时创建主键
+mysql> create table db1.t25 ( name char(10) primary key , class char(7) , age int );
+
+mysql> create table db1.t26 ( name char(10) , class char(7) , age int , primary key(name))；
+
+mysql> insert into  db1.t26 values ("tom" , "nsd2003" , 17);
+ERROR 1062 (23000): Duplicate entry 'tom' for key 'PRIMARY'
+mysql> insert into  db1.t26 values ("toma" , "nsd2003" , 17);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t26;
++------+---------+------+
+| name | class   | age  |
++------+---------+------+
+| tom  | nsd2002 |   19 |
+| toma | nsd2003 |   17 |
++------+---------+------+
+2 rows in set (0.00 sec)
+
+mysql> 
+			在已有表里创建主键
+	        mysql> delete from  teacher;
+		mysql> alter table  teacher add primary key(address);
+
+	
+			删除主键
+		mysql> alter table  teacher drop  primary key ;	
+                MySQL> desc  teacher;
+
+		
+		多个字段都作为主键，称为复合主键，必须一起创建
+  
+  PRI	   PRI
+  cip      port   status
+ 1.1.1.1   22      yes
+ 1.1.1.1   80      no
+ 2.1.1.1   80      yes
+
+create table db1.t27(cip char(15) , port  smallint , status enum("yes","no") , primary key(cip,port)  );
+
+mysql> insert into db1.t27 values("1.1.1.1" , 22 , "yes");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db1.t27 values("1.1.1.1" , 22 , "yes");
+ERROR 1062 (23000): Duplicate entry '1.1.1.1-22' for key 'PRIMARY'
+mysql> 
+mysql> insert into db1.t27 values("1.1.1.1" , 80 , "yes");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db1.t27 values("1.1.1.1" , 80 , "no");
+ERROR 1062 (23000): Duplicate entry '1.1.1.1-80' for key 'PRIMARY'
+mysql> 
+mysql> insert into db1.t27 values("2.1.1.1" , 80 , "no");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t27;
++---------+------+--------+
+| cip     | port | status |
++---------+------+--------+
+| 1.1.1.1 |   22 | yes    |
+| 1.1.1.1 |   80 | yes    |
+| 2.1.1.1 |   80 | no     |
++---------+------+--------+
