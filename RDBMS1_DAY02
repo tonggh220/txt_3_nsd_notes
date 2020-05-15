@@ -123,5 +123,5 @@ mysql> alter table  db1.t2 change  home address  varchar(30) ;
 					show index from 库.表；
 
 				3.4 删除索引
-				drop index class  from db1.t24; 
+				drop index class on db1.t24; 
 				drop  index  xh on  t3;
