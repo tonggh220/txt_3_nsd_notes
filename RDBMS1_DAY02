@@ -87,7 +87,7 @@ mysql> alter table  db1.t2  modify  name varchar(5) not null;
 mysql> alter table  db1.t2 modify name varchar(2) not null  after email ;
 			修改字段名   change
 mysql> alter table  db1.t2 change email  mail varchar(15);
-mysql> alter table  db1.t2 change email  mail varchar(15);
+mysql> alter table  db1.t2 change  home address  varchar(30) ;
 
 			
 			修改表名     rename
