@@ -1,6 +1,11 @@
 学习任务列表：
-
-
+	一、字段约束条件
+		1.1 作用：限制字段赋值
+		1.2 约束条件包括 4部分
+			是否允许为空(null)
+			键值
+			默认值 
+			额外设置
 mysql> create table db1.t23 (class  char(7), name char(10) not null default  "" , age int not null  default 399 , likes  set("a","b","c","d") default "a,b");
 Query OK, 0 rows affected (0.01 sec)
 
@@ -63,3 +68,10 @@ mysql> select  * from db1.t23;
 4 rows in set (0.00 sec)
 
 mysql> );
+		1.2 修改表结构
+			alter table 库.表 操作动作；
+
+			添加新字段  add
+mysql> alter table  db1.t2 add age int not null default 19 ;
+mysql> alter table  db1.t2 add  school char(10) default "tarena" first;
+mysql> alter table  db1.t2 add class char(7) after name ;
