@@ -93,3 +93,35 @@ mysql> alter table  db1.t2 change  home address  varchar(30) ;
 			修改表名     rename
 			mysql> alter table  t2 rename teacher;		
 			mysql> show tables;
+
+
+	二、MySQL键值
+		种类：
+		普通索引
+		唯一索引
+		主键
+		外键
+		全文索引
+
+		2.1 普通索引index的使用
+			1 什么是索引
+			2 优/缺点
+
+			3 普通索引Index的使用
+				3.1 使用规则
+				3.2 创建索引
+					建表时创建索引
+		mysql> create table db1.t24(name char(10) , age  int  ,  class char(7) , sex enum("g","b") , index(name) , index(class) );
+
+		mysql> db1.t24;
+					 在已有表里创建索引
+		mysql> create index  xh on t3(money);
+		mysql> desc  db1.t3;
+	
+				3.3 查看索引
+					desc  库.表；
+					show index from 库.表；
+
+				3.4 删除索引
+				drop index class  from db1.t24; 
+				drop  index  xh on  t3;
