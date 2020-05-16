@@ -213,3 +213,44 @@ root	/bin/bash	0
 bin	/sbin/nologin	1
 daemon	/sbin/nologin	2
 mysql>
+
+	2 管理表记录
+		插入 insert into
+		时间5分钟 到 16:08 
+mysql> insert into db3.user values (22,"bob","x",2000,2000,"test user","/home/bob","/bin/bash");
+
+mysql> insert into db3.user values (23,"tom","x",2001,2001,"test user","/home/tom","/bin/bash"),(26,"lucy","x",3001,3001,"test user","/home/lucy","/bin/bash");
+
+mysql> insert into db3.user(name , uid ) values ("john",2888);
+
+mysql> insert into db3.user(name , uid ) values ("johna",4888),("alices",2999),("lili",3756);
+
+		查询 select
+ select 字段名列表 from  库.表 [ where  条件 ]；
+
+ 字段名列表   控制显示列的个数
+  where  条件 控制显示行的个数
+
+  select  *  from  db3.user;
+  mysql> select  id , name from  db3.user where  id <= 3 ;
+  mysql> select  id , name from  db3.user where  id = 3;
+  mysql> select  *  from  db3.user where  id = 3;	
+
+
+		修改 update
+mysql> update  db3.user  set  password="A" ;
+mysql> select  id , password from  db3.user;
+
+mysql> update db3.user set password="x" where id = 1 ;
+mysql> select  *  from  db3.user where  id = 1;
+
+		删除 delete 
+mysql> delete from db3.user where id > 20 ;
+Query OK, 6 rows affected (0.00 sec)
+
+mysql> select  * from  db3.user where  id > 20 ;
+Empty set (0.00 sec)
+
+mysql> select  * from  db3.user where  id <= 20 ;
+
+mysql> delete  from db3.user; (要慎用)
