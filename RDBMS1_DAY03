@@ -294,3 +294,50 @@ mysql> select  * from db3.user where shell is   null ;
 Empty set (0.00 sec)
 
 mysql> select  * from db3.user where shell is not  null ;
+
+
+
+		逻辑匹配(多个条件)
+		逻辑与 and  多个条件必须同时成立
+		逻辑或 or    多个条件中某个条件成立即可
+	
+mysql> select name , shell  from db3.user where   name="plj" and  uid=1 and shell="xxx";
+Empty set (0.00 sec)
+
+mysql> 
+mysql> select name , shell  from db3.user where   name="plj" or  uid=1 or shell="xxx";
++------+---------------+
+| name | shell         |
++------+---------------+
+| bin  | /sbin/nologin |
++------+---------------+
+1 row in set (0.00 sec)
+
+mysql> select name , shell , uid from db3.user where   name="plj" or  uid=1 or shell="xxx";
++------+---------------+------+
+| name | shell         | uid  |
++------+---------------+------+
+| bin  | /sbin/nologin |    1 |
++------+---------------+------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+mysql> select  * from db3.user where id >= 3 and id<=5 ;
+	
+		逻辑非 not 和 !  取反
+ mysql> select name,shell  from  db3.user where shell="/sbin/nologin";
+
+mysql> select name,shell  from  db3.user where shell != "/sbin/nologin";
+
+mysql> select name from db3.user where name is null;
+mysql> select name from db3.user where name is not null;
+
+
+		范围匹配 匹配范围内的任意一个值即可
+mysql> select  * from db3.user where id  between 3 and 5 ;
+mysql> select name from db3.user where  name in ("root" , "sync" ,"mysql" );
+
+mysql> select name ,shell from db3.user where  shell not in ("/bin/bash","/sbin/nologin");
+
+mysql> select name ,uid , gid  from db3.user where uid in (77 , 63, 9,11);
