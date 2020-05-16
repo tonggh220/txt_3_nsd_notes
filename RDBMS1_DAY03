@@ -325,6 +325,27 @@ mysql>
 
 mysql> select  * from db3.user where id >= 3 and id<=5 ;
 	
+
+mysql> select name , uid  from  db3.user where   name="root" and  uid=0 or  uid=1 ;
++------+------+
+| name | uid  |
++------+------+
+| root |    0 |
+| bin  |    1 |
++------+------+
+2 rows in set (0.00 sec)
+
+mysql> select name , uid  from  db3.user where   name="root" and ( uid=0 or  uid=1) ;
++------+------+
+| name | uid  |
++------+------+
+| root |    0 |
++------+------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+
 		逻辑非 not 和 !  取反
  mysql> select name,shell  from  db3.user where shell="/sbin/nologin";
 
