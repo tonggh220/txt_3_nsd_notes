@@ -1,0 +1,36 @@
+		检索目录
+		mysql> show variables like "secure_file_priv";
++------------------+-----------------------+
+| Variable_name    | Value                 |
++------------------+-----------------------+
+| secure_file_priv | /var/lib/mysql-files/ |
++------------------+-----------------------+
+1 row in set (0.00 sec)
+
+		自定义检索目录
+
+
+[root@localhost ~]# mkdir /myload
+[root@localhost ~]# 
+[root@localhost ~]# chown  mysql /myload/
+[root@localhost ~]# 
+[root@localhost ~]# ls -ld /myload/
+drwxr-xr-x. 2 mysql root 6 5月  16 22:15 /myload/
+[root@localhost ~]#
+
+]# vim /etc/my.cnf
+[mysqld]
+secure_file_priv="/myload"
+:wq
+]# systemctl  restart mysqld
+
+]# mysql -uroot  -p密码
+mysql> show variables like "secure_file_priv";
++------------------+----------+
+| Variable_name    | Value    |
++------------------+----------+
+| secure_file_priv | /myload/ |
++------------------+----------+
+1 row in set (0.00 sec)
+
+mysql>
