@@ -419,3 +419,100 @@ mysql> select  * from db1.gz;
 Empty set (0.00 sec)
 
 mysql> 
+
+验证外键
+mysql> insert into db1.gz values (3,35000);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`db1`.`gz`, CONSTRAINT `gz_ibfk_1` FOREIGN KEY (`gz_id`) REFERENCES `yg_tab` (`yg_id`) ON DELETE CASCADE ON UPDATE CASCADE)
+mysql> 
+mysql> insert into db1.gz values (1,35000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into db1.gz values (2,45000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.gz;
++-------+-------+
+| gz_id | gz    |
++-------+-------+
+|     1 | 35000 |
+|     2 | 45000 |
++-------+-------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+验正on update cascade 的功能
+mysql> select  * from db1.yg_tab;
++-------+------+
+| yg_id | name |
++-------+------+
+|     1 | bob  |
+|     2 | tom  |
++-------+------+
+2 rows in set (0.00 sec)
+
+mysql> select  * from db1.gz;
++-------+-------+
+| gz_id | gz    |
++-------+-------+
+|     1 | 35000 |
+|     2 | 45000 |
++-------+-------+
+2 rows in set (0.00 sec)
+
+mysql> update db1.yg_tab  set  yg_id=8 where yg_id=2;
+Query OK, 1 row affected (0.08 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select  * from db1.gz;
++-------+-------+
+| gz_id | gz    |
++-------+-------+
+|     1 | 35000 |
+|     8 | 45000 |
++-------+-------+
+2 rows in set (0.00 sec)
+
+mysql>
+
+验证 on  delete  cascade 的功能
+
+mysql> 
+mysql> select  * from db1.yg_tab;
++-------+------+
+| yg_id | name |
++-------+------+
+|     1 | bob  |
+|     8 | tom  |
++-------+------+
+2 rows in set (0.01 sec)
+
+mysql> select  * from db1.gz;
++-------+-------+
+| gz_id | gz    |
++-------+-------+
+|     1 | 35000 |
+|     8 | 45000 |
++-------+-------+
+2 rows in set (0.00 sec)
+
+mysql> delete from db1.yg_tab where yg_id=1;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.yg_tab;
++-------+------+
+| yg_id | name |
++-------+------+
+|     8 | tom  |
++-------+------+
+1 row in set (0.00 sec)
+
+mysql> select  * from db1.gz;
++-------+-------+
+| gz_id | gz    |
++-------+-------+
+|     8 | 45000 |
++-------+-------+
+1 row in set (0.00 sec)
+
+mysql> 
