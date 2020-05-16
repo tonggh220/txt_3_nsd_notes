@@ -327,3 +327,28 @@ mysql> select  * from db1.t28 ;
 7 rows in set (0.00 sec)
 
 mysql>
+
+mysql> alter table  db1.t6 add num  int  primary key  auto_increment first;
+Query OK, 0 rows affected (0.05 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> select  * from t6;
++-----+-------+------+------------+----------+---------------------+
+| num | name  | csnf | birthday   | upclass  | party               |
++-----+-------+------+------------+----------+---------------------+
+|   1 | bob   | 1990 | 2020-11-20 | 09:00:00 | 2020-06-18 20:30:00 |
+|   2 | tom   | 2023 | NULL       | NULL     | NULL                |
+|   3 | john  | 1988 | NULL       | NULL     | NULL                |
+|   4 | jerry | 2020 | 2020-05-15 | 18:26:14 | 2020-05-15 18:26:14 |
++-----+-------+------+------------+----------+---------------------+
+4 rows in set (0.01 sec)
+
+mysql> select  * from t6 where num = 3;
++-----+------+------+----------+---------+-------+
+| num | name | csnf | birthday | upclass | party |
++-----+------+------+----------+---------+-------+
+|   3 | john | 1988 | NULL     | NULL    | NULL  |
++-----+------+------+----------+---------+-------+
+1 row in set (0.00 sec)
+
+mysql> 
