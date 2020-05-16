@@ -516,3 +516,98 @@ mysql> select  * from db1.gz;
 1 row in set (0.00 sec)
 
 mysql> 
+
+
+
+完善 修改表结构
+mysql> insert into db1.gz values(8,65000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db1.gz values(8,65000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.gz;
++-------+-------+
+| gz_id | gz    |
++-------+-------+
+|     8 | 45000 |
+|     8 | 65000 |
+|     8 | 65000 |
+|     8 | 65000 |
++-------+-------+
+4 rows in set (0.00 sec)
+
+mysql> 
+mysql> 
+mysql> insert into db1.gz values(null,55000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into db1.gz values(null,55000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.gz;
++-------+-------+
+| gz_id | gz    |
++-------+-------+
+|     8 | 45000 |
+|     8 | 65000 |
+|     8 | 65000 |
+|     8 | 65000 |
+|  NULL | 55000 |
+|  NULL | 55000 |
++-------+-------+
+6 rows in set (0.00 sec)
+
+mysql> desc db1.gz;
++-------+---------+------+-----+---------+-------+
+| Field | Type    | Null | Key | Default | Extra |
++-------+---------+------+-----+---------+-------+
+| gz_id | int(11) | YES  | MUL | NULL    |       |
+| gz    | int(11) | YES  |     | NULL    |       |
++-------+---------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> 
+mysql> delete from db1.gz;
+
+
+
+mysql> select  * from db1.gz;
+Empty set (0.00 sec)
+
+mysql> desc db1.gz;
++-------+---------+------+-----+---------+-------+
+| Field | Type    | Null | Key | Default | Extra |
++-------+---------+------+-----+---------+-------+
+| gz_id | int(11) | YES  | MUL | NULL    |       |
+| gz    | int(11) | YES  |     | NULL    |       |
++-------+---------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> alter table db1.gz add primary key(gz_id);
+Query OK, 0 rows affected (0.07 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> desc db1.gz;
++-------+---------+------+-----+---------+-------+
+| Field | Type    | Null | Key | Default | Extra |
++-------+---------+------+-----+---------+-------+
+| gz_id | int(11) | NO   | PRI | NULL    |       |
+| gz    | int(11) | YES  |     | NULL    |       |
++-------+---------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> insert into db1.gz values(null,55000);
+ERROR 1048 (23000): Column 'gz_id' cannot be null
+mysql> 
+mysql> insert into db1.gz values(7,55000);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`db1`.`gz`, CONSTRAINT `gz_ibfk_1` FOREIGN KEY (`gz_id`) REFERENCES `yg_tab` (`yg_id`) ON DELETE CASCADE ON UPDATE CASCADE)
+mysql> 
+mysql> insert into db1.gz values(8,55000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db1.gz values(8,55000);
+ERROR 1062 (23000): Duplicate entry '8' for key 'PRIMARY'
+mysql> 
+mysql> 
