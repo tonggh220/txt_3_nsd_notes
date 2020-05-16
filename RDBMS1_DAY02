@@ -352,3 +352,70 @@ mysql> select  * from t6 where num = 3;
 1 row in set (0.00 sec)
 
 mysql> 
+
+外键功能
+插入记录时，字段值在另一个表字段值范围内选择。
+使用规则
+表存储引擎必须是innodb
+字段类型要一致
+被参照字段必须要是索引类型的一种(primary key)
+
+mysql> create table db1.yg_tab(yg_id int primary key auto_increment,name char(10))engine=innodb;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> desc db1.yg_tab;
++-------+----------+------+-----+---------+----------------+
+| Field | Type     | Null | Key | Default | Extra          |
++-------+----------+------+-----+---------+----------------+
+| yg_id | int(11)  | NO   | PRI | NULL    | auto_increment |
+| name  | char(10) | YES  |     | NULL    |                |
++-------+----------+------+-----+---------+----------------+
+2 rows in set (0.00 sec)
+
+
+mysql> insert into db1.yg_tab(name) values ("bob");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db1.yg_tab(name) values ("tom");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.yg_tab;
++-------+------+
+| yg_id | name |
++-------+------+
+|     1 | bob  |
+|     2 | tom  |
++-------+------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> create table db1.gz (gz_id  int , gz int , foreign key(gz_id) references yg_tab(yg_id) on update cascade  on delete cascade  )engine=innodb;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> desc db1.gz;
++-------+---------+------+-----+---------+-------+
+| Field | Type    | Null | Key | Default | Extra |
++-------+---------+------+-----+---------+-------+
+| gz_id | int(11) | YES  | MUL | NULL    |       |
+| gz    | int(11) | YES  |     | NULL    |       |
++-------+---------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql>
+mysql> show create table db1.gz \G
+*************************** 1. row ***************************
+       Table: gz
+Create Table: CREATE TABLE `gz` (
+  `gz_id` int(11) DEFAULT NULL,
+  `gz` int(11) DEFAULT NULL,
+  KEY `gz_id` (`gz_id`),
+  CONSTRAINT `gz_ibfk_1` FOREIGN KEY (`gz_id`) REFERENCES `yg_tab` (`yg_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+1 row in set (0.01 sec)
+
+mysql> 
+mysql> select  * from db1.gz;
+Empty set (0.00 sec)
+
+mysql> 
