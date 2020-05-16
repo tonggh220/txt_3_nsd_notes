@@ -254,3 +254,43 @@ Empty set (0.00 sec)
 mysql> select  * from  db3.user where  id <= 20 ;
 
 mysql> delete  from db3.user; (要慎用)
+
+
+3 查询/修改/删除记录时的匹配条件
+		基本匹配条件
+			1 数值比较
+ mysql> select name , uid  from db3.user  where uid < 10 ;
+ mysql> select name , uid , gid  from db3.user  where uid  =  gid ;
+ mysql> select  * from db3.user where id <= 5 ;
+ mysql> select name , uid , gid from db3.user where  uid != gid;
+
+			2 字符比较
+ mysql> select name from db3.user where name = "apache";
+Empty set (0.00 sec)
+
+mysql> select name from db3.user where name = "mysql";
++-------+
+| name  |
++-------+
+| mysql |
++-------+
+1 row in set (0.01 sec)
+
+mysql> 	
+mysql> select name from db3.user where shell="/bin/bash";
++------+
+| name |
++------+
+| root |
++------+
+1 row in set (0.00 sec)
+
+mysql> select name , shell from db3.user where shell != "/bin/bash";
+		
+
+		空 is null
+		非空 is not  null
+mysql> select  * from db3.user where shell is   null ;
+Empty set (0.00 sec)
+
+mysql> select  * from db3.user where shell is not  null ;
