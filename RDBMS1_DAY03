@@ -34,3 +34,100 @@ mysql> show variables like "secure_file_priv";
 1 row in set (0.00 sec)
 
 mysql>
+
+
+1.1 导入数据：把系统文件的内容存储到数据库的表里
+
+		命令：
+		mysql> load  data  infile   "目录名/文件名" into   table  库名.表名  fields terminated   by   "分隔符"
+lines  terminated  by   "\n";
+
+mysql> create database db3;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> create table db3.user(
+    -> name char(30) , 
+    -> password  char(1),
+    -> uid int ,
+    -> gid int ,
+    -> comment varchar(150) ,
+    -> homedir char(60) ,
+    -> shell  char(40)
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> desc db3.user;
++----------+--------------+------+-----+---------+-------+
+| Field    | Type         | Null | Key | Default | Extra |
++----------+--------------+------+-----+---------+-------+
+| name     | char(30)     | YES  |     | NULL    |       |
+| password | char(1)      | YES  |     | NULL    |       |
+| uid      | int(11)      | YES  |     | NULL    |       |
+| gid      | int(11)      | YES  |     | NULL    |       |
+| comment  | varchar(150) | YES  |     | NULL    |       |
+| homedir  | char(60)     | YES  |     | NULL    |       |
+| shell    | char(40)     | YES  |     | NULL    |       |
++----------+--------------+------+-----+---------+-------+
+7 rows in set (0.09 sec)
+
+mysql> 
+mysql> select  * from db3.user;
+Empty set (0.00 sec)
+
+mysql> load data infile "/myload/passwd" into table db3.user
+    -> fields terminated by ":" lines terminated by "\n" ;
+ERROR 13 (HY000): Can't get stat of '/myload/passwd' (Errcode: 2 - No such file or directory)
+mysql> system cp /etc/passwd /myload/
+mysql> system  ls /myload
+passwd
+mysql> load data infile "/myload/passwd" into table db3.user fields terminated by ":" lines terminated by "\n";
+ERROR 13 (HY000): Can't get stat of '/myload/passwd' (Errcode: 13 - Permission denied)
+mysql> 
+mysql> load data infile "/myload/passwd" into table db3.user fields terminated by ":" lines terminated by "\n";
+Query OK, 20 rows affected (0.00 sec)
+Records: 20  Deleted: 0  Skipped: 0  Warnings: 0
+
+mysql>
+mysql> alter table db3.user 
+    -> add
+    -> id int primary key auto_increment first;
+Query OK, 0 rows affected (0.12 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> select  * from db3.user;
++----+-----------------+----------+------+------+----------------------------+--------------------+----------------+
+| id | name            | password | uid  | gid  | comment                    | homedir            | shell          |
++----+-----------------+----------+------+------+----------------------------+--------------------+----------------+
+|  1 | root            | x        |    0 |    0 | root                       | /root              | /bin/bash      |
+|  2 | bin             | x        |    1 |    1 | bin                        | /bin               | /sbin/nologin  |
+|  3 | daemon          | x        |    2 |    2 | daemon                     | /sbin              | /sbin/nologin  |
+|  4 | adm             | x        |    3 |    4 | adm                        | /var/adm           | /sbin/nologin  |
+|  5 | lp              | x        |    4 |    7 | lp                         | /var/spool/lpd     | /sbin/nologin  |
+|  6 | sync            | x        |    5 |    0 | sync                       | /sbin              | /bin/sync      |
+|  7 | shutdown        | x        |    6 |    0 | shutdown                   | /sbin              | /sbin/shutdown |
+|  8 | halt            | x        |    7 |    0 | halt                       | /sbin              | /sbin/halt     |
+|  9 | mail            | x        |    8 |   12 | mail                       | /var/spool/mail    | /sbin/nologin  |
+| 10 | operator        | x        |   11 |    0 | operator                   | /root              | /sbin/nologin  |
+| 11 | games           | x        |   12 |  100 | games                      | /usr/games         | /sbin/nologin  |
+| 12 | ftp             | x        |   14 |   50 | FTP User                   | /var/ftp           | /sbin/nologin  |
+| 13 | nobody          | x        |   99 |   99 | Nobody                     | /                  | /sbin/nologin  |
+| 14 | systemd-network | x        |  192 |  192 | systemd Network Management | /                  | /sbin/nologin  |
+| 15 | dbus            | x        |   81 |   81 | System message bus         | /                  | /sbin/nologin  |
+| 16 | polkitd         | x        |  999 |  998 | User for polkitd           | /                  | /sbin/nologin  |
+| 17 | sshd            | x        |   74 |   74 | Privilege-separated SSH    | /var/empty/sshd    | /sbin/nologin  |
+| 18 | postfix         | x        |   89 |   89 |                            | /var/spool/postfix | /sbin/nologin  |
+| 19 | chrony          | x        |  998 |  996 |                            | /var/lib/chrony    | /sbin/nologin  |
+| 20 | mysql           | x        |   27 |   27 | MySQL Server               | /var/lib/mysql     | /bin/false     |
++----+-----------------+----------+------+------+----------------------------+--------------------+----------------+
+20 rows in set (0.00 sec)
+
+mysql> 
+mysql> select  * from db3.user where id = 5;
++----+------+----------+------+------+---------+----------------+---------------+
+| id | name | password | uid  | gid  | comment | homedir        | shell         |
++----+------+----------+------+------+---------+----------------+---------------+
+|  5 | lp   | x        |    4 |    7 | lp      | /var/spool/lpd | /sbin/nologin |
++----+------+----------+------+------+---------+----------------+---------------+
+1 row in set (0.00 sec)
+
+mysql> 
