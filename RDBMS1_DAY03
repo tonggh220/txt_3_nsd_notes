@@ -131,3 +131,85 @@ mysql> select  * from db3.user where id = 5;
 1 row in set (0.00 sec)
 
 mysql> 
+
+
+1.2 导出数据：把表记录存储到系统文件里
+		命令：
+		select命令   into   outfile "目录名/文件名"
+            [fields  terminated   by "分隔符"
+            lines   terminated   by " \n" ];
+
+mysql> mysql> select  * from db3.user into outfile "/myload/user.txt";
+Query OK, 20 rows affected (0.00 sec)
+
+mysql> 
+mysql> select  * from db3.user into outfile "/myload/user.txt";
+ERROR 1086 (HY000): File '/myload/user.txt' already exists
+mysql> 
+mysql> system ls /myload
+passwd	user.txt
+mysql> system cat /myload/user.txt
+1	root	x	0	0	root	/root	/bin/bash
+2	bin	x	1	1	bin	/bin	/sbin/nologin
+3	daemon	x	2	2	daemon	/sbin	/sbin/nologin
+4	adm	x	3	4	adm	/var/adm	/sbin/nologin
+5	lp	x	4	7	lp	/var/spool/lpd	/sbin/nologin
+6	sync	x	5	0	sync	/sbin	/bin/sync
+7	shutdown	x	6	0	shutdown	/sbin	/sbin/shutdown
+8	halt	x	7	0	halt	/sbin	/sbin/halt
+9	mail	x	8	12	mail	/var/spool/mail	/sbin/nologin
+10	operator	x	11	0	operator	/root	/sbin/nologin
+11	games	x	12	100	games	/usr/games	/sbin/nologin
+12	ftp	x	14	50	FTP User	/var/ftp	/sbin/nologin
+13	nobody	x	99	99	Nobody	/	/sbin/nologin
+14	systemd-network	x	192	192	systemd Network Management	/	/sbin/nologin
+15	dbus	x	81	81	System message bus	/	/sbin/nologin
+16	polkitd	x	999	998	User for polkitd	/	/sbin/nologin
+17	sshd	x	74	74	Privilege-separated SSH	/var/empty/sshd	/sbin/nologin
+18	postfix	x	89	89		/var/spool/postfix	/sbin/nologin
+19	chrony	x	998	996		/var/lib/chrony	/sbin/nologin
+20	mysql	x	27	27	MySQL Server	/var/lib/mysql	/bin/false
+mysql>
+
+mysql> select name , shell , uid from db3.user into outfile "/myload/user2.txt" fields terminated by "#" ;
+Query OK, 20 rows affected (0.00 sec)
+
+mysql> system cat /myload/user2.txt
+root#/bin/bash#0
+bin#/sbin/nologin#1
+daemon#/sbin/nologin#2
+adm#/sbin/nologin#3
+lp#/sbin/nologin#4
+sync#/bin/sync#5
+shutdown#/sbin/shutdown#6
+halt#/sbin/halt#7
+mail#/sbin/nologin#8
+operator#/sbin/nologin#11
+games#/sbin/nologin#12
+ftp#/sbin/nologin#14
+nobody#/sbin/nologin#99
+systemd-network#/sbin/nologin#192
+dbus#/sbin/nologin#81
+polkitd#/sbin/nologin#999
+sshd#/sbin/nologin#74
+postfix#/sbin/nologin#89
+chrony#/sbin/nologin#998
+mysql#/bin/false#27
+mysql> 
+
+mysql> select name , shell , uid from db3.user into outfile "/myload/user4.txt" fields terminated by "#"  
+    -> lines terminated by "???" ;
+Query OK, 20 rows affected (0.01 sec)
+
+mysql> system cat /myload/user4.txt
+root#/bin/bash#0???bin#/sbin/nologin#1???daemon#/sbin/nologin#2???adm#/sbin/nologin#3???lp#/sbin/nologin#4???sync#/bin/sync#5???shutdown#/sbin/shutdown#6???halt#/sbin/halt#7???mail#/sbin/nologin#8???operator#/sbin/nologin#11???games#/sbin/nologin#12???ftp#/sbin/nologin#14???nobody#/sbin/nologin#99???systemd-network#/sbin/nologin#192???dbus#/sbin/nologin#81???polkitd#/sbin/nologin#999???sshd#/sbin/nologin#74???postfix#/sbin/nologin#89???chrony#/sbin/nologin#998???mysql#/bin/false#27???mysql> 
+mysql> 
+
+mysql> select name , shell , uid from db3.user where id <= 3  into outfile "/myload/user6.txt" ;
+Query OK, 3 rows affected (0.00 sec)
+
+mysql> system cat /myload/user6.txt
+root	/bin/bash	0
+bin	/sbin/nologin	1
+daemon	/sbin/nologin	2
+mysql>
