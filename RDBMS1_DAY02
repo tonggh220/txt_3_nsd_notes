@@ -192,3 +192,138 @@ mysql> select  * from db1.t27;
 | 1.1.1.1 |   80 | yes    |
 | 2.1.1.1 |   80 | no     |
 +---------+------+--------+
+
+  主键通常与auto_increment 连用
+		  auto_increment：让字段通过自己加1的方式赋值
+
+mysql> create table db1.t28(id int primary key  auto_increment , name char(10),home varchar(15), class char(7));
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> desc db1.t28;
++-------+-------------+------+-----+---------+----------------+
+| Field | Type        | Null | Key | Default | Extra          |
++-------+-------------+------+-----+---------+----------------+
+| id    | int(11)     | NO   | PRI | NULL    | auto_increment |
+| name  | char(10)    | YES  |     | NULL    |                |
+| home  | varchar(15) | YES  |     | NULL    |                |
+| class | char(7)     | YES  |     | NULL    |                |
++-------+-------------+------+-----+---------+----------------+
+4 rows in set (0.00 sec)
+
+mysql> insert into db1.t28(name , home , class ) values ("bob","usa","nsd2002") ;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from  db1.t28;
++----+------+------+---------+
+| id | name | home | class   |
++----+------+------+---------+
+|  1 | bob  | usa  | nsd2002 |
++----+------+------+---------+
+1 row in set (0.00 sec)
+
+mysql> insert into db1.t28(name , home , class ) values ("tom","usa","nsd2002") ;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from  db1.t28;
++----+------+------+---------+
+| id | name | home | class   |
++----+------+------+---------+
+|  1 | bob  | usa  | nsd2002 |
+|  2 | tom  | usa  | nsd2002 |
++----+------+------+---------+
+2 rows in set (0.00 sec)
+
+mysql> insert into db1.t28(name , home , class ) values ("lucy","usa","nsd2002") ;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from  db1.t28;
++----+------+------+---------+
+| id | name | home | class   |
++----+------+------+---------+
+|  1 | bob  | usa  | nsd2002 |
+|  2 | tom  | usa  | nsd2002 |
+|  3 | lucy | usa  | nsd2002 |
++----+------+------+---------+
+3 rows in set (0.00 sec)
+
+mysql> insert into db1.t28(name , home , class ) values ("john","usa","nsd2002") ;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from  db1.t28;
++----+------+------+---------+
+| id | name | home | class   |
++----+------+------+---------+
+|  1 | bob  | usa  | nsd2002 |
+|  2 | tom  | usa  | nsd2002 |
+|  3 | lucy | usa  | nsd2002 |
+|  4 | john | usa  | nsd2002 |
++----+------+------+---------+
+4 rows in set (0.00 sec)
+
+mysql> select  * from db1.t28 where id=2;
++----+------+------+---------+
+| id | name | home | class   |
++----+------+------+---------+
+|  2 | tom  | usa  | nsd2002 |
++----+------+------+---------+
+1 row in set (0.01 sec)
+
+mysql> insert into db1.t28 values (3,"john","usa","nsd2002") ;
+ERROR 1062 (23000): Duplicate entry '3' for key 'PRIMARY'
+mysql> insert into db1.t28 values (7,"jeryy","usa","nsd2002") ;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from db1.t28 where id=2;
++----+------+------+---------+
+| id | name | home | class   |
++----+------+------+---------+
+|  2 | tom  | usa  | nsd2002 |
++----+------+------+---------+
+1 row in set (0.00 sec)
+
+mysql> select  * from db1.t28 ;
++----+-------+------+---------+
+| id | name  | home | class   |
++----+-------+------+---------+
+|  1 | bob   | usa  | nsd2002 |
+|  2 | tom   | usa  | nsd2002 |
+|  3 | lucy  | usa  | nsd2002 |
+|  4 | john  | usa  | nsd2002 |
+|  7 | jeryy | usa  | nsd2002 |
++----+-------+------+---------+
+5 rows in set (0.00 sec)
+
+mysql> insert into db1.t28(name , home , class ) values ("lili","usa","nsd2002") ;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from db1.t28 ;
++----+-------+------+---------+
+| id | name  | home | class   |
++----+-------+------+---------+
+|  1 | bob   | usa  | nsd2002 |
+|  2 | tom   | usa  | nsd2002 |
+|  3 | lucy  | usa  | nsd2002 |
+|  4 | john  | usa  | nsd2002 |
+|  7 | jeryy | usa  | nsd2002 |
+|  8 | lili  | usa  | nsd2002 |
++----+-------+------+---------+
+6 rows in set (0.00 sec)
+
+mysql> insert into db1.t28 values (null,"alices","usa","nsd2002") ;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t28 ;
++----+--------+------+---------+
+| id | name   | home | class   |
++----+--------+------+---------+
+|  1 | bob    | usa  | nsd2002 |
+|  2 | tom    | usa  | nsd2002 |
+|  3 | lucy   | usa  | nsd2002 |
+|  4 | john   | usa  | nsd2002 |
+|  7 | jeryy  | usa  | nsd2002 |
+|  8 | lili   | usa  | nsd2002 |
+|  9 | alices | usa  | nsd2002 |
++----+--------+------+---------+
+7 rows in set (0.00 sec)
+
+mysql>
