@@ -5,6 +5,7 @@ grant  权限列表  on   库名  to  用户名@"客户端地址"
 identified  by  "密码"  		//授权用户密码
 with  grant  option ;    		//有授权权限 ,可选项
 	
+在50数据库服务器 执行授权命令
 mysql> grant all on db1.* to yaya@"%" identified by "123456";
 
 mysql> select user,host from  mysql.user;
@@ -29,7 +30,7 @@ mysql> use db1;
 mysql> 执行 select  update  delete  create table  drop tables
 
 
-
+在50主机执行授权命令
 mysql> grant all  on  *.*  to mydba@"%" identified by "123qqq...A" with grant option ;
 Query OK, 0 rows affected, 1 warning (0.00 sec)
 
@@ -47,6 +48,7 @@ mysql> select user , host from mysql.user;
 
 mysql> 
 
+在客户端54 使用50的授权用户连接 50
 [root@host54 ~]# mysql -h192.168.4.50  -umydba -p123qqq...A 
 mysql> 
 mysql> show grants;
