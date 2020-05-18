@@ -27,3 +27,76 @@ mysql>
 mysql> show grants;
 mysql> use db1;
 mysql> 执行 select  update  delete  create table  drop tables
+
+
+
+mysql> grant all  on  *.*  to mydba@"%" identified by "123qqq...A" with grant option ;
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> select user , host from mysql.user;
++-----------+-----------+
+| user      | host      |
++-----------+-----------+
+| mydba     | %         |
+| yaya      | %         |
+| yaya2     | %         |
+| mysql.sys | localhost |
+| root      | localhost |
++-----------+-----------+
+5 rows in set (0.00 sec)
+
+mysql> 
+
+[root@host54 ~]# mysql -h192.168.4.50  -umydba -p123qqq...A 
+mysql> 
+mysql> show grants;
++--------------------------------------------------------------+
+| Grants for mydba@%                                           |
++--------------------------------------------------------------+
+| GRANT ALL PRIVILEGES ON *.* TO 'mydba'@'%' WITH GRANT OPTION |
++--------------------------------------------------------------+
+1 row in set (0.01 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| 123a               |
+| SHOPING            |
+| a123               |
+| buydb              |
+| db1                |
+| db3                |
+| gamedb             |
+| mysql              |
+| performance_schema |
+| shoping            |
+| sys                |
++--------------------+
+12 rows in set (0.01 sec)
+
+mysql> drop database 123a;
+Query OK, 0 rows affected (0.12 sec)
+
+mysql> grant select , insert  on db3.user  to yaya3@"localhost" identified by "123456";
+Query OK, 0 rows affected, 1 warning (0.04 sec)
+
+mysql> 
+
+在50本机测试有授权权限的用户 添加的新用户能否登陆
+[root@mysql50 ~]# mysql -uyaya3 -p123456
+mysql> show grants;
++-------------------------------------------------------------+
+| Grants for yaya3@localhost                                  |
++-------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'yaya3'@'localhost'                   |
+| GRANT SELECT, INSERT ON `db3`.`user` TO 'yaya3'@'localhost' |
++-------------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> delete from db3.user;
+ERROR 1142 (42000): DELETE command denied to user 'yaya3'@'localhost' for table 'user'
+mysql> 
+
+
