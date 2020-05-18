@@ -401,3 +401,11 @@ Create_tablespace_priv: Y
 1 row in set (0.00 sec)
 
 mysql>
+
+数据备份与恢复的环境准备
+  准备2台新的数据库服务器 IP地址 
+  192.168.4.51
+  192.168.4.52
+  安装MySQL-5.7.17 软件 
+  使用初始密码登陆，统一把登陆密码修改为123qqq...A
+  禁用firewalld 和 selinux
