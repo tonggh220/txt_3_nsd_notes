@@ -102,3 +102,55 @@ ERROR 1142 (42000): DELETE command denied to user 'yaya3'@'localhost' for table 
 mysql> 
 
 
+在数据库50 做用户授权
+添加admin用户，允许从192.168.4.0/24网段连接，对db3库的user表有查询权限，密码123qqq…A
+
+mysql> grant select on  db3.user to admin@"192.168.4.%" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+
+在客户端54连接
+[root@host54 ~]# mysql -h192.168.4.50 -uadmin -p123qqq...A
+mysql> 
+mysql> show grants;
++-------------------------------------------------------+
+| Grants for admin@192.168.4.%                          |
++-------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'admin'@'192.168.4.%'           |
+| GRANT SELECT ON `db3`.`user` TO 'admin'@'192.168.4.%' |
++-------------------------------------------------------+
+2 rows in set (0.01 sec)
+
+mysql> update db3.user set name="bob" ;
+ERROR 1142 (42000): UPDATE command denied to user 'admin'@'192.168.4.54' for table 'user'
+mysql> 
+mysql> select  * from db3.user; 可以查看数据
+
+
+在50数据库服务器授权
+mysql> grant select , insert , update ,delete on  db3.user to admin2@"localhost" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> 
+
+测试授权
+[root@host54 ~]# mysql -h192.168.4.50 -uadmin2 -p123qqq...A
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 1045 (28000): Access denied for user 'admin2'@'192.168.4.54' (using password: YES)
+[root@host54 ~]#
+
+[root@mysql50 ~]# mysql  -uadmin2 -p123qqq...A
+mysql> show grants;
++------------------------------------------------------------------------------+
+| Grants for admin2@localhost                                                  |
++------------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'admin2'@'localhost'                                   |
+| GRANT SELECT, INSERT, UPDATE, DELETE ON `db3`.`user` TO 'admin2'@'localhost' |
++------------------------------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> drop table db3.user;
+ERROR 1142 (42000): DROP command denied to user 'admin2'@'localhost' for table 'user'
+mysql> 
