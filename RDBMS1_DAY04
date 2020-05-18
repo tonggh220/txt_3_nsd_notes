@@ -276,3 +276,128 @@ mysql>
 mysql: [Warning] Using a password on the command line interface can be insecure.
 ERROR 1045 (28000): Access denied for user 'yaya'@'192.168.4.54' (using password: YES)
 [root@host54 ~]# 
+
+授权信息记录在哪里？ 存储在授权库mysql库下表里
+user表			记录已有的授权用户及权限
+db表			记录已有授权用户对数据库的访问权限
+tables_priv表	记录已有授权用户对表的访问权限
+columns_priv表	记录已有授权用户对字段的访问权限
+
+查看表记录可以获取用户权限；也可以通过更新记录，修改用户权限
+
+
+mysql> select  * from mysql.user where user="mydba" and host="%" \G
+*************************** 1. row ***************************
+                  Host: %
+                  User: mydba
+           Select_priv: Y
+           Insert_priv: Y
+           Update_priv: Y
+           Delete_priv: Y
+           Create_priv: Y
+             Drop_priv: Y
+           Reload_priv: Y
+         Shutdown_priv: Y
+          Process_priv: Y
+             File_priv: Y
+            Grant_priv: Y
+       References_priv: Y
+            Index_priv: Y
+            Alter_priv: Y
+          Show_db_priv: Y
+            Super_priv: Y
+ Create_tmp_table_priv: Y
+      Lock_tables_priv: Y
+          Execute_priv: Y
+       Repl_slave_priv: Y
+      Repl_client_priv: Y
+      Create_view_priv: Y
+        Show_view_priv: Y
+   Create_routine_priv: Y
+    Alter_routine_priv: Y
+      Create_user_priv: Y
+            Event_priv: Y
+          Trigger_priv: Y
+Create_tablespace_priv: Y
+              ssl_type: 
+            ssl_cipher: 
+           x509_issuer: 
+          x509_subject: 
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *F19C699342FA5C91EBCF8E0182FB71470EB2AF30
+      password_expired: N
+ password_last_changed: 2020-05-18 23:48:34
+     password_lifetime: NULL
+        account_locked: N
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> update mysql.user set delete_priv="N" where user="mydba" and host="%" ;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> flush privileges;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show grants for mydba@"%";
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Grants for mydba@%                                                                                                                                                                                                                                                                                                                                                |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| GRANT SELECT, INSERT, UPDATE, CREATE, DROP, RELOAD, SHUTDOWN, PROCESS, FILE, REFERENCES, INDEX, ALTER, SHOW DATABASES, SUPER, CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, REPLICATION SLAVE, REPLICATION CLIENT, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, CREATE USER, EVENT, TRIGGER, CREATE TABLESPACE ON *.* TO 'mydba'@'%' WITH GRANT OPTION |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select  * from mysql.user where user="mydba" and host="%" \G
+*************************** 1. row ***************************
+                  Host: %
+                  User: mydba
+           Select_priv: Y
+           Insert_priv: Y
+           Update_priv: Y
+           Delete_priv: N
+           Create_priv: Y
+             Drop_priv: Y
+           Reload_priv: Y
+         Shutdown_priv: Y
+          Process_priv: Y
+             File_priv: Y
+            Grant_priv: Y
+       References_priv: Y
+            Index_priv: Y
+            Alter_priv: Y
+          Show_db_priv: Y
+            Super_priv: Y
+ Create_tmp_table_priv: Y
+      Lock_tables_priv: Y
+          Execute_priv: Y
+       Repl_slave_priv: Y
+      Repl_client_priv: Y
+      Create_view_priv: Y
+        Show_view_priv: Y
+   Create_routine_priv: Y
+    Alter_routine_priv: Y
+      Create_user_priv: Y
+            Event_priv: Y
+          Trigger_priv: Y
+Create_tablespace_priv: Y
+              ssl_type: 
+            ssl_cipher: 
+           x509_issuer: 
+          x509_subject: 
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *F19C699342FA5C91EBCF8E0182FB71470EB2AF30
+      password_expired: N
+ password_last_changed: 2020-05-18 23:48:34
+     password_lifetime: NULL
+        account_locked: N
+1 row in set (0.00 sec)
+
+mysql>
