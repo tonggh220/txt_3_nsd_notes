@@ -856,3 +856,184 @@ mysql> select  distinct gid from user;
 17 rows in set (0.00 sec)
 
 mysql> 
+
+过滤查询结果 having
+having用法
+SQL查询   having   条件表达式;
+
+mysql> select name , uid  from user;
++-----------------+------+
+| name            | uid  |
++-----------------+------+
+| a$namei         |    0 |
+| a$namei         |    1 |
+| a$namei         |    2 |
+| a$namei         |    3 |
+| a$namei         |    4 |
+| sync            |    5 |
+| shutdown        |    5 |
+| halt            |    7 |
+| mail            |    8 |
+| operator        |   11 |
+| games           |   12 |
+| ftp             |   14 |
+| nobody          |   99 |
+| systemd-network |  192 |
+| dbus            |   81 |
+| polkitd         |  999 |
+| sshd            |   74 |
+| postfix         |   89 |
+| chrony          |  998 |
+| mysql           |   27 |
+| xxhh            | NULL |
+| yaya9           | NULL |
+| y6aya           | NULL |
+| ya3ya           | NULL |
++-----------------+------+
+24 rows in set (0.00 sec)
+
+mysql> 
+mysql> 
+mysql> 
+mysql> select name , uid  from user having name="apache" and uid=100;
+Empty set (0.00 sec)
+
+mysql> 
+mysql> select name , uid  from user where uid > 10     having name="apache" and uid=100;
+Empty set (0.00 sec)
+
+mysql> select name , uid  from user where uid > 10     having name="mysql" or name="bin"; 
++-------+------+
+| name  | uid  |
++-------+------+
+| mysql |   27 |
++-------+------+
+1 row in set (0.00 sec)
+
+mysql> select  name from user where id <= 10  having name="tom";
+Empty set (0.01 sec)
+
+mysql> 
+
+限制查询结果显示行数（默认显示查询结果的所有行）
+SQL查询  limit  数字; 	//显示查询结果前多少条记录
+SQL查询  limit  数字1,数字2; //显示指定范围内的查询记录
+数字1  起始行 （0 表示第1行  ）
+数字2  总行数
+
+mysql> 
+mysql> select id ,name from user where id <=3 ;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | a$namei |
+|  2 | a$namei |
+|  3 | a$namei |
++----+---------+
+3 rows in set (0.00 sec)
+
+mysql> select id ,name from user where id <=3  limit 2;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | a$namei |
+|  2 | a$namei |
++----+---------+
+2 rows in set (0.00 sec)
+
+mysql> select id ,name from user where id <=3  limit 1;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | a$namei |
++----+---------+
+1 row in set (0.00 sec)
+
+mysql> select name , uid , gid from user;
++-----------------+------+------+
+| name            | uid  | gid  |
++-----------------+------+------+
+| a$namei         |    0 |    0 |
+| a$namei         |    1 |    1 |
+| a$namei         |    2 |    2 |
+| a$namei         |    3 |    4 |
+| a$namei         |    4 |    7 |
+| sync            |    5 |    0 |
+| shutdown        |    5 |    0 |
+| halt            |    7 |    0 |
+| mail            |    8 |   12 |
+| operator        |   11 |    0 |
+| games           |   12 |  100 |
+| ftp             |   14 |   50 |
+| nobody          |   99 |   99 |
+| systemd-network |  192 |  192 |
+| dbus            |   81 |   81 |
+| polkitd         |  999 |  998 |
+| sshd            |   74 |   74 |
+| postfix         |   89 |   89 |
+| chrony          |  998 |  996 |
+| mysql           |   27 |   27 |
+| xxhh            | NULL | NULL |
+| yaya9           | NULL | NULL |
+| y6aya           | NULL | NULL |
+| ya3ya           | NULL | NULL |
++-----------------+------+------+
+24 rows in set (0.00 sec)
+
+mysql> 
+mysql> 
+mysql> 
+mysql> select name , uid , gid from user limit 5 , 4;
++----------+------+------+
+| name     | uid  | gid  |
++----------+------+------+
+| sync     |    5 |    0 |
+| shutdown |    5 |    0 |
+| halt     |    7 |    0 |
+| mail     |    8 |   12 |
++----------+------+------+
+4 rows in set (0.00 sec)
+
+mysql> select name , uid , gid from user limit 5 , 2;
++----------+------+------+
+| name     | uid  | gid  |
++----------+------+------+
+| sync     |    5 |    0 |
+| shutdown |    5 |    0 |
++----------+------+------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+
+mysql> select name , uid from user where uid >= 50 and uid <= 100 ;
++---------+------+
+| name    | uid  |
++---------+------+
+| nobody  |   99 |
+| dbus    |   81 |
+| sshd    |   74 |
+| postfix |   89 |
++---------+------+
+4 rows in set (0.01 sec)
+
+mysql> select name , uid from user where uid >= 50 and uid <= 100 order by uid desc;
++---------+------+
+| name    | uid  |
++---------+------+
+| nobody  |   99 |
+| postfix |   89 |
+| dbus    |   81 |
+| sshd    |   74 |
++---------+------+
+4 rows in set (0.00 sec)
+
+mysql> select name , uid from user where uid >= 50 and uid <= 100 order by uid desc limit 1;
++--------+------+
+| name   | uid  |
++--------+------+
+| nobody |   99 |
++--------+------+
+1 row in set (0.00 sec)
+
+mysql> 
