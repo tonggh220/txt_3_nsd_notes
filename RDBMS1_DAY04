@@ -154,3 +154,125 @@ mysql>
 mysql> drop table db3.user;
 ERROR 1142 (42000): DROP command denied to user 'admin2'@'localhost' for table 'user'
 mysql> 
+
+
+
+与授权用户相关的管理命令
+mysql> select user(); 显示当前登陆用户名和客户端地址
++----------------+
+| user()         |
++----------------+
+| root@localhost |
++----------------+
+1 row in set (0.00 sec)
+
+mysql>
+
+mysql> show grants; 登陆数据库的用户查看自己的访问权限
++---------------------------------------------------------------------+
+| Grants for root@localhost                                           |
++---------------------------------------------------------------------+
+| GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION |
+| GRANT PROXY ON ''@'' TO 'root'@'localhost' WITH GRANT OPTION        |
++---------------------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> select user , host from mysql.user; 查看已有的授权用户
++-----------+-------------+
+| user      | host        |
++-----------+-------------+
+| mydba     | %           |
+| yaya      | %           |
+| yaya2     | %           |
+| admin     | 192.168.4.% |
+| admin2    | localhost   |
+| mysql.sys | localhost   |
+| root      | localhost   |
+| yaya3     | localhost   |
++-----------+-------------+
+8 rows in set (0.00 sec)
+
+mysql> show grants for admin@"192.168.4.%"; 查看指定授权用户的权限
++-------------------------------------------------------+
+| Grants for admin@192.168.4.%                          |
++-------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'admin'@'192.168.4.%'           |
+| GRANT SELECT ON `db3`.`user` TO 'admin'@'192.168.4.%' |
++-------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+授权用户登陆后，修改登陆密码
+[root@host54 ~]# mysql -h192.168.4.50 -uyaya -p123456
+mysql> select  password("654321");
++-------------------------------------------+
+| password("654321")                        |
++-------------------------------------------+
+| *2A032F7C5BA932872F0F045E0CF6B53CF702F2C5 |
++-------------------------------------------+
+1 row in set, 1 warning (0.00 sec)
+
+mysql> set password=password("654321");
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> exit
+Bye
+[root@host54 ~]# mysql -h192.168.4.50 -uyaya -p654321 使用修改后的密码登陆
+
+
+数据库管理员重置授权用户的密码
+[root@mysql50 ~]# mysql -uroot -pabc123
+mysql> select user ,host from mysql.user;
++-----------+-------------+
+| user      | host        |
++-----------+-------------+
+| mydba     | %           |
+| yaya      | %           |
+| yaya2     | %           |
+| admin     | 192.168.4.% |
+| admin2    | localhost   |
+| mysql.sys | localhost   |
+| root      | localhost   |
+| yaya3     | localhost   |
++-----------+-------------+
+8 rows in set (0.00 sec)
+
+mysql> set password for yaya@"%"=password("666888");
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> exit
+
+在客户端验证修改的密码
+[root@host54 ~]# mysql -h192.168.4.50 -uyaya -p654321
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 1045 (28000): Access denied for user 'yaya'@'192.168.4.54' (using password: YES)
+[root@host54 ~]# 
+[root@host54 ~]# mysql -h192.168.4.50 -uyaya -p666888
+
+在数据库服务器查看已有的授权用户
+mysql> select user ,host from mysql.user;
++-----------+-------------+
+| user      | host        |
++-----------+-------------+
+| mydba     | %           |
+| yaya      | %           |
+| yaya2     | %           |
+| admin     | 192.168.4.% |
+| admin2    | localhost   |
+| mysql.sys | localhost   |
+| root      | localhost   |
+| yaya3     | localhost   |
++-----------+-------------+
+8 rows in set (0.00 sec)
+
+mysql> drop user yaya@"%" ;  删除授权用户
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> 
+[root@host54 ~]# mysql -h192.168.4.50 -uyaya -p666888  客户无法使用用户连接了
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 1045 (28000): Access denied for user 'yaya'@'192.168.4.54' (using password: YES)
+[root@host54 ~]# 
