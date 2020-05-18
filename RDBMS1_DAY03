@@ -362,3 +362,251 @@ mysql> select name from db3.user where  name in ("root" , "sync" ,"mysql" );
 mysql> select name ,shell from db3.user where  shell not in ("/bin/bash","/sbin/nologin");
 
 mysql> select name ,uid , gid  from db3.user where uid in (77 , 63, 9,11);
+
+
+        高级匹配
+                模糊匹配 like 
+
+mysql> select name from  user where name like '____';
++------+
+| name |
++------+
+| root |
+| sync |
+| halt |
+| mail |
+| dbus |
+| sshd |
+| xxhh |
++------+
+7 rows in set (0.00 sec)
+
+mysql> select name from  user where name like '___';
++------+
+| name |
++------+
+| bin  |
+| adm  |
+| ftp  |
++------+
+3 rows in set (0.00 sec)
+
+mysql> select name from  user where name   like  '%a%';
++----------+
+| name     |
++----------+
+| daemon   |
+| adm      |
+| halt     |
+| mail     |
+| operator |
+| games    |
++----------+
+6 rows in set (0.00 sec)
+
+mysql> select name from  user where name   like  'a%';
++------+
+| name |
++------+
+| adm  |
++------+
+1 row in set (0.00 sec)
+
+mysql> select name from  user where name   like  '%____%';
++-----------------+
+| name            |
++-----------------+
+| root            |
+| daemon          |
+| sync            |
+| shutdown        |
+| halt            |
+| mail            |
+| operator        |
+| games           |
+| nobody          |
+| systemd-network |
+| dbus            |
+| polkitd         |
+| sshd            |
+| postfix         |
+| chrony          |
+| mysql           |
+| xxhh            |
++-----------------+
+17 rows in set (0.00 sec)
+
+mysql> 
+
+        正则表达式
+mysql> select name from  user where  name regexp  '^j' ;
+Empty set (0.00 sec)
+
+mysql> 
+mysql> select name from  user where  name regexp  'y$' ;
++--------+
+| name   |
++--------+
+| nobody |
+| chrony |
++--------+
+2 rows in set (0.00 sec)
+
+mysql> select name from  user where  name regexp  '^j|y$' ;
++--------+
+| name   |
++--------+
+| nobody |
+| chrony |
++--------+
+2 rows in set (0.00 sec)
+
+mysql> select name from  user where  name regexp  '^a|y$' ;
++--------+
+| name   |
++--------+
+| adm    |
+| nobody |
+| chrony |
++--------+
+3 rows in set (0.01 sec)
+
+mysql> 
+mysql> select  name , uid  from user where  uid regexp  '..' ;
++-----------------+------+
+| name            | uid  |
++-----------------+------+
+| operator        |   11 |
+| games           |   12 |
+| ftp             |   14 |
+| nobody          |   99 |
+| systemd-network |  192 |
+| dbus            |   81 |
+| polkitd         |  999 |
+| sshd            |   74 |
+| postfix         |   89 |
+| chrony          |  998 |
+| mysql           |   27 |
++-----------------+------+
+11 rows in set (0.00 sec)
+
+mysql> select  name , uid  from user where  uid regexp  '^..$' ;
++----------+------+
+| name     | uid  |
++----------+------+
+| operator |   11 |
+| games    |   12 |
+| ftp      |   14 |
+| nobody   |   99 |
+| dbus     |   81 |
+| sshd     |   74 |
+| postfix  |   89 |
+| mysql    |   27 |
++----------+------+
+8 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> select name from  user where name regexp '[0-9]';
+Empty set (0.00 sec)
+
+mysql> insert into user(name) values ("yaya9"),("y6aya"),("ya3ya");
+Query OK, 3 rows affected (0.04 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> select name from  user where name regexp '[0-9]';
++-------+
+| name  |
++-------+
+| yaya9 |
+| y6aya |
+| ya3ya |
++-------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
+
+        四则计数
+
+mysql> select name , uid  from user  where  uid % 2  =  0 ;
++-----------------+------+
+| name            | uid  |
++-----------------+------+
+| root            |    0 |
+| daemon          |    2 |
+| lp              |    4 |
+| shutdown        |    6 |
+| mail            |    8 |
+| games           |   12 |
+| ftp             |   14 |
+| systemd-network |  192 |
+| sshd            |   74 |
+| chrony          |  998 |
++-----------------+------+
+10 rows in set (0.13 sec)
+
+mysql>
+
+
+mysql> select name ,  uid  from  user where uid <= 5;
++--------+------+
+| name   | uid  |
++--------+------+
+| root   |    0 |
+| bin    |    1 |
+| daemon |    2 |
+| adm    |    3 |
+| lp     |    4 |
+| sync   |    5 |
++--------+------+
+6 rows in set (0.00 sec)
+
+mysql> update user set  uid = uid + 1 where uid <= 5;
+Query OK, 6 rows affected (0.25 sec)
+Rows matched: 6  Changed: 6  Warnings: 0
+
+mysql> select name ,  uid  from  user where uid <= 6;
++----------+------+
+| name     | uid  |
++----------+------+
+| root     |    1 |
+| bin      |    2 |
+| daemon   |    3 |
+| adm      |    4 |
+| lp       |    5 |
+| sync     |    6 |
+| shutdown |    6 |
++----------+------+
+7 rows in set (0.00 sec)
+
+mysql> 
+mysql> update user set  uid = uid - 1 where uid <= 6;
+
+
+mysql> select name , uid , gid from user where name = "mysql";
++-------+------+------+
+| name  | uid  | gid  |
++-------+------+------+
+| mysql |   27 |   27 |
++-------+------+------+
+1 row in set (0.00 sec)
+
+mysql> select name , uid , gid , (uid + gid) / 2  pjf     from user where name = "mysql"; 
++-------+------+------+---------+
+| name  | uid  | gid  | pjf     |
++-------+------+------+---------+
+| mysql |   27 |   27 | 27.0000 |
++-------+------+------+---------+
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> select name , uid , gid , (uid + gid) / 2  pjf , uid + gid  zcj   from user where name = "mysql";
++-------+------+------+---------+------+
+| name  | uid  | gid  | pjf     | zcj  |
++-------+------+------+---------+------+
+| mysql |   27 |   27 | 27.0000 |   54 |
++-------+------+------+---------+------+
+1 row in set (0.00 sec)
+
+mysql> 
