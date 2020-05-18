@@ -1037,3 +1037,35 @@ mysql> select name , uid from user where uid >= 50 and uid <= 100 order by uid d
 1 row in set (0.00 sec)
 
 mysql> 
+
+4 MySQL服务图形管理工具-phpmyadmin软件
+		主流的图形工具软件
+		讲phpmyadmin软件安装与使用
+
+ [root@mysql50 ~]# rpm -q httpd
+未安装软件包 httpd 
+[root@mysql50 ~]# rpm -q php
+未安装软件包 php 
+[root@mysql50 ~]# rpm -q php-mysql
+未安装软件包 php-mysql 
+[root@mysql50 ~]# 
+[root@mysql50 ~]# yum -y install httpd php php-mysql
+[root@mysql50 ~]# systemctl  start httpd
+
+[root@mysql50 upload]# mv phpMyAdmin-2.11.11-all-languages /var/www/html/phpmyadmin
+[root@mysql50 upload]# cd /var/www/html/
+[root@mysql50 html]# ls
+phpmyadmin
+[root@mysql50 html]# cd phpmyadmin/
+[root@mysql50 phpmyadmin]# 
+[root@mysql50 phpmyadmin]# ls config.sample.inc.php 
+config.sample.inc.php
+[root@mysql50 phpmyadmin]# cp config.sample.inc.php  config.inc.php 
+[root@mysql50 phpmyadmin]# 
+[root@mysql50 phpmyadmin]# vim config.inc.php
+17 $cfg['blowfish_secret'] = 'plj123';
+31 $cfg['Servers'][$i]['host'] = 'localhost';
+:wq
+打开真机浏览器 输入网址 http://192.168.4.50/phpmyadmin
+			用户 root
+			密码 
