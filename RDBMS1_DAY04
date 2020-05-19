@@ -1030,3 +1030,25 @@ mysql>
  
 [root@mysql50 ~]# cat /var/lib/mysql/mysql50-bin.index  查看索引文件的内容
 ./mysql50-bin.000001
+
+自定义日志文件存储目录和名称
+]# vim /etc/my.cnf
+[mysqld]
+#log_bin
+log_bin=/mylog/db50
+server_id=50
+:wq 
+
+[root@mysql50 ~]# systemctl  restart mysqld
+
+[root@mysql50 ~]# mysql -uroot -p123bbb...A -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------------+----------+--------------+------------------+-------------------+
+| File        | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-------------+----------+--------------+------------------+-------------------+
+| db50.000001 |      154 |              |                  |                   |
++-------------+----------+--------------+------------------+-------------------+
+[root@mysql50 ~]# 
+[root@mysql50 ~]# ls /mylog
+db50.000001  db50.index
+[root@mysql50 ~]# 
