@@ -402,6 +402,86 @@ Create_tablespace_priv: Y
 
 mysql>
 
+
+db表的使用
+mysql> grant all on  db1.*  to yaya88@"%" identified by "123456" ;
+Query OK, 0 rows affected, 1 warning (0.07 sec)
+
+mysql> 
+mysql> select host , user , db from mysql.db;
++-----------+-----------+-----+
+| host      | user      | db  |
++-----------+-----------+-----+
+| %         | yaya88    | db1 |
+| localhost | mysql.sys | sys |
++-----------+-----------+-----+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> select * from mysql.db where db="db1" \G
+*************************** 1. row ***************************
+                 Host: %
+                   Db: db1
+                 User: yaya88
+          Select_priv: Y
+          Insert_priv: Y
+          Update_priv: Y
+          Delete_priv: Y
+          Create_priv: Y
+            Drop_priv: Y
+           Grant_priv: N
+      References_priv: Y
+           Index_priv: Y
+           Alter_priv: Y
+Create_tmp_table_priv: Y
+     Lock_tables_priv: Y
+     Create_view_priv: Y
+       Show_view_priv: Y
+  Create_routine_priv: Y
+   Alter_routine_priv: Y
+         Execute_priv: Y
+           Event_priv: Y
+         Trigger_priv: Y
+1 row in set (0.00 sec)
+
+mysql> 
+
+mysql> update mysql.db set delete_priv="N" , drop_priv="N" where db="db1";
+Query OK, 1 row affected (0.06 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> flush privileges;
+Query OK, 0 rows affected (0.09 sec)
+
+mysql> select * from mysql.db where db="db1" \G
+*************************** 1. row ***************************
+                 Host: %
+                   Db: db1
+                 User: yaya88
+          Select_priv: Y
+          Insert_priv: Y
+          Update_priv: Y
+          Delete_priv: N
+          Create_priv: Y
+            Drop_priv: N
+           Grant_priv: N
+      References_priv: Y
+           Index_priv: Y
+           Alter_priv: Y
+Create_tmp_table_priv: Y
+     Lock_tables_priv: Y
+     Create_view_priv: Y
+       Show_view_priv: Y
+  Create_routine_priv: Y
+   Alter_routine_priv: Y
+         Execute_priv: Y
+           Event_priv: Y
+         Trigger_priv: Y
+1 row in set (0.00 sec)
+
+mysql> 
+
+
 数据备份与恢复的环境准备
   准备2台新的数据库服务器 IP地址 
   192.168.4.51
