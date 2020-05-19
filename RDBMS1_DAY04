@@ -826,10 +826,39 @@ Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
 
 mysql>
 
-份与恢复的环境准备
-  准备2台新的数据库服务器 IP地址 
-  192.168.4.51
-  192.168.4.52
-  安装MySQL-5.7.17 软件 
-  使用初始密码登陆，统一把登陆密码修改为123qqq...A
-  禁用firewalld 和 selinux
+	相关概念：
+	  数据备份方式？ 
+		物理备份：  
+		逻辑备份：
+	  数据备份策略？ 完全备份 差异备份 增量备份
+
+  
+50主机备份数据
+ [root@mysql50 ~]# cp -r /var/lib/mysql   /root/mysql.bak
+ [root@mysql50 ~]# ls /root/
+anaconda-ks.cfg  mysql.bak
+[root@mysql50 ~]# 
+
+[root@mysql50 ~]# tar -czf /opt/mysql.tar.gz /var/lib/mysql/*
+tar: 从成员名中删除开头的“/”
+tar: /var/lib/mysql/mysql.sock: 忽略套接字(socket)
+[root@mysql50 ~]# 
+[root@mysql50 ~]# ls /opt/
+mysql.tar.gz
+[root@mysql50 ~]# 
+
+[root@mysql50 ~]# scp -r /root/mysql.bak/ root@192.168.4.51:/opt/
+
+新搭建的数据库51 使用备份文件恢复数据
+systemctl  stop mysqld
+rm -rf /var/lib/mysql/*
+  
+ 
+cp -r /opt/mysql.bak/*  /var/lib/mysql/
+ls /var/lib/mysql
+  
+chown  -R mysql:mysql /var/lib/mysql
+ 
+systemctl  start mysqld 
+mysql -uroot -p123bbb...A
+mysql> show databases;
