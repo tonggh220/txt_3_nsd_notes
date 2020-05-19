@@ -970,3 +970,63 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | yg_tab        |
 +---------------+
 [root@mysql51 ~]# 
+
+2 数据增量备份与恢复
+		2.1 实现方法1 启用binlog日志文件
+			日志介绍（什么是binlog日志文件）
+
+
+			日志的使用：
+				启用日志
+mysql> show master status ;
+Empty set (0.00 sec)
+
+mysql> 
+
+]# /etc/my.cnf
+[mysqld]
+log_bin
+server_id=50
+:wq
+
+[root@mysql50 ~]# systemctl  restart mysqld
+
+mysql> show master status; 
++--------------------+----------+--------------+------------------+-------------------+
+| File               | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++--------------------+----------+--------------+------------------+-------------------+
+| mysql50-bin.000001 |      154 |              |                  |                   |
++--------------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql>
+
+mysql> insert into db3.user (name,uid)values("tom",999);
+Query OK, 1 row affected (0.03 sec)
+
+mysql> show master status;
++--------------------+----------+--------------+------------------+-------------------+
+| File               | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++--------------------+----------+--------------+------------------+-------------------+
+| mysql50-bin.000001 |      429 |              |                  |                   |
++--------------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> create database bbsdb;
+Query OK, 1 row affected (0.04 sec)
+
+mysql> show master status;
++--------------------+----------+--------------+------------------+-------------------+
+| File               | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++--------------------+----------+--------------+------------------+-------------------+
+| mysql50-bin.000001 |      591 |              |                  |                   |
++--------------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+				查看日志文件的内容
+ [root@mysql50 ~]# mysqlbinlog /var/lib/mysql/mysql50-bin.000001
+ 
+[root@mysql50 ~]# cat /var/lib/mysql/mysql50-bin.index  查看索引文件的内容
+./mysql50-bin.000001
