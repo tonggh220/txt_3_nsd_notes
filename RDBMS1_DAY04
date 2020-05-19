@@ -482,6 +482,79 @@ Create_tmp_table_priv: Y
 mysql> 
 
 
+tables_priv表的使用
+
+mysql> select  host , user , db , table_name from mysql.tables_priv ;
++-------------+-----------+-----+------------+
+| host        | user      | db  | table_name |
++-------------+-----------+-----+------------+
+| 192.168.4.% | admin     | db3 | user       |
+| localhost   | admin2    | db3 | user       |
+| localhost   | yaya3     | db3 | user       |
+| localhost   | mysql.sys | sys | sys_config |
++-------------+-----------+-----+------------+
+4 rows in set (0.00 sec)
+
+mysql> 
+mysql> select  *  from mysql.tables_priv  where user="admin";
++-------------+-----+-------+------------+----------------+---------------------+------------+-------------+
+| Host        | Db  | User  | Table_name | Grantor        | Timestamp           | Table_priv | Column_priv |
++-------------+-----+-------+------------+----------------+---------------------+------------+-------------+
+| 192.168.4.% | db3 | admin | user       | root@localhost | 0000-00-00 00:00:00 | Select     |             |
++-------------+-----+-------+------------+----------------+---------------------+------------+-------------+
+1 row in set (0.00 sec)
+
+mysql> update mysql.tables_priv set table_priv="select,insert,update"  where user="admin";;;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> flush privileges;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select  *  from mysql.tables_priv  where user="admin";
++-------------+-----+-------+------------+----------------+---------------------+----------------------+-------------+
+| Host        | Db  | User  | Table_name | Grantor        | Timestamp           | Table_priv           | Column_priv |
++-------------+-----+-------+------------+----------------+---------------------+----------------------+-------------+
+| 192.168.4.% | db3 | admin | user       | root@localhost | 2020-05-19 17:57:45 | Select,Insert,Update |             |
++-------------+-----+-------+------------+----------------+---------------------+----------------------+-------------+
+1 row in set (0.00 sec)
+
+mysql>
+
+columns_priv表的使用
+
+mysql> select  * from mysql.columns_priv;
+Empty set (0.00 sec)
+
+mysql> grant select , update(name,password) , insert on db3.user  to admin3@"%" identified by "123456" ;
+Query OK, 0 rows affected, 1 warning (0.06 sec)
+
+mysql> 
+mysql> select  * from  mysql.columns_priv;
++------+-----+--------+------------+-------------+---------------------+-------------+
+| Host | Db  | User   | Table_name | Column_name | Timestamp           | Column_priv |
++------+-----+--------+------------+-------------+---------------------+-------------+
+| %    | db3 | admin3 | user       | name        | 0000-00-00 00:00:00 | Update      |
+| %    | db3 | admin3 | user       | password    | 0000-00-00 00:00:00 | Update      |
++------+-----+--------+------------+-------------+---------------------+-------------+
+2 rows in set (0.00 sec)
+
+mysql> delete from  mysql.columns_priv where Column_name="name";
+Query OK, 1 row affected (0.04 sec)
+
+mysql> flush privileges;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select  * from  mysql.columns_priv;
++------+-----+--------+------------+-------------+---------------------+-------------+
+| Host | Db  | User   | Table_name | Column_name | Timestamp           | Column_priv |
++------+-----+--------+------------+-------------+---------------------+-------------+
+| %    | db3 | admin3 | user       | password    | 0000-00-00 00:00:00 | Update      |
++------+-----+--------+------------+-------------+---------------------+-------------+
+1 row in set (0.00 sec)
+
+mysql>
+
 数据备份与恢复的环境准备
   准备2台新的数据库服务器 IP地址 
   192.168.4.51
