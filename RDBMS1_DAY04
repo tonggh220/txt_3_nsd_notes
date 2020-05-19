@@ -862,3 +862,111 @@ chown  -R mysql:mysql /var/lib/mysql
 systemctl  start mysqld 
 mysql -uroot -p123bbb...A
 mysql> show databases;
+
+
+完全备份：备份所有数据
+		  一张表的所有数据
+		  一个库的所有数据
+		  一台数据库服务器的所有数据
+	备份新的数据： 差异备份  增量备份
+		差异备份： 备份完全备份后，所有新产生的数据
+		增量备份： 备份上次备份后，所有新产生的数据
+
+       
+
+	1 数据完全备份与恢复
+		备份数据的命令 （50）
+]# mysqldump   -uroot    -p密码    库名  >  目录/xxx.sql
+库名表示方式：
+--all-databases 或  -A      		//所有库
+数据库名			//单个库
+数据库名  表名          	//单张表
+-B  数据库1  数据库2 		//多个库
+
+mkdir /bak
+mysqldump -uroot -p123bbb...A  --all-databases  > /bak/all.sql
+mysqldump -uroot -p123bbb...A  db1  > /bak/db1.sql
+mysqldump -uroot -p123bbb...A  db1 t28  > /bak/db1_t28.sql
+mysqldump -uroot -p123bbb...A   -B db1 db3  > /bak/twodb.sql
+		
+[root@mysql50 ~]# ls /bak/
+all.sql  db1.sql  db1_t28.sql  twodb.sql
+[root@mysql50 ~]# 
+
+[root@mysql50 ~]# scp /bak/all.sql  root@192.168.4.51:/opt/
+
+		恢复数据的命令 （51）
+	命令格式：
+]# mysql  -uroot    -p密码   [ 库名 ]   <   目录/xxx.sql
+
+[root@mysql51 ~]# mysql -uroot -p123bbb...A  <  /opt/all.sql 
+
+[root@mysql51 ~]# mysql -uroot -p123bbb...A
+mysql> show databases;
+mysql> drop database db1;
+mysql> exit
+
+[root@mysql50 ~]# ls /bak/
+all.sql  db1.sql  db1_t28.sql  twodb.sql
+[root@mysql50 ~]# 
+[root@mysql50 ~]# scp /bak/db1.sql  root@192.168.4.51:/opt/
+root@192.168.4.51's password: 
+db1.sql                                                100%   12KB   5.2MB/s   00:00    
+[root@mysql50 ~]# 
+
+[root@mysql51 ~]# mysql -uroot -p123bbb...A  db1 < /opt/db1.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 1049 (42000): Unknown database 'db1'
+[root@mysql51 ~]# 
+[root@mysql51 ~]# mysql -uroot -p123bbb...A  < /opt/db1.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 1046 (3D000) at line 22: No database selected
+[root@mysql51 ~]# 
+[root@mysql51 ~]# mysql -uroot -p123bbb...A  -e 'create database db1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql51 ~]# 
+[root@mysql51 ~]# mysql -uroot -p123bbb...A  -e 'show databases'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| SHOPING            |
+| a123               |
+| buydb              |
+| db1                |
+| db3                |
+| gamedb             |
+| mysql              |
+| performance_schema |
+| shoping            |
+| sys                |
++--------------------+
+[root@mysql51 ~]# mysql -uroot -p123bbb...A  db1  < /opt/db1.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql51 ~]# 
+[root@mysql51 ~]# mysql -uroot -p123bbb...A  -e 'use db1;show tables' 
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| Tables_in_db1 |
++---------------+
+| gz            |
+| stuinfo       |
+| stuinfo2      |
+| t21           |
+| t22           |
+| t23           |
+| t24           |
+| t25           |
+| t26           |
+| t27           |
+| t28           |
+| t4            |
+| t5            |
+| t6            |
+| t7            |
+| teacher       |
+| teacher2      |
+| yg_tab        |
++---------------+
+[root@mysql51 ~]# 
