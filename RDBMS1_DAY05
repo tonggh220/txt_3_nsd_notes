@@ -1,0 +1,6 @@
+在50主机安装percona软件提供备份命令 innobackupex
+[root@mysql50 upload]# rpm -ivh libev-4.15-1.el6.rf.x86_64.rpm 
+[root@mysql50 upload]# yum -y install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+[root@mysql50 upload]# which  innobackupex
+/usr/bin/innobackupex
+[root@mysql50 upload]# 
