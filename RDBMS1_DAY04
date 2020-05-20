@@ -1310,3 +1310,40 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 |  665 |
 +------+
 [root@mysql51 ~]#
+
+通过指定时间范围恢复数据
+[root@mysql51 ~]# ls /root/db50.000002 
+/root/db50.000002
+[root@mysql51 ~]# 
+[root@mysql51 ~]# 
+[root@mysql51 ~]# mysqlbinlog /root/db50.000002  | grep -i insert
+insert into db5.t1 values (222)
+insert into db5.t1 values (233)
+insert into db5.t1 values (555)
+insert into db5.t1 values (665)
+SET INSERT_ID=37/*!*/;
+insert into db3.user(name,uid,gid)values("alices",998,998)
+SET INSERT_ID=38/*!*/;
+insert into db3.user(name,uid,gid)values("jerry",8888,9998)
+[root@mysql51 ~]# 
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'select count(*) from db3.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| count(*) |
++----------+
+|       19 |
++----------+
+[root@mysql51 ~]#
+
+时间范围需要自己看日志 确定
+[root@mysql51 ~]# mysqlbinlog --start-datetime="2020/05/20 19:29:13"  --stop-datetime="2020/05/20 19:30:08"  /root/db50.000002 | mysql -uroot -p123bbb...A
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql51 ~]# 
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'select count(*) from db3.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| count(*) |
++----------+
+|       21 |
++----------+
+[root@mysql51 ~]#
