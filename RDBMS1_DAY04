@@ -1157,3 +1157,33 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 |  102 |
 +------+
 [root@mysql51 ~]# 
+
+
+修改日志格式
+mysql> show variables like "binlog_format";
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| binlog_format | ROW   |
++---------------+-------+
+1 row in set (0.01 sec)
+
+mysql> exit
+Bye
+[root@mysql50 mylog]# vim /etc/my.cnf
+[mysqld]
+binlog_format="mixed"
+:wq
+
+[root@mysql50 mylog]# systemctl  restart mysqld
+
+[root@mysql50 mylog]# mysql -uroot -p123bbb...A  -e 'show variables like "binlog_format" '
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| binlog_format | MIXED |
++---------------+-------+
+[root@mysql50 mylog]# ls /mylog
+db50.000001  db50.000002  db50.index
+[root@mysql50 mylog]# 
