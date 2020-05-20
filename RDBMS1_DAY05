@@ -71,7 +71,13 @@ ib_buffer_pool  performance_schema  xtrabackup_checkpoints
 [root@mysql50 ~]# scp -r /allbak  root@192.168.4.51:/root/
 
 在51主机恢复数据，步骤如下：
-
+安装提供命令的软件包
+					停止数据库服务
+					清空数据库目录
+					准备恢复数据
+					拷贝数据
+					修改数据库目录下的所有者和组用户为mysql
+				    启动数据库服务
 
 [root@mysql51 ~]# which  innobackupex
 /usr/bin/which: no innobackupex in (/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin)
@@ -174,4 +180,76 @@ mysql> select  * from db5.b;
 5 rows in set (0.01 sec)
 
 mysql> 
+
+
+恢复单张表的所有数据
+51]# 
+mysql> delete from db5.b;
+mysql>  select  * from  db5.b;
+
+具体操作如下：
+
+删除表空间
+mysql> 
+mysql> alter table db5.b discard  tablespace;  
+Query OK, 0 rows affected (0.10 sec)
+
+mysql> select  * from db5.b;
+ERROR 1814 (HY000): Tablespace has been discarded for table 'b'
+mysql> 
+mysql> system ls /var/lib/mysql/db5/b.*
+/var/lib/mysql/db5/b.frm
+mysql> 
+
+导出表信息
+
+[root@mysql51 ~]# innobackupex --apply-log --export /root/allbak
+
+[root@mysql51 ~]# ls /root/allbak/db5/
+a.cfg  a.exp  a.frm  a.ibd  b.cfg  b.exp  b.frm  b.ibd  db.opt
+[root@mysql51 ~]# 
+拷贝表信息文件到数据库目录下
+[root@mysql51 ~]# cp /root/allbak/db5/b.{cfg,exp,ibd} /var/lib/mysql/db5/
+[root@mysql51 ~]# ls -l /var/lib/mysql/db5/b.*
+-rw-r--r--. 1 root  root    369 5月  21 01:02 /var/lib/mysql/db5/b.cfg
+-rw-r-----. 1 root  root  16384 5月  21 01:02 /var/lib/mysql/db5/b.exp
+-rw-r-----. 1 mysql mysql  8560 5月  21 00:09 /var/lib/mysql/db5/b.frm
+-rw-r-----. 1 root  root  98304 5月  21 01:02 /var/lib/mysql/db5/b.ibd
+[root@mysql51 ~]#
+
+修改表信息文件的所有者及组用户为mysql
+[root@mysql51 ~]# chown  mysql:mysql /var/lib/mysql/db5/b.*
+
+导入表空间
+mysql> select  * from db5.b;
+ERROR 1814 (HY000): Tablespace has been discarded for table 'b'
+mysql> 
+mysql> alter  table db5.b   import  tablespace; 
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> select  * from db5.b; 查看表记录
++--------+
+| name   |
++--------+
+| tom    |
+| lucy   |
+| jerry  |
+| lili   |
+| meimei |
++--------+
+5 rows in set (0.00 sec)
+
+mysql>
+
+删除数据库目录下的表信息文件
+[root@mysql51 ~]# rm -rf /var/lib/mysql/db5/b.cfg 
+[root@mysql51 ~]# rm -rf /var/lib/mysql/db5/b.exp 
+[root@mysql51 ~]# 
+[root@mysql51 ~]# ls /var/lib/mysql/db5/b.*
+/var/lib/mysql/db5/b.frm  /var/lib/mysql/db5/b.ibd
+[root@mysql51 ~]# 
+
+
+
+
 
