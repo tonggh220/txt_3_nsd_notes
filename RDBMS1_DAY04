@@ -30,6 +30,19 @@ mysql> use db1;
 mysql> 执行 select  update  delete  create table  drop tables
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 在50主机执行授权命令
 mysql> grant all  on  *.*  to mydba@"%" identified by "123qqq...A" with grant option ;
 Query OK, 0 rows affected, 1 warning (0.00 sec)
@@ -1051,4 +1064,93 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@mysql50 ~]# 
 [root@mysql50 ~]# ls /mylog
 db50.000001  db50.index
+
+				创建新的日志文件
+   mysql -uroot -p123bbb...A -e 'flush logs'
+
+   mysql>flush logs;
+
+  mysqldump -uroot -p123bbb...A  --flush-logs  db3 > /root/db3.sql
+  
+  mysqldump -uroot -p123bbb...A  --flush-logs  -B db1 db3 > /root/twodb.sql
+
+
+ systemctl  restart mysqld
+				删除已有日志文件
+
+ mysql> purge  master  logs  to  "db50.000005"; 删除编号5之前的日志文件
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> reset master; 删除所有的日志文件，重新创建日志文件
+
+	
+使用日志文件恢复数据：
+			1 恢复所有数据
+                命令格式：
+                ]# mysqlbinlog  日志名  |  mysql -uroot -p密码
+
+
 [root@mysql50 ~]# 
+mysql> reset master ;
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> show master status;
++-------------+----------+--------------+------------------+-------------------+
+| File        | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-------------+----------+--------------+------------------+-------------------+
+| db50.000001 |      154 |              |                  |                   |
++-------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> create database db5;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> create table db5.t1(id int);
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> 
+mysql> insert into db5.t1 values (101);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into db5.t1 values (102);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from db5.t1;
++------+
+| id   |
++------+
+|  101 |
+|  102 |
++------+
+2 rows in set (0.00 sec)
+
+mysql> show master status;
++-------------+----------+--------------+------------------+-------------------+
+| File        | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-------------+----------+--------------+------------------+-------------------+
+| db50.000001 |      967 |              |                  |                   |
++-------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> exit
+Bye
+[root@mysql50 mylog]# scp /mylog/db50.000001  root@192.168.4.51:/tmp/
+root@192.168.4.51's password: 
+db50.000001                                            100%  967   555.3KB/s   00:00    
+[root@mysql50 mylog]# 
+
+
+[root@mysql51 ~]# ls /tmp/db50.000001 
+/tmp/db50.000001
+[root@mysql51 ~]# which mysqlbinlog
+/usr/bin/mysqlbinlog
+[root@mysql51 ~]# 
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'select  * from db5.t1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  101 |
+|  102 |
++------+
+[root@mysql51 ~]# 
