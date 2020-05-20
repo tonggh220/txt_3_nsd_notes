@@ -253,6 +253,46 @@ mysql>
 [root@mysql51 ~]# 
 
 
+3、innobackupex 数据增量备份与恢复
+				数据增量备份命令格式
+
+]#innobackupex --user root --password  密码   --incremental  /new1dir    
+   --incremental-basedir=上次备份文件存储的目录   --no-timestamp  
+
+
+首次完全备份数据
+[root@mysql50 ~]# innobackupex --user root --password 123bbb...A  /fullbak --no-timestamp
+[root@mysql50 ~]# ls /fullbak
+backup-my.cnf   ibdata1             sys                     xtrabackup_info
+db5             mysql               xtrabackup_binlog_info  xtrabackup_logfile
+ib_buffer_pool  performance_schema  xtrabackup_checkpoints
+[root@mysql50 ~]# 
+
+向表里写新数据
+mysql> insert into db5.a values(333); 多写几条
+mysql> insert into db5.b values("plj");多写几条
+
+增量备份 
+[root@mysql50 ~]# innobackupex --user root --password 123bbb...A  --incremental /new1dir  --incremental-basedir=/fullbak --no-timestamp
+
+[root@mysql50 ~]# ls /new1dir/
+backup-my.cnf   ibdata1.delta  performance_schema      xtrabackup_checkpoints
+db5             ibdata1.meta   sys                     xtrabackup_info
+ib_buffer_pool  mysql          xtrabackup_binlog_info  xtrabackup_logfile
+[root@mysql50 ~]#
+
+向表里写新数据
+mysql> insert into db5.a values(444); 多写几条
+mysql> insert into db5.b values("yaya");多写几条
+
+[root@mysql50 ~]# innobackupex --user root --password 123bbb...A  --incremental /new2dir  --incremental-basedir=/new1dir --no-timestamp
+
+[root@mysql50 ~]# ls /new2dir/
+backup-my.cnf   ibdata1.delta  performance_schema      xtrabackup_checkpoints
+db5             ibdata1.meta   sys                     xtrabackup_info
+ib_buffer_pool  mysql          xtrabackup_binlog_info  xtrabackup_logfile
+[root@mysql50 ~]# 
+
 
 
 
