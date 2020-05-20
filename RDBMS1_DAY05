@@ -57,3 +57,121 @@ mysql> select count(*) from db5.b;
 1 row in set (0.00 sec)
 
 mysql> 
+
+
+在50主机做完全备份
+[root@mysql50 ~]# innobackupex --user root  --password 123bbb...A   /allbak  --no-timestamp
+
+[root@mysql50 ~]# ls /allbak/
+backup-my.cnf   ibdata1             sys                     xtrabackup_info
+db5             mysql               xtrabackup_binlog_info  xtrabackup_logfile
+ib_buffer_pool  performance_schema  xtrabackup_checkpoints
+[root@mysql50 ~]# 
+
+[root@mysql50 ~]# scp -r /allbak  root@192.168.4.51:/root/
+
+在51主机恢复数据，步骤如下：
+
+
+[root@mysql51 ~]# which  innobackupex
+/usr/bin/which: no innobackupex in (/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin)
+
+[root@mysql51 upload]# rpm -ivh libev-4.15-1.el6.rf.x86_64.rpm
+[root@mysql51 upload]# yum -y install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm
+
+[root@mysql51 upload]# which  innobackupex
+/usr/bin/innobackupex
+[root@mysql51 upload]# 
+
+[root@mysql51 ~]# systemctl  stop mysqld
+[root@mysql51 ~]# rm -rf /var/lib/mysql/*
+[root@mysql51 ~]# 
+[root@mysql51 ~]# ls /var/lib/mysql
+[root@mysql51 ~]# 
+
+]# cd /root/allbak
+[root@mysql51 allbak]# ls
+backup-my.cnf   ibdata1             sys                     xtrabackup_info
+db5             mysql               xtrabackup_binlog_info  xtrabackup_logfile
+ib_buffer_pool  performance_schema  xtrabackup_checkpoints
+[root@mysql51 allbak]# 
+[root@mysql51 allbak]# cat xtrabackup_checkpoints 
+backup_type = full-backuped
+from_lsn = 0
+to_lsn = 3146638
+last_lsn = 3146647
+compact = 0
+recover_binlog_info = 0
+[root@mysql51 allbak]#
+
+[root@mysql51 ~]# innobackupex  --apply-log /root/allbak/
+
+[root@mysql51 ~]# cat  /root/allbak/xtrabackup_checkpoints 
+backup_type = full-prepared
+from_lsn = 0
+to_lsn = 3146638
+last_lsn = 3146647
+compact = 0
+recover_binlog_info = 0
+[root@mysql51 ~]#
+
+[root@mysql51 ~]# ls /var/lib/mysql
+[root@mysql51 ~]# 
+[root@mysql51 ~]# innobackupex  --copy-back /root/allbak/
+
+[root@mysql51 ~]# chown  -R mysql:mysql /var/lib/mysql
+[root@mysql51 ~]# ls  -l /var/lib/mysql 
+总用量 188456
+drwxr-x---. 2 mysql mysql       72 5月  21 00:09 db5
+-rw-r-----. 1 mysql mysql      530 5月  21 00:09 ib_buffer_pool
+-rw-r-----. 1 mysql mysql 79691776 5月  21 00:09 ibdata1
+-rw-r-----. 1 mysql mysql 50331648 5月  21 00:09 ib_logfile0
+-rw-r-----. 1 mysql mysql 50331648 5月  21 00:09 ib_logfile1
+-rw-r-----. 1 mysql mysql 12582912 5月  21 00:09 ibtmp1
+drwxr-x---. 2 mysql mysql     4096 5月  21 00:09 mysql
+drwxr-x---. 2 mysql mysql     8192 5月  21 00:09 performance_schema
+drwxr-x---. 2 mysql mysql     8192 5月  21 00:09 sys
+-rw-r-----. 1 mysql mysql       17 5月  21 00:09 xtrabackup_binlog_pos_innodb
+-rw-r-----. 1 mysql mysql      485 5月  21 00:09 xtrabackup_info
+[root@mysql51 ~]# 
+[root@mysql51 ~]# systemctl  start mysqld
+[root@mysql51 ~]# mysql -uroot -p123bbb...A
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| db5                |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.06 sec)
+
+mysql> select  * from db5.a;
++------+
+| id   |
++------+
+|    1 |
+|    2 |
+|    3 |
+|    4 |
+|    5 |
++------+
+5 rows in set (0.06 sec)
+
+mysql> select  * from db5.b;
++--------+
+| name   |
++--------+
+| tom    |
+| lucy   |
+| jerry  |
+| lili   |
+| meimei |
++--------+
+5 rows in set (0.01 sec)
+
+mysql> 
+
