@@ -1144,7 +1144,10 @@ db50.000001                                            100%  967   555.3KB/s   0
 /tmp/db50.000001
 [root@mysql51 ~]# which mysqlbinlog
 /usr/bin/mysqlbinlog
-[root@mysql51 ~]# 
+
+[root@mysql51 ~]# mysqlbinlog /tmp/db50.000001  | mysql -uroot -p123bbb...A
+
+
 [root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'select  * from db5.t1'
 mysql: [Warning] Using a password on the command line interface can be insecure.
 +------+
