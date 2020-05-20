@@ -1187,3 +1187,126 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@mysql50 mylog]# ls /mylog
 db50.000001  db50.000002  db50.index
 [root@mysql50 mylog]# 
+
+
+2 恢复指定时间段的数据
+命令格式：
+]# mysqlbinlog 选项 日志名  |  mysql -uroot -p密码
+
+选项
+指定时间范围（时间点）
+ --start-datetime="yyyy/mm/dd hh:mm:ss"  --stop-datetime="yyyy/mm/dd hh:mm:ss"
+
+指定编号范围（偏移量）
+ --start-position=编号 --stop-position=编号
+
+ mysql> show master status;
++-------------+----------+--------------+------------------+-------------------+
+| File        | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-------------+----------+--------------+------------------+-------------------+
+| db50.000002 |      154 |              |                  |                   |
++-------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> insert into db5.t1 values (222);
+Query OK, 1 row affected (0.52 sec)
+
+mysql> show master status;
++-------------+----------+--------------+------------------+-------------------+
+| File        | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-------------+----------+--------------+------------------+-------------------+
+| db50.000002 |      424 |              |                  |                   |
++-------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> insert into db5.t1 values (233);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> show master status;
++-------------+----------+--------------+------------------+-------------------+
+| File        | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-------------+----------+--------------+------------------+-------------------+
+| db50.000002 |      694 |              |                  |                   |
++-------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> 
+mysql> 
+mysql> insert into db5.t1 values (555);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db5.t1 values (665);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> show master status;
++-------------+----------+--------------+------------------+-------------------+
+| File        | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-------------+----------+--------------+------------------+-------------------+
+| db50.000002 |     1234 |              |                  |                   |
++-------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> insert into db3.user(name,uid,gid)values("alices",998,998);
+Query OK, 1 row affected (0.08 sec)
+
+mysql> insert into db3.user(name,uid,gid)values("jerry",8888,9998);
+Query OK, 1 row affected (0.14 sec)
+
+mysql> show master status;
++-------------+----------+--------------+------------------+-------------------+
+| File        | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-------------+----------+--------------+------------------+-------------------+
+| db50.000002 |     1893 |              |                  |                   |
++-------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> 
+mysql> update db5.t1 set id=77;
+Query OK, 4 rows affected (0.00 sec)
+Rows matched: 4  Changed: 4  Warnings: 0
+
+mysql> delete from db5.t7;
+ERROR 1146 (42S02): Table 'db5.t7' doesn't exist
+mysql> delete from db5.t1;
+Query OK, 4 rows affected (0.03 sec)
+
+mysql> 
+mysql> 
+mysql> update db5.t1 set id=77;
+Query OK, 0 rows affected (0.00 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+mysql> update db5.t1 set id=77;
+
+[root@mysql50 ~]# scp /mylog/db50.000002  root@192.168.4.51:/root/
+root@192.168.4.51's password: 
+db50.000002                                            100% 2718     1.6MB/s   00:00    
+[root@mysql50 ~]#
+
+
+
+
+[root@mysql51 ~]# ls /root/db50.000002 
+/root/db50.000002
+[root@mysql51 ~]#
+
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'select * from  db5.t1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql51 ~]# 
+
+需要自己查看sql命令 对应的时间范围 和 偏移量范围。
+[root@mysql51 ~]# mysqlbinlog  --start-position=833   --stop-position=1234 /root/db50.000002 |  mysql -uroot -p123bbb...A
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql51 ~]# 
+
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'select * from db5.t1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  555 |
+|  665 |
++------+
+[root@mysql51 ~]#
