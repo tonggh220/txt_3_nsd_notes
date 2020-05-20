@@ -187,6 +187,9 @@ mysql>
 mysql> delete from db5.b;
 mysql>  select  * from  db5.b;
 
+表空间？存储表里数据的文件 
+	  /var/lib/mysql/库名/表名.ibd
+
 具体操作如下：
 
 删除表空间
