@@ -135,3 +135,73 @@ mysql>
 [root@mysql52 mysql]# mysql -uroot -p123bbb...A -e 'show slave status \G '
 mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@mysql52 mysql]# 
+
+	4.3 测试主从同步的配置
+		4.3.1 在主服务器51 授权用户给客户端连接使用
+mysql> grant select,insert on db5.*  to  yaya101@"%" identified by "123qqq...A";
+
+		4.3.2 在客户端50 使用授权用户访问 主服务器51 对数据做操作
+[root@mysql50 ~]# which  mysqld
+/usr/sbin/mysqld
+[root@mysql50 ~]# mysql -h192.168.4.51 -uyaya101 -p123qqq...A
+mysql> show grants;
++--------------------------------------------------+
+| Grants for yaya101@%                             |
++--------------------------------------------------+
+| GRANT USAGE ON *.* TO 'yaya101'@'%'              |
+| GRANT SELECT, INSERT ON `db5`.* TO 'yaya101'@'%' |
++--------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> select  count(*) from db5.a;
++----------+
+| count(*) |
++----------+
+|       43 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> insert into db5.a values(8887);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db5.a values(8887);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db5.a values(8887);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  count(*) from db5.a;
++----------+
+| count(*) |
++----------+
+|       46 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> select  * from db5.a where id = 8887;
++------+
+| id   |
++------+
+| 8887 |
+| 8887 |
+| 8887 |
++------+
+
+
+		4.3.3 在从服务器52本机可以查看到同样的数据
+mysql> select  count(*) from db5.a;
++----------+
+| count(*) |
++----------+
+|       46 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> select  * from db5.a where id = 8887;
++------+
+| id   |
++------+
+| 8887 |
+| 8887 |
+| 8887 |
++------+
