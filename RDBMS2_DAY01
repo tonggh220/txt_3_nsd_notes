@@ -1,0 +1,24 @@
+搭建MySQL一主一从 同步结构
+配置主服务器 192.168.4.51
+        1 启用binlog日志文件
+                [root@mysql51 ~]# vim /etc/my.cnf
+                [mysqld]
+                        server_id=51
+                        log_bin=master51
+                        :wq
+                        
+[root@mysql51 ~]# systemctl  restart mysqld
+[root@mysql51 ~]# 
+[root@mysql51 ~]# ls /var/lib/mysql
+auto.cnf        ibdata1      ibtmp1           mysql            performance_schema
+db5             ib_logfile0  master51.000001  mysql.sock       sys
+ib_buffer_pool  ib_logfile1  master51.index   mysql.sock.lock  xtrabackup_info
+[root@mysql51 ~]# 
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master51.000001 |      154 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@mysql51 ~]#
