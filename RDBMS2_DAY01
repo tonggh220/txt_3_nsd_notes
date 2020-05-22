@@ -51,3 +51,57 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | master51.000001 |      441 |              |                  |                   |
 +-----------------+----------+--------------+------------------+-------------------+
 [root@mysql51 ~]#
+
+
+		4.2 配置从服务器192.168.4.52
+			4.2.1  指定server_id
+				[mysqld]
+				server_id=52
+			          :wq
+
+			      [root@mysql52 ~]# systemctl  restart mysqld
+
+			4.2.2确保与主服务器数据一致
+[root@mysql51 ~]# mysqldump -uroot -p123bbb...A --master-data db5  > /root/newdb5.sql
+mysqldump: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql51 ~]# 
+
+[root@mysql51 ~]# scp /root/newdb5.sql  root@192.168.4.52:/root/
+
+[root@mysql52 ~]# mysql -uroot -p123bbb...A
+mysql> create database db5;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> exit
+Bye
+[root@mysql52 ~]# 
+[root@mysql52 ~]# mysql -uroot -p123bbb...A db5 < /root/newdb5.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql52 ~]# 		
+
+[root@mysql52 ~]# grep master51 /root/newdb5.sql 
+CHANGE MASTER TO MASTER_LOG_FILE='master51.000001', MASTER_LOG_POS=441;
+[root@mysql52 ~]#
+
+		4.2.3 指定主服务器信息
+[root@mysql52 ~]# mysql -uroot -p123bbb...A
+
+mysql> show slave status;
+Empty set (0.00 sec)
+
+mysql> 
+mysql> change master to  master_host="192.168.4.51" ,  master_user="repluser" , master_password="123qqq...A" , master_log_file="master51.000001" , master_log_pos=441;
+Query OK, 0 rows affected, 2 warnings (0.01 sec)
+
+mysql> 
+		4.2.4 启动Slave进程	
+mysql> start slave ;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> 
+
+		4.2.5 查看Slave状态
+	mysql> show  slave status \G
+	          Master_Host: 192.168.4.51
+ 	          Slave_IO_Running: Yes
+                          Slave_SQL_Running: Yes
