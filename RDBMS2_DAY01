@@ -105,3 +105,33 @@ mysql>
 	          Master_Host: 192.168.4.51
  	          Slave_IO_Running: Yes
                           Slave_SQL_Running: Yes
+
+
+	排错时间
+	 Slave_IO_Running 报错 	
+	 Last_IO_Error: 报错信息
+               解决办法  
+	mysql> stop   slave ;
+	mysql> change master to  配置项="值"，配置项=值 ;
+	mysql> start  slave ;	
+
+	
+	Slave_SQL_Running：报错
+	Last_SQL_Error: 报错信息
+
+	解决办法
+		mysql> stop slave;
+		如果有 sql命令里同名的库 表 提示已存在 exists ，把其删除
+		如果执行sql命令里的库或表 不存在 要手动创建出来
+		mysql> start slave;
+
+               终极解决办法，还原重新配置
+		与从服务器相关的配置文件 ,存放在数据库目录下/var/lib/mysql/
+			
+[root@mysql52 ~]# cd /var/lib/mysql
+[root@mysql52 mysql]# rm -rf master.info  mysql52-relay-bin.* relay-log.info 
+[root@mysql52 mysql]# systemctl  restart mysqld
+[root@mysql52 mysql]# 
+[root@mysql52 mysql]# mysql -uroot -p123bbb...A -e 'show slave status \G '
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql52 mysql]# 
