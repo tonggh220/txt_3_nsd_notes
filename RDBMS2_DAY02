@@ -1,0 +1,138 @@
+	一 数据读写分离
+		1. 1  数据读写分离介绍
+		1. 2  为什么要使用数据读写分离服务结构存储数据
+		1. 3  实现数据读写分离的手段？ 通过程序员写代码实现
+					架设数据读写分离功能服务器区分 
+						
+		mysql中间件   maxscale   mycat   mysql-proxy 
+
+		1. 3  配置  数据读写分离服务结构 具体步骤如下：
+			1.3.1  服务拓扑结构
+			1.3.2  读写分离服务器的工作过程？
+			1.3.3  配置MySQL一主一从同步结构：把数据库服务器52配置为51的从数据库。
+			1.3.4 配置读写分离服务器192.168.4.57（代替数据库服务器接收客户端的访问）
+			            1.3.4.1  安装软件maxscale-2.1.2-1.rhel.7.x86_64.rpm	
+[root@HOST57 ~]# rpm -ivh  maxscale-2.1.2-1.rhel.7.x86_64.rpm 
+warning: /var/ftp/pub/maxscale-2.1.2-1.rhel.7.x86_64.rpm: Header V4 RSA/SHA1 Signature, key ID 8167ee24: NOKEY
+Preparing...                          ################################# [100%]
+Updating / installing...
+   1:maxscale-2.1.2-1                 ################################# [100%]
+[root@HOST57 ~]# 
+			
+			            1.3.4.2  修改maxscale服务的文件
+
+			        
+				[root@HOST57 ~]# vim /etc/maxscale.cnf
+					修改后
+				:wq
+				[root@HOST57 ~]# sed -i '/#/d' /etc/maxscale.cnf删除有#号的行
+
+				[root@HOST57 ~]# 
+[root@HOST57 ~]# cat  /etc/maxscale.cnf
+
+
+[maxscale]
+threads=auto
+
+
+[server1]
+type=server
+address=192.168.4.51
+port=3306
+protocol=MySQLBackend
+
+[server2]
+type=server
+address=192.168.4.52
+port=3306
+protocol=MySQLBackend
+
+
+[MySQL Monitor]
+type=monitor
+module=mysqlmon
+servers=server1,server2
+user=plja
+passwd=123qqq...A
+monitor_interval=10000
+ 
+
+
+
+
+[Read-Write Service]
+type=service
+router=readwritesplit
+servers=server1,server2
+user=pljb
+passwd=123qqq...A
+max_slave_connections=100%
+
+
+[MaxAdmin Service]
+type=service
+router=cli
+
+
+
+[Read-Write Listener]
+type=listener
+service=Read-Write Service
+protocol=MySQLClient
+port=4006
+
+[MaxAdmin Listener]
+type=listener
+service=MaxAdmin Service
+protocol=maxscaled
+socket=default
+port=4016
+[root@HOST57 ~]# 
+			          1.3.4.3  配置数据库服务器51 和52： 在数据服务器授权用户plja 和pljb
+				
+[root@mysql51 ~]# mysql -uroot -p123bbb...A  -e '  grant replication slave, replication client on *.* to  plja@"%" identified by "123qqq...A"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql51 ~]# 
+[root@mysql51 ~]# mysql -uroot -p123bbb...A  -e '  grant select on mysql.* to  pljb@"%" identified by "123qqq...A"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql51 ~]# 
+[root@mysql51 ~]# mysql -uroot -p123bbb...A  -e ' select  user from mysql.user where user in ("plja","pljb")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| user |
++------+
+| plja |
+| pljb |
++------+
+[root@mysql51 ~]#
+[root@mysql52 ~]# mysql -uroot -p123bbb...A  -e ' select  user from mysql.user where user in ("plja","pljb")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| user |
++------+
+| plja |
+| pljb |
++------+
+[root@mysql52 ~]# 
+		
+			            1.3.4.4 启动maxscale服务
+[root@HOST57 ~]# netstat  -utnlp  | grep maxscale
+[root@HOST57 ~]# maxscale  -f /etc/maxscale.cnf
+[root@HOST57 ~]# 
+[root@HOST57 ~]# netstat  -utnlp  | grep maxscale
+tcp6       0      0 :::4006                 :::*                    LISTEN      1459/maxscale       
+tcp6       0      0 :::4016                 :::*                    LISTEN      1459/maxscale       
+[root@HOST57 ~]# 
+[root@HOST57 ~]# ls /var/log/maxscale/
+maxscale.log
+[root@HOST57 ~]# kill -9 1459
+[root@HOST57 ~]# kill -9 1459
+-bash: kill: (1459) - No such process
+[root@HOST57 ~]# 
+[root@HOST57 ~]# netstat  -utnlp  | grep maxscale
+[root@HOST57 ~]# 
+[root@HOST57 ~]# maxscale  -f /etc/maxscale.cnf
+[root@HOST57 ~]# netstat  -utnlp  | grep maxscale
+tcp6       0      0 :::4006                 :::*                    LISTEN      1471/maxscale       
+tcp6       0      0 :::4016                 :::*                    LISTEN      1471/maxscale       
+[root@HOST57 ~]# 
