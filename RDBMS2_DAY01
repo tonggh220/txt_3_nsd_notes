@@ -674,6 +674,40 @@ mysql> show  variables  like  "rpl_semi_sync_%_enabled";
 
 mysql> 
 
+                配置从数据库服务器192.168.4.55 为半同步复制模式
+[root@mysql55 ~]# mysql -uroot -p123bbb...A
+mysql> install  plugin  rpl_semi_sync_slave   SONAME  "semisync_slave.so";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> set  global rpl_semi_sync_slave_enabled=1;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show  variables  like  "rpl_semi_sync_%_enabled";
++-----------------------------+-------+
+| Variable_name               | Value |
++-----------------------------+-------+
+| rpl_semi_sync_slave_enabled | ON    |
++-----------------------------+-------+
+1 row in set (0.00 sec)
+
+mysql>exit
+
+[root@mysql55 ~]# vim /etc/my.cnf
+[mysqld]
+plugin-load=rpl_semi_sync_slave=semisync_slave.so
+rpl_semi_sync_slave_enabled=1
+:wq
+
+[root@mysql55 ~]# systemctl  restart mysqld
+[root@mysql55 ~]# mysql -uroot -p123bbb...A -e ' show  variables  like  "rpl_semi_sync_%_enabled" '
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------------------+-------+
+| Variable_name               | Value |
++-----------------------------+-------+
+| rpl_semi_sync_slave_enabled | ON    |
++-----------------------------+-------+
+[root@mysql55 ~]#
+
 
 晚自习练习题 配置主主结构要求如下：
         把数据库服务器192.168.4.56 和 192.168.4.57 配置为 主主结构
