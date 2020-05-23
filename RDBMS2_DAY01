@@ -550,6 +550,72 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
                   Master_Host: 192.168.4.54
 [root@mysql55 ~]#
 
+                测试主从从配置
+
+[root@mysql53 mysql]# mysql -uroot -p123qqq...A -e 'grant all on gamedb.* to yaya@"%" identified by  "123qqq...A"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql53 mysql]#
+
+[root@mysql50 ~]# mysql -h192.168.4.53 -uyaya -p123qqq...A
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
++--------------------+
+1 row in set (0.00 sec)
+
+mysql> create database gamedb;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> create table gamedb.t1(id int);
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> insert into  gamedb.t1 values(100);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from gamedb.t1;
++------+
+| id   |
++------+
+|  100 |
++------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+mysql> insert into  gamedb.t1 values(200);
+
+[root@mysql54 ~]# mysql -uroot -p123bbb...A  -e 'select  * from gamedb.t1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  100 |
+|  200 |
++------+
+[root@mysql54 ~]# 
+
+[root@mysql55 ~]# mysql -uroot -p123bbb...A  -e 'select  * from gamedb.t1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  100 |
+|  200 |
++------+
+[root@mysql55 ~]# 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
