@@ -346,3 +346,210 @@ mysql> show master status;
 1 row in set (0.00 sec)
 
 mysql> 
+            配置数据库服务器192.168.4.54 
+          [root@mysql54 ~]# vim /etc/my.cnf          
+                    [mysqld]
+server_id=54
+log_bin=db54
+log_slave_updates
+：wq
+[root@mysql54 ~]# systemctl  restart mysqld
+[root@mysql54 ~]# mysql -uroot -p123bbb...A
+mysql> grant replication slave on *.* to plj@"%" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> show slave status;
+Empty set (0.00 sec)
+
+mysql> 
+mysql> change master to  master_host="192.168.4.53" , master_user="repluser" , master_password="123qqq...A" , master_log_file="master53.000001" , master_log_pos=441;
+Query OK, 0 rows affected, 2 warnings (0.01 sec)
+
+mysql> start slave ;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show slave status \G
+*************************** 1. row ***************************
+               Slave_IO_State: Waiting for master to send event
+                  Master_Host: 192.168.4.53
+                  Master_User: repluser
+                  Master_Port: 3306
+                Connect_Retry: 60
+              Master_Log_File: master53.000001
+          Read_Master_Log_Pos: 441
+               Relay_Log_File: mysql54-relay-bin.000002
+                Relay_Log_Pos: 319
+        Relay_Master_Log_File: master53.000001
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+              Replicate_Do_DB: 
+          Replicate_Ignore_DB: 
+           Replicate_Do_Table: 
+       Replicate_Ignore_Table: 
+      Replicate_Wild_Do_Table: 
+  Replicate_Wild_Ignore_Table: 
+                   Last_Errno: 0
+                   Last_Error: 
+                 Skip_Counter: 0
+          Exec_Master_Log_Pos: 441
+              Relay_Log_Space: 528
+              Until_Condition: None
+               Until_Log_File: 
+                Until_Log_Pos: 0
+           Master_SSL_Allowed: No
+           Master_SSL_CA_File: 
+           Master_SSL_CA_Path: 
+              Master_SSL_Cert: 
+            Master_SSL_Cipher: 
+               Master_SSL_Key: 
+        Seconds_Behind_Master: 0
+Master_SSL_Verify_Server_Cert: No
+                Last_IO_Errno: 0
+                Last_IO_Error: 
+               Last_SQL_Errno: 0
+               Last_SQL_Error: 
+  Replicate_Ignore_Server_Ids: 
+             Master_Server_Id: 53
+                  Master_UUID: 06fc08bc-9c52-11ea-96eb-000c2916c819
+             Master_Info_File: /var/lib/mysql/master.info
+                    SQL_Delay: 0
+          SQL_Remaining_Delay: NULL
+      Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+           Master_Retry_Count: 86400
+                  Master_Bind: 
+      Last_IO_Error_Timestamp: 
+     Last_SQL_Error_Timestamp: 
+               Master_SSL_Crl: 
+           Master_SSL_Crlpath: 
+           Retrieved_Gtid_Set: 
+            Executed_Gtid_Set: 
+                Auto_Position: 0
+         Replicate_Rewrite_DB: 
+                 Channel_Name: 
+           Master_TLS_Version: 
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> show master status ;
++-------------+----------+--------------+------------------+-------------------+
+| File        | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-------------+----------+--------------+------------------+-------------------+
+| db54.000001 |      436 |              |                  |                   |
++-------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql>
+
+                配置从服务器 192.168.4.55
+           [root@mysql55 ~]# vim /etc/my.cnf
+         
+                    [mysqld]
+                        server_id=55
+        :wq
+        [root@mysql55 ~]# systemctl  restart mysqld
+[root@mysql55 ~]# mysql -uroot -p123qqq...A
+mysql> change master to master_host="192.168.4.54" , master_user="plj" , master_password="123qqq...A" , master_log_file="db54.000001" , master_log_pos=436 ;
+Query OK, 0 rows affected, 2 warnings (0.01 sec)
+
+mysql> start slave ;
+Query OK, 0 rows affected (0.00 sec)
+
+*************************** 1. row ***************************
+               Slave_IO_State: Waiting for master to send event
+                  Master_Host: 192.168.4.54
+                  Master_User: plj
+                  Master_Port: 3306
+                Connect_Retry: 60
+              Master_Log_File: db54.000001
+          Read_Master_Log_Pos: 436
+               Relay_Log_File: mysql55-relay-bin.000003
+                Relay_Log_Pos: 315
+        Relay_Master_Log_File: db54.000001
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+              Replicate_Do_DB: 
+          Replicate_Ignore_DB: 
+           Replicate_Do_Table: 
+       Replicate_Ignore_Table: 
+      Replicate_Wild_Do_Table: 
+  Replicate_Wild_Ignore_Table: 
+                   Last_Errno: 0
+                   Last_Error: 
+                 Skip_Counter: 0
+          Exec_Master_Log_Pos: 436
+              Relay_Log_Space: 524
+              Until_Condition: None
+               Until_Log_File: 
+                Until_Log_Pos: 0
+           Master_SSL_Allowed: No
+           Master_SSL_CA_File: 
+           Master_SSL_CA_Path: 
+              Master_SSL_Cert: 
+            Master_SSL_Cipher: 
+               Master_SSL_Key: 
+        Seconds_Behind_Master: 0
+Master_SSL_Verify_Server_Cert: No
+                Last_IO_Errno: 0
+                Last_IO_Error: 
+               Last_SQL_Errno: 0
+               Last_SQL_Error: 
+  Replicate_Ignore_Server_Ids: 
+             Master_Server_Id: 54
+                  Master_UUID: 3d7f9f32-9b87-11ea-86bc-000c29070d34
+             Master_Info_File: /var/lib/mysql/master.info
+                    SQL_Delay: 0
+          SQL_Remaining_Delay: NULL
+      Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+           Master_Retry_Count: 86400
+                  Master_Bind: 
+      Last_IO_Error_Timestamp: 
+     Last_SQL_Error_Timestamp: 
+               Master_SSL_Crl: 
+           Master_SSL_Crlpath: 
+           Retrieved_Gtid_Set: 
+            Executed_Gtid_Set: 
+                Auto_Position: 0
+         Replicate_Rewrite_DB: 
+                 Channel_Name: 
+           Master_TLS_Version: 
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> 
+
+            查看配置
+
+  [root@mysql53 mysql]# mysql -uroot -p123qqq...A -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master53.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@mysql53 mysql]# 
+          
+            [root@mysql54 ~]# mysql -uroot -p123bbb...A -e 'show slave status \G ' | grep -i "yes"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@mysql54 ~]# 
+[root@mysql54 ~]# mysql -uroot -p123bbb...A -e 'show slave status \G ' | grep -i "master_host"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.53
+[root@mysql54 ~]#
+
+[root@mysql55 ~]# mysql -uroot -p123bbb...A -e 'show slave status \G ' | grep -i "yes"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@mysql55 ~]# 
+[root@mysql55 ~]# mysql -uroot -p123bbb...A -e 'show slave status \G ' | grep -i "master_host"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.54
+[root@mysql55 ~]#
+
+
+
+
