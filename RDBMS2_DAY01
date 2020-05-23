@@ -322,5 +322,27 @@ Empty set (0.00 sec)
 
 mysql>
 
-明天学习环境准备
+
         部署2台新的mysql数据库服务器 192.168.4.54  /  192.168.4.55  管理员名 123qqq...A
+
++++++配置MySQL主从从同步结构
+        1 配置主数据库服务器 192.168.4.53
+                ]# /etc/my.cnf
+[mysqld]
+server_id=53
+log_bin=master53
+:wq
+[root@mysql53 mysql]# systemctl  restart mysqld
+[root@mysql53 mysql]# mysql -uroot -p123qqq...A
+mysql> grant replication slave on  *.*  to  repluser@"%" identified by "123qqq...A" ;
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master53.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
