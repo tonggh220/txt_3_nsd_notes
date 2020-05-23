@@ -708,6 +708,46 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +-----------------------------+-------+
 [root@mysql55 ~]#
 
+                开启192.168.4.54主机的半同步复制模式
+                        [root@mysql54 ~]# mysql -uroot -p123bbb...A
+                        mysql>  install  plugin  rpl_semi_sync_master   SONAME  "semisync_master.so";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>  install  plugin  rpl_semi_sync_slave   SONAME  "semisync_slave.so";
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> set  global rpl_semi_sync_master_enabled=1; 
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> set  global rpl_semi_sync_slave_enabled=1;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show  variables  like  "rpl_semi_sync_%_enabled";
++------------------------------+-------+
+| Variable_name                | Value |
++------------------------------+-------+
+| rpl_semi_sync_master_enabled | ON    |
+| rpl_semi_sync_slave_enabled  | ON    |
++------------------------------+-------+
+2 rows in set (0.00 sec)
+
+mysql>
+]# vim /etc/my.cnf
+[mysqld]
+plugin-load= "rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1
+:wq
+[root@mysql54 ~]# systemctl  restart mysqld
+[root@mysql54 ~]# mysql -uroot -p123bbb...A  -e ' show  variables  like  "rpl_semi_sync_%_enabled" 'mysql: [Warning] Using a password on the command line interface can be insecure.
++------------------------------+-------+
+| Variable_name                | Value |
++------------------------------+-------+
+| rpl_semi_sync_master_enabled | ON    |
+| rpl_semi_sync_slave_enabled  | ON    |
++------------------------------+-------+
+[root@mysql54 ~]#
+
 
 晚自习练习题 配置主主结构要求如下：
         把数据库服务器192.168.4.56 和 192.168.4.57 配置为 主主结构
