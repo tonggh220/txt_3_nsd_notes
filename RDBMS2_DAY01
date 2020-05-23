@@ -607,6 +607,80 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@mysql55 ~]# 
 
 
+        配置MySQL半同步复制模式  
+                配置步骤 
+				   查看是否允许动态安装模块
+                        ]# mysql -uroot -p123qqq...A -e 'show  variables  like  "have_dynamic_loading"'
+                        mysql: [Warning] Using a password on the command line interface can be insecure.
++----------------------+-------+
+| Variable_name        | Value |
++----------------------+-------+
+| have_dynamic_loading | YES   |
++----------------------+-------+
+[root@mysql53 mysql]#     
+
+				安装模块：
+				  命令行安装，马上生效不需要重启服务，重启服务配置会还原
+
+		                mysql> install  plugin  rpl_semi_sync_master   SONAME  "semisync_master.so";
+
+					
+
+				查看模块是否安装成功
+> select  plugin_name, plugin_status from  information_schema.plugins  where plugin_name like '%semi%';  
+
+mysql> select  plugin_name, plugin_status from  information_schema.plugins  where plugin_name like '%semi%';
++----------------------+---------------+
+| plugin_name          | plugin_status |
++----------------------+---------------+
+| rpl_semi_sync_master | ACTIVE        |
++----------------------+---------------+
+1 row in set (0.00 sec)
+
+mysql>
+				启用模块
+					命令行启用
+                        
+                        mysql> set  global rpl_semi_sync_master_enabled=1; 
+
+
+					永久启用
+				[root@mysql53 mysql]# vim /etc/my.cnf
+				[mysqld]
+
+                plugin-load=rpl_semi_sync_master=semisync_master.so 永久配置，在配置文件里设置加载模块的选项
+            	rpl_semi_sync_master_enabled=1  启用 
+                :wq
+                [root@mysql53 mysql]# systemctl  restart mysqld
+
+                验证：
+[root@mysql53 mysql]# mysql -uroot -p123qqq...A
+                    
+mysql> select  plugin_name, plugin_status from  information_schema.plugins  where plugin_name like '%semi%'; 
++----------------------+---------------+
+| plugin_name          | plugin_status |
++----------------------+---------------+
+| rpl_semi_sync_master | ACTIVE        |
++----------------------+---------------+
+1 row in set (0.00 sec)
+
+mysql> show  variables  like  "rpl_semi_sync_%_enabled";                                            
++------------------------------+-------+
+| Variable_name                | Value |
++------------------------------+-------+
+| rpl_semi_sync_master_enabled | ON    |
++------------------------------+-------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+晚自习练习题 配置主主结构要求如下：
+        把数据库服务器192.168.4.56 和 192.168.4.57 配置为 主主结构
+
+        
+
+
 
 
 
