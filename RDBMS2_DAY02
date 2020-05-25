@@ -397,7 +397,167 @@ socket = /dir2/mysqld2.sock
 :wq
 [root@host58 mysql]# 
 
+
+
                     启动实例服务并访问
+]# id mysql || useradd  mysql
+]# rpm -q libaio ||  yum  -y  install libaio
+
+[root@host58 mysql]# mysqld_multi start  1 
+
+
+Installing new database in /dir1
+
+2020-05-25T14:07:41.238831Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2020-05-25T14:07:41.678348Z 0 [Warning] InnoDB: New log files created, LSN=45790
+2020-05-25T14:07:41.733254Z 0 [Warning] InnoDB: Creating foreign key constraint system tables.
+2020-05-25T14:07:41.794265Z 0 [Warning] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: 192b64e4-9e91-11ea-a598-000c2998c982.
+2020-05-25T14:07:41.798233Z 0 [Warning] Gtid table is not ready to be used. Table 'mysql.gtid_executed' cannot be opened.
+2020-05-25T14:07:41.802116Z 1 [Note] A temporary password is generated for root@localhost: 3llTUDukkJ(E
+[root@host58 mysql]# ls /dir1
+auto.cnf        ibdata1      ib_logfile1  mysql          mysqld1.pid   mysqld1.sock.lock   sys
+ib_buffer_pool  ib_logfile0  ibtmp1       mysqld1.error  mysqld1.sock  performance_schema
+[root@host58 mysql]# 
+
+
+			5 查看状态
+[root@host58 mysql]# netstat  -utnlp  | grep mysqld
+tcp6       0      0 :::3307                 :::*                    LISTEN      1682/mysqld         
+[root@host58 mysql]# 
+
+或
+[root@host58 mysql]# netstat -utnlp  | grep 3307
+tcp6       0      0 :::3307                 :::*                    LISTEN      1682/mysqld         
+[root@host58 mysql]# 
+
+			
+
+			6 使用管理员初始密码登录
+[root@host58 mysql]# mysql -uroot -p'3llTUDukkJ(E'  -S  /dir1/mysqld1.sock  访问多实例服务
+
+mysql> show databases;
+ERROR 1820 (HY000): You must reset your password using ALTER USER statement before executing this statement.
+
+mysql> alter user root@"localhost" identified by "123456";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql> create database db1;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> create table db1.a(id int);
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> insert into db1.a values(111);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from db1.a;
++------+
+| id   |
++------+
+|  111 |
++------+
+1 row in set (0.00 sec)
+
+mysql> exit
+Bye
+[root@host58 mysql]# ls /dir1/
+auto.cnf  ib_buffer_pool  ib_logfile0  ibtmp1  mysqld1.error  mysqld1.sock       performance_schema
+db1       ibdata1         ib_logfile1  mysql   mysqld1.pid    mysqld1.sock.lock  sys
+[root@host58 mysql]# 
+
+[root@host58 mysql]# ls /dir1/db1
+a.frm  a.ibd  db.opt
+[root@host58 mysql]# 
+
+[root@host58 mysql]# mysqld_multi  start 2 
+
+
+Installing new database in /dir2
+
+2020-05-25T14:20:31.229435Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2020-05-25T14:20:31.628390Z 0 [Warning] InnoDB: New log files created, LSN=45790
+2020-05-25T14:20:31.661412Z 0 [Warning] InnoDB: Creating foreign key constraint system tables.
+2020-05-25T14:20:31.749033Z 0 [Warning] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: e4192c0c-9e92-11ea-bfbd-000c2998c982.
+2020-05-25T14:20:31.749526Z 0 [Warning] Gtid table is not ready to be used. Table 'mysql.gtid_executed' cannot be opened.
+2020-05-25T14:20:31.750034Z 1 [Note] A temporary password is generated for root@localhost: _em,!bLXI4*s
+[root@host58 mysql]# ls /dir2
+auto.cnf        ibdata1      ib_logfile1  mysql          mysqld2.pid   mysqld2.sock.lock   sys
+ib_buffer_pool  ib_logfile0  ibtmp1       mysqld2.error  mysqld2.sock  performance_schema
+[root@host58 mysql]# 
+[root@host58 mysql]# netstat -utnlp  | grep  mysqld
+tcp6       0      0 :::3307                 :::*                    LISTEN      1682/mysqld         
+tcp6       0      0 :::3308                 :::*                    LISTEN      1889/mysqld         
+[root@host58 mysql]# 
+[root@host58 mysql]# mysql -uroot -p'_em,!bLXI4*s' -S /dir2/mysqld2.sock  访问多实例服务
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 3
+Server version: 5.7.20
+
+Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> show databases;
+ERROR 1820 (HY000): You must reset your password using ALTER USER statement before executing this statement.
+mysql> alter user root@"localhost" identified by "123456";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql> create database db1;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> create table db1.b (id int);
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> insert into db1.b values(888);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from db1.b;
++------+
+| id   |
++------+
+|  888 |
++------+
+1 row in set (0.01 sec)
+
+mysql> exit
+Bye
+[root@host58 mysql]# ls /dir2
+auto.cnf  ib_buffer_pool  ib_logfile0  ibtmp1  mysqld2.error  mysqld2.sock       performance_schema
+db1       ibdata1         ib_logfile1  mysql   mysqld2.pid    mysqld2.sock.lock  sys
+[root@host58 mysql]# ls /dir2/db1/
+b.frm  b.ibd  db.opt
+[root@host58 mysql]# 
+                        			6 停止某个实例
+
+]# mysqld_multi --user=root  --password=密码  stop  实例编号    	//停止服务
+                                
 [root@host58 mysql]# netstat  -utnlp  | grep mysqld
 tcp6       0      0 :::3307                 :::*                    LISTEN      1682/mysqld         
 tcp6       0      0 :::3308                 :::*                    LISTEN      1889/mysqld         
