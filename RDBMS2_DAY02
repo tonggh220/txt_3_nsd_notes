@@ -581,4 +581,63 @@ auto.cnf  ib_buffer_pool  ib_logfile0  mysql          performance_schema
 db1       ibdata1         ib_logfile1  mysqld2.error  sys
 [root@host58 mysql]# 
 
+
+                让客户端可以访问58主机实例2服务，并且启用实例2   binlog日志文件
+
+                vim /etc/my.cnf     
+                [mysqld2]
+                server_id = 2  手动添加
+                log_bin = plj  手动添加
+                ：wq
+
+[root@host58 pub]# netstat -utnlp  | grep mysqld
+tcp6       0      0 :::3307                 :::*                    LISTEN      2455/mysqld         
+tcp6       0      0 :::3308                 :::*                    LISTEN      2257/mysqld         
+[root@host58 pub]# 
+[root@host58 pub]# 
+[root@host58 pub]# /usr/local/mysql/bin/mysqld_multi  --user root --password 123456  stop 2
+[root@host58 pub]# netstat -utnlp  | grep mysqld
+tcp6       0      0 :::3307                 :::*                    LISTEN      2455/mysqld         
+[root@host58 pub]# 
+[root@host58 pub]# 
+[root@host58 pub]# /usr/local/mysql/bin/mysqld_multi  start 2
+[root@host58 pub]# 
+[root@host58 pub]# netstat -utnlp  | grep mysqld
+tcp6       0      0 :::3307                 :::*                    LISTEN      2455/mysqld         
+tcp6       0      0 :::3308                 :::*                    LISTEN      2693/mysqld         
+[root@host58 pub]# 
+[root@host58 pub]# ls /dir2
+auto.cnf        ibdata1      ibtmp1         mysqld2.pid        performance_schema  sys
+db1             ib_logfile0  mysql          mysqld2.sock       plj.000001
+ib_buffer_pool  ib_logfile1  mysqld2.error  mysqld2.sock.lock  plj.index
+[root@host58 pub]# 
+
+[root@host58 pub]# /usr/local/mysql/bin/mysql -uroot -p123456 -S /dir2/mysqld2.sock
+mysql> show master status;
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000001 |      154 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> grant all on *.*  to  jing3@"%" identified by "123456";
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+
+[root@mysql50 ~]# mysql -h192.168.4.58 -P3308 -ujing3 -p123456
+MySQL>
+mysql> show grants;
++--------------------------------------------+
+| Grants for jing3@%                         |
++--------------------------------------------+
+| GRANT ALL PRIVILEGES ON *.* TO 'jing3'@'%' |
++--------------------------------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+
+
            
