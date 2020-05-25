@@ -396,4 +396,29 @@ pid-file = /dir2/mysqld2.pid
 socket = /dir2/mysqld2.sock
 :wq
 [root@host58 mysql]# 
+
+                    启动实例服务并访问
+[root@host58 mysql]# netstat  -utnlp  | grep mysqld
+tcp6       0      0 :::3307                 :::*                    LISTEN      1682/mysqld         
+tcp6       0      0 :::3308                 :::*                    LISTEN      1889/mysqld         
+[root@host58 mysql]# 
+[root@host58 mysql]# 
+[root@host58 mysql]# mysqld_multi  --user root --password 123456  stop 1
+[root@host58 mysql]# 
+[root@host58 mysql]# netstat  -utnlp  | grep mysqld
+tcp6       0      0 :::3308                 :::*                    LISTEN      1889/mysqld         
+[root@host58 mysql]# 
+[root@host58 mysql]# ls /dir1
+auto.cnf  ib_buffer_pool  ib_logfile0  mysql          performance_schema
+db1       ibdata1         ib_logfile1  mysqld1.error  sys
+[root@host58 mysql]# 
+[root@host58 mysql]# mysqld_multi  --user root --password 123456  stop 2
+[root@host58 mysql]# 
+[root@host58 mysql]# netstat  -utnlp  | grep mysqld
+[root@host58 mysql]# 
+[root@host58 mysql]# ls /dir2
+auto.cnf  ib_buffer_pool  ib_logfile0  mysql          performance_schema
+db1       ibdata1         ib_logfile1  mysqld2.error  sys
+[root@host58 mysql]# 
+
            
