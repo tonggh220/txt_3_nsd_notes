@@ -384,14 +384,14 @@ user = root
 [mysqld1]
 datadir = /dir1
 port = 3307 
-error-log = /dir1/mysqld1.error
+log-error = /dir1/mysqld1.error
 pid-file = /dir1/mysqld1.pid
 socket = /dir1/mysqld1.sock
 
 [mysqld2]
 datadir = /dir2
 port = 3308 
-error-log = /dir2/mysqld2.error
+log-error = /dir2/mysqld2.error
 pid-file = /dir2/mysqld2.pid
 socket = /dir2/mysqld2.sock
 :wq
