@@ -136,3 +136,195 @@ maxscale.log
 tcp6       0      0 :::4006                 :::*                    LISTEN      1471/maxscale       
 tcp6       0      0 :::4016                 :::*                    LISTEN      1471/maxscale       
 [root@HOST57 ~]# 
+
+
+        1.4  测试配置
+			1.4.1  在读写分离服务器57本机，查看监控信息
+[root@HOST57 ~]# maxadmin -uadmin  -pmariadb -P4016
+MaxScale> list servers
+Servers.
+-------------------+-----------------+-------+-------------+--------------------
+Server             | Address         | Port  | Connections | Status              
+-------------------+-----------------+-------+-------------+--------------------
+server1            | 192.168.4.51    |  3306 |           0 | Master, Running
+server2            | 192.168.4.52    |  3306 |           0 | Slave, Running
+-------------------+-----------------+-------+-------------+--------------------
+MaxScale>           
+MaxScale> exit
+[root@HOST57 ~]# 
+			1.4.2  在主数据库服务器51授权用户给客户端连接使用
+			
+[root@mysql51 ~]# mysql -uroot -p123bbb...A 
+mysql> create database gamedb;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> create table gamedb.user(id int);
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> grant select , insert on gamedb.* to yaya99@"%" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> 							
+
+
+[root@mysql52 ~]# mysql -uroot -p123bbb...A -e 'show databases'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| bbsdb              |
+| db5                |
+| gamedb             |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+[root@mysql52 ~]# mysql -uroot -p123bbb...A -e 'use gamedb;show tables'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------------+
+| Tables_in_gamedb |
++------------------+
+| user             |
++------------------+
+[root@mysql52 ~]# mysql -uroot -p123bbb...A -e 'select user from mysql.user where user="yaya99"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------+
+| user   |
++--------+
+| yaya99 |
++--------+
+[root@mysql52 ~]# 
+		1.4.3 客户端50主机链接读写分离服务器57 访问数据
+[root@mysql50 ~]# mysql -h192.168.4.57 -P4006 -uyaya999 -p123qqq...A 
+mysql> show grants;
++----------------------------------------------------+
+| Grants for yaya99@%                                |
++----------------------------------------------------+
+| GRANT USAGE ON *.* TO 'yaya99'@'%'                 |
+| GRANT SELECT, INSERT ON `gamedb`.* TO 'yaya99'@'%' |
++----------------------------------------------------+
+2 rows in set (0.00 sec)
+mysql> use gamedb;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> show tables;
++------------------+
+| Tables_in_gamedb |
++------------------+
+| user             |
++------------------+
+1 row in set (0.00 sec)
+
+mysql> desc user;
++-------+---------+------+-----+---------+-------+
+| Field | Type    | Null | Key | Default | Extra |
++-------+---------+------+-----+---------+-------+
+| id    | int(11) | YES  |     | NULL    |       |
++-------+---------+------+-----+---------+-------+
+1 row in set (0.06 sec)
+mysql> insert into gamedb.user values(110);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into gamedb.user values(120);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into gamedb.user values(119);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from gamedb.user;
++------+
+| id   |
++------+
+|  110 |
+|  120 |
+|  119 |
++------+
+3 rows in set (0.00 sec)
+
+mysql> ^C
+mysql> 
+		1.4.4 在数据库服务器51和52查看数据
+
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'select  * from gamedb.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  110 |
+|  120 |
+|  119 |
++------+
+[root@mysql51 ~]# 
+
+[root@mysql52 ~]#  mysql -uroot -p123bbb...A -e 'select  * from gamedb.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  110 |
+|  120 |
+|  119 |
++------+
+[root@mysql52 ~]#
+
+		1.4.5 测试57主机的读写分离功能
+			1 在从服务器52本机向gamedb.user表写入一条新记录
+[root@mysql52 ~]#  mysql -uroot -p123bbb...A -e 'insert into gamedb.user values(5252)'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql52 ~]#  mysql -uroot -p123bbb...A -e 'select  * from gamedb.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  110 |
+|  120 |
+|  119 |
+| 5252 |
++------+
+[root@mysql52 ~]# 
+
+		 	2 客户端再次访问读写分离服务器57 访问数据
+[root@mysql50 ~]# mysql -h192.168.4.57 -P4006 -uyaya99 -p123qqq...A   
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 1475
+Server version: 5.5.5-10.0.0 2.1.2-maxscale MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2016, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> select  * from gamedb.user;
++------+
+| id   |
++------+
+|  110 |
+|  120 |
+|  119 |
+| 5252 |
++------+
+4 rows in set (0.00 sec)
+
+mysql> insert into gamedb.user values(5151);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from gamedb.user;
++------+
+| id   |
++------+
+|  110 |
+|  120 |
+|  119 |
+| 5252 |
+| 5151 |
++------+
+5 rows in set (0.00 sec)
+
+mysql> 
