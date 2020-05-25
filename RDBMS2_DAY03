@@ -1,0 +1,44 @@
+一 数据分片概述
+		
+
+	二部署mycat服务
+	
+	      把53 54 55 恢复为独立胡数据库服务器  并创建存储数据的库
+		53   停止mysqld服务
+		       在配置文件里禁用binlog日志
+		      删除数据库目录下binlog日志文件
+		      启动数据库服务
+		     删除 数据库 只保留 默认的4个数据库
+		     创建存储数据的db1库
+
+		54  停止mysqld服务
+		       在配置文件里禁用binlog日志
+		      删除数据库目录下binlog日志文件 及 从角色相关的文件
+		      启动数据库服务
+		     删除 数据库 只保留 默认的4个数据库
+		     创建存储数据的db2库	
+
+		55  停止mysqld服务
+		       在配置文件里禁用server_id
+		      删除数据库目录下的 从角色相关的文件
+		      启动数据库服务
+		     删除 数据库 只保留 默认的4个数据库
+		     创建存储数据的db3库
+
+		56 systemctl stop mysqld ;  systemctl  disable  mysqld
+		
+		53 、54 、55 、56  关闭 firewalld  禁用selinux    17:10 上课
+
+		在56 主机部署mycat服务
+			安装软件 Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz
+[root@host56 ~]# yum  -y   install  java-1.8.0-openjdk.x86_64
+[root@host56 ~]# java -version
+openjdk version "1.8.0_161"
+OpenJDK Runtime Environment (build 1.8.0_161-b14)
+OpenJDK 64-Bit Server VM (build 25.161-b14, mixed mode)
+[root@host56 ~]# 
+[root@host56 ~]# tar -zxvf Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz 
+[root@host56 ~]# mv mycat /usr/local/
+[root@host56 ~]# ls /usr/local/mycat/
+bin  catlet  conf  lib  logs  version.txt
+[root@host56 ~]# 
