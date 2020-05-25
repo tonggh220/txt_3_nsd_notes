@@ -42,3 +42,32 @@ OpenJDK 64-Bit Server VM (build 25.161-b14, mixed mode)
 [root@host56 ~]# ls /usr/local/mycat/
 bin  catlet  conf  lib  logs  version.txt
 [root@host56 ~]# 
+
+
+配置文件说明？ 具体见ppt
+
+			修改配置文件
+				1 定义客户端连接mycat服务的用户  server.xml
+				   注：无需修改 使用默认配置即可
+
+				2 定义数据分片存储的表  schema.xml
+
+[root@host56 conf]# sed -i '57,77d' schema.xml
+[root@host56 conf]# sed -i '39,42d' schema.xml
+[root@host56 conf]# cp  schema.xml  /root/
+[root@host56 conf]# vim  schema.xml
+schema.xml 的配置格式
+<mycat:schema  选项>
+	<schema  选项>    //定义分片表名
+		<table  选项   />     单标签定义表名
+
+		<table  选项> 双表标签定义表名
+		</table >
+	</schema>
+
+	<dataNode 选项  />  定义数据库服务器的主机名
+
+	<dataHost 选项>  定义数据库服务器ip地址
+                </dataHost>
+
+</mycat:schema>
