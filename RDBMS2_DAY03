@@ -204,3 +204,51 @@ mysql> show tables;
 mysql>exit;
 
     
+
+ 三测试配置
+		3.1 数据分片规则的使用
+			3.1.1 枚举法 sharding-by-intfile 字段"值" ，必须在 规则文件  定义的值里  选择
+			查看那张使用枚举法对表记录做分片存储
+			vim schema.xml
+<table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+
+			
+
+			表中分片字段的名字   rule.xml
+
+[root@host56 ~]# vim /usr/local/mycat/conf/rule.xml
+
+      <tableRule name="sharding-by-intfile">
+                <rule>
+                        <columns>sharding_id</columns>
+                        <algorithm>hash-int</algorithm>
+                </rule>
+        </tableRule>
+
+        <function name="hash-int"  class="io.mycat.route.function.PartitionByFileMap">
+                <property name="mapFile">partition-hash-int.txt</property>
+        </function>
+
+       <function name="hash-int"  class="io.mycat.route.function.PartitionByFileMap">
+                <property name="mapFile">partition-hash-int.txt</property>
+        </function>
+			分片规则配置文件
+ ]#vim /usr/local/mycat/conf/partition-hash-int.txt      	
+10000=0
+10010=1
+10020=2
+:wq
+
+			
+		重启服务让配置生效
+[root@host56 ~]# /usr/local/mycat/bin/mycat  stop
+Stopping Mycat-server...
+Stopped Mycat-server.
+[root@host56 ~]# netstat -utnlp  | grep  8066
+[root@host56 ~]# /usr/local/mycat/bin/mycat  start
+Starting Mycat-server...
+[root@host56 ~]# 
+[root@host56 ~]# netstat -utnlp  | grep  8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      2782/java           
+[root@host56 ~]#   
