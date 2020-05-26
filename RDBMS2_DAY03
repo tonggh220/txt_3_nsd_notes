@@ -397,5 +397,41 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@mysql55 ~]# 
 
+3.1.2 求模法 mod-long （做取余运算）
+			根据字段值 与 设定的数字  求模结果  存储数据
 
+                                     	查看使用求模法存储数据的表名 schema.xml
+<table name="hotnews" primaryKey="ID" autoIncrement="true" dataNode="dn1,dn2,dn3"
+                           rule="mod-long" />
+
+			查看表的分片字段名  rule.xml
+
+ <tableRule name="mod-long">
+                <rule>
+                        <columns>num</columns>  修改了分片字段名
+                        <algorithm>mod-long</algorithm>
+                </rule>
+        </tableRule>
+		             查看算法 设置取余运算的数字
+
+        <function name="mod-long" class="io.mycat.route.function.PartitionByMod">
+                <!-- how many data nodes -->
+                <property name="count">3</property>
+        </function>
+
+		            重启mycat服务
+
+       [root@host56 ~]# /usr/local/mycat/bin/mycat  stop
+Stopping Mycat-server...
+Stopped Mycat-server.
+[root@host56 ~]# 
+[root@host56 ~]# netstat  -utnlp  | grep 8066
+[root@host56 ~]# 
+[root@host56 ~]# /usr/local/mycat/bin/mycat  start
+Starting Mycat-server...
+
+[root@host56 ~]# 
+[root@host56 ~]# netstat  -utnlp  | grep 8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      3013/java           
+[root@host56 ~]# 
                 
