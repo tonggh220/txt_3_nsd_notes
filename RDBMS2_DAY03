@@ -435,3 +435,110 @@ Starting Mycat-server...
 tcp6       0      0 :::8066                 :::*                    LISTEN      3013/java           
 [root@host56 ~]# 
                 
+
+                		建表并存储数据
+[root@mysql50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> desc hotnews;
+ERROR 1146 (42S02): Table 'db1.hotnews' doesn't exist
+
+mysql> create table hotnews(  id  int primary key auto_increment , num int , title  char(10) , woker char(10) , comment varchar(100) );
+
+
+mysql> insert into hotnews(id ,num , title, woker , comment) values (null,7,"A","AA","AAA"),(null,7,"B","BB","BBB"),(null,10,"c","cc","CCC");
+Query OK, 3 rows affected (0.01 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> select  * from hotnews;
++----+------+-------+-------+---------+
+| id | num  | title | woker | comment |
++----+------+-------+-------+---------+
+|  1 |    7 | A     | AA    | AAA     |
+|  2 |    7 | B     | BB    | BBB     |
+|  3 |   10 | c     | cc    | CCC     |
++----+------+-------+-------+---------+
+3 rows in set (0.04 sec)
+
+mysql> 
+mysql> insert into hotnews(id ,num , title, woker , comment) values (null,6,"A","AA","AAA"),(null,6,"B","BB","BBB"),(null,6,"c","cc","CCC");
+Query OK, 3 rows affected (0.00 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> select  * from hotnews;                                                          
++----+------+-------+-------+---------+
+| id | num  | title | woker | comment |
++----+------+-------+-------+---------+
+|  1 |    6 | A     | AA    | AAA     |
+|  2 |    6 | B     | BB    | BBB     |
+|  3 |    6 | c     | cc    | CCC     |
+|  1 |    7 | A     | AA    | AAA     |
+|  2 |    7 | B     | BB    | BBB     |
+|  3 |   10 | c     | cc    | CCC     |
++----+------+-------+-------+---------+
+6 rows in set (0.01 sec)
+
+mysql> 
+mysql> insert into hotnews(id ,num , title, woker , comment) values (null,11,"A","AA","AAA"
+Query OK, 3 rows affected (0.01 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> 
+mysql> 
+mysql> insert into hotnews(id ,num , title, woker , comment) values (null,10,"A","AA","AAA"),(null,12,"B","BB","BBB"),(null,11,"c","cc","CCC");
+Query OK, 3 rows affected (0.00 sec)
+
+mysql> select  * from hotnews;
++----+------+-------+-------+---------+
+| id | num  | title | woker | comment |
++----+------+-------+-------+---------+
+|  1 |    6 | A     | AA    | AAA     |
+|  2 |    6 | B     | BB    | BBB     |
+|  3 |    6 | c     | cc    | CCC     |
+|  4 |   12 | B     | BB    | BBB     |
+|  1 |    7 | A     | AA    | AAA     |
+|  2 |    7 | B     | BB    | BBB     |
+|  3 |   10 | c     | cc    | CCC     |
+|  4 |   10 | A     | AA    | AAA     |
+|  1 |   11 | A     | AA    | AAA     |
+|  2 |   11 | B     | BB    | BBB     |
+|  3 |   11 | c     | cc    | CCC     |
+|  4 |   11 | c     | cc    | CCC     |
++----+------+-------+-------+---------+
+12 rows in set (0.01 sec)
+
+mysql> 
+[root@mysql53 ~]# mysql -uroot -p123qqq...A -e 'select  * from  db1.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+------+-------+-------+---------+
+| id | num  | title | woker | comment |
++----+------+-------+-------+---------+
+|  1 |    6 | A     | AA    | AAA     |
+|  2 |    6 | B     | BB    | BBB     |
+|  3 |    6 | c     | cc    | CCC     |
+|  4 |   12 | B     | BB    | BBB     |
++----+------+-------+-------+---------+
+[root@mysql53 ~]# 
+
+[root@mysql54 ~]# mysql -uroot -p123bbb...A -e 'select * from  db2.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+------+-------+-------+---------+
+| id | num  | title | woker | comment |
++----+------+-------+-------+---------+
+|  1 |    7 | A     | AA    | AAA     |
+|  2 |    7 | B     | BB    | BBB     |
+|  3 |   10 | c     | cc    | CCC     |
+|  4 |   10 | A     | AA    | AAA     |
++----+------+-------+-------+---------+
+[root@mysql54 ~]# 
+
+[root@mysql55 ~]# mysql -uroot -p123bbb...A -e 'select  * from  db3.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+------+-------+-------+---------+
+| id | num  | title | woker | comment |
++----+------+-------+-------+---------+
+|  1 |   11 | A     | AA    | AAA     |
+|  2 |   11 | B     | BB    | BBB     |
+|  3 |   11 | c     | cc    | CCC     |
+|  4 |   11 | c     | cc    | CCC     |
++----+------+-------+-------+---------+
+[root@mysql55 ~]# 
+
