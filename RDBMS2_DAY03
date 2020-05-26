@@ -207,37 +207,35 @@ mysql>exit;
 
  三测试配置
 		3.1 数据分片规则的使用
-			3.1.1 枚举法 sharding-by-intfile 字段"值" ，必须在 规则文件  定义的值里  选择
-			查看那张使用枚举法对表记录做分片存储
+			3.1.1 枚举法 sharding-by-intfile 字段"值" (必须在 规则文件  定义的值里  选择)
+
+			
 			vim schema.xml
 <table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
-                           rule="sharding-by-intfile" />
+                           rule="sharding-by-intfile" />   查看那张使用枚举法对表记录做分片存储
 
 			
 
-			表中分片字段的名字   rule.xml
-
+			 
 [root@host56 ~]# vim /usr/local/mycat/conf/rule.xml
 
       <tableRule name="sharding-by-intfile">
                 <rule>
-                        <columns>sharding_id</columns>
+                        <columns>sharding_id</columns>   表中分片字段的名字
                         <algorithm>hash-int</algorithm>
                 </rule>
         </tableRule>
 
         <function name="hash-int"  class="io.mycat.route.function.PartitionByFileMap">
-                <property name="mapFile">partition-hash-int.txt</property>
+                <property name="mapFile">partition-hash-int.txt</property>  分片规则配置文件
         </function>
 
-       <function name="hash-int"  class="io.mycat.route.function.PartitionByFileMap">
-                <property name="mapFile">partition-hash-int.txt</property>
-        </function>
-			分片规则配置文件
- ]#vim /usr/local/mycat/conf/partition-hash-int.txt      	
-10000=0
-10010=1
-10020=2
+     
+			
+ ]#vim /usr/local/mycat/conf/partition-hash-int.txt     定义分片字段的值  	
+10000=0  （对应dn1服务器）
+10010=1    （对应dn2服务器）
+10020=2（对应dn3服务器）
 :wq
 
 			
