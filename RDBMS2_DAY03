@@ -128,4 +128,79 @@ schema.xml 的配置格式
 
 </mycat:schema>
 [root@host56 conf]# 
+
+                        配置数据库服务器 53、54、55
+				创建存储数据的库
+[root@mysql53 ~]# mysql -uroot -p123qqq...A -e 'create database db1'
+[root@mysql54 ~]# mysql -uroot -p123qqq...A -e 'create database db2'
+[root@mysql55 ~]# mysql -uroot -p123bbb...A -e 'create database db3'
+			
+				创建授权用户
+
+[root@mysql53 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.* to pljadmin@"%" identified by "123qqq...A"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql53 ~]# 
+
+[root@mysql54 ~]# mysql -uroot -p123bbb...A -e 'grant all on *.* to pljadmin@"%" identified by "123qqq...A"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql54 ~]#
+
+[root@mysql55 ~]# mysql -uroot -p123bbb...A -e 'grant all on *.* to pljadmin@"%" identified by "123qqq...A"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql55 ~]# 
+			启动mycat服务 并查看服务状态
+[root@host56 ~]# netstat  -utnlp  | grep 8066
+[root@host56 ~]# 
+[root@host56 ~]# /usr/local/mycat/bin/mycat --help
+Usage: /usr/local/mycat/bin/mycat { console | start | stop | restart | status | dump }
+[root@host56 ~]# 
+[root@host56 ~]# /usr/local/mycat/bin/mycat  status
+Mycat-server is not running.
+[root@host56 ~]# 
+[root@host56 ~]# /usr/local/mycat/bin/mycat  start
+Starting Mycat-server...
+[root@host56 ~]# 
+[root@host56 ~]# netstat  -utnlp  | grep 8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      2313/java           
+[root@host56 ~]# ls /usr/local/mycat/
+bin  catlet  conf  lib  logs  version.txt
+[root@host56 ~]# 
+[root@host56 ~]# ls /usr/local/mycat/logs/
+mycat.log  mycat.pid  wrapper.log
+[root@host56 ~]# 
+
+			测试配置
+				1 在客户端主机50 连接mycat服务器查看库和表
+[root@mysql50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| TESTDB   |
++----------+
+1 row in set (0.00 sec)
+
+mysql> use TESTDB;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> show tables;
++------------------+
+| Tables in TESTDB |
++------------------+
+| company          |
+| customer         |
+| customer_addr    |
+| employee         |
+| goods            |
+| hotnews          |
+| orders           |
+| order_items      |
+| travelrecord     |
++------------------+
+9 rows in set (0.00 sec)
+
+mysql>exit;
+
     
