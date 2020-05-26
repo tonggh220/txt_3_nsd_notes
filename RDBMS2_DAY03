@@ -401,7 +401,7 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 			根据字段值 与 设定的数字  求模结果  存储数据
 
                                      	查看使用求模法存储数据的表名 schema.xml
-<table name="hotnews" primaryKey="ID" autoIncrement="true" dataNode="dn1,dn2,dn3"
+<table name="hotnews"  dataNode="dn1,dn2,dn3"
                            rule="mod-long" />
 
 			查看表的分片字段名  rule.xml
