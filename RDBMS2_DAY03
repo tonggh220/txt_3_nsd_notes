@@ -542,3 +542,127 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +----+------+-------+-------+---------+
 [root@mysql55 ~]# 
 
+
+                +++++++添加新库新表++++++++++
+
+
+		添加新的数据库
+
+[root@host56 ~]# vim /usr/local/mycat/conf/server.xml
+  <user name="root">
+                <property name="password">123456</property>
+                <property name="schemas">TESTDB,BBSDB</property> 添加库名
+        </user>
+
+        <user name="user">
+                <property name="password">user</property>
+                <property name="schemas">TESTDB,BBSDB</property> 添加库名
+                <property name="readOnly">true</property>
+        </user>
+:wq
+
+		添加新的
+[root@host56 ~]# vim /usr/local/mycat/conf/schema.xml
+<mycat:schema xmlns:mycat="http://io.mycat/"> 在下方添加如下行
+        <schema name="BBSDB" checkSQLschema="false" sqlMaxLimit="100">
+                <table name="user" dataNode="dn1,dn2,dn3"  rule="mod-long" />
+                <table name="pay"  dataNode="dn1,dn2,dn3"  type="global" />
+        </schema>
+:wq
+
+		重启mycat服务
+[root@host56 ~]# /usr/local/mycat/bin/mycat  stop
+[root@host56 ~]# /usr/local/mycat/bin/mycat  start
+Starting Mycat-server...
+[root@host56 ~]# 
+[root@host56 ~]# 
+[root@host56 ~]# netstat  -utnlp  | grep 8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      3943/java           
+[root@host56 ~]#
+
+	          在客户端50 连接56主机 查看新库新表 存储数据
+[root@mysql50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| BBSDB    |
+| TESTDB   |
++----------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> use BBSDB;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> show tables;
++-----------------+
+| Tables in BBSDB |
++-----------------+
+| pay             |
+| user            |
++-----------------+
+2 rows in set (0.00 sec)
+
+mysql>
+mysql> create table  pay (name char(10) ,age int);
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> desc pay;
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| name  | char(10) | YES  |     | NULL    |       |
+| age   | int(11)  | YES  |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> insert into pay(name,age)values("bob",29),("tom",31),("jerry",40);
+Query OK, 3 rows affected (0.04 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> select  * from pay;
++-------+------+
+| name  | age  |
++-------+------+
+| bob   |   29 |
+| tom   |   31 |
+| jerry |   40 |
++-------+------+
+3 rows in set (0.05 sec)
+
+mysql> 
+
+[root@mysql53 ~]# mysql -uroot -p123qqq...A -e 'select  * from  db1.pay'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------+------+
+| name  | age  |
++-------+------+
+| bob   |   29 |
+| tom   |   31 |
+| jerry |   40 |
++-------+------+
+[root@mysql53 ~]# 
+[root@mysql54 ~]# mysql -uroot -p123bbb...A -e 'select * from  db2.pay'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------+------+
+| name  | age  |
++-------+------+
+| bob   |   29 |
+| tom   |   31 |
+| jerry |   40 |
++-------+------+
+[root@mysql54 ~]# 
+[root@mysql55 ~]# mysql -uroot -p123bbb...A -e 'select  * from  db3.pay'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------+------+
+| name  | age  |
++-------+------+
+| bob   |   29 |
+| tom   |   31 |
+| jerry |   40 |
++-------+------+
+[root@mysql55 ~]# 
+
