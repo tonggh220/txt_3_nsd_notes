@@ -249,4 +249,153 @@ Starting Mycat-server...
 [root@host56 ~]# 
 [root@host56 ~]# netstat -utnlp  | grep  8066
 tcp6       0      0 :::8066                 :::*                    LISTEN      2782/java           
-[root@host56 ~]#   
+[root@host56 ~]#  
+
+建表并存储数据
+
+[root@mysql50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+
+mysql> use TESTDB;		
+mysql> create table employee ( ID int primary key , sharding_id  int , name char(15), age  int );
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> DESC employee;                                                                   
++-------------+----------+------+-----+---------+-------+
+| Field       | Type     | Null | Key | Default | Extra |
++-------------+----------+------+-----+---------+-------+
+| ID          | int(11)  | NO   | PRI | NULL    |       |
+| sharding_id | int(11)  | YES  |     | NULL    |       |
+| name        | char(15) | YES  |     | NULL    |       |
+| age         | int(11)  | YES  |     | NULL    |       |
++-------------+----------+------+-----+---------+-------+
+4 rows in set (0.04 sec)
+
+mysql> 
+
+[root@mysql53 ~]# mysql -uroot -p123qqq...A -e 'desc db1.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------------+----------+------+-----+---------+-------+
+| Field       | Type     | Null | Key | Default | Extra |
++-------------+----------+------+-----+---------+-------+
+| ID          | int(11)  | NO   | PRI | NULL    |       |
+| sharding_id | int(11)  | YES  |     | NULL    |       |
+| name        | char(15) | YES  |     | NULL    |       |
+| age         | int(11)  | YES  |     | NULL    |       |
++-------------+----------+------+-----+---------+-------+
+[root@mysql53 ~]# 
+
+[root@mysql54 ~]# mysql -uroot -p123bbb...A -e 'desc db2.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------------+----------+------+-----+---------+-------+
+| Field       | Type     | Null | Key | Default | Extra |
++-------------+----------+------+-----+---------+-------+
+| ID          | int(11)  | NO   | PRI | NULL    |       |
+| sharding_id | int(11)  | YES  |     | NULL    |       |
+| name        | char(15) | YES  |     | NULL    |       |
+| age         | int(11)  | YES  |     | NULL    |       |
++-------------+----------+------+-----+---------+-------+
+[root@mysql54 ~]# 
+[root@mysql55 ~]# mysql -uroot -p123bbb...A -e 'desc db3.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------------+----------+------+-----+---------+-------+
+| Field       | Type     | Null | Key | Default | Extra |
++-------------+----------+------+-----+---------+-------+
+| ID          | int(11)  | NO   | PRI | NULL    |       |
+| sharding_id | int(11)  | YES  |     | NULL    |       |
+| name        | char(15) | YES  |     | NULL    |       |
+| age         | int(11)  | YES  |     | NULL    |       |
++-------------+----------+------+-----+---------+-------+
+[root@mysql55 ~]# 
+
+
+[root@mysql50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> use TESTDB;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> 
+mysql> 
+mysql> DESC employee;
++-------------+----------+------+-----+---------+-------+
+| Field       | Type     | Null | Key | Default | Extra |
++-------------+----------+------+-----+---------+-------+
+| ID          | int(11)  | NO   | PRI | NULL    |       |
+| sharding_id | int(11)  | YES  |     | NULL    |       |
+| name        | char(15) | YES  |     | NULL    |       |
+| age         | int(11)  | YES  |     | NULL    |       |
++-------------+----------+------+-----+---------+-------+
+4 rows in set (0.01 sec)
+
+mysql> insert into employee values(1,10000,"bob",19);
+ERROR 1064 (HY000): partition table, insert must provide ColumnList
+mysql> 
+mysql> insert into employee(ID , sharding_id , name ,age) values(1,10000,"bob",19);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into employee(ID , sharding_id , name ,age) values(2,10000,"boba",18);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into employee(ID , sharding_id , name ,age) values(3,10000,"bobc",18);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into employee(ID , sharding_id , name ,age) values(4,10010,"tom",18);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into employee(ID , sharding_id , name ,age) values(5,10010,"toma",18);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(ID , sharding_id , name ,age) values(6,10010,"tomb",18);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(ID , sharding_id , name ,age) values(7,10010,"tomd",18);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from employee;
++----+-------------+------+------+
+| ID | sharding_id | name | age  |
++----+-------------+------+------+
+|  4 |       10010 | tom  |   18 |
+|  5 |       10010 | toma |   18 |
+|  6 |       10010 | tomb |   18 |
+|  7 |       10010 | tomd |   18 |
+|  1 |       10000 | bob  |   19 |
+|  2 |       10000 | boba |   18 |
+|  3 |       10000 | bobc |   18 |
++----+-------------+------+------+
+7 rows in set (0.06 sec)
+
+mysql> insert into employee(ID , sharding_id , name ,age) values(8,10030,"tomf",18);
+ERROR 1064 (HY000): can't find any valid datanode :EMPLOYEE -> SHARDING_ID -> 10030
+mysql> 
+
+
+[root@mysql53 ~]# mysql -uroot -p123qqq...A -e 'select  * from  db1.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | age  |
++----+-------------+------+------+
+|  1 |       10000 | bob  |   19 |
+|  2 |       10000 | boba |   18 |
+|  3 |       10000 | bobc |   18 |
++----+-------------+------+------+
+[root@mysql53 ~]# 
+
+[root@mysql54 ~]# mysql -uroot -p123bbb...A -e 'select * from  db2.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | age  |
++----+-------------+------+------+
+|  4 |       10010 | tom  |   18 |
+|  5 |       10010 | toma |   18 |
+|  6 |       10010 | tomb |   18 |
+|  7 |       10010 | tomd |   18 |
++----+-------------+------+------+
+[root@mysql54 ~]# 
+
+[root@mysql55 ~]# mysql -uroot -p123bbb...A -e 'select  * from  db3.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql55 ~]# 
+
+
+                
