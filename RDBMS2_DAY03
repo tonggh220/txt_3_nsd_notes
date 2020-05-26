@@ -477,7 +477,7 @@ mysql> select  * from hotnews;
 6 rows in set (0.01 sec)
 
 mysql> 
-mysql> insert into hotnews(id ,num , title, woker , comment) values (null,11,"A","AA","AAA"
+mysql> insert into hotnews(id ,num , title, woker , comment) values (null,11,"A","AA","AAA")；
 Query OK, 3 rows affected (0.01 sec)
 Records: 3  Duplicates: 0  Warnings: 0
 
