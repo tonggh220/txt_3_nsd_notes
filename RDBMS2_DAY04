@@ -245,6 +245,9 @@ rpl_semi_sync_slave_enabled=1
 relay_log_purge=0
 :wq			
 	
+[root@mysql53 mysql]# systemctl  restart mysqld
+
+
 [root@mysql52 mysql]# mysql -uroot -p123bbb...A -e ' select user from mysql.user'
 mysql: [Warning] Using a password on the command line interface can be insecure.
 +-----------+
