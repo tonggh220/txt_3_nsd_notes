@@ -150,7 +150,7 @@ masterha_check_status     masterha_master_monitor   masterha_stop
 
 [root@HOST57 mha]# vim /etc/mha/app1.cnf
 manager_workdir=/etc/mha
-manager_log=/etc/hma/manager.log
+manager_log=/etc/mha/manager.log
 
 [server default]
 manager_workdir=/etc/mha
