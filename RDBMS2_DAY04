@@ -205,3 +205,81 @@ ens33:1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         ether 00:0c:29:a6:73:ab  txqueuelen 1000  (Ethernet)
 
 [root@mysql51 mha]#
+
+                 2.2.4 配置3台数据服务器（根据管理主机配置文件的设置，优化一主多从同步结构的配置）
+			1  启用主从角色数据库服务的半同步复制模式
+			2  在备用数据库服务器53/52主机启用binlog日志并添加repluser用户
+              		                 3  在3台数据库服务器上禁止自动删除本机的中继日志文件
+
+
+[root@mysql51 mha]# vim /etc/my.cnf
+[mysqld]
+server_id=51
+log_bin=master51
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1
+relay_log_purge=0
+:wq
+[root@mysql51 mha]# systemctl  restart mysqld
+
+
+[root@mysql52 mha]# vim /etc/my.cnf
+[mysqld]
+server_id=52
+log_bin=master52
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1
+relay_log_purge=0
+:wq
+[root@mysql52 mysql]# systemctl  restart mysqld
+
+[root@mysql53 mha]# vim /etc/my.cnf
+[mysqld]
+server_id=53
+log_bin=master53
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1
+relay_log_purge=0
+:wq			
+	
+[root@mysql52 mysql]# mysql -uroot -p123bbb...A -e ' select user from mysql.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------+
+| user      |
++-----------+
+| mysql.sys |
+| root      |
++-----------+
+[root@mysql52 mysql]#
+
+[root@mysql52 mysql]# mysql -uroot -p123bbb...A -e 'grant replication slave on  *.* to repluser@"%" identified by "123qqq...A"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql52 mysql]# 
+[root@mysql52 mysql]# mysql -uroot -p123bbb...A -e ' select user from mysql.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------+
+| user      |
++-----------+
+| repluser  |
+| mysql.sys |
+| root      |
++-----------+
+[root@mysql52 mysql]# 
+
+[root@mysql53 mha]# mysql -uroot -p123qqq...A -e  'grant replication slave on  *.* to repluser@"%" identified by "123qqq...A"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql53 mha]#
+
+[root@mysql53 mha]# mysql -uroot -p123qqq...A -e  'select user from mysql.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------+
+| user      |
++-----------+
+| repluser  |
+| mysql.sys |
+| root      |
++-----------+
+[root@mysql53 mha]# 
