@@ -141,3 +141,44 @@ masterha_check_repl       masterha_conf_host        masterha_master_switch
 masterha_check_ssh        masterha_manager          masterha_secondary_check
 masterha_check_status     masterha_master_monitor   masterha_stop
 [root@HOST57 mha4mysql-manager-0.56]#
+
+                
+			2.2.2  编辑管理服务的主配置文件
+			
+[root@HOST57 mha]# mkdir /etc/mha
+[root@HOST57 mha]# cp mha4mysql-manager-0.56/samples/conf/app1.cnf   /etc/mha/
+
+[root@HOST57 mha]# vim /etc/mha/app1.cnf
+manager_workdir=/etc/mha
+manager_log=/etc/hma/manager.log
+
+[server default]
+manager_workdir=/etc/mha
+manager_log=/etc/hma/manager.log
+master_ip_failover_script=/etc/mha/master_ip_failover
+
+
+ssh_user=root
+ssh_port=22
+
+repl_user=repluser
+repl_password="123qqq...A"
+
+user=root
+password=123qqq...A
+
+[server1]
+hostname=192.168.4.51
+port=3306
+candidate_master=1
+
+[server2]
+hostname=192.168.4.52
+port=3306
+candidate_master=1
+
+[server3]
+hostname=192.168.4.53
+port=3306
+candidate_master=1
+:wq
