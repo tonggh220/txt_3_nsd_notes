@@ -108,3 +108,36 @@ mysql> start slave ;
 Query OK, 0 rows affected (0.00 sec)
 
 mysql> show slave status \G;
+
+
+		2.2  配置管理服务器192.168.4.57
+			2.2.1  安装软件
+[root@HOST57 mha]# yum -y install  mha4mysql-node-0.56-0.el6.noarch.rpm
+[root@HOST57 mha]# tar -zxvf mha4mysql-manager-0.56.tar.gz
+
+[root@HOST57 mha4mysql-manager-0.56]# yum -y  install perl-ExtUtils-*   perl-CPAN*
+
+[root@HOST57 mha]#  cd  mha4mysql-manager-0.56
+[root@HOST57 mha4mysql-manager-0.56]# perl Makefile.PL   
+*** Module::AutoInstall version 1.03
+*** Checking for Perl dependencies...
+[Core Features]
+- DBI                   ...loaded. (1.627)
+- DBD::mysql            ...loaded. (4.023)
+- Time::HiRes           ...loaded. (1.9725)
+- Config::Tiny          ...loaded. (2.14)
+- Log::Dispatch         ...loaded. (2.41)
+- Parallel::ForkManager ...loaded. (1.18)
+- MHA::NodeConst        ...loaded. (0.56)
+*** Module::AutoInstall configuration finished.
+Checking if your kit is complete...
+Looks good
+Writing Makefile for mha4mysql::manager
+Writing MYMETA.yml and MYMETA.json
+[root@HOST57 mha4mysql-manager-0.56]# make  && make install  
+
+[root@HOST57 mha4mysql-manager-0.56]# masterha_    按2次tab键
+masterha_check_repl       masterha_conf_host        masterha_master_switch
+masterha_check_ssh        masterha_manager          masterha_secondary_check
+masterha_check_status     masterha_master_monitor   masterha_stop
+[root@HOST57 mha4mysql-manager-0.56]#
