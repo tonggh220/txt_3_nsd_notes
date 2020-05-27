@@ -306,4 +306,23 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 
 [root@mysql53 mha]# mysql -uroot -p123qqq...A -e  'grant all on  *.*  to root@"%" identified by "123qqq...A"'
 mysql: [Warning] Using a password on the command line interface can be insecure.
-[root@mysql53 mha]# 
+[root@mysql53 mha]#
+
+
+ 			2.3.3  启动管理服务
+[root@HOST57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+app1 is stopped(2:NOT_RUNNING).
+[root@HOST57 ~]# 
+[root@HOST57 ~]# masterha_manager  --conf=/etc/mha/app1.cnf  --remove_dead_master_conf --ignore_last_failover  
+Wed May 27 16:57:52 2020 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Wed May 27 16:57:52 2020 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Wed May 27 16:57:52 2020 - [info] Reading server configuration from /etc/mha/app1.cnf..
+
+
+			2.3.4  查看服务状态 (开新终端查看状态)
+[root@HOST57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf 
+app1 (pid:3947) is running(0:PING_OK), master:192.168.4.51
+[root@HOST57 ~]# 
+[root@HOST57 ~]# ls /etc/mha/
+app1.cnf  app1.master_status.health  manager.log  master_ip_failover
+[root@HOST57 ~]# 
