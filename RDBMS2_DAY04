@@ -286,3 +286,24 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | root      |
 +-----------+
 [root@mysql53 mha]# 
+
+                                        4  在数据库服务器51/52/53 分别安装mha_node软件包
+				                        5  在数据库服务器51/52/53 分别添加监控用户root
+[root@mysql51 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+[root@mysql52 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+[root@mysql53 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+
+[root@mysql51 mha]# mysql -uroot -p123qqq...A -e  'grant all on  *.*  to root@"%" identified by "123qqq...A"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql53 mha]# 
+
+
+
+[root@mysql52 mha]# mysql -uroot -p123qqq...A -e  'grant all on  *.*  to root@"%" identified by "123qqq...A"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql53 mha]# 
+
+
+[root@mysql53 mha]# mysql -uroot -p123qqq...A -e  'grant all on  *.*  to root@"%" identified by "123qqq...A"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql53 mha]# 
