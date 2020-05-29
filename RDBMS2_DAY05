@@ -142,3 +142,25 @@ mysql> show  databases;
 mysql> select user from mysql.user  where user="sstuser";
 mysql> show  databases;
 
+                       二、存储引擎
+MySQL服务的体系结构
+管理工具 、连接池、SQL接口 、 分析器 、优化器 、 查询缓存 、存储引擎 、文件系统（硬盘）
+
+存储引擎介绍？
+
+查看服务的存储引擎信息  show  engines;
+
+存储引擎的使用？
+	查看表使用的存储引擎 show create  库名.表名;
+	指定表使用的存储引擎  create table  库名.表名（字段名列表）engine=存储引擎名;
+	修改表使用的存储引擎 alter table 库名.表名 engine=存储引擎名;
+	
+	修改数据库服务默认使用的存储引擎
+]# vim /etc/my.cnf
+[mysqld]
+default-storage-engine=myisam
+:wq
+
+]# systemctl  restart mysqld	
+
+[root@mysql51 db9]# mysql -uroot -p123bbb...A -e 'show engines' | grep  -i "default" 
