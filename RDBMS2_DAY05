@@ -164,3 +164,12 @@ default-storage-engine=myisam
 ]# systemctl  restart mysqld	
 
 [root@mysql51 db9]# mysql -uroot -p123bbb...A -e 'show engines' | grep  -i "default" 
+
+
+
+
+++++++++++++最安装1台虚拟机 做模板机。（配置yum  selinux 关   firewalld   软件）
+克隆3台虚拟机 
+配置ip地址 71/72/73
+71/72/73 分别安装软件
+71/72/73 分别修改配置
