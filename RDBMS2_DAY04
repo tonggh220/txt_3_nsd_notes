@@ -746,3 +746,38 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
              Slave_IO_Running: Yes
             Slave_SQL_Running: Yes
 [root@mysql51 ~]# 
+
+                		4.2 配置管理主机57，配置步骤如下：
+修改主配置文件
+[root@HOST57 ~]# vim /etc/mha/app1.cnf
+[server1]
+candidate_master=1
+hostname=192.168.4.51
+port=3306
+
+:wq
+
+
+测试集群环境
+[root@HOST57 ~]#  masterha_check_ssh  --conf=/etc/mha/app1.cnf 
+[root@HOST57 ~]# masterha_check_repl  --conf=/etc/mha/app1.cnf 
+
+
+重启管理服务
+[root@HOST57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf 
+app1 (pid:16541) is running(0:PING_OK), master:192.168.4.52
+[root@HOST57 ~]# 
+
+[root@HOST57 ~]# masterha_stop  --conf=/etc/mha/app1.cnf 
+Stopped app1 successfully.
+
+[root@HOST57 ~]# masterha_manager  --conf=/etc/mha/app1.cnf  --remove_dead_master_conf --ignore_last_failover  
+
+Fri May 29 11:30:53 2020 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Fri May 29 11:30:53 2020 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Fri May 29 11:30:53 2020 - [info] Reading server configuration from /etc/mha/app1.cnf..
+
+查看服务状态
+[root@HOST57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf 
+app1 (pid:16541) is running(0:PING_OK), master:192.168.4.52
+[root@HOST57 ~]#
