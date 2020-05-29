@@ -519,3 +519,179 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 |  888 |
 +------+
 [root@mysql51 ~]#
+                        
+
+
+                        3.2 测试MySQL服务的高可用   练习+休息  到 10：20 
+		（51主机的MySQL服务停止后，客户端依然可以访问到数据）
+[root@mysql51 ~]# systemctl  stop  mysqld
+
+[root@HOST57 ~]#masterha_manager  --conf=/etc/mha/app1.cnf  --remove_dead_master_conf --ignore_last_failover  
+
+Fri May 29 08:38:12 2020 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Fri May 29 08:38:12 2020 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Fri May 29 08:38:12 2020 - [info] Reading server configuration from /etc/mha/app1.cnf..
+
+
+
+
+
+
+  Creating /var/tmp if not exists..    ok.
+  Checking output directory is accessible or not..
+   ok.
+  Binlog found at /var/lib/mysql, up to master51.000002
+Fri May 29 09:41:09 2020 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Fri May 29 09:41:09 2020 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Fri May 29 09:41:09 2020 - [info] Reading server configuration from /etc/mha/app1.cnf..
+[root@HOST57 ~]# 
+
+[root@HOST57 ~]# cat /etc/mha/app1.cnf 
+[server default]
+manager_log=/etc/mha/manager.log
+manager_workdir=/etc/mha
+master_ip_failover_script=/etc/mha/master_ip_failover
+password=123qqq...A
+repl_password="123qqq...A"
+repl_user=repluser
+ssh_port=22
+ssh_user=root
+user=root
+
+[server2]
+candidate_master=1
+hostname=192.168.4.52
+port=3306
+
+[server3]
+candidate_master=1
+hostname=192.168.4.53
+port=3306
+[root@HOST57 ~]# 
+
+[root@mysql52 ~]# ip addr show  | grep  192
+    inet 192.168.4.52/24 brd 192.168.4.255 scope global noprefixroute ens33
+    inet 192.168.4.100/24 brd 192.168.4.255 scope global secondary ens33:1
+[root@mysql52 ~]# 
+
+[root@mysql53 ~]# mysql -uroot -p123qqq...A -e  'show slave status \G' | grep  -i "master_host"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.52
+[root@mysql53 ~]# 
+[root@mysql53 ~]# mysql -uroot -p123qqq...A -e  'show slave status \G' | grep  -i "yes"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@mysql53 ~]# 
+		
+[root@mysql50 ~]# mysql -h192.168.4.100  -uyaya55 -p123qqq...A
+
+mysql> insert into db9.a values(999);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> 
+mysql> select  * from db9.a;
++------+
+| id   |
++------+
+|  888 |
+|  999 |
++------+
+2 rows in set (0.00 sec)
+
+[root@mysql53 ~]# mysql -uroot -p123qqq...A -e  'select  * from db9.a'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  888 |
+|  999 |
+
+
+[root@HOST57 ~]# masterha_check_ssh --conf=/etc/mha/app1.cnf
+Fri May 29 09:52:04 2020 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Fri May 29 09:52:04 2020 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Fri May 29 09:52:04 2020 - [info] Reading server configuration from /etc/mha/app1.cnf..
+Fri May 29 09:52:04 2020 - [info] Starting SSH connection tests..
+Fri May 29 09:52:05 2020 - [debug] 
+Fri May 29 09:52:04 2020 - [debug]  Connecting via SSH from root@192.168.4.52(192.168.4.52:22) to root@192.168.4.53(192.168.4.53:22)..
+Fri May 29 09:52:04 2020 - [debug]   ok.
+Fri May 29 09:52:06 2020 - [debug] 
+Fri May 29 09:52:04 2020 - [debug]  Connecting via SSH from root@192.168.4.53(192.168.4.53:22) to root@192.168.4.52(192.168.4.52:22)..
+Fri May 29 09:52:05 2020 - [debug]   ok.
+Fri May 29 09:52:06 2020 - [info] All SSH connection tests passed successfully.
+[root@HOST57 ~]# 
+
+[root@HOST57 ~]# masterha_check_repl --conf=/etc/mha/app1.cnf
+Fri May 29 09:52:52 2020 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Fri May 29 09:52:52 2020 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Fri May 29 09:52:52 2020 - [info] Reading server configuration from /etc/mha/app1.cnf..
+Fri May 29 09:52:52 2020 - [info] MHA::MasterMonitor version 0.56.
+Fri May 29 09:52:53 2020 - [info] GTID failover mode = 0
+Fri May 29 09:52:53 2020 - [info] Dead Servers:
+Fri May 29 09:52:53 2020 - [info] Alive Servers:
+Fri May 29 09:52:53 2020 - [info]   192.168.4.52(192.168.4.52:3306)
+Fri May 29 09:52:53 2020 - [info]   192.168.4.53(192.168.4.53:3306)
+Fri May 29 09:52:53 2020 - [info] Alive Slaves:
+Fri May 29 09:52:53 2020 - [info]   192.168.4.53(192.168.4.53:3306)  Version=5.7.17-log (oldest major version between slaves) log-bin:enabled
+Fri May 29 09:52:53 2020 - [info]     Replicating from 192.168.4.52(192.168.4.52:3306)
+Fri May 29 09:52:53 2020 - [info]     Primary candidate for the new Master (candidate_master is set)
+Fri May 29 09:52:53 2020 - [info] Current Alive Master: 192.168.4.52(192.168.4.52:3306)
+Fri May 29 09:52:53 2020 - [info] Checking slave configurations..
+Fri May 29 09:52:53 2020 - [info]  read_only=1 is not set on slave 192.168.4.53(192.168.4.53:3306).
+Fri May 29 09:52:53 2020 - [info] Checking replication filtering settings..
+Fri May 29 09:52:53 2020 - [info]  binlog_do_db= , binlog_ignore_db= 
+Fri May 29 09:52:53 2020 - [info]  Replication filtering check ok.
+Fri May 29 09:52:53 2020 - [info] GTID (with auto-pos) is not supported
+Fri May 29 09:52:53 2020 - [info] Starting SSH connection tests..
+Fri May 29 09:52:55 2020 - [info] All SSH connection tests passed successfully.
+Fri May 29 09:52:55 2020 - [info] Checking MHA Node version..
+Fri May 29 09:52:55 2020 - [info]  Version check ok.
+Fri May 29 09:52:55 2020 - [info] Checking SSH publickey authentication settings on the current master..
+Fri May 29 09:52:55 2020 - [info] HealthCheck: SSH to 192.168.4.52 is reachable.
+Fri May 29 09:52:56 2020 - [info] Master MHA Node version is 0.56.
+Fri May 29 09:52:56 2020 - [info] Checking recovery script configurations on 192.168.4.52(192.168.4.52:3306)..
+Fri May 29 09:52:56 2020 - [info]   Executing command: save_binary_logs --command=test --start_pos=4 --binlog_dir=/var/lib/mysql,/var/log/mysql --output_file=/var/tmp/save_binary_logs_test --manager_version=0.56 --start_file=master52.000001 
+Fri May 29 09:52:56 2020 - [info]   Connecting to root@192.168.4.52(192.168.4.52:22).. 
+  Creating /var/tmp if not exists..    ok.
+  Checking output directory is accessible or not..
+   ok.
+  Binlog found at /var/lib/mysql, up to master52.000001
+Fri May 29 09:52:56 2020 - [info] Binlog setting check done.
+Fri May 29 09:52:56 2020 - [info] Checking SSH publickey authentication and checking recovery script configurations on all alive slave servers..
+Fri May 29 09:52:56 2020 - [info]   Executing command : apply_diff_relay_logs --command=test --slave_user='root' --slave_host=192.168.4.53 --slave_ip=192.168.4.53 --slave_port=3306 --workdir=/var/tmp --target_version=5.7.17-log --manager_version=0.56 --relay_log_info=/var/lib/mysql/relay-log.info  --relay_dir=/var/lib/mysql/  --slave_pass=xxx
+Fri May 29 09:52:56 2020 - [info]   Connecting to root@192.168.4.53(192.168.4.53:22).. 
+  Checking slave recovery environment settings..
+    Opening /var/lib/mysql/relay-log.info ... ok.
+    Relay log found at /var/lib/mysql, up to mysql53-relay-bin.000002
+    Temporary relay log file is /var/lib/mysql/mysql53-relay-bin.000002
+    Testing mysql connection and privileges..mysql: [Warning] Using a password on the command line interface can be insecure.
+ done.
+    Testing mysqlbinlog output.. done.
+    Cleaning up test file(s).. done.
+Fri May 29 09:52:56 2020 - [info] Slaves settings check done.
+Fri May 29 09:52:56 2020 - [info] 
+192.168.4.52(192.168.4.52:3306) (current master)
+ +--192.168.4.53(192.168.4.53:3306)
+
+Fri May 29 09:52:56 2020 - [info] Checking replication health on 192.168.4.53..
+Fri May 29 09:52:56 2020 - [info]  ok.
+Fri May 29 09:52:56 2020 - [info] Checking master_ip_failover_script status:
+Fri May 29 09:52:56 2020 - [info]   /etc/mha/master_ip_failover --command=status --ssh_user=root --orig_master_host=192.168.4.52 --orig_master_ip=192.168.4.52 --orig_master_port=3306 
+Fri May 29 09:52:56 2020 - [info]  OK.
+Fri May 29 09:52:56 2020 - [warning] shutdown_script is not defined.
+Fri May 29 09:52:56 2020 - [info] Got exit code 0 (Not master dead).
+
+MySQL Replication Health is OK.
+[root@HOST57 ~]
+
+
+[root@HOST57 ~]# masterha_manager  --conf=/etc/mha/app1.cnf  --remove_dead_master_conf --ignore_last_failover  
+Fri May 29 09:54:08 2020 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Fri May 29 09:54:08 2020 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Fri May 29 09:54:08 2020 - [info] Reading server configuration from /etc/mha/app1.cnf..
+
+
+[root@HOST57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf  （开个新终端查看状态）
+app1 (pid:14446) is running(0:PING_OK), master:192.168.4.52
+[root@HOST57 ~]# 
