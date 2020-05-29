@@ -63,4 +63,82 @@ wsrep_node_name=pxcnode73		//本机主机名
 wsrep_sst_auth="sstuser:123qqq…A"	
 :wq
 
+                		在71 做集群初始化配置
+
+[root@pxc71 ~]# systemctl  start mysql@bootstrap.service  
+[root@pxc71 ~]# 
+[root@pxc71 ~]# ls /var/lib/mysql
+auto.cnf         grastate.dat    ibtmp1              private_key.pem   server-key.pem
+ca-key.pem       gvwstate.dat    mysql               public_key.pem    sys
+ca.pem           ib_buffer_pool  mysqld_safe.pid     pxc71-bin.000001  xb_doublewrite
+client-cert.pem  ibdata1         mysql.sock          pxc71-bin.000002
+client-key.pem   ib_logfile0     mysql.sock.lock     pxc71-bin.index
+galera.cache     ib_logfile1     performance_schema  server-cert.pem
+[root@pxc71 ~]# 
+[root@pxc71 ~]# netstat  -utnlp  | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      5545/mysqld         
+[root@pxc71 ~]# 
+[root@pxc71 ~]# netstat  -utnlp  | grep 4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      5545/mysqld         
+[root@pxc71 ~]# ls /var/log/mysqld.log 
+/var/log/mysqld.log
+[root@pxc71 ~]# 
+[root@pxc71 ~]# grep  password  /var/log/mysqld.log 
+2020-05-21T17:19:34.291720Z 1 [Note] A temporary password is generated for root@localhost: ed,<u:Gxj0w(
+2020-05-29T12:47:50.682207Z 0 [Note] Shutting down plugin 'validate_password'
+2020-05-29T12:47:52.112562Z 0 [Note] Shutting down plugin 'sha256_password'
+2020-05-29T12:47:52.112570Z 0 [Note] Shutting down plugin 'mysql_native_password'
+2020-05-29T15:28:47.641940Z 1 [Note] A temporary password is generated for root@localhost: pn8MO0Ct/6pM
+[root@pxc71 ~]# 
+[root@pxc71 ~]# mysql -uroot -p'pn8MO0Ct/6pM'
+mysql>
+mysql> show databases;
+ERROR 1820 (HY000): You must reset your password using ALTER USER statement before executing this statement.
+mysql> 
+mysql> alter user root@"localhost" identified by "123456";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql> grant reload, lock tables,replication client,process on *.* to sstuser@"localhost" identified by  "123qqq…A"; 
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> create database db10;
+mysql> create table db1.tea(name char(10));
+mysql> exit
+Bye
+[root@pxc71 ~]#
+			72 主机启动数据库mysql服务同步数据
+[root@pxc72 ~]# systemctl  start mysql
+
+[root@pxc72~]# netstat  -utnlp  | grep  3306
+
+[root@pxc72 ~]# netstat  -utnlp  | grep 4567
+
+[root@pxc72 ~]# ls /var/lib/mysql
+
+[root@pxc72 ~]# mysql  -uroot  -p123456
+mysql> select user from mysql.user  where user="sstuser";
+mysql> show  databases;
+			73 主机启动数据库mysql服务同步数据
+[root@pxc73 ~]# systemctl  start mysql
+
+[root@pxc73~]# netstat  -utnlp  | grep  3306
+
+[root@pxc73 ~]# netstat  -utnlp  | grep 4567
+
+[root@pxc73 ~]# ls /var/lib/mysql
+
+[root@pxc73 ~]# mysql  -uroot  -p123456
+mysql> select user from mysql.user  where user="sstuser";
+mysql> show  databases;
 
