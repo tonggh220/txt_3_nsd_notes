@@ -1,0 +1,22 @@
+一PXC集群
+		1.1 相关概念
+		1.2 拓扑结构
+		1.3 配置pxc集群
+			1.3.1 在71/72/73分别安装软件包
+			如果安装了其他版本的MySQL数据库服务器软件，要卸载软件
+]# systemctl  stop mysqld
+]# rpm -qa  | grep  -i mysql
+
+]#rpm -e --nodeps mysql-community-server mysql-community-embedded-compat mysql-community-common mysql-community-client mysql-community-devel mysql-community-test mysql-community-libs-compat mysql-community-minimal-debuginfo mysql-community-libs mysql-community-embedded mysql-community-embedded-devel
+
+]#rm -rf /var/lib/mysql/
+
+			安装PXC软件
+   ]# yum -y install libev-4.15-1.el6.rf.x86_64.rpm 
+]# 
+]#yum -y install qpress-1.1-14.11.x86_64.rpm 
+
+ ]# yum -y install percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm 
+
+   ]#tar -xvf Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar 
+   ]#yum -y install Percona-XtraDB-Cluster-*.rpm
