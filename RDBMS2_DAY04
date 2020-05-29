@@ -432,3 +432,90 @@ app1 (pid:3947) is running(0:PING_OK), master:192.168.4.51
 [root@HOST57 ~]# ls /etc/mha/
 app1.cnf  app1.master_status.health  manager.log  master_ip_failover
 [root@HOST57 ~]# 
+
+
+	三、验证配置
+		3.1 客户端连接vip地址 访问数据
+			在主服务器给客户端添加连接用户
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'create database db9'
+
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'create table db9.a(id int)'
+
+
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'grant select , insert on db9.* to  yaya55@"%" identified by "123qqq...A"'
+
+[root@mysql52 ~]# mysql -uroot -p123bbb...A -e  'desc db9.a'
+
++-------+---------+------+-----+---------+-------+
+| Field | Type    | Null | Key | Default | Extra |
++-------+---------+------+-----+---------+-------+
+| id    | int(11) | YES  |     | NULL    |       |
++-------+---------+------+-----+---------+-------+
+[root@mysql52 ~]# 
+[root@mysql52 ~]# mysql -uroot -p123bbb...A -e  'show grants for yaya55@"%"'
+
++-------------------------------------------------+
+| Grants for yaya55@%                             |
++-------------------------------------------------+
+| GRANT USAGE ON *.* TO 'yaya55'@'%'              |
+| GRANT SELECT, INSERT ON `db9`.* TO 'yaya55'@'%' |
++-------------------------------------------------+
+[root@mysql52 ~]# 
+
+[root@mysql53 ~]# mysql -uroot -p123qqq...A -e  'show grants for yaya55@"%"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------------------------------------------------+
+| Grants for yaya55@%                             |
++-------------------------------------------------+
+| GRANT USAGE ON *.* TO 'yaya55'@'%'              |
+| GRANT SELECT, INSERT ON `db9`.* TO 'yaya55'@'%' |
++-------------------------------------------------+
+[root@mysql53 ~]# 
+[root@mysql53 ~]# mysql -uroot -p123qqq...A -e  'desc db9.a'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------+---------+------+-----+---------+-------+
+| Field | Type    | Null | Key | Default | Extra |
++-------+---------+------+-----+---------+-------+
+| id    | int(11) | YES  |     | NULL    |       |
++-------+---------+------+-----+---------+-------+
+[root@mysql53 ~]# 
+
+[root@mysql50 ~]# mysql -h192.168.4.100  -uyaya55 -p123qqq...A
+mysql> insert into db9.a values(888);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from  db9.a;
++------+
+| id   |
++------+
+|  888 |
++------+
+1 row in set (0.00 sec)
+
+mysql> 
+		在3台数据库服务器本机可以查看到数据
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'select  * from db9.a'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  888 |
++------+
+[root@mysql51 ~]#
+[root@mysql52 ~]# mysql -uroot -p123bbb...A -e 'select  * from db9.a'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  888 |
++------+
+[root@mysql51 ~]#
+
+[root@mysql53 ~]# mysql -uroot -p123bbb...A -e 'select  * from db9.a'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  888 |
++------+
+[root@mysql51 ~]#
