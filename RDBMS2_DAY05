@@ -113,7 +113,7 @@ mysql> grant reload, lock tables,replication client,process on *.* to sstuser@"l
 Query OK, 0 rows affected, 1 warning (0.00 sec)
 
 mysql> create database db10;
-mysql> create table db1.tea(name char(10));
+mysql> create table db10.tea(name char(10));
 mysql> exit
 Bye
 [root@pxc71 ~]#
