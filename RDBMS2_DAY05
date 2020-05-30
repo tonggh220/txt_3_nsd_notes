@@ -189,6 +189,61 @@ default-storage-engine=myisam
 
 [root@mysql51 db9]# mysql -uroot -p123bbb...A -e 'show engines' | grep  -i "default" 
 
+常用存储引擎的特点	:	
+			myisam存储引擎的特点？
+				支持表级锁
+				不支持事务、事务回滚、外键
+使用3个文件存储表数据：
+表.MYI     排队信息  index
+表.MYD   表记录  select  * from 表；
+表.frm      表结构 desc  表； 
+			innodb存储引擎的特点？
+				支持行级锁定
+				支持事务、事务回滚、外键
+
+使用2个文件存储表数据：
+表.ibd     排队信息  index + 表记录  select  * from 表；
+表.frm      表结构 desc  表；
+
+
+事务日志文件
+ibdata1
+ib_logfile0
+ib_logfile1
+ 				
+			专业术语解释：
+				锁粒度（加锁的范围）
+				表级锁 ：对一张表加锁
+				行级锁 ：仅仅对备份访问的行分别加锁，没有被访问的其他行不会加锁
+				锁：解决客户端并发访问冲突文件
+				锁类型：
+					读锁（共享锁）：支持并发读
+					select 
+					写锁  (排它锁)
+					update delete  insert 
+PC1  update set user name="lucy" where id=3;
+pc2  update set user name="jerry" where id=3;
+
+			                事务？ 连接数据库开始 到断开连接 ，这个过程称为事务
+																	select/insert /update/delete
+				 事务回滚 :连接数据库服务器期间，所有命令必须正确执行，反之会把数据回滚的误操作之前的状态。
+
+				 支持事务的表有什么特殊？ ACID
+
+
+mysql> show variables ;
+mysql> show variables  like  "%auto%";
+
+mysql> set atuocommit=off;
+
+mysql> show variables  like  "autocommit";
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| autocommit    | OFF   |
++---------------+-------+
+
+        
 
 
 
