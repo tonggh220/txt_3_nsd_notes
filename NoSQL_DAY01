@@ -1,0 +1,78 @@
+		相关的概念？
+		提供NoSQL数据库服务的软件？
+
+		
+		二 、搭建redis数据库服务器 192.168.4.50
+			1 安装软件
+
+[root@mysql50 ~]# rpm -q gcc  || yum -y install  gcc
+[root@mysql50 ~]#tar -zxvf /var/ftp/pub/redis-4.0.8.tar.gz 
+[root@mysql50 ~]#cd redis-4.0.8/
+[root@mysql50 ~]#make  && make install
+[root@mysql50 ~]#ls utils/
+[root@mysql50 ~]# ./utils/install_server.sh  初始化配置 回车即可
+[root@mysql50 ~]#netstat  -utnlp  | grep 6379
+
+时间10分钟 到 15:39 
+			修配置文件 (使用默认配置运行即可)
+				/etc/redis/6379.conf
+
+			启动服务
+	/etc/init.d/redis_6379  status | stop | start 
+
+			查看服务状态
+]# netstat  -utnlp  | grep 6379
+]# ps -C   redis-server
+			客户端连接服务
+[root@mysql50 ~]# redis-cli
+127.0.0.1:6379> ping
+PONG
+127.0.0.1:6379> keys *
+(empty list or set)
+127.0.0.1:6379> 
+127.0.0.1:6379> set school tarena
+OK
+127.0.0.1:6379> keys *
+1) "school"
+127.0.0.1:6379> get school
+"tarena"
+127.0.0.1:6379> exit
+[root@mysql50 ~]# 
+
+
+		常用管理命令的使用 ,具体见PPT
+
+		配置文件解析：修改Redis服务使用的ip地址及端口号 并设置连接密码
+			
+[root@mysql50 ~]# /etc/init.d/redis_6379 stop
+Stopping ...
+Redis stopped
+[root@mysql50 ~]# netstat  -utnlp  | grep  6379
+[root@mysql50 ~]# 
+
+[root@mysql50 ~]#  vim /etc/redis/6379.conf
+bind 192.168.4.50
+port  6360	
+requirepass 123456
+:wq
+[root@mysql50 ~]# /etc/init.d/redis_6379 start
+[root@mysql50 ~]# netstat  -utnlp  | grep  redis-server
+tcp        0      0 192.168.4.50:6360       0.0.0.0:*               LISTEN      9580/redis-server 1 
+[root@mysql50 ~]# 
+
+[root@mysql50 ~]# redis-cli  -h 192.168.4.50  -p 6360  -a  123456
+192.168.4.50:6360> ping
+PONG
+192.168.4.50:6360> exit
+[root@mysql50 ~]# 
+[root@mysql50 ~]# redis-cli  -h 192.168.4.50  -p 6360 
+192.168.4.50:6360> ping
+(error) NOAUTH Authentication required.
+192.168.4.50:6360> 
+192.168.4.50:6360> auth 123456
+OK
+192.168.4.50:6360> keys *
+1) "k"
+2) "j"
+192.168.4.50:6360> exit
+[root@mysql50 ~]# 
