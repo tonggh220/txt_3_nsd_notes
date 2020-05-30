@@ -234,7 +234,7 @@ pc2  update set user name="jerry" where id=3;
 mysql> show variables ;
 mysql> show variables  like  "%auto%";
 
-mysql> set atuocommit=off;
+mysql> set autocommit=off;
 
 mysql> show variables  like  "autocommit";
 +---------------+-------+
@@ -244,11 +244,9 @@ mysql> show variables  like  "autocommit";
 +---------------+-------+
 
         
+ 在建表时如何决定表使用哪种存储引擎
+		写访问多的表 适合使用innodb存储引擎，并访问量大
+		查询访问多的表 适合使用myisam存储引擎，节省系统资源(cup)
 
 
 
-++++++++++++最安装1台虚拟机 做模板机。（配置yum  selinux 关   firewalld   软件）
-克隆3台虚拟机 
-配置ip地址 71/72/73
-71/72/73 分别安装软件
-71/72/73 分别修改配置
