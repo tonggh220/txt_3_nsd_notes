@@ -142,6 +142,30 @@ mysql> show  databases;
 mysql> select user from mysql.user  where user="sstuser";
 mysql> show  databases;
 
+                        测试集群
+			1 客户端连接集群中任意一台数据库服务器都可以存取数据
+				1.1 在任意1台给客户端授权连接用户都可以
+
+	mysql> grant all on  bbsdb.* to admin@"%" identified by "123456";
+
+				1.2 客户端50 可以连接任意1台数据库服务器存取数据另外2台会自动同步数据到本机。
+				50】#mysql -h192.168.4.73 -uadmin -p123456
+				 create  database bbsdb;
+				create table  bbsdb.t1(id int primary key auto_increment,name char(10));
+ 
+insert into  bbsdb.t1(name)values("jim"),("jim");
+
+			 2 任意1台数据库服务器宕机 都不影响其他2台存取数据
+				
+			 3  MySQL服务器启动后会自动加人集群并同步数据。
+			
+			 查看集群信息 > show status like "%wsrep%";
+
++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
                        二、存储引擎
 MySQL服务的体系结构
 管理工具 、连接池、SQL接口 、 分析器 、优化器 、 查询缓存 、存储引擎 、文件系统（硬盘）
