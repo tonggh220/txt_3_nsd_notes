@@ -76,3 +76,59 @@ OK
 2) "j"
 192.168.4.50:6360> exit
 [root@mysql50 ~]# 
+
+
+
+	部署LNMP+redis （把nginx网站服务的数据存储到50内存里）
+		1 部署网站运行平台 LNMP
+[root@mysql51]#
+  156  yum -y  install gcc pcre-devel zlib-devel
+  157  tar -zxvf /var/ftp/pub/nginx-1.12.2.tar.gz 
+  158  ls
+  159  cd nginx-1.12.2/
+  160  ls
+  161  ./configure 
+  162  make   && make install
+
+[root@mysql51 nginx-1.12.2]# ls /usr/local/nginx/
+conf  html  logs  sbin
+[root@mysql51]# yum  -y  install  php-fpm
+
+[root@mysql51]# vim +65 /usr/local/nginx/conf/nginx.conf
+
+        location ~ \.php$ {
+            root           html;
+            fastcgi_pass   127.0.0.1:9000;
+           fastcgi_index  index.php;
+            include        fastcgi.conf;
+        }
+		
+:wq
+
+[root@mysql51 ~]# systemctl  start php-fpm
+[root@mysql51 ~]# systemctl  enable php-fpm
+Created symlink from /etc/systemd/system/multi-user.target.wants/php-fpm.service to /usr/lib/systemd/system/php-fpm.service.
+[root@mysql51 ~]# 
+[root@mysql51 ~]# netstat  -utnlp  | grep 9000
+tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      6825/php-fpm: maste 
+[root@mysql51 ~]# 
+[root@mysql51 ~]# /usr/local/nginx/sbin/nginx  -t
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+[root@mysql51 ~]# 
+[root@mysql51 ~]# /usr/local/nginx/sbin/nginx
+[root@mysql51 ~]# 
+[root@mysql51 ~]# netstat  -utnlp  | grep 80
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      6860/nginx: master  
+[root@mysql51 ~]# 
+
+[root@mysql51 ~]# vim /usr/local/nginx/html/test.php
+
+<?php
+   echo "hello boy";
+?>
+
+:wq
+
+[root@mysql51 ~]# curl  http://localhost/test.php
+hello boy
