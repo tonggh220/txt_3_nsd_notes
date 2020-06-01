@@ -21,10 +21,107 @@ cluster-node-timeout 5000
 [root@mysql51 ~]# netstat  -utnlp  | grep  redis-server
 tcp        0      0 192.168.4.51:16351      0.0.0.0:*               LISTEN      13775/redis-server  
 tcp        0      0 192.168.4.51:6351       0.0.0.0:*               LISTEN      13775/redis-server  
+[root@mysql51 ~]#
+
+[root@mysql51 ~]# redis-cli  -h 192.168.4.51 -p 6351       //51 主机自己访问自己
+192.168.4.51:6351> cluster   info  查看集群信息
+cluster_state:fail
+cluster_slots_assigned:0
+cluster_slots_ok:0
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:1
+cluster_size:0
+cluster_current_epoch:0
+cluster_my_epoch:0
+cluster_stats_messages_sent:0
+cluster_stats_messages_received:0
+192.168.4.51:6351> 
+192.168.4.51:6351> cluster   nodes  查看集群成员列表
+520f49d221e0636e8e25f747bb71fa3ea8d3b469 :6351@16351 myself,master - 0 0 0 connected
+192.168.4.51:6351> 
+192.168.4.51:6351> exit
+
+[root@mysql51 ~]# ls /var/lib/redis/6379/   
+dump.rdb  nodes-6379.conf
 [root@mysql51 ~]# 
+[root@mysql51 ~]# cat /var/lib/redis/6379/nodes-6379.conf   查看保存集群信息文件
+520f49d221e0636e8e25f747bb71fa3ea8d3b469 :0@0 myself,master - 0 0 0 connected
+vars currentEpoch 0 lastVoteEpoch 0
+[root@mysql51 ~]#  
 
+	1.2 配置管理主机 57 
+		1.2.1 准备脚本运行环境
+			]# yum  -y  install  ruby  rubygems 
+			]# gem  install  redis-3.2.1.gem
 
+		1.2.2  创建管理集群的ruby 脚本
+			[root@HOST57 ~]# cd redis-4.0.8/
+[root@HOST57 redis-4.0.8]# ls
+00-RELEASENOTES  COPYING  Makefile   redis.conf       runtest-sentinel  tests
+BUGS             deps     MANIFESTO  runtest          sentinel.conf     utils
+CONTRIBUTING     INSTALL  README.md  runtest-cluster  src
+[root@HOST57 redis-4.0.8]# 
+[root@HOST57 redis-4.0.8]# 
+[root@HOST57 redis-4.0.8]# ls src/*.rb  
+src/redis-trib.rb
+[root@HOST57 redis-4.0.8]# 
+[root@HOST57 redis-4.0.8]# echo  $PATH
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
+[root@HOST57 redis-4.0.8]# 
+[root@HOST57 redis-4.0.8]# 
+[root@HOST57 redis-4.0.8]# cd /root/bin
+-bash: cd: /root/bin: No such file or directory
+[root@HOST57 redis-4.0.8]# 
+[root@HOST57 redis-4.0.8]# mkdir /root/bin
+[root@HOST57 redis-4.0.8]# 
+[root@HOST57 redis-4.0.8]# cp src/redis-trib.rb /root/bin/  
+[root@HOST57 redis-4.0.8]# 
+[root@HOST57 redis-4.0.8]# chmod +x /root/bin/redis-trib.rb  
+[root@HOST57 redis-4.0.8]# 
+[root@HOST57 redis-4.0.8]# ls -l /root/bin/redis-trib.rb 
+-rwxr-xr-x. 1 root root 65991 Jun  1 15:13 /root/bin/redis-trib.rb
+[root@HOST57 redis-4.0.8]# 
+[root@HOST57 redis-4.0.8]# redis-trib.rb help  查看命令帮助信息
+Usage: redis-trib <command> <options> <arguments ...>
 
+  create          host1:port1 ... hostN:portN
+                  --replicas <arg>
+  check           host:port
+  info            host:port
+  fix             host:port
+                  --timeout <arg>
+  reshard         host:port
+                  --from <arg>
+                  --to <arg>
+                  --slots <arg>
+                  --yes
+                  --timeout <arg>
+                  --pipeline <arg>
+  rebalance       host:port
+                  --weight <arg>
+                  --auto-weights
+                  --use-empty-masters
+                  --timeout <arg>
+                  --simulate
+                  --pipeline <arg>
+                  --threshold <arg>
+  add-node        new_host:new_port existing_host:existing_port
+                  --slave
+                  --master-id <arg>
+  del-node        host:port node_id
+  set-timeout     host:port milliseconds
+  call            host:port command arg arg .. arg
+  import          host:port
+                  --from <arg>
+                  --copy
+                  --replace
+  help            (show this help)
+
+For check, fix, reshard, del-node, set-timeout you can specify the host and port of any working node in the cluster.
+[root@HOST57 redis-4.0.8]# 
+
+		
 二 管理Redis集群
 
  
