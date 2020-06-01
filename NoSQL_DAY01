@@ -132,3 +132,45 @@ tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      
 
 [root@mysql51 ~]# curl  http://localhost/test.php
 hello boy
+
+
+                        2 配置PHP支持redis
+
+[root@mysql51 ~]# rpm -q php
+php-5.4.16-45.el7.x86_64
+[root@mysql51 ~]# rpm -q php-devel
+package php-devel is not installed
+[root@mysql51 ~]# rpm -q automake
+package automake is not installed
+[root@mysql51 ~]# rpm -q autoconf
+package autoconf is not installed
+[root@mysql51 ~]# 
+[root@mysql51 ~]# yum -y  install php-devel  automake autoconf
+
+[root@mysql51 ~]# tar -zxvf /var/ftp/pub/php-redis-2.2.4.tar.gz
+
+[root@mysql51 ~]#cd  phpredis-2.2.4
+[root@mysql51 phpredis-2.2.4]# phpize 
+Configuring for:
+PHP Api Version:         20100412
+Zend Module Api No:      20100525
+Zend Extension Api No:   220100525
+[root@mysql51 phpredis-2.2.4]# 
+[root@mysql51 phpredis-2.2.4]# ./configure  --with-php-config=/usr/bin/php-config
+[root@mysql51 phpredis-2.2.4]#  make
+[root@mysql51 phpredis-2.2.4]# make install 
+Installing shared extensions:     /usr/lib64/php/modules/
+[root@mysql51 phpredis-2.2.4]# 
+[root@mysql51 phpredis-2.2.4]# ls /usr/lib64/php/modules/
+curl.so  fileinfo.so  json.so  phar.so  redis.so  zip.so
+[root@mysql51 phpredis-2.2.4]# 
+
+[root@mysql51 phpredis-2.2.4]# vim /etc/php.ini
+728 extension_dir = "/usr/lib64/php/modules/"
+730 extension = "redis.so"
+:wq
+[root@mysql51 phpredis-2.2.4]# systemctl  restart php-fpm
+
+[root@mysql51 phpredis-2.2.4]# php -m  | grep  -i redis
+redis
+[root@mysql51 phpredis-2.2.4]#
