@@ -1,0 +1,1071 @@
+		检索目录
+		mysql> show variables like "secure_file_priv";
++------------------+-----------------------+
+| Variable_name    | Value                 |
++------------------+-----------------------+
+| secure_file_priv | /var/lib/mysql-files/ |
++------------------+-----------------------+
+1 row in set (0.00 sec)
+
+		自定义检索目录
+
+
+[root@localhost ~]# mkdir /myload
+[root@localhost ~]# 
+[root@localhost ~]# chown  mysql /myload/
+[root@localhost ~]# 
+[root@localhost ~]# ls -ld /myload/
+drwxr-xr-x. 2 mysql root 6 5月  16 22:15 /myload/
+[root@localhost ~]#
+
+]# vim /etc/my.cnf
+[mysqld]
+secure_file_priv="/myload"
+:wq
+]# systemctl  restart mysqld
+
+]# mysql -uroot  -p密码
+mysql> show variables like "secure_file_priv";
++------------------+----------+
+| Variable_name    | Value    |
++------------------+----------+
+| secure_file_priv | /myload/ |
++------------------+----------+
+1 row in set (0.00 sec)
+
+mysql>
+
+
+1.1 导入数据：把系统文件的内容存储到数据库的表里
+
+		命令：
+		mysql> load  data  infile   "目录名/文件名" into   table  库名.表名  fields terminated   by   "分隔符"
+lines  terminated  by   "\n";
+
+mysql> create database db3;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> create table db3.user(
+    -> name char(30) , 
+    -> password  char(1),
+    -> uid int ,
+    -> gid int ,
+    -> comment varchar(150) ,
+    -> homedir char(60) ,
+    -> shell  char(40)
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> desc db3.user;
++----------+--------------+------+-----+---------+-------+
+| Field    | Type         | Null | Key | Default | Extra |
++----------+--------------+------+-----+---------+-------+
+| name     | char(30)     | YES  |     | NULL    |       |
+| password | char(1)      | YES  |     | NULL    |       |
+| uid      | int(11)      | YES  |     | NULL    |       |
+| gid      | int(11)      | YES  |     | NULL    |       |
+| comment  | varchar(150) | YES  |     | NULL    |       |
+| homedir  | char(60)     | YES  |     | NULL    |       |
+| shell    | char(40)     | YES  |     | NULL    |       |
++----------+--------------+------+-----+---------+-------+
+7 rows in set (0.09 sec)
+
+mysql> 
+mysql> select  * from db3.user;
+Empty set (0.00 sec)
+
+mysql> load data infile "/myload/passwd" into table db3.user
+    -> fields terminated by ":" lines terminated by "\n" ;
+ERROR 13 (HY000): Can't get stat of '/myload/passwd' (Errcode: 2 - No such file or directory)
+mysql> system cp /etc/passwd /myload/
+mysql> system  ls /myload
+passwd
+mysql> load data infile "/myload/passwd" into table db3.user fields terminated by ":" lines terminated by "\n";
+ERROR 13 (HY000): Can't get stat of '/myload/passwd' (Errcode: 13 - Permission denied)
+mysql> 
+mysql> load data infile "/myload/passwd" into table db3.user fields terminated by ":" lines terminated by "\n";
+Query OK, 20 rows affected (0.00 sec)
+Records: 20  Deleted: 0  Skipped: 0  Warnings: 0
+
+mysql>
+mysql> alter table db3.user 
+    -> add
+    -> id int primary key auto_increment first;
+Query OK, 0 rows affected (0.12 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> select  * from db3.user;
++----+-----------------+----------+------+------+----------------------------+--------------------+----------------+
+| id | name            | password | uid  | gid  | comment                    | homedir            | shell          |
++----+-----------------+----------+------+------+----------------------------+--------------------+----------------+
+|  1 | root            | x        |    0 |    0 | root                       | /root              | /bin/bash      |
+|  2 | bin             | x        |    1 |    1 | bin                        | /bin               | /sbin/nologin  |
+|  3 | daemon          | x        |    2 |    2 | daemon                     | /sbin              | /sbin/nologin  |
+|  4 | adm             | x        |    3 |    4 | adm                        | /var/adm           | /sbin/nologin  |
+|  5 | lp              | x        |    4 |    7 | lp                         | /var/spool/lpd     | /sbin/nologin  |
+|  6 | sync            | x        |    5 |    0 | sync                       | /sbin              | /bin/sync      |
+|  7 | shutdown        | x        |    6 |    0 | shutdown                   | /sbin              | /sbin/shutdown |
+|  8 | halt            | x        |    7 |    0 | halt                       | /sbin              | /sbin/halt     |
+|  9 | mail            | x        |    8 |   12 | mail                       | /var/spool/mail    | /sbin/nologin  |
+| 10 | operator        | x        |   11 |    0 | operator                   | /root              | /sbin/nologin  |
+| 11 | games           | x        |   12 |  100 | games                      | /usr/games         | /sbin/nologin  |
+| 12 | ftp             | x        |   14 |   50 | FTP User                   | /var/ftp           | /sbin/nologin  |
+| 13 | nobody          | x        |   99 |   99 | Nobody                     | /                  | /sbin/nologin  |
+| 14 | systemd-network | x        |  192 |  192 | systemd Network Management | /                  | /sbin/nologin  |
+| 15 | dbus            | x        |   81 |   81 | System message bus         | /                  | /sbin/nologin  |
+| 16 | polkitd         | x        |  999 |  998 | User for polkitd           | /                  | /sbin/nologin  |
+| 17 | sshd            | x        |   74 |   74 | Privilege-separated SSH    | /var/empty/sshd    | /sbin/nologin  |
+| 18 | postfix         | x        |   89 |   89 |                            | /var/spool/postfix | /sbin/nologin  |
+| 19 | chrony          | x        |  998 |  996 |                            | /var/lib/chrony    | /sbin/nologin  |
+| 20 | mysql           | x        |   27 |   27 | MySQL Server               | /var/lib/mysql     | /bin/false     |
++----+-----------------+----------+------+------+----------------------------+--------------------+----------------+
+20 rows in set (0.00 sec)
+
+mysql> 
+mysql> select  * from db3.user where id = 5;
++----+------+----------+------+------+---------+----------------+---------------+
+| id | name | password | uid  | gid  | comment | homedir        | shell         |
++----+------+----------+------+------+---------+----------------+---------------+
+|  5 | lp   | x        |    4 |    7 | lp      | /var/spool/lpd | /sbin/nologin |
++----+------+----------+------+------+---------+----------------+---------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+1.2 导出数据：把表记录存储到系统文件里
+		命令：
+		select命令   into   outfile "目录名/文件名"
+            [fields  terminated   by "分隔符"
+            lines   terminated   by " \n" ];
+
+mysql> mysql> select  * from db3.user into outfile "/myload/user.txt";
+Query OK, 20 rows affected (0.00 sec)
+
+mysql> 
+mysql> select  * from db3.user into outfile "/myload/user.txt";
+ERROR 1086 (HY000): File '/myload/user.txt' already exists
+mysql> 
+mysql> system ls /myload
+passwd	user.txt
+mysql> system cat /myload/user.txt
+1	root	x	0	0	root	/root	/bin/bash
+2	bin	x	1	1	bin	/bin	/sbin/nologin
+3	daemon	x	2	2	daemon	/sbin	/sbin/nologin
+4	adm	x	3	4	adm	/var/adm	/sbin/nologin
+5	lp	x	4	7	lp	/var/spool/lpd	/sbin/nologin
+6	sync	x	5	0	sync	/sbin	/bin/sync
+7	shutdown	x	6	0	shutdown	/sbin	/sbin/shutdown
+8	halt	x	7	0	halt	/sbin	/sbin/halt
+9	mail	x	8	12	mail	/var/spool/mail	/sbin/nologin
+10	operator	x	11	0	operator	/root	/sbin/nologin
+11	games	x	12	100	games	/usr/games	/sbin/nologin
+12	ftp	x	14	50	FTP User	/var/ftp	/sbin/nologin
+13	nobody	x	99	99	Nobody	/	/sbin/nologin
+14	systemd-network	x	192	192	systemd Network Management	/	/sbin/nologin
+15	dbus	x	81	81	System message bus	/	/sbin/nologin
+16	polkitd	x	999	998	User for polkitd	/	/sbin/nologin
+17	sshd	x	74	74	Privilege-separated SSH	/var/empty/sshd	/sbin/nologin
+18	postfix	x	89	89		/var/spool/postfix	/sbin/nologin
+19	chrony	x	998	996		/var/lib/chrony	/sbin/nologin
+20	mysql	x	27	27	MySQL Server	/var/lib/mysql	/bin/false
+mysql>
+
+mysql> select name , shell , uid from db3.user into outfile "/myload/user2.txt" fields terminated by "#" ;
+Query OK, 20 rows affected (0.00 sec)
+
+mysql> system cat /myload/user2.txt
+root#/bin/bash#0
+bin#/sbin/nologin#1
+daemon#/sbin/nologin#2
+adm#/sbin/nologin#3
+lp#/sbin/nologin#4
+sync#/bin/sync#5
+shutdown#/sbin/shutdown#6
+halt#/sbin/halt#7
+mail#/sbin/nologin#8
+operator#/sbin/nologin#11
+games#/sbin/nologin#12
+ftp#/sbin/nologin#14
+nobody#/sbin/nologin#99
+systemd-network#/sbin/nologin#192
+dbus#/sbin/nologin#81
+polkitd#/sbin/nologin#999
+sshd#/sbin/nologin#74
+postfix#/sbin/nologin#89
+chrony#/sbin/nologin#998
+mysql#/bin/false#27
+mysql> 
+
+mysql> select name , shell , uid from db3.user into outfile "/myload/user4.txt" fields terminated by "#"  
+    -> lines terminated by "???" ;
+Query OK, 20 rows affected (0.01 sec)
+
+mysql> system cat /myload/user4.txt
+root#/bin/bash#0???bin#/sbin/nologin#1???daemon#/sbin/nologin#2???adm#/sbin/nologin#3???lp#/sbin/nologin#4???sync#/bin/sync#5???shutdown#/sbin/shutdown#6???halt#/sbin/halt#7???mail#/sbin/nologin#8???operator#/sbin/nologin#11???games#/sbin/nologin#12???ftp#/sbin/nologin#14???nobody#/sbin/nologin#99???systemd-network#/sbin/nologin#192???dbus#/sbin/nologin#81???polkitd#/sbin/nologin#999???sshd#/sbin/nologin#74???postfix#/sbin/nologin#89???chrony#/sbin/nologin#998???mysql#/bin/false#27???mysql> 
+mysql> 
+
+mysql> select name , shell , uid from db3.user where id <= 3  into outfile "/myload/user6.txt" ;
+Query OK, 3 rows affected (0.00 sec)
+
+mysql> system cat /myload/user6.txt
+root	/bin/bash	0
+bin	/sbin/nologin	1
+daemon	/sbin/nologin	2
+mysql>
+
+	2 管理表记录
+		插入 insert into
+		时间5分钟 到 16:08 
+mysql> insert into db3.user values (22,"bob","x",2000,2000,"test user","/home/bob","/bin/bash");
+
+mysql> insert into db3.user values (23,"tom","x",2001,2001,"test user","/home/tom","/bin/bash"),(26,"lucy","x",3001,3001,"test user","/home/lucy","/bin/bash");
+
+mysql> insert into db3.user(name , uid ) values ("john",2888);
+
+mysql> insert into db3.user(name , uid ) values ("johna",4888),("alices",2999),("lili",3756);
+
+		查询 select
+ select 字段名列表 from  库.表 [ where  条件 ]；
+
+ 字段名列表   控制显示列的个数
+  where  条件 控制显示行的个数
+
+  select  *  from  db3.user;
+  mysql> select  id , name from  db3.user where  id <= 3 ;
+  mysql> select  id , name from  db3.user where  id = 3;
+  mysql> select  *  from  db3.user where  id = 3;	
+
+
+		修改 update
+mysql> update  db3.user  set  password="A" ;
+mysql> select  id , password from  db3.user;
+
+mysql> update db3.user set password="x" where id = 1 ;
+mysql> select  *  from  db3.user where  id = 1;
+
+		删除 delete 
+mysql> delete from db3.user where id > 20 ;
+Query OK, 6 rows affected (0.00 sec)
+
+mysql> select  * from  db3.user where  id > 20 ;
+Empty set (0.00 sec)
+
+mysql> select  * from  db3.user where  id <= 20 ;
+
+mysql> delete  from db3.user; (要慎用)
+
+
+3 查询/修改/删除记录时的匹配条件
+		基本匹配条件
+			1 数值比较
+ mysql> select name , uid  from db3.user  where uid < 10 ;
+ mysql> select name , uid , gid  from db3.user  where uid  =  gid ;
+ mysql> select  * from db3.user where id <= 5 ;
+ mysql> select name , uid , gid from db3.user where  uid != gid;
+
+			2 字符比较
+ mysql> select name from db3.user where name = "apache";
+Empty set (0.00 sec)
+
+mysql> select name from db3.user where name = "mysql";
++-------+
+| name  |
++-------+
+| mysql |
++-------+
+1 row in set (0.01 sec)
+
+mysql> 	
+mysql> select name from db3.user where shell="/bin/bash";
++------+
+| name |
++------+
+| root |
++------+
+1 row in set (0.00 sec)
+
+mysql> select name , shell from db3.user where shell != "/bin/bash";
+		
+
+		空 is null
+		非空 is not  null
+mysql> select  * from db3.user where shell is   null ;
+Empty set (0.00 sec)
+
+mysql> select  * from db3.user where shell is not  null ;
+
+
+
+		逻辑匹配(多个条件)
+		逻辑与 and  多个条件必须同时成立
+		逻辑或 or    多个条件中某个条件成立即可
+	
+mysql> select name , shell  from db3.user where   name="plj" and  uid=1 and shell="xxx";
+Empty set (0.00 sec)
+
+mysql> 
+mysql> select name , shell  from db3.user where   name="plj" or  uid=1 or shell="xxx";
++------+---------------+
+| name | shell         |
++------+---------------+
+| bin  | /sbin/nologin |
++------+---------------+
+1 row in set (0.00 sec)
+
+mysql> select name , shell , uid from db3.user where   name="plj" or  uid=1 or shell="xxx";
++------+---------------+------+
+| name | shell         | uid  |
++------+---------------+------+
+| bin  | /sbin/nologin |    1 |
++------+---------------+------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+mysql> select  * from db3.user where id >= 3 and id<=5 ;
+	
+
+mysql> select name , uid  from  db3.user where   name="root" and  uid=0 or  uid=1 ;
++------+------+
+| name | uid  |
++------+------+
+| root |    0 |
+| bin  |    1 |
++------+------+
+2 rows in set (0.00 sec)
+
+mysql> select name , uid  from  db3.user where   name="root" and ( uid=0 or  uid=1) ;
++------+------+
+| name | uid  |
++------+------+
+| root |    0 |
++------+------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+		逻辑非 not 和 !  取反
+ mysql> select name,shell  from  db3.user where shell="/sbin/nologin";
+
+mysql> select name,shell  from  db3.user where shell != "/sbin/nologin";
+
+mysql> select name from db3.user where name is null;
+mysql> select name from db3.user where name is not null;
+
+
+		范围匹配 匹配范围内的任意一个值即可
+mysql> select  * from db3.user where id  between 3 and 5 ;
+mysql> select name from db3.user where  name in ("root" , "sync" ,"mysql" );
+
+mysql> select name ,shell from db3.user where  shell not in ("/bin/bash","/sbin/nologin");
+
+mysql> select name ,uid , gid  from db3.user where uid in (77 , 63, 9,11);
+
+
+        高级匹配
+                模糊匹配 like 
+
+mysql> select name from  user where name like '____';
++------+
+| name |
++------+
+| root |
+| sync |
+| halt |
+| mail |
+| dbus |
+| sshd |
+| xxhh |
++------+
+7 rows in set (0.00 sec)
+
+mysql> select name from  user where name like '___';
++------+
+| name |
++------+
+| bin  |
+| adm  |
+| ftp  |
++------+
+3 rows in set (0.00 sec)
+
+mysql> select name from  user where name   like  '%a%';
++----------+
+| name     |
++----------+
+| daemon   |
+| adm      |
+| halt     |
+| mail     |
+| operator |
+| games    |
++----------+
+6 rows in set (0.00 sec)
+
+mysql> select name from  user where name   like  'a%';
++------+
+| name |
++------+
+| adm  |
++------+
+1 row in set (0.00 sec)
+
+mysql> select name from  user where name   like  '%____%';
++-----------------+
+| name            |
++-----------------+
+| root            |
+| daemon          |
+| sync            |
+| shutdown        |
+| halt            |
+| mail            |
+| operator        |
+| games           |
+| nobody          |
+| systemd-network |
+| dbus            |
+| polkitd         |
+| sshd            |
+| postfix         |
+| chrony          |
+| mysql           |
+| xxhh            |
++-----------------+
+17 rows in set (0.00 sec)
+
+mysql> 
+
+        正则表达式
+mysql> select name from  user where  name regexp  '^j' ;
+Empty set (0.00 sec)
+
+mysql> 
+mysql> select name from  user where  name regexp  'y$' ;
++--------+
+| name   |
++--------+
+| nobody |
+| chrony |
++--------+
+2 rows in set (0.00 sec)
+
+mysql> select name from  user where  name regexp  '^j|y$' ;
++--------+
+| name   |
++--------+
+| nobody |
+| chrony |
++--------+
+2 rows in set (0.00 sec)
+
+mysql> select name from  user where  name regexp  '^a|y$' ;
++--------+
+| name   |
++--------+
+| adm    |
+| nobody |
+| chrony |
++--------+
+3 rows in set (0.01 sec)
+
+mysql> 
+mysql> select  name , uid  from user where  uid regexp  '..' ;
++-----------------+------+
+| name            | uid  |
++-----------------+------+
+| operator        |   11 |
+| games           |   12 |
+| ftp             |   14 |
+| nobody          |   99 |
+| systemd-network |  192 |
+| dbus            |   81 |
+| polkitd         |  999 |
+| sshd            |   74 |
+| postfix         |   89 |
+| chrony          |  998 |
+| mysql           |   27 |
++-----------------+------+
+11 rows in set (0.00 sec)
+
+mysql> select  name , uid  from user where  uid regexp  '^..$' ;
++----------+------+
+| name     | uid  |
++----------+------+
+| operator |   11 |
+| games    |   12 |
+| ftp      |   14 |
+| nobody   |   99 |
+| dbus     |   81 |
+| sshd     |   74 |
+| postfix  |   89 |
+| mysql    |   27 |
++----------+------+
+8 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> select name from  user where name regexp '[0-9]';
+Empty set (0.00 sec)
+
+mysql> insert into user(name) values ("yaya9"),("y6aya"),("ya3ya");
+Query OK, 3 rows affected (0.04 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> select name from  user where name regexp '[0-9]';
++-------+
+| name  |
++-------+
+| yaya9 |
+| y6aya |
+| ya3ya |
++-------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
+
+        四则计数
+
+mysql> select name , uid  from user  where  uid % 2  =  0 ;
++-----------------+------+
+| name            | uid  |
++-----------------+------+
+| root            |    0 |
+| daemon          |    2 |
+| lp              |    4 |
+| shutdown        |    6 |
+| mail            |    8 |
+| games           |   12 |
+| ftp             |   14 |
+| systemd-network |  192 |
+| sshd            |   74 |
+| chrony          |  998 |
++-----------------+------+
+10 rows in set (0.13 sec)
+
+mysql>
+
+
+mysql> select name ,  uid  from  user where uid <= 5;
++--------+------+
+| name   | uid  |
++--------+------+
+| root   |    0 |
+| bin    |    1 |
+| daemon |    2 |
+| adm    |    3 |
+| lp     |    4 |
+| sync   |    5 |
++--------+------+
+6 rows in set (0.00 sec)
+
+mysql> update user set  uid = uid + 1 where uid <= 5;
+Query OK, 6 rows affected (0.25 sec)
+Rows matched: 6  Changed: 6  Warnings: 0
+
+mysql> select name ,  uid  from  user where uid <= 6;
++----------+------+
+| name     | uid  |
++----------+------+
+| root     |    1 |
+| bin      |    2 |
+| daemon   |    3 |
+| adm      |    4 |
+| lp       |    5 |
+| sync     |    6 |
+| shutdown |    6 |
++----------+------+
+7 rows in set (0.00 sec)
+
+mysql> 
+mysql> update user set  uid = uid - 1 where uid <= 6;
+
+
+mysql> select name , uid , gid from user where name = "mysql";
++-------+------+------+
+| name  | uid  | gid  |
++-------+------+------+
+| mysql |   27 |   27 |
++-------+------+------+
+1 row in set (0.00 sec)
+
+mysql> select name , uid , gid , (uid + gid) / 2  pjf     from user where name = "mysql"; 
++-------+------+------+---------+
+| name  | uid  | gid  | pjf     |
++-------+------+------+---------+
+| mysql |   27 |   27 | 27.0000 |
++-------+------+------+---------+
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> select name , uid , gid , (uid + gid) / 2  pjf , uid + gid  zcj   from user where name = "mysql";
++-------+------+------+---------+------+
+| name  | uid  | gid  | pjf     | zcj  |
++-------+------+------+---------+------+
+| mysql |   27 |   27 | 27.0000 |   54 |
++-------+------+------+---------+------+
+1 row in set (0.00 sec)
+
+mysql> 
+        操作查询结构
+        
+聚集函数（对数据做统计的命令）
+mysql> select  * from user;
+mysql> select count(*) from user;
++----------+
+| count(*) |
++----------+
+|       24 |
++----------+
+1 row in set (0.00 sec)
+
+mysql>
+
+mysql> select sum(uid) from user;
++----------+
+| sum(uid) |
++----------+
+|     2631 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> select sum(uid) bjzcj from user;
++-------+
+| bjzcj |
++-------+
+|  2631 |
++-------+
+1 row in set (0.00 sec)
+
+mysql> select min(uid) bjzcj from user;
++-------+
+| bjzcj |
++-------+
+|     0 |
++-------+
+1 row in set (0.00 sec)
+
+mysql> select min(uid) bjzcj from user where shell != "/sbin/nologin";
++-------+
+| bjzcj |
++-------+
+|     0 |
++-------+
+1 row in set (0.00 sec)
+
+mysql> select max(uid) bjzcj from user where shell != "/sbin/nologin";
++-------+
+| bjzcj |
++-------+
+|    27 |
++-------+
+1 row in set (0.00 sec)
+
+mysql> select avg(uid) from user;
++----------+
+| avg(uid) |
++----------+
+| 131.5500 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> select name from user where shell = "/sbin/nologin" ;
++-----------------+
+| name            |
++-----------------+
+| a$namei         |
+| a$namei         |
+| a$namei         |
+| a$namei         |
+| mail            |
+| operator        |
+| games           |
+| ftp             |
+| nobody          |
+| systemd-network |
+| dbus            |
+| polkitd         |
+| sshd            |
+| postfix         |
+| chrony          |
++-----------------+
+15 rows in set (0.00 sec)
+
+mysql> select count(name) from user where shell = "/sbin/nologin" ;
+
+mysql> select min(uid) , max(uid) , avg(uid) , sum(uid) from user;
++----------+----------+----------+----------+
+| min(uid) | max(uid) | avg(uid) | sum(uid) |
++----------+----------+----------+----------+
+|        0 |      999 | 131.5500 |     2631 |
++----------+----------+----------+----------+
+1 row in set (0.01 sec)
+
+mysql> select min(uid) 最小值 , max(uid) , avg(uid) , sum(uid) from user;
++-----------+----------+----------+----------+
+| 最小值    | max(uid) | avg(uid) | sum(uid) |
++-----------+----------+----------+----------+
+|         0 |      999 | 131.5500 |     2631 |
++-----------+----------+----------+----------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+查询结果排序
+
+mysql> select name , uid from user where uid >=50 and uid <=100 ;
++---------+------+
+| name    | uid  |
++---------+------+
+| nobody  |   99 |
+| dbus    |   81 |
+| sshd    |   74 |
+| postfix |   89 |
++---------+------+
+4 rows in set (0.00 sec)
+
+mysql> select name , uid from user where uid >=50 and uid <=100 order by uid asc;
++---------+------+
+| name    | uid  |
++---------+------+
+| sshd    |   74 |
+| dbus    |   81 |
+| postfix |   89 |
+| nobody  |   99 |
++---------+------+
+4 rows in set (0.00 sec)
+
+mysql> select name , uid from user where uid >=50 and uid <=100 order by uid desc;
++---------+------+
+| name    | uid  |
++---------+------+
+| nobody  |   99 |
+| postfix |   89 |
+| dbus    |   81 |
+| sshd    |   74 |
++---------+------+
+4 rows in set (0.00 sec)
+
+mysql> 
+
+        查询结果排序
+
+mysql> select shell from user  where uid <= 100;
++----------------+
+| shell          |
++----------------+
+| /bin/bash      |
+| /sbin/nologin  |
+| /sbin/nologin  |
+| /sbin/nologin  |
+| /sbin/nologin  |
+| /bin/sync      |
+| /sbin/shutdown |
+| /sbin/halt     |
+| /sbin/nologin  |
+| /sbin/nologin  |
+| /sbin/nologin  |
+| /sbin/nologin  |
+| /sbin/nologin  |
+| /sbin/nologin  |
+| /sbin/nologin  |
+| /sbin/nologin  |
+| /bin/false     |
++----------------+
+17 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> select shell from user  where uid <= 100 group by shell;
++----------------+
+| shell          |
++----------------+
+| /bin/bash      |
+| /bin/false     |
+| /bin/sync      |
+| /sbin/halt     |
+| /sbin/nologin  |
+| /sbin/shutdown |
++----------------+
+6 rows in set (0.00 sec)
+
+mysql> 
+
+        去重显示
+
+mysql> select gid from user;
++------+
+| gid  |
++------+
+|    0 |
+|    1 |
+|    2 |
+|    4 |
+|    7 |
+|    0 |
+|    0 |
+|    0 |
+|   12 |
+|    0 |
+|  100 |
+|   50 |
+|   99 |
+|  192 |
+|   81 |
+|  998 |
+|   74 |
+|   89 |
+|  996 |
+|   27 |
+| NULL |
+| NULL |
+| NULL |
+| NULL |
++------+
+24 rows in set (0.00 sec)
+
+mysql> 
+mysql> 
+mysql> 
+mysql> select  distinct gid from user;
++------+
+| gid  |
++------+
+|    0 |
+|    1 |
+|    2 |
+|    4 |
+|    7 |
+|   12 |
+|  100 |
+|   50 |
+|   99 |
+|  192 |
+|   81 |
+|  998 |
+|   74 |
+|   89 |
+|  996 |
+|   27 |
+| NULL |
++------+
+17 rows in set (0.00 sec)
+
+mysql> 
+
+过滤查询结果 having
+having用法
+SQL查询   having   条件表达式;
+
+mysql> select name , uid  from user;
++-----------------+------+
+| name            | uid  |
++-----------------+------+
+| a$namei         |    0 |
+| a$namei         |    1 |
+| a$namei         |    2 |
+| a$namei         |    3 |
+| a$namei         |    4 |
+| sync            |    5 |
+| shutdown        |    5 |
+| halt            |    7 |
+| mail            |    8 |
+| operator        |   11 |
+| games           |   12 |
+| ftp             |   14 |
+| nobody          |   99 |
+| systemd-network |  192 |
+| dbus            |   81 |
+| polkitd         |  999 |
+| sshd            |   74 |
+| postfix         |   89 |
+| chrony          |  998 |
+| mysql           |   27 |
+| xxhh            | NULL |
+| yaya9           | NULL |
+| y6aya           | NULL |
+| ya3ya           | NULL |
++-----------------+------+
+24 rows in set (0.00 sec)
+
+mysql> 
+mysql> 
+mysql> 
+mysql> select name , uid  from user having name="apache" and uid=100;
+Empty set (0.00 sec)
+
+mysql> 
+mysql> select name , uid  from user where uid > 10     having name="apache" and uid=100;
+Empty set (0.00 sec)
+
+mysql> select name , uid  from user where uid > 10     having name="mysql" or name="bin"; 
++-------+------+
+| name  | uid  |
++-------+------+
+| mysql |   27 |
++-------+------+
+1 row in set (0.00 sec)
+
+mysql> select  name from user where id <= 10  having name="tom";
+Empty set (0.01 sec)
+
+mysql> 
+
+限制查询结果显示行数（默认显示查询结果的所有行）
+SQL查询  limit  数字; 	//显示查询结果前多少条记录
+SQL查询  limit  数字1,数字2; //显示指定范围内的查询记录
+数字1  起始行 （0 表示第1行  ）
+数字2  总行数
+
+mysql> 
+mysql> select id ,name from user where id <=3 ;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | a$namei |
+|  2 | a$namei |
+|  3 | a$namei |
++----+---------+
+3 rows in set (0.00 sec)
+
+mysql> select id ,name from user where id <=3  limit 2;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | a$namei |
+|  2 | a$namei |
++----+---------+
+2 rows in set (0.00 sec)
+
+mysql> select id ,name from user where id <=3  limit 1;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | a$namei |
++----+---------+
+1 row in set (0.00 sec)
+
+mysql> select name , uid , gid from user;
++-----------------+------+------+
+| name            | uid  | gid  |
++-----------------+------+------+
+| a$namei         |    0 |    0 |
+| a$namei         |    1 |    1 |
+| a$namei         |    2 |    2 |
+| a$namei         |    3 |    4 |
+| a$namei         |    4 |    7 |
+| sync            |    5 |    0 |
+| shutdown        |    5 |    0 |
+| halt            |    7 |    0 |
+| mail            |    8 |   12 |
+| operator        |   11 |    0 |
+| games           |   12 |  100 |
+| ftp             |   14 |   50 |
+| nobody          |   99 |   99 |
+| systemd-network |  192 |  192 |
+| dbus            |   81 |   81 |
+| polkitd         |  999 |  998 |
+| sshd            |   74 |   74 |
+| postfix         |   89 |   89 |
+| chrony          |  998 |  996 |
+| mysql           |   27 |   27 |
+| xxhh            | NULL | NULL |
+| yaya9           | NULL | NULL |
+| y6aya           | NULL | NULL |
+| ya3ya           | NULL | NULL |
++-----------------+------+------+
+24 rows in set (0.00 sec)
+
+mysql> 
+mysql> 
+mysql> 
+mysql> select name , uid , gid from user limit 5 , 4;
++----------+------+------+
+| name     | uid  | gid  |
++----------+------+------+
+| sync     |    5 |    0 |
+| shutdown |    5 |    0 |
+| halt     |    7 |    0 |
+| mail     |    8 |   12 |
++----------+------+------+
+4 rows in set (0.00 sec)
+
+mysql> select name , uid , gid from user limit 5 , 2;
++----------+------+------+
+| name     | uid  | gid  |
++----------+------+------+
+| sync     |    5 |    0 |
+| shutdown |    5 |    0 |
++----------+------+------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+
+mysql> select name , uid from user where uid >= 50 and uid <= 100 ;
++---------+------+
+| name    | uid  |
++---------+------+
+| nobody  |   99 |
+| dbus    |   81 |
+| sshd    |   74 |
+| postfix |   89 |
++---------+------+
+4 rows in set (0.01 sec)
+
+mysql> select name , uid from user where uid >= 50 and uid <= 100 order by uid desc;
++---------+------+
+| name    | uid  |
++---------+------+
+| nobody  |   99 |
+| postfix |   89 |
+| dbus    |   81 |
+| sshd    |   74 |
++---------+------+
+4 rows in set (0.00 sec)
+
+mysql> select name , uid from user where uid >= 50 and uid <= 100 order by uid desc limit 1;
++--------+------+
+| name   | uid  |
++--------+------+
+| nobody |   99 |
++--------+------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+4 MySQL服务图形管理工具-phpmyadmin软件
+		主流的图形工具软件
+		讲phpmyadmin软件安装与使用
+
+ [root@mysql50 ~]# rpm -q httpd
+未安装软件包 httpd 
+[root@mysql50 ~]# rpm -q php
+未安装软件包 php 
+[root@mysql50 ~]# rpm -q php-mysql
+未安装软件包 php-mysql 
+[root@mysql50 ~]# 
+[root@mysql50 ~]# yum -y install httpd php php-mysql
+[root@mysql50 ~]# systemctl  start httpd
+
+[root@mysql50 upload]# mv phpMyAdmin-2.11.11-all-languages /var/www/html/phpmyadmin
+[root@mysql50 upload]# cd /var/www/html/
+[root@mysql50 html]# ls
+phpmyadmin
+[root@mysql50 html]# cd phpmyadmin/
+[root@mysql50 phpmyadmin]# 
+[root@mysql50 phpmyadmin]# ls config.sample.inc.php 
+config.sample.inc.php
+[root@mysql50 phpmyadmin]# cp config.sample.inc.php  config.inc.php 
+[root@mysql50 phpmyadmin]# 
+[root@mysql50 phpmyadmin]# vim config.inc.php
+17 $cfg['blowfish_secret'] = 'plj123';
+31 $cfg['Servers'][$i]['host'] = 'localhost';
+:wq
+打开真机浏览器 输入网址 http://192.168.4.50/phpmyadmin
+			用户 root
+			密码 

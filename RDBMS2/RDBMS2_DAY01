@@ -1,0 +1,769 @@
+进阶课程 RDBMS2_DAY01： MySQL主从同步
+一、MySQL主从同步 （存储数据的服务结构）
+	1 mysql主从同步介绍
+	2 主从同步的工作过程？
+	3 配置主从同步的步骤
+	4 配置MySQL一主一从同步结构
+		4.1 配置主服务器192.168.4.51
+			4.1.1 启用binlog日志文件
+                [root@mysql51 ~]# vim /etc/my.cnf
+                [mysqld]
+                        server_id=51
+                        log_bin=master51
+                        :wq
+                        
+[root@mysql51 ~]# systemctl  restart mysqld
+[root@mysql51 ~]# 
+[root@mysql51 ~]# ls /var/lib/mysql
+auto.cnf        ibdata1      ibtmp1           mysql            performance_schema
+db5             ib_logfile0  master51.000001  mysql.sock       sys
+ib_buffer_pool  ib_logfile1  master51.index   mysql.sock.lock  xtrabackup_info
+[root@mysql51 ~]# 
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master51.000001 |      154 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@mysql51 ~]#
+
+			4.1.2 用户授权 
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'grant replication slave on  *.*  to repluser@"%" identified by "123qqq...A"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql51 ~]# 
+
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'select user , host from mysql.user where user="repluser"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+------+
+| user     | host |
++----------+------+
+| repluser | %    |
++----------+------+
+[root@mysql51 ~]#
+			4.1.3 查看日志信息
+	
+[root@mysql51 ~]# mysql -uroot -p123bbb...A -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master51.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@mysql51 ~]#
+
+
+		4.2 配置从服务器192.168.4.52
+			4.2.1  指定server_id
+				[mysqld]
+				server_id=52
+			          :wq
+
+			      [root@mysql52 ~]# systemctl  restart mysqld
+
+			4.2.2确保与主服务器数据一致
+[root@mysql51 ~]# mysqldump -uroot -p123bbb...A --master-data db5  > /root/newdb5.sql
+mysqldump: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql51 ~]# 
+
+[root@mysql51 ~]# scp /root/newdb5.sql  root@192.168.4.52:/root/
+
+[root@mysql52 ~]# mysql -uroot -p123bbb...A
+mysql> create database db5;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> exit
+Bye
+[root@mysql52 ~]# 
+[root@mysql52 ~]# mysql -uroot -p123bbb...A db5 < /root/newdb5.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql52 ~]# 		
+
+[root@mysql52 ~]# grep master51 /root/newdb5.sql 
+CHANGE MASTER TO MASTER_LOG_FILE='master51.000001', MASTER_LOG_POS=441;
+[root@mysql52 ~]#
+
+		4.2.3 指定主服务器信息
+[root@mysql52 ~]# mysql -uroot -p123bbb...A
+
+mysql> show slave status;
+Empty set (0.00 sec)
+
+mysql> 
+mysql> change master to  master_host="192.168.4.51" ,  master_user="repluser" , master_password="123qqq...A" , master_log_file="master51.000001" , master_log_pos=441;
+Query OK, 0 rows affected, 2 warnings (0.01 sec)
+
+mysql> 
+		4.2.4 启动Slave进程	
+mysql> start slave ;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> 
+
+		4.2.5 查看Slave状态
+	mysql> show  slave status \G
+	          Master_Host: 192.168.4.51
+ 	          Slave_IO_Running: Yes
+                          Slave_SQL_Running: Yes
+
+
+	排错时间
+	 Slave_IO_Running 报错 	
+	 Last_IO_Error: 报错信息
+               解决办法  
+	mysql> stop   slave ;
+	mysql> change master to  配置项="值"，配置项=值 ;
+	mysql> start  slave ;	
+
+	
+	Slave_SQL_Running：报错
+	Last_SQL_Error: 报错信息
+
+	解决办法
+		mysql> stop slave;
+		如果有 sql命令里同名的库 表 提示已存在 exists ，把其删除
+		如果执行sql命令里的库或表 不存在 要手动创建出来
+		mysql> start slave;
+
+               终极解决办法，还原重新配置
+		与从服务器相关的配置文件 ,存放在数据库目录下/var/lib/mysql/
+			
+[root@mysql52 ~]# cd /var/lib/mysql
+[root@mysql52 mysql]# rm -rf master.info  mysql52-relay-bin.* relay-log.info 
+[root@mysql52 mysql]# systemctl  restart mysqld
+[root@mysql52 mysql]# 
+[root@mysql52 mysql]# mysql -uroot -p123bbb...A -e 'show slave status \G '
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql52 mysql]# 
+
+	4.3 测试主从同步的配置
+		4.3.1 在主服务器51 授权用户给客户端连接使用
+mysql> grant select,insert on db5.*  to  yaya101@"%" identified by "123qqq...A";
+
+		4.3.2 在客户端50 使用授权用户访问 主服务器51 对数据做操作
+[root@mysql50 ~]# which  mysqld
+/usr/sbin/mysqld
+[root@mysql50 ~]# mysql -h192.168.4.51 -uyaya101 -p123qqq...A
+mysql> show grants;
++--------------------------------------------------+
+| Grants for yaya101@%                             |
++--------------------------------------------------+
+| GRANT USAGE ON *.* TO 'yaya101'@'%'              |
+| GRANT SELECT, INSERT ON `db5`.* TO 'yaya101'@'%' |
++--------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> select  count(*) from db5.a;
++----------+
+| count(*) |
++----------+
+|       43 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> insert into db5.a values(8887);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db5.a values(8887);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db5.a values(8887);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  count(*) from db5.a;
++----------+
+| count(*) |
++----------+
+|       46 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> select  * from db5.a where id = 8887;
++------+
+| id   |
++------+
+| 8887 |
+| 8887 |
+| 8887 |
++------+
+
+
+		4.3.3 在从服务器52本机可以查看到同样的数据
+mysql> select  count(*) from db5.a;
++----------+
+| count(*) |
++----------+
+|       46 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> select  * from db5.a where id = 8887;
++------+
+| id   |
++------+
+| 8887 |
+| 8887 |
+| 8887 |
++------+
+
+	主从同步模式：
+		1 结构类型？
+		2 配置一主多从 结构
+			要求：把数据库服务器53 也配置为51的从服务器
+		配置步骤：
+ 			1 在53主机安装MySQL软件、启动服务、使用初始密码登录、修改登录密码123qqq...A (时间5分钟到 17:40)
+ 			2 确保从53 有51上的数据
+
+[root@mysql51 ~]# mysqldump -uroot -p123bbb...A  --master-data db5 > /opt/db5.sql 
+mysqldump: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql51 ~]# 
+[root@mysql51 ~]# scp /opt/db5.sql  root@192.168.4.53:/root/
+
+[root@mysql53 ~]# vim /etc/my.cnf
+		[mysqld]
+		server_id=53
+:wq
+
+[root@mysql53 ~]# systemctl  restart mysqld
+[root@mysql53 ~]# 
+[root@mysql53 ~]# 
+[root@mysql53 ~]# 
+[root@mysql53 ~]# mysql -uroot -p123qqq...A  db5  < /root/db5.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql53 ~]# 
+
+			3 把53配置为51的从服务器
+
+[root@mysql53 ~]# grep master51 /root/db5.sql 
+CHANGE MASTER TO MASTER_LOG_FILE='master51.000001', MASTER_LOG_POS=3364;
+[root@mysql53 ~]# 
+
+[root@mysql53 ~]# mysql -uroot -p123qqq...A
+mysql> show slave status;
+Empty set (0.00 sec)
+
+mysql>
+ 
+mysql> change master to master_host="192.168.4.51" , master_user="repluser" , master_password="123qqq...A" ,  master_log_file="master51.000001" , master_log_pos=3364;
+Query OK, 0 rows affected, 2 warnings (0.00 sec)
+
+mysql> start slave ;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> 
+[root@mysql53 ~]# mysql -uroot -p123qqq...A -e 'show slave status \G' | grep -i "master_host"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.51
+[root@mysql53 ~]# 
+[root@mysql53 ~]# mysql -uroot -p123qqq...A -e 'show slave status \G' | grep -i "yes"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@mysql53 ~]# 
+
+		      	4 测试配置
+				4.1在50主机连接主服务器51 操作数据
+[root@mysql50 ~]# mysql -h192.168.4.51 -uyaya101 -p123qqq...A
+mysql> insert into db5.b values("xxhh");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db5.b values("xxhh");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db5.b values("xxhh");
+Query OK, 1 row affected (0.00 sec)
+
+mysql>
+				4.2 在从52 和 53 本机都可以查看到同样的数据
+[root@mysql52 mysql]# mysql -uroot -p123bbb...A  -e 'select  * from db5.b where name="xxhh"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| name |
++------+
+| xxhh |
+| xxhh |
+| xxhh |
++------+
+[root@mysql52 mysql]# 
+[root@mysql53 ~]# mysql -uroot -p123qqq...A  -e 'select  * from db5.b where name="xxhh"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| name |
++------+
+| xxhh |
+| xxhh |
+| xxhh |
++------+
+
+
+++++++配置mysql 主从从同步结构
+        1  把数据服务器192.168.4.53 恢复独立的数据库服务器
+        [root@mysql53 mysql]# rm -rf master.info  relay-log.info  mysql53-relay-bin.*
+[root@mysql53 mysql]# systemctl  restart mysqld
+
+[root@mysql53 mysql]# mysql -uroot -p123qqq...A
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| db5                |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+
+mysql> drop database db5;
+Query OK, 2 rows affected (0.01 sec)
+
+mysql> show slave status;
+Empty set (0.00 sec)
+
+mysql>
+
+
+        部署2台新的mysql数据库服务器 192.168.4.54  /  192.168.4.55  管理员名 123qqq...A
+
++++++配置MySQL主从从同步结构
+        1 配置主数据库服务器 192.168.4.53
+                ]# /etc/my.cnf
+[mysqld]
+server_id=53
+log_bin=master53
+:wq
+[root@mysql53 mysql]# systemctl  restart mysqld
+[root@mysql53 mysql]# mysql -uroot -p123qqq...A
+mysql> grant replication slave on  *.*  to  repluser@"%" identified by "123qqq...A" ;
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master53.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+            配置数据库服务器192.168.4.54 
+          [root@mysql54 ~]# vim /etc/my.cnf          
+                    [mysqld]
+server_id=54
+log_bin=db54
+log_slave_updates
+：wq
+[root@mysql54 ~]# systemctl  restart mysqld
+[root@mysql54 ~]# mysql -uroot -p123bbb...A
+mysql> grant replication slave on *.* to plj@"%" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> show slave status;
+Empty set (0.00 sec)
+
+mysql> 
+mysql> change master to  master_host="192.168.4.53" , master_user="repluser" , master_password="123qqq...A" , master_log_file="master53.000001" , master_log_pos=441;
+Query OK, 0 rows affected, 2 warnings (0.01 sec)
+
+mysql> start slave ;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show slave status \G
+*************************** 1. row ***************************
+               Slave_IO_State: Waiting for master to send event
+                  Master_Host: 192.168.4.53
+                  Master_User: repluser
+                  Master_Port: 3306
+                Connect_Retry: 60
+              Master_Log_File: master53.000001
+          Read_Master_Log_Pos: 441
+               Relay_Log_File: mysql54-relay-bin.000002
+                Relay_Log_Pos: 319
+        Relay_Master_Log_File: master53.000001
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+              Replicate_Do_DB: 
+          Replicate_Ignore_DB: 
+           Replicate_Do_Table: 
+       Replicate_Ignore_Table: 
+      Replicate_Wild_Do_Table: 
+  Replicate_Wild_Ignore_Table: 
+                   Last_Errno: 0
+                   Last_Error: 
+                 Skip_Counter: 0
+          Exec_Master_Log_Pos: 441
+              Relay_Log_Space: 528
+              Until_Condition: None
+               Until_Log_File: 
+                Until_Log_Pos: 0
+           Master_SSL_Allowed: No
+           Master_SSL_CA_File: 
+           Master_SSL_CA_Path: 
+              Master_SSL_Cert: 
+            Master_SSL_Cipher: 
+               Master_SSL_Key: 
+        Seconds_Behind_Master: 0
+Master_SSL_Verify_Server_Cert: No
+                Last_IO_Errno: 0
+                Last_IO_Error: 
+               Last_SQL_Errno: 0
+               Last_SQL_Error: 
+  Replicate_Ignore_Server_Ids: 
+             Master_Server_Id: 53
+                  Master_UUID: 06fc08bc-9c52-11ea-96eb-000c2916c819
+             Master_Info_File: /var/lib/mysql/master.info
+                    SQL_Delay: 0
+          SQL_Remaining_Delay: NULL
+      Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+           Master_Retry_Count: 86400
+                  Master_Bind: 
+      Last_IO_Error_Timestamp: 
+     Last_SQL_Error_Timestamp: 
+               Master_SSL_Crl: 
+           Master_SSL_Crlpath: 
+           Retrieved_Gtid_Set: 
+            Executed_Gtid_Set: 
+                Auto_Position: 0
+         Replicate_Rewrite_DB: 
+                 Channel_Name: 
+           Master_TLS_Version: 
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> show master status ;
++-------------+----------+--------------+------------------+-------------------+
+| File        | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-------------+----------+--------------+------------------+-------------------+
+| db54.000001 |      436 |              |                  |                   |
++-------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql>
+
+                配置从服务器 192.168.4.55
+           [root@mysql55 ~]# vim /etc/my.cnf
+         
+                    [mysqld]
+                        server_id=55
+        :wq
+        [root@mysql55 ~]# systemctl  restart mysqld
+[root@mysql55 ~]# mysql -uroot -p123qqq...A
+mysql> change master to master_host="192.168.4.54" , master_user="plj" , master_password="123qqq...A" , master_log_file="db54.000001" , master_log_pos=436 ;
+Query OK, 0 rows affected, 2 warnings (0.01 sec)
+
+mysql> start slave ;
+Query OK, 0 rows affected (0.00 sec)
+
+*************************** 1. row ***************************
+               Slave_IO_State: Waiting for master to send event
+                  Master_Host: 192.168.4.54
+                  Master_User: plj
+                  Master_Port: 3306
+                Connect_Retry: 60
+              Master_Log_File: db54.000001
+          Read_Master_Log_Pos: 436
+               Relay_Log_File: mysql55-relay-bin.000003
+                Relay_Log_Pos: 315
+        Relay_Master_Log_File: db54.000001
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+              Replicate_Do_DB: 
+          Replicate_Ignore_DB: 
+           Replicate_Do_Table: 
+       Replicate_Ignore_Table: 
+      Replicate_Wild_Do_Table: 
+  Replicate_Wild_Ignore_Table: 
+                   Last_Errno: 0
+                   Last_Error: 
+                 Skip_Counter: 0
+          Exec_Master_Log_Pos: 436
+              Relay_Log_Space: 524
+              Until_Condition: None
+               Until_Log_File: 
+                Until_Log_Pos: 0
+           Master_SSL_Allowed: No
+           Master_SSL_CA_File: 
+           Master_SSL_CA_Path: 
+              Master_SSL_Cert: 
+            Master_SSL_Cipher: 
+               Master_SSL_Key: 
+        Seconds_Behind_Master: 0
+Master_SSL_Verify_Server_Cert: No
+                Last_IO_Errno: 0
+                Last_IO_Error: 
+               Last_SQL_Errno: 0
+               Last_SQL_Error: 
+  Replicate_Ignore_Server_Ids: 
+             Master_Server_Id: 54
+                  Master_UUID: 3d7f9f32-9b87-11ea-86bc-000c29070d34
+             Master_Info_File: /var/lib/mysql/master.info
+                    SQL_Delay: 0
+          SQL_Remaining_Delay: NULL
+      Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+           Master_Retry_Count: 86400
+                  Master_Bind: 
+      Last_IO_Error_Timestamp: 
+     Last_SQL_Error_Timestamp: 
+               Master_SSL_Crl: 
+           Master_SSL_Crlpath: 
+           Retrieved_Gtid_Set: 
+            Executed_Gtid_Set: 
+                Auto_Position: 0
+         Replicate_Rewrite_DB: 
+                 Channel_Name: 
+           Master_TLS_Version: 
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> 
+
+            查看配置
+
+  [root@mysql53 mysql]# mysql -uroot -p123qqq...A -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master53.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@mysql53 mysql]# 
+          
+            [root@mysql54 ~]# mysql -uroot -p123bbb...A -e 'show slave status \G ' | grep -i "yes"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@mysql54 ~]# 
+[root@mysql54 ~]# mysql -uroot -p123bbb...A -e 'show slave status \G ' | grep -i "master_host"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.53
+[root@mysql54 ~]#
+
+[root@mysql55 ~]# mysql -uroot -p123bbb...A -e 'show slave status \G ' | grep -i "yes"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@mysql55 ~]# 
+[root@mysql55 ~]# mysql -uroot -p123bbb...A -e 'show slave status \G ' | grep -i "master_host"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.54
+[root@mysql55 ~]#
+
+                测试主从从配置
+
+[root@mysql53 mysql]# mysql -uroot -p123qqq...A -e 'grant all on gamedb.* to yaya@"%" identified by  "123qqq...A"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@mysql53 mysql]#
+
+[root@mysql50 ~]# mysql -h192.168.4.53 -uyaya -p123qqq...A
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
++--------------------+
+1 row in set (0.00 sec)
+
+mysql> create database gamedb;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> create table gamedb.t1(id int);
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> insert into  gamedb.t1 values(100);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from gamedb.t1;
++------+
+| id   |
++------+
+|  100 |
++------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+mysql> insert into  gamedb.t1 values(200);
+
+[root@mysql54 ~]# mysql -uroot -p123bbb...A  -e 'select  * from gamedb.t1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  100 |
+|  200 |
++------+
+[root@mysql54 ~]# 
+
+[root@mysql55 ~]# mysql -uroot -p123bbb...A  -e 'select  * from gamedb.t1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  100 |
+|  200 |
++------+
+[root@mysql55 ~]# 
+
+
+        配置MySQL半同步复制模式  
+                配置步骤 
+				   查看是否允许动态安装模块
+                        ]# mysql -uroot -p123qqq...A -e 'show  variables  like  "have_dynamic_loading"'
+                        mysql: [Warning] Using a password on the command line interface can be insecure.
++----------------------+-------+
+| Variable_name        | Value |
++----------------------+-------+
+| have_dynamic_loading | YES   |
++----------------------+-------+
+[root@mysql53 mysql]#     
+
+				安装模块：
+				  命令行安装，马上生效不需要重启服务，重启服务配置会还原
+
+		                mysql> install  plugin  rpl_semi_sync_master   SONAME  "semisync_master.so";
+
+					
+
+				查看模块是否安装成功
+> select  plugin_name, plugin_status from  information_schema.plugins  where plugin_name like '%semi%';  
+
+mysql> select  plugin_name, plugin_status from  information_schema.plugins  where plugin_name like '%semi%';
++----------------------+---------------+
+| plugin_name          | plugin_status |
++----------------------+---------------+
+| rpl_semi_sync_master | ACTIVE        |
++----------------------+---------------+
+1 row in set (0.00 sec)
+
+mysql>
+				启用模块
+					命令行启用
+                        
+                        mysql> set  global rpl_semi_sync_master_enabled=1; 
+
+
+					永久启用
+				[root@mysql53 mysql]# vim /etc/my.cnf
+				[mysqld]
+
+                plugin-load=rpl_semi_sync_master=semisync_master.so 永久配置，在配置文件里设置加载模块的选项
+            	rpl_semi_sync_master_enabled=1  启用 
+                :wq
+                [root@mysql53 mysql]# systemctl  restart mysqld
+
+                验证：
+[root@mysql53 mysql]# mysql -uroot -p123qqq...A
+                    
+mysql> select  plugin_name, plugin_status from  information_schema.plugins  where plugin_name like '%semi%'; 
++----------------------+---------------+
+| plugin_name          | plugin_status |
++----------------------+---------------+
+| rpl_semi_sync_master | ACTIVE        |
++----------------------+---------------+
+1 row in set (0.00 sec)
+
+mysql> show  variables  like  "rpl_semi_sync_%_enabled";                                            
++------------------------------+-------+
+| Variable_name                | Value |
++------------------------------+-------+
+| rpl_semi_sync_master_enabled | ON    |
++------------------------------+-------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+                配置从数据库服务器192.168.4.55 为半同步复制模式
+[root@mysql55 ~]# mysql -uroot -p123bbb...A
+mysql> install  plugin  rpl_semi_sync_slave   SONAME  "semisync_slave.so";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> set  global rpl_semi_sync_slave_enabled=1;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show  variables  like  "rpl_semi_sync_%_enabled";
++-----------------------------+-------+
+| Variable_name               | Value |
++-----------------------------+-------+
+| rpl_semi_sync_slave_enabled | ON    |
++-----------------------------+-------+
+1 row in set (0.00 sec)
+
+mysql>exit
+
+[root@mysql55 ~]# vim /etc/my.cnf
+[mysqld]
+plugin-load=rpl_semi_sync_slave=semisync_slave.so
+rpl_semi_sync_slave_enabled=1
+:wq
+
+[root@mysql55 ~]# systemctl  restart mysqld
+[root@mysql55 ~]# mysql -uroot -p123bbb...A -e ' show  variables  like  "rpl_semi_sync_%_enabled" '
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------------------+-------+
+| Variable_name               | Value |
++-----------------------------+-------+
+| rpl_semi_sync_slave_enabled | ON    |
++-----------------------------+-------+
+[root@mysql55 ~]#
+
+                开启192.168.4.54主机的半同步复制模式
+                        [root@mysql54 ~]# mysql -uroot -p123bbb...A
+                        mysql>  install  plugin  rpl_semi_sync_master   SONAME  "semisync_master.so";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>  install  plugin  rpl_semi_sync_slave   SONAME  "semisync_slave.so";
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> set  global rpl_semi_sync_master_enabled=1; 
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> set  global rpl_semi_sync_slave_enabled=1;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show  variables  like  "rpl_semi_sync_%_enabled";
++------------------------------+-------+
+| Variable_name                | Value |
++------------------------------+-------+
+| rpl_semi_sync_master_enabled | ON    |
+| rpl_semi_sync_slave_enabled  | ON    |
++------------------------------+-------+
+2 rows in set (0.00 sec)
+
+mysql>
+]# vim /etc/my.cnf
+[mysqld]
+plugin-load= "rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1
+:wq
+[root@mysql54 ~]# systemctl  restart mysqld
+[root@mysql54 ~]# mysql -uroot -p123bbb...A  -e ' show  variables  like  "rpl_semi_sync_%_enabled" 'mysql: [Warning] Using a password on the command line interface can be insecure.
++------------------------------+-------+
+| Variable_name                | Value |
++------------------------------+-------+
+| rpl_semi_sync_master_enabled | ON    |
+| rpl_semi_sync_slave_enabled  | ON    |
++------------------------------+-------+
+[root@mysql54 ~]#
+
+
+晚自习练习题 配置主主结构要求如下：
+        把数据库服务器192.168.4.56 和 192.168.4.57 配置为 主主结构
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
