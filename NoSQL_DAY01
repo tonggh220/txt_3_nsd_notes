@@ -174,3 +174,36 @@ curl.so  fileinfo.so  json.so  phar.so  redis.so  zip.so
 [root@mysql51 phpredis-2.2.4]# php -m  | grep  -i redis
 redis
 [root@mysql51 phpredis-2.2.4]#
+
+                		测试 配置
+			1  检查redis服务是否运行
+[root@mysql50 ~]# netstat  -utnlp  | grep redis-server
+tcp        0      0 192.168.4.50:6360       0.0.0.0:*               LISTEN      9839/redis-server 1 
+[root@mysql50 ~]# 			
+                        编写网页脚本
+[root@mysql51 ~]# vim /usr/local/nginx/html/test2.php
+<?php
+$redis = new redis();
+$redis->connect("192.168.4.50","6360");
+$redis->auth("123456");
+$redis->set("linux","redhat");
+$redis->set("name","panglijing");
+echo $redis->get("linux");
+echo $redis->get("name");
+?>
+:wq
+
+[root@mysql51 ~]# curl  http://localhost/test2.php  测试
+redhatpanglijing[root@mysql51 ~]# 
+
+
+[root@mysql50 ~]# redis-cli  -h 192.168.4.50 -p 6360  -a 123456   在Redis本机 查看数据
+192.168.4.50:6360> keys *
+1) "linux"
+2) "name"
+3) "k"
+4) "j"
+192.168.4.50:6360> mget linux  name
+1) "redhat"
+2) "panglijing"
+192.168.4.50:6360> 
