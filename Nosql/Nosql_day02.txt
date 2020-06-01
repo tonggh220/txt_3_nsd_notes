@@ -1,4 +1,30 @@
-一  创建Redis集群
+一 创建Redis集群
+	1.1 集群的功能： 可以实现数据的自动备份
+		           可以实现redis服务的高可用
+		           分布式存储数据
+
+
+	1.2  启用每一台redis服务的集群功能 (15分钟14:41)
+已51主机为例
+[root@mysql51 ~]# /etc/init.d/redis_6379  stop
+Stopping ...
+Redis stopped
+[root@mysql51 ~]# vim   /etc/redis/6379.conf 
+
+port 6351
+bind 192.168.4.51
+cluster-enabled yes
+cluster-config-file nodes-6379.conf
+cluster-node-timeout 5000
+:wq
+
+[root@mysql51 ~]# netstat  -utnlp  | grep  redis-server
+tcp        0      0 192.168.4.51:16351      0.0.0.0:*               LISTEN      13775/redis-server  
+tcp        0      0 192.168.4.51:6351       0.0.0.0:*               LISTEN      13775/redis-server  
+[root@mysql51 ~]# 
+
+
+
 二 管理Redis集群
 
  
