@@ -338,10 +338,88 @@ OK
 [root@HOST57 ~]# 
 
 	集群存/取数据的工作过程?
-	
+					09:00  上课 
 	2.1  向集群中添加新服务器  
 		2.1.1 添加master角色服务器  
-192.168.4.58 （安装源码redis软件 做初始化配置 并启用集群功能运行服务）
+                                               192.168.4.58 （安装源码redis软件 做初始化配置 并启用集群功能运行服务）
+			在管理主机57，添加master角色的Redis服务器
+				1 添加主机
+[root@HOST57 ~]# redis-trib.rb  info  192.168.4.53:6353
+192.168.4.53:6353 (8f6c32e4...) -> 2 keys | 5461 slots | 1 slaves.
+192.168.4.52:6352 (c4e1bcef...) -> 3 keys | 5462 slots | 1 slaves.
+192.168.4.55:6355 (2e79e704...) -> 2 keys | 5461 slots | 1 slaves.
+[OK] 7 keys in 3 masters.
+0.00 keys per slot on average.
+[root@HOST57 ~]#
+
+[root@HOST57 ~]# redis-trib.rb  add-node  192.168.4.58:6379   192.168.4.53:6353
+>>> Adding node 192.168.4.58:6379 to cluster 192.168.4.53:6353
+>>> Performing Cluster Check (using node 192.168.4.53:6353)
+M: 8f6c32e447d978c9750ff81cc1b13fee02bac875 192.168.4.53:6353
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+S: e5e96b0e27c8007a274de6d4a28f8ad143c502d2 192.168.4.54:6354
+   slots: (0 slots) slave
+   replicates 8f6c32e447d978c9750ff81cc1b13fee02bac875
+S: 520f49d221e0636e8e25f747bb71fa3ea8d3b469 192.168.4.51:6351
+   slots: (0 slots) slave
+   replicates 2e79e70442de0426d35c6e8d1ab145373a11a63f
+S: 8cbaacec314fcc4028811fb6c0ae008b6f87f2f2 192.168.4.56:6356
+   slots: (0 slots) slave
+   replicates c4e1bcef71c4a9b799b29a9c666836962fc81eda
+M: c4e1bcef71c4a9b799b29a9c666836962fc81eda 192.168.4.52:6352
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+M: 2e79e70442de0426d35c6e8d1ab145373a11a63f 192.168.4.55:6355
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+>>> Send CLUSTER MEET to node 192.168.4.58:6379 to make it join the cluster.
+[OK] New node added correctly.
+[root@HOST57 ~]#
+
+
+
+				2 分配hash slots
+[root@HOST57 ~]#  redis-trib.rb reshard 192.168.4.53:6353
+移出hash槽个数   4096
+接收hash槽主机ID    58主机的id
+移出hash槽主机ID    all
+同意配置   yes
+
+
+				3 查看集群信息
+[root@HOST57 ~]# redis-trib.rb info 192.168.4.53:6353
+192.168.4.53:6353 (8f6c32e4...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.58:6379 (2d1ecc69...) -> 2 keys | 4096 slots | 0 slaves.
+192.168.4.52:6352 (c4e1bcef...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.55:6355 (2e79e704...) -> 1 keys | 4096 slots | 1 slaves.
+[OK] 7 keys in 4 masters.
+0.00 keys per slot on average.
+[root@HOST57 ~]#
+
+[root@HOST57 ~]# redis-trib.rb info 192.168.4.53:6353
+M: 2d1ecc690c0d841887693b3be09a41332918f55b 192.168.4.58:6379
+   slots:0-1364,5461-6826,10923-12287 (4096 slots) master
+   0 additional replica(s)
+
+				4 客户端访问新添加服务器存/取数据
+[root@mysql50 ~]# redis-cli  -c  -h 192.168.4.58 -p 6379
+192.168.4.58:6379> keys *
+1) "name"
+2) "age"
+192.168.4.58:6379> set address  bj
+-> Redirected to slot [3680] located at 192.168.4.55:6355
+OK
+192.168.4.55:6355> keys *
+1) "address"
+2) "j"
+192.168.4.55:6355> 
+			
+
 		2.1.2 添加slave角色服务器
 
 	2.2  把服务器从集群中移除
@@ -349,6 +427,12 @@ OK
 		2.2.2 移除master角色服务器
  
 	2.3 把移除的服务器再添加到集群里 
+
++++++++NoSQL_day03
+主从复制
+持久化
+数据类型
+
 
 
 
