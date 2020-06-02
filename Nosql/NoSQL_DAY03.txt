@@ -52,3 +52,57 @@ Starting Redis server...
 		> config set  masterauth  123456  命令行指定主服务器密码
 		> config rewrite   把命令行的配置保存到配置文件里
 		> info replication  查看复制信息
+
+		配置主从从结构  把主机54 配置为 53的从服务器  时间5分钟 到 16:17 
+[root@mysql54 ~]# redis-cli  -h 192.168.4.54 -p 6354 
+192.168.4.54:6354> slaveof 192.168.4.53 6353
+OK
+192.168.4.54:6354> config set masterauth 123456
+OK
+192.168.4.54:6354> config rewrite
+OK
+192.168.4.54:6354> info replication
+
+		主从复制工作过程？
+
+	哨兵服务：监视主服务的服务状态，当发现主服务器无法连接时 自动将对应的从提升为主服务器
+
+		 1 配置主52 从53  从54 结构
+		 2 配置哨兵服务器56
+			2.1  安装源码redis软件
+			 ]# tar  -zxvf  redis-4.0.8.tar.gz
+			 ]# yum  -y install gcc
+			 ]# cd redis-4.0.8
+			 ]# make  && make install
+			2.2  编辑哨兵服务的主配置文件
+			vim  /etc/sentinel.conf
+bind  0.0.0.0
+port  26379
+sentinel monitor   redisserver    192.168.4.51  6351    1
+sentinel auth-pass    redisserver    123456
+:wq
+
+
+			2.3 启动哨兵服务
+[root@host56 ~]# redis-sentinel  /etc/sentinel.conf    （启动信息会输出在屏幕上）
+
+			2.4 验证配置
+				把主服务器51的redis服务停止
+				查看56主机的监控信息
+				在53主机查看角色
+				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
