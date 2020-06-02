@@ -530,12 +530,22 @@ Waiting for the cluster to join.
 [root@HOST57 ~]# 
 
 
+[root@HOST57 ~]# redis-trib.rb  rebalance  192.168.4.54:6354  平均分配所有主服务器占用槽
 
 
-+++++++NoSQL_day03
-主从复制
-持久化
-数据类型
+		管理集群掌握的技术：
+			添加master角色主机
+			添加slave角色主机
+			删除master主机
+			删除slave主机
+			把删除的主机再添加到集群 rm -rf /var/lib/redis/6379/*
+
+			把 数据库服务器恢复为独立的服务器。
+			14:38 
+
+		
+	
+
 
 
 

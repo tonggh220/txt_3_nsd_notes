@@ -1,0 +1,54 @@
++++++++NoSQL_day03
+主从复制
+	默认Redis服务运行后，是master服务器
+
+	查看复制信息 > info   replication
+
+	命令行配置： 马上生效 ， 但重启服务后还原
+	> slaveof  192.168.4.51   6351
+
+	永久配置： vim /etc/redis/6379.conf
+	282   slaveof   masterip地址  master端口号
+
+
+	命令行恢复为独立的数据库服务器
+	> slaveof  no  one
+			
+	配置带验证的主从复制   练习6分钟 到 15:27 
+		主服务器设置连接密码
+		]# vim +501 /etc/redis/6379.conf
+			requirepass 123456
+		:wq
+[root@mysql51 ~]# redis-cli  -h 192.168.4.51 -p 6351 shutdown
+[root@mysql51 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@mysql51 ~]# 
+[root@mysql51 ~]# redis-cli  -h 192.168.4.51 -p 6351  -a 123456
+
+		从服务器指定主服务器的连接密码
+
+[root@mysql52 ~]# redis-cli  -h 192.168.4.52 -p 6352  shutdown
+[root@mysql52 ~]# vim /etc/redis/6379.conf 
+		masterauth 123456
+:wq
+[root@mysql52 ~]# redis-cli  -h 192.168.4.52 -p 6352
+192.168.4.52:6352> info replication
+
+
+		配置一主多从结构 （把主机53 也配置为 51的从服务器）
+		vim /etc/redis/6379.conf
+		slaveof  192.168.4.51  6351
+		masterauth  123456
+		:wq
+				
+		]# redis-cli  -h 192.168.4.53 -p 6353 shutdown
+		]# /etc/init.d/redis_6379 start
+		]# redis-cli  -h 192.168.4.53 -p 6353
+
+		或
+		> config set  requirepass  123456  给自己设置连接
+		> auth  123456  输入连接密码
+		> slaveof  192.168.4.51 6351   命令行指定主服务器
+		> config set  masterauth  123456  命令行指定主服务器密码
+		> config rewrite   把命令行的配置保存到配置文件里
+		> info replication  查看复制信息
