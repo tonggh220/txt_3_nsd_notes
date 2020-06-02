@@ -340,7 +340,7 @@ OK
 	集群存/取数据的工作过程?
 					09:00  上课 
 	2.1  向集群中添加新服务器  
-		2.1.1 添加master角色服务器  
+		2.1.1 添加master角色服务器    时间 10分钟到  09:41 
                                                192.168.4.58 （安装源码redis软件 做初始化配置 并启用集群功能运行服务）
 			在管理主机57，添加master角色的Redis服务器
 				1 添加主机
@@ -401,7 +401,7 @@ M: 2e79e70442de0426d35c6e8d1ab145373a11a63f 192.168.4.55:6355
 0.00 keys per slot on average.
 [root@HOST57 ~]#
 
-[root@HOST57 ~]# redis-trib.rb info 192.168.4.53:6353
+[root@HOST57 ~]# redis-trib.rb check 192.168.4.53:6353
 M: 2d1ecc690c0d841887693b3be09a41332918f55b 192.168.4.58:6379
    slots:0-1364,5461-6826,10923-12287 (4096 slots) master
    0 additional replica(s)
@@ -420,13 +420,102 @@ OK
 192.168.4.55:6355> 
 			
 
-		2.1.2 添加slave角色服务器
+		
 
 	2.2  把服务器从集群中移除
-		2.2.1 移除slave角色服务器
+		2.2.1 移除slave角色服务器     练习到 11:11 
+[root@HOST57 ~]# redis-trib.rb  info  192.168.4.53:6353
+192.168.4.53:6353 (8f6c32e4...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.58:6379 (2d1ecc69...) -> 2 keys | 4096 slots | 0 slaves.
+192.168.4.52:6352 (c4e1bcef...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.55:6355 (2e79e704...) -> 2 keys | 4096 slots | 1 slaves.
+[OK] 8 keys in 4 masters.
+0.00 keys per slot on average.
+[root@HOST57 ~]# 
+
+
+[root@HOST57 ~]# redis-trib.rb del-node 192.168.4.53:6353 e5e96b0e27c8007a274de6d4a28f8ad143c502d2
+
+>>> Removing node e5e96b0e27c8007a274de6d4a28f8ad143c502d2 from cluster 192.168.4.53:6353
+>>> Sending CLUSTER FORGET messages to the cluster...
+>>> SHUTDOWN the node.
+[root@HOST57 ~]# 
+[root@HOST57 ~]# redis-trib.rb info  192.168.4.56:6356
+192.168.4.53:6353 (8f6c32e4...) -> 2 keys | 4096 slots | 0 slaves.
+192.168.4.58:6379 (2d1ecc69...) -> 2 keys | 4096 slots | 0 slaves.
+192.168.4.52:6352 (c4e1bcef...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.55:6355 (2e79e704...) -> 2 keys | 4096 slots | 1 slaves.
+[OK] 8 keys in 4 masters.
+0.00 keys per slot on average.
+[root@HOST57 ~]# 
+
+[root@mysql54 ~]# netstat  -utnlp  | grep redis-server
+[root@mysql54 ~]# 
+   
 		2.2.2 移除master角色服务器
  
 	2.3 把移除的服务器再添加到集群里 
+[root@mysql54 ~]# rm -rf  /var/lib/redis/6379/*
+[root@mysql54 ~]# /etc/init.d/redis_6379  start
+Starting Redis server...
+[root@mysql54 ~]# 
+[root@mysql54 ~]# redis-cli  -h 192.168.4.54 -p 6354
+192.168.4.54:6354> cluster info
+cluster_state:fail
+cluster_slots_assigned:2
+cluster_slots_ok:2
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:1
+cluster_size:1
+cluster_current_epoch:0
+cluster_my_epoch:0
+cluster_stats_messages_sent:0
+cluster_stats_messages_received:0
+192.168.4.54:6354> exit
+[root@mysql54 ~]# 
+
+		2.1.2 添加slave角色服务器
+[root@HOST57 ~]# redis-trib.rb add-node --slave 192.168.4.54:6354 192.168.4.58:6379
+>>> Adding node 192.168.4.54:6354 to cluster 192.168.4.58:6379
+>>> Performing Cluster Check (using node 192.168.4.58:6379)
+M: 2d1ecc690c0d841887693b3be09a41332918f55b 192.168.4.58:6379
+   slots:0-1364,5461-6826,10923-12287 (4096 slots) master
+   0 additional replica(s)
+M: 2e79e70442de0426d35c6e8d1ab145373a11a63f 192.168.4.55:6355
+   slots:1365-5460 (4096 slots) master
+   0 additional replica(s)
+S: 8cbaacec314fcc4028811fb6c0ae008b6f87f2f2 192.168.4.56:6356
+   slots: (0 slots) slave
+   replicates c4e1bcef71c4a9b799b29a9c666836962fc81eda
+M: 8f6c32e447d978c9750ff81cc1b13fee02bac875 192.168.4.53:6353
+   slots:12288-16383 (4096 slots) master
+   0 additional replica(s)
+M: c4e1bcef71c4a9b799b29a9c666836962fc81eda 192.168.4.52:6352
+   slots:6827-10922 (4096 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+Automatically selected master 192.168.4.58:6379
+>>> Send CLUSTER MEET to node 192.168.4.54:6354 to make it join the cluster.
+Waiting for the cluster to join.
+>>> Configure node as replica of 192.168.4.58:6379.
+[OK] New node added correctly.
+[root@HOST57 ~]#	
+	
+[root@HOST57 ~]# redis-trib.rb  info  192.168.4.53:6353
+192.168.4.53:6353 (8f6c32e4...) -> 2 keys | 4096 slots | 0 slaves.
+192.168.4.58:6379 (2d1ecc69...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.52:6352 (c4e1bcef...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.55:6355 (2e79e704...) -> 2 keys | 4096 slots | 0 slaves.
+[OK] 8 keys in 4 masters.
+0.00 keys per slot on average.
+[root@HOST57 ~]# 
+
+
+
 
 +++++++NoSQL_day03
 主从复制
