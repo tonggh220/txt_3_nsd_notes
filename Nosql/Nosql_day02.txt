@@ -451,10 +451,25 @@ OK
 
 [root@mysql54 ~]# netstat  -utnlp  | grep redis-server
 [root@mysql54 ~]# 
-   
+   			
 		2.2.2 移除master角色服务器
+			释放占用的hash slots
+]# redis-trib.rb reshard 192.168.4.56:6356
+How many slots do you want to move (from 1 to 16384)? 4096   移除槽个数
+What is the receiving node ID? 4361720c3978aa02347076218580a103c60a6d7f   接收槽主机id 
+Please enter all the source node IDs.
+  Type 'all' to use all the nodes as source nodes for the hash slots.
+  Type 'done' once you entered all the source nodes IDs.
+Source node #1:e081313ec843655d9bc5a17f3bed3de1dccb1d2b  移除槽主机的id 
+Source node #2:done  结束主机id 的填写
+Do you want to proceed with the proposed reshard plan (yes/no)? yes  同意以上配置
+
+
+			删除主机
+[root@HOST57 ~]# redis-trib.rb  del-node  192.168.4.54:6354 2d1ecc690c0d841887693b3be09a41332918f55b
+
  
-	2.3 把移除的服务器再添加到集群里 
+	2.3 把移除的服务器再添加到集群里   
 [root@mysql54 ~]# rm -rf  /var/lib/redis/6379/*
 [root@mysql54 ~]# /etc/init.d/redis_6379  start
 Starting Redis server...
