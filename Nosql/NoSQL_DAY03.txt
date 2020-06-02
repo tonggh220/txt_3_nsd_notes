@@ -68,7 +68,7 @@ OK
 	哨兵服务：监视主服务的服务状态，当发现主服务器无法连接时 自动将对应的从提升为主服务器
 
 		 1 配置主52 从53  从54 结构
-		 2 配置哨兵服务器56
+		 2 配置哨兵服务器56        练习+休息到 17:20 
 			2.1  安装源码redis软件
 			 ]# tar  -zxvf  redis-4.0.8.tar.gz
 			 ]# yum  -y install gcc
@@ -93,7 +93,10 @@ sentinel auth-pass    redisserver    123456
 				
 
 
-
+	数据类型： 字符 、 列表  、 hash表 、 集合 、 有序集合
+		     *           *              *
+	字符类型管理命令： set   setrange    strlen   decr    decrby   get   getrange  mget  incr 
+			incrby    incrbyfloat
 
 
 
