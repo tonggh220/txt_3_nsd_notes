@@ -146,6 +146,11 @@ Starting Redis server...
 	2.2  AOF  
 		AOF文件介绍？
 		启用AOF。
+  		]# vim /etc/redis/6379.conf
+		    appendonly  yes
+		:wq
+		重启 redis服务
+			]# ls /var/lib/redis/6379/appendonly.aof
 		使用AOF文件恢复数据？
 
 [root@mysql50 ~]# scp /var/lib/redis/6379/appendonly.aof  root@192.168.4.51:/root/
