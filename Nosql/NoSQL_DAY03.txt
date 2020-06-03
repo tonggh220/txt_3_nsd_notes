@@ -153,7 +153,7 @@ Starting Redis server...
 			]# ls /var/lib/redis/6379/appendonly.aof
 
 
-		使用AOF文件恢复数据？
+		使用AOF文件恢复数据？  练习到 14:50 
 
 [root@mysql50 ~]# scp /var/lib/redis/6379/appendonly.aof  root@192.168.4.51:/root/
 		
@@ -164,7 +164,7 @@ OK
 192.168.4.51:6351> config get appendonly
 1) "appendonly"
 2) "yes"
-192.168.4.51:6351> config rewrite
+192.168.4.51:6351> config  rewrite
 OK
 192.168.4.51:6351> exit
 [root@mysql51 ~]#
@@ -187,8 +187,25 @@ Starting Redis server...
 3) "x"
 192.168.4.51:6351>
 
+		AOF文件记录写操作的方式 >
+		appendfsync  everysec|always|no
+			
+		何时触发日志重写? 
+		auto-aof-rewrite-min-size 64mb
+		auto-aof-rewrite-percentage 100
+
+		修复有问题的aof文件
+[root@mysql50 ~]# redis-check-aof --fix /var/lib/redis/6379/appendonly.aof 
+0x              68: Expected prefix '*', got: 'f'
+AOF analyzed: size=129, ok_up_to=104, diff=25
+This will shrink the AOF from 129 bytes, with 25 bytes, to 104 bytes
+Continue? [y/N]: y
+Successfully truncated AOF
+[root@mysql50 ~]#
 
 
+		AOF有点与缺点 ？ 
+			
 
 三 数据类型：
 	数据类型： 字符 、 列表  、 hash表 、 集合 、 有序集合
@@ -234,9 +251,14 @@ Starting Redis server...
 		练习 +  订餐 + 修改  11:20
 
 
-		
-		
+++++NoSQL知识点总结
+	1 搭建Redis服务器		
+	2 常用命令的使用
+	3 配置网站服务可以使用redis服务存储数据 LNMP+Redis
+	4 集群的部署与管理
+	5 主从+哨兵服务  数据类型   数据持久化 AOF  RDB		
 
+休息到 16:10
 
 
 
