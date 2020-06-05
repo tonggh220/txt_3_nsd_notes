@@ -266,8 +266,59 @@ server2            | 192.168.4.22    |  3306 |           0 | Slave, Running
 MaxScale> exit
 [root@maxscale77 ~]# 
 
-		练习  到  12:00 
-七
+七  配置NFS服务器 192.168.4.30      练习时间15分钟 到  14:56
+	7.1    挂载存储网页文件的分区 到 系统的 /site 目录
+		
+[root@nfs30 ~]# mkfs.xfs /dev/sdb1
+
+[root@nfs30 ~]# blkid /dev/sdb1
+/dev/sdb1: UUID="cb6671bf-24c1-4968-84c9-77f40158970b" TYPE="xfs" 
+[root@nfs30 ~]#
+
+[root@nfs30 ~]# mkdir /site
+[root@nfs30 ~]# chmod  o+w /site
+
+[root@nfs30 ~]# vim /etc/fstab
+/dev/sdb1        /site   xfs    defaults        0 0
+:wq
+
+[root@nfs30 ~]# mount -a 
+[root@nfs30 ~]# 
+[root@nfs30 ~]# mount | grep "/site"
+/dev/sdb1 on /site type xfs (rw,relatime,seclabel,attr2,inode64,noquota)
+[root@nfs30 ~]# 
+
+[root@nfs30 ~]# df -h /site/
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdb1       3.0G   33M  3.0G   2% /site
+[root@nfs30 ~]#
+
+	7.2  通过NFS服务共享 /site 目录 给网络的网站服务器
+		7.2.1 安装软件
+[root@nfs30 ~]# yum  -y  install nfs-utils  rpcbind
+		7.2.2 共享目录
+
+[root@nfs30 ~]# ls /etc/exports
+/etc/exports
+[root@nfs30 ~]# cat /etc/exports
+[root@nfs30 ~]# 
+[root@nfs30 ~]# vim /etc/exports
+/site	*(rw)
+:wq
+
+
+		7.2.3 启动服务
+[root@nfs30 ~]# systemctl  start rpcbind
+[root@nfs30 ~]# systemctl  enable rpcbind
+[root@nfs30 ~]# 
+[root@nfs30 ~]# systemctl  start nfs
+[root@nfs30 ~]# systemctl  enable nfs
+
+		7.2.4 查看共享目录
+[root@nfs30 ~]# showmount  -e localhost
+Export list for localhost:
+/site *
+[root@nfs30 ~]# 
 
 八
 
