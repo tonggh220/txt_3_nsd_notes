@@ -320,7 +320,33 @@ Export list for localhost:
 /site *
 [root@nfs30 ~]# 
 
-八
+		休息到 15:15 
+
+八  配置网站服务器192.168.4.33  和  192.168.4.44   (时间10分钟到 17:37)
+	8.1 安装网站服务软件(不需要启动服务)
+[root@web33 ~]# rpm -q httpd || yum -y install httpd
+
+	8.2 挂载NFS共享目录
+[root@web33 ~]# yum -y install nfs-utils
+
+[root@web33 ~]# showmount -e 192.168.4.30
+Export list for 192.168.4.30:
+/site *
+[root@web33 ~]#
+
+[root@web33 ~]# vim /etc/fstab
+192.168.4.30:/site	/var/www/html	nfs	defaults  0   0
+:wq
+
+[root@web33 ~]# mount | grep  "/var/www/html"
+192.168.4.30:/site on /var/www/html type nfs4 (rw,relatime,vers=4.1,rsize=131072,wsize=131072,namlen=255,hard,proto=tcp,port=0,timeo=600,retrans=2,sec=sys,clientaddr=192.168.4.33,local_lock=none,addr=192.168.4.30)
+[root@web33 ~]# 
+
+
+
+	8.3 启动网站服务
+	8.4 查看挂载信息
+
 
 九
 
