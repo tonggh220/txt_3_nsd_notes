@@ -1,0 +1,97 @@
+一  配置数据库服务器的LV设备 （时间20分钟） 09:57
+    4  fdisk  -l /dev/sdb
+    5  fdisk  -l /dev/sdc
+
+    6  fdisk   /dev/sdb
+    7  fdisk  -l   /dev/sdb
+
+    8  fdisk    /dev/sdc
+    9  fdisk  -l  /dev/sdc
+  
+   11  pvcreate  /dev/sdb1 /dev/sdc1
+   12  vgcreate  vg0 /dev/sdb1 /dev/sdc1
+   13  lvcreate  -n lv0  -L +9.99G vg0
+
+   14  lvscan 
+
+   15  mkfs.xfs  /dev/vg0/lv0 
+   16  blkid /dev/vg0/lv0 
+
+二、在2台数据库服务器主机 11 和 22 上安装MySQL数据库服务器软件 （不需要启动）
+/var/lib/mysql
+
+
+			
+三、在2台数据库服务器主机 11 和 22 上  挂载LV设备到 数据库目录下
+
+[root@mysqL11 ~]# blkid  /dev/vg0/lv0 
+/dev/vg0/lv0: UUID="3448442a-5610-4f4c-ad69-a8934b906326" TYPE="xfs" 
+[root@mysqL11 ~]# 
+
+[root@mysqL11 ~]# vim /etc/fstab 
+/dev/vg0/lv0	/var/lib/mysql	xfs	defaults  0    0
+:wq
+
+[root@mysqL11 ~]# mount -a
+[root@mysqL11 ~]# 
+
+[root@mysqL11 ~]# mount  | grep "/var/lib/mysql"
+/dev/mapper/vg0-lv0 on /var/lib/mysql type xfs (rw,relatime,seclabel,attr2,inode64,noquota)
+[root@mysqL11 ~]#
+
+四 、启动2台数据库服务器主机 11 和 22 上 的MySQL服务 并设置管理员的初始密码(可以自定义)
+
+[root@mysqL11 ~]# df -h /var/lib/mysql
+Filesystem           		Size  Used Avail Use% Mounted on
+/dev/mapper/vg0-lv0            10G   33M   10G   1% /var/lib/mysql
+[root@mysqL11 ~]# 
+
+[root@mysqL11 ~]# ls /var/lib/mysql
+[root@mysqL11 ~]# 
+
+[root@mysqL11 ~]# systemctl  start mysqld
+[root@mysqL11 ~]# systemctl  enable mysqld
+[root@mysqL11 ~]# 
+[root@mysqL11 ~]# ls /var/lib/mysql
+auto.cnf         ib_buffer_pool  mysql               public_key.pem
+ca-key.pem       ibdata1         mysql.sock          server-cert.pem
+ca.pem           ib_logfile0     mysql.sock.lock     server-key.pem
+client-cert.pem  ib_logfile1     performance_schema  sys
+client-key.pem   ibtmp1          private_key.pem
+[root@mysqL11 ~]# 
+[root@mysqL11 ~]#
+
+[root@mysqL11 ~]# grep password /var/log/mysqld.log 
+2020-06-05T10:29:08.749387Z 1 [Note] A temporary password is generated for root@localhost: gfo)L9PPu<>a
+[root@mysqL11 ~]# 
+[root@mysqL11 ~]# 
+[root@mysqL11 ~]# mysql -uroot -p'gfo)L9PPu<>a'
+
+mysql> alter user root@"localhost" identified by "123qqq...A";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> exit
+Bye
+[root@mysqL11 ~]# mysql -uroot -p123qqq...A
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              	     |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql> 
+
+		时间10分钟到 10:44 
+
+
+
+
+
+
+
+
