@@ -370,7 +370,7 @@ Created symlink from /etc/systemd/system/multi-user.target.wants/httpd.service t
 
 
 九 测试配置
-	9.1 测试nfs服务
+	9.1 测试nfs服务   （练习+休息 15分钟到  16:25 ）
 		9.1.1  在NFS服务的共享目录/site 里创建网页文件
 [root@nfs30 ~]# vim /site/test.html
 [root@nfs30 ~]# cat /site/test.html 
@@ -408,9 +408,83 @@ bbbb
 [root@mysqL11 ~]# 
 	
 	9.2 测试数据库服务
+		9.2.1 在主服务器11 添加访问数据的的连接用户
+[root@mysqL11 ~]# mysql -uroot -p123qqq...A -e 'create database db1'
+
+[root@mysqL11 ~]# mysql -uroot -p123qqq...A -e 'create table db1.a(id int)'
+
+[root@mysqL11 ~]# mysql -uroot -p123qqq...A -e 'grant select , insert on db1.*  to  admin@"%" identified by "123qqq...A"'
+
+
+		9.2.2 在从服务器22 查看是否同步授权用户到本机
+[root@mysqL22 ~]# mysql -uroot -p'123qqq...A' -e  ' use db1 ; show tables'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| Tables_in_db1 |
++---------------+
+| a             |
++---------------+
+[root@mysqL22 ~]# mysql -uroot -p'123qqq...A' -e  ' show grants for admin@"%"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------------------------------------------+
+| Grants for admin@%                             |
++------------------------------------------------+
+| GRANT USAGE ON *.* TO 'admin'@'%'              |
+| GRANT SELECT, INSERT ON `db1`.* TO 'admin'@'%' |
++------------------------------------------------+
+[root@mysqL22 ~]# 
+
+
+		9.2.3 在网站服务器web33和web44 主机， 连接读写分离服务器访问数据
+[root@web33 ~]# which  mysql || yum -y install mariadb		
+[root@web33 ~]# which  mysql
+/usr/bin/mysql
+			
+[root@web33 ~]# mysql -h192.168.4.77 -P4006 -uadmin -p123qqq...A
+mysql> show grants;
++------------------------------------------------+
+| Grants for admin@%                             |
++------------------------------------------------+
+| GRANT USAGE ON *.* TO 'admin'@'%'              |
+| GRANT SELECT, INSERT ON `db1`.* TO 'admin'@'%' |
++------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> select * from db1.a;
+Empty set (0.08 sec)
+
+mysql> insert into db1.a values(1088);
+Query OK, 1 row affected (0.07 sec)
+
+mysql> select  * from db1.a;
++------+
+| id   |
++------+
+| 1088 |
++------+
+1 row in set (0.00 sec)
+
+mysql> 
+		9.2.4 在数据库服务器本机查看数据
+
+[root@mysqL11 ~]# mysql -uroot -p123qqq...A -e 'select * from db1.a'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+| 1088 |
+
+[root@mysqL22 ~]# mysql -uroot -p123qqq...A -e 'select * from db1.a'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+| 1088 |
+
+
 
 十
-asdfafadsfasfasfasfasfdas
+
 
 
 
