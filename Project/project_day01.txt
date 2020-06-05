@@ -266,12 +266,14 @@ server2            | 192.168.4.22    |  3306 |           0 | Slave, Running
 MaxScale> exit
 [root@maxscale77 ~]# 
 
-
+		练习  到  12:00 
 七
 
 八
 
+九
 
+十
 
 
 
