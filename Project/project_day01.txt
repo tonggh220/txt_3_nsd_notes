@@ -407,7 +407,7 @@ aaa
 bbbb
 [root@mysqL11 ~]# 
 	
-	9.2 测试数据库服务
+	9.2 测试数据库服务   （练习10分钟 到  17:00）
 		9.2.1 在主服务器11 添加访问数据的的连接用户
 [root@mysqL11 ~]# mysql -uroot -p123qqq...A -e 'create database db1'
 
@@ -483,7 +483,102 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 
 
 
-十
+
+十   配置监控服务器zabbix ( 192.168.4.55)
+      配置监控服务器
+	10.1  部署zabbix服务的运行平台LNMP
+		1  安装源码nginx
+
+   64  yum -y install gcc pcre-devel zlib-devel
+   65  tar -zxvf /var/ftp/pub/nginx-1.12.2.tar.gz 
+   66  cd nginx-1.12.2/
+   67  ./configure 
+   68  make && make install
+
+[root@mysql5 nginx-1.12.2]# ls /usr/local/nginx/
+conf  html  logs  sbin
+[root@mysql5 nginx-1.12.2]# 
+
+[root@mysql5 ~]# vim +65 /usr/local/nginx/conf/nginx.conf
+ location ~ \.php$ {
+            root           html;
+            fastcgi_pass   127.0.0.1:9000;
+            fastcgi_index  index.php;
+            include        fastcgi.conf;
+        }
+:wq
+[root@mysql5 ~]# /usr/local/nginx/sbin/nginx  -t
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+[root@mysql5 ~]# /usr/local/nginx/sbin/nginx
+[root@mysql5 ~]# 
+[root@mysql5 ~]# netstat  -utnlp  | grep 80
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      3691/nginx: master  
+[root@mysql5 ~]#
+	
+[root@mysql5 ~]# yum -y  install php php-mysql php-fpm
+
+[root@mysql5 ~]# systemctl  start php-fpm
+[root@mysql5 ~]# netstat  -utnlp  | grep  9000
+tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      3764/php-fpm: maste 
+[root@mysql5 ~]# 	
+
+[root@mysql5 ~]# rpm -qa | grep -i mysql
+mysql-community-server-5.7.17-1.el7.x86_64
+mysql-community-embedded-compat-5.7.17-1.el7.x86_64
+mysql-community-common-5.7.17-1.el7.x86_64
+mysql-community-client-5.7.17-1.el7.x86_64
+mysql-community-devel-5.7.17-1.el7.x86_64
+mysql-community-test-5.7.17-1.el7.x86_64
+mysql-community-libs-compat-5.7.17-1.el7.x86_64
+mysql-community-minimal-debuginfo-5.7.17-1.el7.x86_64
+php-mysql-5.4.16-45.el7.x86_64
+mysql-community-libs-5.7.17-1.el7.x86_64
+mysql-community-embedded-5.7.17-1.el7.x86_64
+mysql-community-embedded-devel-5.7.17-1.el7.x86_64
+[root@mysql5 ~]# 
+[root@mysql5 ~]# systemctl  start mysqld
+
+[root@mysql5 ~]# netstat  -utnlp  | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      917/mysqld          
+[root@mysql5 ~]#
+ 
+	10.2  安装zabbix源码软件
+	]# yum -y install libevent-devel
+    1  tar -zxvf /var/ftp/pub/zabbix-3.4.4.tar.gz 
+    2  cd zabbix-3.4.4/
+   11  ./configure  --enable-server --with-mysql
+   12  make install
+[root@mysql5 zabbix-3.4.4]# ls /usr/local/sbin/
+zabbix_server
+[root@mysql5 zabbix-3.4.4]# ls /usr/local/etc/
+zabbix_server.conf  zabbix_server.conf.d
+[root@mysql5 zabbix-3.4.4]# 
+
+	
+	10.3  初始化环境准备
+		创建存储数据的库和表
+[root@mysql5 ~]# mysql -uroot -p123bbb...A
+mysql> create database zabbix ;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> grant all on  zabbix.* to  zabbix@"localhost" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql>exit
+
+
+		安装初始化配置依赖的软件
+		设置zabbix运行环境
+
+	10.4 初始化配置
+	10.5 登录web管理页面
+	10.6 修改zabbix服务的主配置文件
+	10.7 启动zabbix监控服务
+    配置客户端
+
+
+
 
 
 

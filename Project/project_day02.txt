@@ -1,0 +1,79 @@
+一、升级网站服务器192.168.4.33 和  192.168.4.44 运行平台LNMP
+	1.1 清除当前配置
+[root@web33 ~]# systemctl  stop  httpd
+[root@web33 ~]# systemctl  disable  httpd
+Removed symlink /etc/systemd/system/multi-user.target.wants/httpd.service.
+[root@web33 ~]# 
+[root@web33 ~]# umount /var/www/html/
+[root@web33 ~]# 
+[root@web33 ~]# vim /etc/fstab 
+[root@web33 ~]# tail -1  /etc/fstab 
+#192.168.4.30:/site	/var/www/html		nfs	defaults 0 0 
+[root@web33 ~]#
+
+	1.2 部署LNMP环境
+   44  rpm -q gcc 
+   45  rpm -q pcre-devel zlib-devel
+   46  yum -y install gcc  pcre-devel zlib-devel
+   47  tar -zxvf /var/ftp/pub/nginx-1.12.2.tar.gz 
+   48  cd nginx-1.12.2/
+   49  ./configure 
+   50  make && make install
+
+[root@web33 nginx-1.12.2]# ls /usr/local/nginx/
+conf  html  logs  sbin
+[root@web33 nginx-1.12.2]# 
+
+[root@web33 nginx-1.12.2]# vim  +65 /usr/local/nginx/conf/nginx.conf
+location ~ \.php$ {
+            root           html;
+            fastcgi_pass   127.0.0.1:9000;
+            fastcgi_index  index.php;
+            include        fastcgi.conf;
+        }
+:wq
+[root@web33 nginx-1.12.2]# /usr/local/nginx/sbin/nginx  -t
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+[root@web33 nginx-1.12.2]# 
+
+[root@web33 nginx-1.12.2]# /usr/local/nginx/sbin/nginx
+[root@web33 nginx-1.12.2]# 
+[root@web33 nginx-1.12.2]# netstat  -utnlp  | grep 80
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      5230/nginx: master  
+[root@web33 nginx-1.12.2]#
+
+[root@web33 nginx-1.12.2]# chmod  +x /etc/rc.local 
+[root@web33 nginx-1.12.2]# echo "/usr/local/nginx/sbin/nginx" >> /etc/rc.local 
+[root@web33 nginx-1.12.2]# 
+
+[root@web33 ~]# yum -y install php php-mysql php-fpm
+[root@web33 ~]# systemctl  start php-fpm
+[root@web33 ~]# systemctl  enable php-fpm
+Created symlink from /etc/systemd/system/multi-user.target.wants/php-fpm.service to /usr/lib/systemd/system/php-fpm.service.
+
+[root@web33 ~]# 
+[root@web33 ~]# netstat  -utnlp  | grep 9000
+tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      5271/php-fpm: maste 
+[root@web33 ~]#
+
+[root@web33 ~]# vim /etc/fstab
+192.168.4.30:/site      /usr/local/nginx/html   nfs     defaults 0 0
+:wq
+
+[root@web33 ~]# mount | grep  -i  "/usr/local/nginx/html"
+192.168.4.30:/site on /usr/local/nginx/html type nfs4 (rw,relatime,vers=4.1,rsize=131072,wsize=131072,namlen=255,hard,proto=tcp,port=0,timeo=600,retrans=2,sec=sys,clientaddr=192.168.4.33,local_lock=none,addr=192.168.4.30)
+[root@web33 ~]#
+
+[root@web33 ~]# vim /usr/local/nginx/html/d.php
+[root@web33 ~]# cat /usr/local/nginx/html/d.php
+<?php
+	echo "hello world";
+?>
+[root@web33 ~]# 
+
+[root@web33 ~]# curl  http://localhost/d.php
+hello world
+
+
+		15 分钟 配置web33 到 09:55
