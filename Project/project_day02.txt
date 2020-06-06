@@ -234,9 +234,10 @@ OK
 [root@web44 ~]# 
 		
 
-配置网站服务器可以使用PHP脚本 连接集群存取数据
-		1 配置网站服务器 web33 和 web44
-			
+		配置网站服务器可以使用PHP脚本 连接集群主机存/取数据 时间20分钟到 14:44
+				1 配置网站服务器 web33 和 web44
+[root@web44 ~]# which php
+/usr/bin/php		
 [root@web44 ~]# rpm -qf /usr/bin/php
 php-cli-5.4.16-45.el7.x86_64
 [root@web44 ~]# 
@@ -335,14 +336,73 @@ redis
    93  systemctl  restart php-fpm
    94  php -m | grep -i redis
 
+	休息  到  15:10 
 
-		2  编写PHP脚本连接集群存/取数据
+			2  编写PHP脚本连接集群存/取数据
 
-		3 客户端 访问网站的PHP脚本 
+[root@nfs30 ~]# vim /site/redis_set.php     存数据 脚本
+[root@nfs30 ~]# ls /site/
+a.html  b.html  c.php  d.php  redis_set.php  test.html
+[root@nfs30 ~]# 
+[root@nfs30 ~]# cat /site/redis_set.php 
+<?php
+$redis_list = ['192.168.4.51:6379','192.168.4.52:6379','192.168.4.53:6379','192.168.4.54:6379','192.168.4.56:6379','192.168.4.57:6379'];
+
+
+$client = new RedisCluster(NUll,$redis_list);
+$client->set("i","tarenaA ");
+$client->set("j","tarenaB ");
+$client->set("k","tarenaC ");
+echo  "ok"; 
+echo "\n" ;
+?>
+[root@nfs30 ~]#
+
+[root@nfs30 ~]# vim /site/redis_get.php 取数据的脚本
+[root@nfs30 ~]# 
+[root@nfs30 ~]# ls /site/
+a.html  b.html  c.php  d.php  redis_get.php  redis_set.php  test.html
+[root@nfs30 ~]# 
+[root@nfs30 ~]# cat /site/redis_get.php
+<?php
+$redis_list = ['192.168.4.51:6379','192.168.4.52:6379','192.168.4.53:6379','192.168.4.54:6379','192.168.4.56:6379','192.168.4.57:6379'];
+
+
+$client = new RedisCluster(NUll,$redis_list);
+
+echo $client->get("i");
+echo $client->get("j");
+echo $client->get("k");
+
+echo  "\n";
+?>
+[root@nfs30 ~]# 
 
 
 
+			3 客户端 访问网站的PHP脚本 
 
+[root@mysql57 ~]# curl  http://192.168.4.33/redis_set.php
+ok 
+[root@mysql57 ~]# curl  http://192.168.4.44/redis_get.php
+tarenaA tarenaB tarenaC 
+[root@mysql57 ~]# 
+
+		命令访问redis服务器 查看数据
+[root@mysql57 ~]# redis-cli  -c -h 192.168.4.57 -p 6379
+192.168.4.57:6379> keys *
+1) "k"
+2) "c"
+3) "name"
+4) "school"
+5) "class"
+192.168.4.57:6379> exit
+[root@mysql57 ~]# redis-cli  -c -h 192.168.4.51 -p 6379
+192.168.4.51:6379> keys *
+1) "b"
+2) "j"
+3) "sex"
+192.168.4.51:6379> 
 
 
 
