@@ -61,6 +61,8 @@ tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      
 192.168.4.30:/site      /usr/local/nginx/html   nfs     defaults 0 0
 :wq
 
+[root@web33 ~]#  mount  -a 
+
 [root@web33 ~]# mount | grep  -i  "/usr/local/nginx/html"
 192.168.4.30:/site on /usr/local/nginx/html type nfs4 (rw,relatime,vers=4.1,rsize=131072,wsize=131072,namlen=255,hard,proto=tcp,port=0,timeo=600,retrans=2,sec=sys,clientaddr=192.168.4.33,local_lock=none,addr=192.168.4.30)
 [root@web33 ~]#
@@ -69,6 +71,7 @@ tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      
 [root@web33 ~]# cat /usr/local/nginx/html/d.php
 <?php
 	echo "hello world";
+	echo  "\n";
 ?>
 [root@web33 ~]# 
 
@@ -76,4 +79,177 @@ tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      
 hello world
 
 
-		15 分钟 配置web33 到 09:55
+同样的步骤 配置web44 主机 
+
+[root@web44 nginx-1.12.2]# curl http://localhost/d.php
+hello world
+[root@web44 nginx-1.12.2]# 
+
+二、 部署缓存服务
+	2.1  在6台主机 运行redis服务并启用了集群配置
+	2.2 创建集群
+		2.2.1  配置管理主机192.168.4.58
+[root@mgm58 ~]# yum -y install ruby rubygems
+[root@mgm58 ~]# gem install redis-3.2.1.gem
+[root@mgm58 ~]# tar -zxvf redis-4.0.8.tar.gz
+
+[root@mgm58 ~]# cd redis-4.0.8/
+[root@mgm58 redis-4.0.8]# 
+[root@mgm58 redis-4.0.8]# mkdir /root/bin
+[root@mgm58 redis-4.0.8]# ls src/*.rb
+src/redis-trib.rb
+[root@mgm58 redis-4.0.8]# cp src/redis-trib.rb /root/bin
+[root@mgm58 redis-4.0.8]# chmod +x /root/bin/redis-trib.rb 
+[root@mgm58 redis-4.0.8]#
+[root@mgm58 redis-4.0.8]# redis-trib.rb    help  #可以查看到命令的帮助信息为成功
+
+		2.2.2  创建集群
+[root@mgm58 ~]# redis-trib.rb  create --replicas 1  192.168.4.51:6379  192.168.4.52:6379 192.168.4.53:6379 192.168.4.54:6379 192.168.4.56:6379 192.168.4.57:6379
+>>> Creating cluster
+>>> Performing hash slots allocation on 6 nodes...
+Using 3 masters:
+192.168.4.51:6379
+192.168.4.52:6379
+192.168.4.53:6379
+Adding replica 192.168.4.56:6379 to 192.168.4.51:6379
+Adding replica 192.168.4.57:6379 to 192.168.4.52:6379
+Adding replica 192.168.4.54:6379 to 192.168.4.53:6379
+M: 81efbb654e1f56b313c8ed873d21c680b5a20df4 192.168.4.51:6379
+   slots:0-5460 (5461 slots) master
+M: a3424220d0fbb87210a4aad2e9568ca0057788ab 192.168.4.52:6379
+   slots:5461-10922 (5462 slots) master
+M: c901339df646979b6deaeba512abfac5e7be6ec6 192.168.4.53:6379
+   slots:10923-16383 (5461 slots) master
+S: 279b5a30af0cb3a2277dacc8d8fd8c072a667c04 192.168.4.54:6379
+   replicates c901339df646979b6deaeba512abfac5e7be6ec6
+S: 441b538321343a55bcc4fb60fb0f6a9fdcb98d2b 192.168.4.56:6379
+   replicates 81efbb654e1f56b313c8ed873d21c680b5a20df4
+S: 07acdc56acfe9c6c41f8390e635ebab6a87d0848 192.168.4.57:6379
+   replicates a3424220d0fbb87210a4aad2e9568ca0057788ab
+Can I set the above configuration? (type 'yes' to accept):    yes  同意配置
+>>> Nodes configuration updated
+>>> Assign a different config epoch to each node
+>>> Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join...
+>>> Performing Cluster Check (using node 192.168.4.51:6379)
+M: 81efbb654e1f56b313c8ed873d21c680b5a20df4 192.168.4.51:6379
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+M: c901339df646979b6deaeba512abfac5e7be6ec6 192.168.4.53:6379
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+S: 07acdc56acfe9c6c41f8390e635ebab6a87d0848 192.168.4.57:6379
+   slots: (0 slots) slave
+   replicates a3424220d0fbb87210a4aad2e9568ca0057788ab
+S: 441b538321343a55bcc4fb60fb0f6a9fdcb98d2b 192.168.4.56:6379
+   slots: (0 slots) slave
+   replicates 81efbb654e1f56b313c8ed873d21c680b5a20df4
+S: 279b5a30af0cb3a2277dacc8d8fd8c072a667c04 192.168.4.54:6379
+   slots: (0 slots) slave
+   replicates c901339df646979b6deaeba512abfac5e7be6ec6
+M: a3424220d0fbb87210a4aad2e9568ca0057788ab 192.168.4.52:6379
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+[root@mgm58 ~]# 
+		2.2.3  查看集群信息
+[root@mgm58 ~]# redis-trib.rb  info  192.168.4.57:6379
+192.168.4.53:6379 (c901339d...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.4.52:6379 (a3424220...) -> 0 keys | 5462 slots | 1 slaves.
+192.168.4.51:6379 (81efbb65...) -> 0 keys | 5461 slots | 1 slaves.
+[OK] 0 keys in 3 masters.
+0.00 keys per slot on average.
+[root@mgm58 ~]# 
+
+[root@mgm58 ~]# redis-trib.rb  check  192.168.4.51:6379
+>>> Performing Cluster Check (using node 192.168.4.51:6379)
+M: 81efbb654e1f56b313c8ed873d21c680b5a20df4 192.168.4.51:6379
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+M: c901339df646979b6deaeba512abfac5e7be6ec6 192.168.4.53:6379
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+S: 07acdc56acfe9c6c41f8390e635ebab6a87d0848 192.168.4.57:6379
+   slots: (0 slots) slave
+   replicates a3424220d0fbb87210a4aad2e9568ca0057788ab
+S: 441b538321343a55bcc4fb60fb0f6a9fdcb98d2b 192.168.4.56:6379
+   slots: (0 slots) slave
+   replicates 81efbb654e1f56b313c8ed873d21c680b5a20df4
+S: 279b5a30af0cb3a2277dacc8d8fd8c072a667c04 192.168.4.54:6379
+   slots: (0 slots) slave
+   replicates c901339df646979b6deaeba512abfac5e7be6ec6
+M: a3424220d0fbb87210a4aad2e9568ca0057788ab 192.168.4.52:6379
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+[root@mgm58 ~]# 
+      
+	测试配置
+		1  在网站服务器web33 he  web44的 命令行 连接集群存/取数据
+
+[root@mysql52 ~]# which  redis-cli
+/usr/local/bin/redis-cli
+[root@mysql52 ~]# 
+[root@mysql52 ~]# scp /usr/local/bin/redis-cli  root@192.168.4.33:/usr/local/bin/
+
+[root@web33 ~]# ls /usr/local/bin/redis-cli 
+/usr/local/bin/redis-cli
+[root@web33 ~]# 
+[root@web33 ~]# redis-cli  -c -h 192.168.4.51 -p 6379
+192.168.4.51:6379> keys *
+(empty list or set)
+192.168.4.51:6379> set name plj
+-> Redirected to slot [5798] located at 192.168.4.52:6379
+OK
+192.168.4.52:6379> set school tarena
+OK
+192.168.4.52:6379> set class 2002
+OK
+192.168.4.52:6379> set sex boy
+-> Redirected to slot [2584] located at 192.168.4.51:6379
+OK
+192.168.4.51:6379> keys *
+1) "sex"
+192.168.4.51:6379> exit
+[root@web33 ~]# 
+[root@web33 ~]# 
+
+[root@mysql52 ~]# scp /usr/local/bin/redis-cli  root@192.168.4.44:/usr/local/bin/
+
+[root@web44 ~]# redis-cli  -c  -h 192.168.4.52 -p 6379
+192.168.4.52:6379> keys *
+1) "class"
+2) "school"
+3) "name"
+192.168.4.52:6379> get sex 
+-> Redirected to slot [2584] located at 192.168.4.51:6379
+"boy"
+192.168.4.51:6379> exit
+[root@web44 ~]# 
+		
+
+		练习时间 到 12:00 
+
+		2  编写PHP脚本连接集群存/取数据
+
+		3 客户端 访问网站的PHP脚本 
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
