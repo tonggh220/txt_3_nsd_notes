@@ -234,7 +234,107 @@ OK
 [root@web44 ~]# 
 		
 
-		练习时间 到 12:00 
+配置网站服务器可以使用PHP脚本 连接集群存取数据
+		1 配置网站服务器 web33 和 web44
+			
+[root@web44 ~]# rpm -qf /usr/bin/php
+php-cli-5.4.16-45.el7.x86_64
+[root@web44 ~]# 
+[root@web44 ~]# php -m
+[PHP Modules]
+bz2
+calendar
+Core
+ctype
+curl
+date
+ereg
+exif
+fileinfo
+filter
+ftp
+gettext
+gmp
+hash
+iconv
+json
+libxml
+mhash
+mysql
+mysqli
+openssl
+pcntl
+pcre
+PDO
+pdo_mysql
+pdo_sqlite
+Phar
+readline
+Reflection
+session
+shmop
+SimpleXML
+sockets
+SPL
+sqlite3
+standard
+tokenizer
+xml
+zip
+zlib
+
+[Zend Modules]
+
+[root@web44 ~]# php -m | grep -i  redis
+[root@web44 ~]# 
+		
+[root@web44 ~]# rpm -q php-devel gcc
+package php-devel is not installed
+gcc-4.8.5-28.el7.x86_64
+[root@web44 ~]# 
+[root@web44 ~]# yum -y install php-devel
+
+   91  tar -zxvf /var/ftp/pub/redis-cluster-4.3.0.tgz 
+
+   93  cd redis-4.3.0/
+   95  phpize 
+   97  ls /usr/bin/php-config 
+   98  ./configure  --with-php-config=/usr/bin/php-config
+   99  make
+
+[root@web44 redis-4.3.0]# make install
+Installing shared extensions:     /usr/lib64/php/modules/
+[root@web44 redis-4.3.0]#
+
+[root@web44 redis-4.3.0]# ls /usr/lib64/php/modules/redis.so 
+/usr/lib64/php/modules/redis.so
+[root@web44 redis-4.3.0]# 
+
+[root@web44 redis-4.3.0]# vim +728 /etc/php.ini
+extension_dir = "/usr/lib64/php/modules/"
+extension = "redis.so"
+
+:wq
+[root@web44 redis-4.3.0]# php -m  | grep  -i redis
+redis
+[root@web44 redis-4.3.0]# 
+
+
+在web33主机做同样的配置
+   82  php -m | grep -i redis
+   83  rpm -q gcc  php-devel
+   84  yum -y install  php-devel
+   85  tar -zxvf /var/ftp/pub/redis-cluster-4.3.0.tgz 
+   86  ls
+   87  cd redis-4.3.0/
+   88  phpize 
+   89  ./configure  --with-php-config=/usr/bin/php-config
+   90  make && make install
+   91  ls /usr/lib64/php/modules/
+   92  vim /etc/php.ini 
+   93  systemctl  restart php-fpm
+   94  php -m | grep -i redis
+
 
 		2  编写PHP脚本连接集群存/取数据
 
