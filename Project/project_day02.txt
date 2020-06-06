@@ -561,7 +561,44 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +------+
 [root@pxcnode66 ~]# 
 
-		3.2.2 安装PXC集群软件包
+
+		
+		3.2.2  创建PXC集群
+ 			3.2.2.1 安装PXC集群软件包 ：在66主机    88主机   10主机分别安装PXC软件
+				
+		
+如果安装了其他版本的数据库服务软件要清除，具体操作如下：
+    4  rpm -qa  | grep -i mysql
+    5  systemctl  stop mysqld
+    6  rm -rf /var/lib/mysql/*
+    9  rm -rf /etc/my.cnf
+[root@pxcnode10 ~]# rpm -e --nodeps mysql-community-server mysql-community-embedded-compat mysql-community-common mysql-community-client mysql-community-devel mysql-community-test mysql-community-libs-compat mysql-community-minimal-debuginfo mysql-community-libs mysql-community-embedded mysql-community-embedded-devel
+
+	安装PXC 集群软件，安装步骤如下
+   14  rpm -ivh /var/ftp/pub/pxc/libev-4.15-1.el6.rf.x86_64.rpm 
+   15  yum -y install /var/ftp/pub/pxc/percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm 
+   16  yum -y install /var/ftp/pub/pxc/qpress-1.1-14.11.x86_64.rpm 
+   17  tar -xvf /var/ftp/pub/pxc/Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar 
+   18  ls *.rpm
+   19  yum -y install Percona-XtraDB-Cluster-*.rpm
+
+
+
+
+
+[root@pxcnode10 ~]# ls /etc/percona-xtradb-cluster.conf.d/
+mysqld.cnf  mysqld_safe.cnf  wsrep.cnf
+[root@pxcnode10 ~]# 
+
+
+[root@pxcnode88 ~]# ls /etc/percona-xtradb-cluster.conf.d/
+mysqld.cnf  mysqld_safe.cnf  wsrep.cnf
+[root@pxcnode88 ~]# 
+
+
+   		做192.168.4.11 从服务器192.168.4.66 主机的配置，如下：（周一再安装）
+			
+
 
 四、服务集群
 
