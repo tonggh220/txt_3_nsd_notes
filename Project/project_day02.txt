@@ -456,8 +456,70 @@ server_id=66
 			3.2.1.3 启动mysqld服务 
 	[root@pxcnode66 ~]# systemctl  restart mysqld
 
+			 完成以上配置 10分钟 到  16:24 
 
-3.2.1.4确保数据一致 (使用innobackupex命令)
+			3.2.1.4确保数据一致 (使用innobackupex命令)
+				1  在主服务器11 在线做数据的完全备份
+
+[root@mysqL11 ~]# yum -y install /var/ftp/pub/libev-4.15-1.el6.rf.x86_64.rpm
+[root@mysqL11 ~]# yum -y install /var/ftp/pub/percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+[root@mysqL11 ~]# which  innobackupex
+/usr/bin/innobackupex
+[root@mysqL11 ~]# 
+
+[root@mysqL11 ~]# innobackupex  --user root --password 123qqq...A /allbak --no-timestamp
+
+[root@mysqL11 ~]# ls /allbak
+backup-my.cnf   mysql                   xtrabackup_checkpoints
+db1             performance_schema      xtrabackup_info
+ib_buffer_pool  sys                     xtrabackup_logfile
+ibdata1         xtrabackup_binlog_info
+[root@mysqL11 ~]# 
+
+[root@mysqL11 ~]# scp -r /allbak root@192.168.4.66:/opt/
+
+				2  66主机使用11共享的备份文件恢复数据
+
+[root@pxcnode66 ~]# yum -y install /var/ftp/pub/libev-4.15-1.el6.rf.x86_64.rpm
+[root@pxcnode66 ~]# yum -y install /var/ftp/pub/percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm
+
+[root@pxcnode66 ~]# systemctl  stop mysqld
+[root@pxcnode66 ~]# rm -rf /var/lib/mysql/*
+[root@pxcnode66 ~]# innobackupex --apply-log /opt/allbak/
+[root@pxcnode66 ~]# innobackupex --copy-back /opt/allbak/
+
+[root@pxcnode66 ~]# ls /var/lib/mysql
+db1             ib_logfile1         sys
+ib_buffer_pool  ibtmp1              xtrabackup_binlog_pos_innodb
+ibdata1         mysql               xtrabackup_info
+ib_logfile0     performance_schema
+[root@pxcnode66 ~]# 
+[root@pxcnode66 ~]# chown  -R mysql:mysql /var/lib/mysql
+[root@pxcnode66 ~]# systemctl  start mysqld
+[root@pxcnode66 ~]# 
+[root@pxcnode66 ~]# netstat  -utnlp  | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      1539/mysqld         
+[root@pxcnode66 ~]# 
+
+[root@pxcnode66 ~]# mysql -uroot -p123qqq...A -e 'show databases'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| db1                |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+[root@pxcnode66 ~]#
+
+
+[root@pxcnode66 ~]# grep master11 /opt/allbak/xtrabackup_info 
+binlog_pos = filename 'master11.000001', position '2864'
+[root@pxcnode66 ~]# 
+
+
 3.2.1.5指定主服务器 (change master  to)
 3.2.1.6查看状态信息  show  slave  status\G;
 
