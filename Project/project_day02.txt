@@ -762,7 +762,7 @@ listen status     定义监控页面
         stats uri /admin
         stats auth admin:admin
 	
-listen mysql_3306 192.168.4.99:3306   定义LB集群
+listen mysql_3306  *:3306   定义LB集群
     mode    tcp
     option  tcpka
     balance roundrobin
@@ -779,7 +779,7 @@ tcp6       0      0 :::3306                 :::*                    LISTEN      
 [root@haproxy99 ~]# systemctl  start haproxy
 [root@haproxy99 ~]# 
 [root@haproxy99 ~]# netstat  -utnlp  | grep 3306
-tcp        0      0 192.168.4.99:3306       0.0.0.0:*               LISTEN      1295/haproxy        
+tcp        0      0 *:3306       0.0.0.0:*               LISTEN      1295/haproxy        
 [root@haproxy99 ~]#
 
 	客户端访问连接调度器 ，访问数据库
@@ -823,7 +823,7 @@ haproxy-1.5.18-7.el7.x86_64
 [root@haproxy98 ~]# scp root@192.168.4.99:/etc/haproxy/haproxy.cfg  /etc/haproxy/
 
 [root@haproxy98 ~]# vim /etc/haproxy/haproxy.cfg
-   listen mysql_3306 192.168.4.98:3306   修改地址为 192.168.4.98
+   listen mysql_3306  8:3306   修改地址为 192.168.4.98
 :wq
 
 
@@ -834,7 +834,7 @@ Removed symlink /etc/systemd/system/multi-user.target.wants/mysqld.service.
 [root@haproxy98 ~]# 
 [root@haproxy98 ~]# systemctl  start haproxy
 [root@haproxy98 ~]# netstat  -utnlp  | grep  3306
-tcp        0      0 192.168.4.98:3306       0.0.0.0:*               LISTEN      1321/haproxy        
+tcp        0      0  8:3306       0.0.0.0:*               LISTEN      1321/haproxy        
 [root@haproxy98 ~]#
 			
 		测试192.168.4.98 主机的调度功能
@@ -915,12 +915,62 @@ vrrp_instance VI_1 {
 [root@haproxy98 ~]# ip addr show  | grep  192.168.4.100
 [root@haproxy98 ~]# 
 
+		
 				3  客户连接vip地址访问数据库服务
 
+[root@web33 ~]# mysql -h192.168.4.100 -uadmin -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxcnode10  |
++------------+
+[root@web33 ~]# mysql -h192.168.4.100 -uadmin -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxcnode88  |
++------------+
+[root@web33 ~]# mysql -h192.168.4.100 -uadmin -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxcnode66  |
++------------+
+[root@web33 ~]# 
 
+				4 测试高可用
+					把99主机关机，客户端依然可以连接vip地址192.168.4.100 访问数据库服务
 
-
-
+[root@haproxy98 ~]# ip addr show | grep 192.168.4.100
+    inet 192.168.4.100/32 scope global ens33
+[root@haproxy98 ~]# 
+			
+[root@web33 ~]# mysql -h192.168.4.100 -uadmin -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxcnode66  |
++------------+
+[root@web33 ~]# mysql -h192.168.4.100 -uadmin -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxcnode10  |
++------------+
+[root@web33 ~]# mysql -h192.168.4.100 -uadmin -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxcnode88  |
++------------+
+[root@web33 ~]# 
+				
 
 
 
