@@ -747,7 +747,7 @@ web33 ~ ]#  mysql  -h192.168.4.88  -uadmin  -p123qqq...A
 		
 
 四、部署集群
-	4.1  负载均衡集群
+	4.1  负载均衡集群    (20分钟时间到 16:10 )
 		配置调度器192.168.4.99
     4  rpm -qa  | grep haproxy   ||  yum  -y install  haproxy
     5  rpm -qc haproxy
@@ -812,16 +812,110 @@ http://192.168.4.99/admin
 	用户名 admin
 	密  码  admin			
 
-	4.2  高可用集群
+	4.2  高可用集群 （配置备用调度器 192.168.4.98）
+		4.2.1  配置192.168.4.98 主机可以接受访问数据库请求，并把请求可以平均分发给数据库服务器192.168.4.66   192.168.4.10  192.168.4.88
 
 
+[root@haproxy98 ~]# rpm -q haproxy
+haproxy-1.5.18-7.el7.x86_64
+[root@haproxy98 ~]# 
+
+[root@haproxy98 ~]# scp root@192.168.4.99:/etc/haproxy/haproxy.cfg  /etc/haproxy/
+
+[root@haproxy98 ~]# vim /etc/haproxy/haproxy.cfg
+   listen mysql_3306 192.168.4.98:3306   修改地址为 192.168.4.98
+:wq
 
 
+[root@haproxy98 ~]# netstat  -utnlp  | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      930/mysqld          
+[root@haproxy98 ~]# systemctl  stop mysqld ; systemctl  disable mysqld
+Removed symlink /etc/systemd/system/multi-user.target.wants/mysqld.service.
+[root@haproxy98 ~]# 
+[root@haproxy98 ~]# systemctl  start haproxy
+[root@haproxy98 ~]# netstat  -utnlp  | grep  3306
+tcp        0      0 192.168.4.98:3306       0.0.0.0:*               LISTEN      1321/haproxy        
+[root@haproxy98 ~]#
+			
+		测试192.168.4.98 主机的调度功能
+[root@web33 ~]# mysql -h192.168.4.98 -uadmin -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxcnode66  |
++------------+
+[root@web33 ~]# mysql -h192.168.4.98 -uadmin -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxcnode10  |
++------------+
+[root@web33 ~]# mysql -h192.168.4.98 -uadmin -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxcnode88  |
++------------+
+[root@web33 ~]#
+
+		2.2.2 配置调度器的高可用集群
+			1 分别在 192.168.4.98 和 192.168.4.99 主机安装keepalived软件
+[root@haproxy99 ~]# rpm -q keepalived || yum -y install keepalived
+[root@haproxy98 ~]# rpm -q keepalived || yum -y install keepalived
 
 
+			 2 修改192.168.4.99主机的配置文件
+[root@haproxy99 ~]# cp /etc/keepalived/keepalived.conf /root/
+[root@haproxy99 ~]# sed -i  '35,$d'  /etc/keepalived/keepalived.conf
+
+[root@haproxy99 ~]# vim /etc/keepalived/keepalived.conf
+global_defs {
+vrrp_iptables  		//禁止iptables
+}
+vrrp_instance VI_1 {
+    state MASTER      		//标识
+    interface ens33
+    priority 150   		//优先级
+    virtual_ipaddress {
+        192.168.4.100   	//vip地址
+    }
+}
+:wq
+
+[root@haproxy99 ~]# scp /etc/keepalived/keepalived.conf  root@192.168.4.98:/etc/keepalived/
 
 
+[root@haproxy98 ~]# vim /etc/keepalived/keepalived.conf
+vrrp_instance VI_1 {
+    state BACKUP  		//标识
+    interface ens33
+    priority 100  		//优先级
+    virtual_ipaddress {
+        192.168.4.100
+    }
+}
+:wq
 
+			3 启动keepalived 服务
+				1   启动192.168.4.99 主机的keepalived服务
+[root@haproxy99 ~]# ip addr show  | grep  192.168.4.100
+[root@haproxy99 ~]# 
+[root@haproxy99 ~]# systemctl  start keepalived
+[root@haproxy99 ~]# 
+[root@haproxy99 ~]# ip addr show  | grep  192.168.4.100
+    inet 192.168.4.100/32 scope global ens33
+[root@haproxy99 ~]# 
+
+				2  启动192.168.4.98 主机的keepalived服务
+[root@haproxy98 ~]# systemctl  start keepalived
+[root@haproxy98 ~]# 
+[root@haproxy98 ~]# ip addr show  | grep  192.168.4.100
+[root@haproxy98 ~]# 
+
+				3  客户连接vip地址访问数据库服务
 
 
 
