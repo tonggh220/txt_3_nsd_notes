@@ -973,6 +973,29 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 				
 
 
+		网络连通性   监控路由器 交换机
+
+		操作系统的运行情况
+
+		服务器资源的使用率 （CPU   内存  磁盘空间）低于10G 
+
+		服务运行状态
+
+		配置监控报警
+
+		可以是监控服务提供的监控模板
+
+		可以写监控脚本
+
+		
+
+
+
+
+
+
+
+
 
 
 		
