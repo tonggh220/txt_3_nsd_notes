@@ -563,7 +563,7 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 
 ++++++++++++++++++++++++++++++++++++++++++++++
 		
-		3.2.2  创建PXC集群
+		3.2.2  创建PXC集群    （ 练习+排错  1个小时  到  11:21） 
 			在192.168.4.66 主机做如下配置
 ]# systemctl  stop mysqld
 
@@ -744,13 +744,75 @@ mysql> exit
 web33 ~ ]#  mysql  -h192.168.4.66  -uadmin  -p123qqq...A
 web33 ~ ]#  mysql  -h192.168.4.10  -uadmin  -p123qqq...A 
 web33 ~ ]#  mysql  -h192.168.4.88  -uadmin  -p123qqq...A
+		
 
+四、部署集群
+	4.1  负载均衡集群
+		配置调度器192.168.4.99
+    4  rpm -qa  | grep haproxy   ||  yum  -y install  haproxy
+    5  rpm -qc haproxy
+    6  cp /etc/haproxy/haproxy.cfg  /root/
+    7  vim /etc/haproxy/haproxy.cfg  (只保留原文件中 global  和 default的配置 其他全删除)
+手动添加如下行
+ 	
+listen status     定义监控页面
+        mode http
+        bind *:80
+        stats enable
+        stats uri /admin
+        stats auth admin:admin
+	
+listen mysql_3306 192.168.4.99:3306   定义LB集群
+    mode    tcp
+    option  tcpka
+    balance roundrobin
+    server  mysql_01 192.168.4.66:3306 check
+    server  mysql_02 192.168.4.10:3306 check
+    server  mysql_03 192.168.4.88:3306 check
+:wq
 
+[root@haproxy99 ~]# netstat  -utnlp  | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      928/mysqld          
+[root@haproxy99 ~]# 
+[root@haproxy99 ~]# systemctl  stop  mysqld ; systemctl  disable mysqld
 
+[root@haproxy99 ~]# systemctl  start haproxy
+[root@haproxy99 ~]# 
+[root@haproxy99 ~]# netstat  -utnlp  | grep 3306
+tcp        0      0 192.168.4.99:3306       0.0.0.0:*               LISTEN      1295/haproxy        
+[root@haproxy99 ~]#
 
-四、服务集群
+	客户端访问连接调度器 ，访问数据库
+[root@web33 ~]# mysql -h192.168.4.99 -uadmin -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxcnode66  |
++------------+
+[root@web33 ~]# 
+[root@web33 ~]# mysql -h192.168.4.99 -uadmin -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxcnode10  |
++------------+
+[root@web33 ~]# mysql -h192.168.4.99 -uadmin -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxcnode88  |
++------------+
+[root@web33 ~]#	
 
+		访问监控页面查看监控状态（打开真机的浏览器访问）
+http://192.168.4.99/admin	
+	用户名 admin
+	密  码  admin			
 
+	4.2  高可用集群
 
 
 
