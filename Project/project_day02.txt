@@ -561,20 +561,75 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +------+
 [root@pxcnode66 ~]# 
 
-
+++++++++++++++++++++++++++++++++++++++++++++++
 		
 		3.2.2  创建PXC集群
- 			3.2.2.1 安装PXC集群软件包 ：在66主机    88主机   10主机分别安装PXC软件
-				
-		
+			在192.168.4.66 主机做如下配置
+]# systemctl  stop mysqld
+
+]#rpm -e --nodeps mysql-community-server mysql-community-embedded-compat mysql-community-common mysql-community-client mysql-community-devel mysql-community-test mysql-community-libs-compat mysql-community-minimal-debuginfo mysql-community-libs mysql-community-embedded mysql-community-embedded-devel
+   
+]# rpm -qa  | grep  mysql
+
+]# ls /var/lib/mysql/   (不要删除数据)
+
+]# rm -rf /etc/my.cnf
+
+   47  rpm -ivh /var/ftp/pub/libev-4.15-1.el6.rf.x86_64.rpm 
+
+   48  yum -y install /var/ftp/pub/pxc/percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm 
+
+   49  tar -xvf /var/ftp/pub/pxc/Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar 
+   50  ls Percona-XtraDB-Cluster-*
+
+   51  yum -y install /var/ftp/pub/pxc/qpress-1.1-14.11.x86_64.rpm 
+
+   52  yum -y install Percona-XtraDB-Cluster-*.rpm
+
+   53  ls /etc/percona-xtradb-cluster.conf.d/
+
+]# vim /etc/percona-xtradb-cluster.conf.d/mysqld.cnf
+[mysqld]
+server_id=66
+:wq
+
+]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf
+wsrep_cluster_address=gcomm:          //不需要写ip地址
+wsrep_node_address=192.168.4.66 
+wsrep_cluster_name=pxc-cluster
+wsrep_node_name=pxcnode66
+wsrep_sst_auth="sstuser:123qqq...A"
+:wq
+
+   59  ls /var/lib/mysql
+   60  systemctl  start mysql
+   61  netstat  -utnlp  | grep 3306
+
+   63  mysql -uroot -p123qqq...A
+ mysql> grant reload , lock tables , replication  client ,  process  on *.* to sstuser@"localhost" identified by "123qqq...A";
+
+mysql>  show  status  like "%wsrep%"; 
+wsrep_cluster_status           Primary 
+wsrep_connected             ON  
+
+mysql>  show  slave status  \G;
+mysql>  select  * from db1.a;
+
+
+
+reload 导入数据 , lock tables 锁表  , replication  client  查看MySQL服务状态,  process 命令停止MySQL服务
+
+			在192.168.4.10 主机做如下配置
+
+ 
 如果安装了其他版本的数据库服务软件要清除，具体操作如下：
     4  rpm -qa  | grep -i mysql
     5  systemctl  stop mysqld
-    6  rm -rf /var/lib/mysql/*
+    6  rm -rf /var/lib/mysql/* 
     9  rm -rf /etc/my.cnf
 [root@pxcnode10 ~]# rpm -e --nodeps mysql-community-server mysql-community-embedded-compat mysql-community-common mysql-community-client mysql-community-devel mysql-community-test mysql-community-libs-compat mysql-community-minimal-debuginfo mysql-community-libs mysql-community-embedded mysql-community-embedded-devel
 
-	安装PXC 集群软件，安装步骤如下
+	安装PXC 集群软件
    14  rpm -ivh /var/ftp/pub/pxc/libev-4.15-1.el6.rf.x86_64.rpm 
    15  yum -y install /var/ftp/pub/pxc/percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm 
    16  yum -y install /var/ftp/pub/pxc/qpress-1.1-14.11.x86_64.rpm 
@@ -582,22 +637,115 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
    18  ls *.rpm
    19  yum -y install Percona-XtraDB-Cluster-*.rpm
 
-
-
-
-
 [root@pxcnode10 ~]# ls /etc/percona-xtradb-cluster.conf.d/
 mysqld.cnf  mysqld_safe.cnf  wsrep.cnf
 [root@pxcnode10 ~]# 
+
 
 
 [root@pxcnode88 ~]# ls /etc/percona-xtradb-cluster.conf.d/
 mysqld.cnf  mysqld_safe.cnf  wsrep.cnf
 [root@pxcnode88 ~]# 
 
+]# vim /etc/percona-xtradb-cluster.conf.d/mysqld.cnf
+[mysqld]
+server-id=10
+]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf
+wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.10
+wsrep_node_address=192.168.4.10
+wsrep_cluster_name=pxc-cluster
+wsrep_node_name=pxcnode10
+wsrep_sst_auth="sstuser:123qqq...A"
+:wq
 
-   		做192.168.4.11 从服务器192.168.4.66 主机的配置，如下：（周一再安装）
+   59  ls /var/lib/mysql
+   60  systemctl  start mysql
+   61  netstat  -utnlp  | grep 3306
+
+   63  mysql -uroot -p123qqq...A
+
+mysql>  show  status  like "%wsrep%"; 
+wsrep_cluster_status           Primary 
+wsrep_connected             ON  
+
+mysql>  select  * from db1.a;
+mysql> select  user from mysql.user where user="sstuser";
+
+
+
+   		在192.168.4.88 主机做如下配置
+
+ 
+			如果安装了其他版本的数据库服务软件要清除，具体操作如下：
+    4  rpm -qa  | grep -i mysql
+    5  systemctl  stop mysqld
+    6  rm -rf /var/lib/mysql/* 
+    9  rm -rf /etc/my.cnf
+[root@pxcnode10 ~]# rpm -e --nodeps mysql-community-server mysql-community-embedded-compat mysql-community-common mysql-community-client mysql-community-devel mysql-community-test mysql-community-libs-compat mysql-community-minimal-debuginfo mysql-community-libs mysql-community-embedded mysql-community-embedded-devel
+
+			安装PXC 集群软件
+   14  rpm -ivh /var/ftp/pub/pxc/libev-4.15-1.el6.rf.x86_64.rpm 
+   15  yum -y install /var/ftp/pub/pxc/percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm 
+   16  yum -y install /var/ftp/pub/pxc/qpress-1.1-14.11.x86_64.rpm 
+   17  tar -xvf /var/ftp/pub/pxc/Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar 
+   18  ls *.rpm
+   19  yum -y install Percona-XtraDB-Cluster-*.rpm
+
+[root@pxcnode88 ~]# ls /etc/percona-xtradb-cluster.conf.d/
+mysqld.cnf  mysqld_safe.cnf  wsrep.cnf
+[root@pxcnode88 ~]# 
+
+
+
+[root@pxcnode88 ~]# ls /etc/percona-xtradb-cluster.conf.d/
+mysqld.cnf  mysqld_safe.cnf  wsrep.cnf
+[root@pxcnode88 ~]# 
+
+]# vim /etc/percona-xtradb-cluster.conf.d/mysqld.cnf
+[mysqld]
+server-id=88
+]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf
+wsrep_cluster_address=gcomm://192.168.4.66
+wsrep_node_address=192.168.4.88
+wsrep_cluster_name=pxc-cluster
+wsrep_node_name=pxcnode88
+wsrep_sst_auth="sstuser:123qqq...A"
+:wq
+
+   59  ls /var/lib/mysql
+   60  systemctl  start mysql
+   61  netstat  -utnlp  | grep 3306
+
+   63  mysql -uroot -p123qqq...A
+
+mysql>  show  status  like "%wsrep%"; 
+wsrep_cluster_status           Primary 
+wsrep_connected             ON  
+
+mysql>  select  * from db1.a;
+mysql> select  user from mysql.user where user="sstuser";
 			
+		在3台数据库服务器上分别修改集群成员列表的配置
+]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf  	//pxcnode88主机
+wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.10,192.168.4.88
+
+]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf  	//pxcnode10主机
+wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.88,192.168.4.10
+
+]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf 	//pxcnode66主机
+wsrep_cluster_address=gcomm://192.168.4.10,192.168.4.88,192.168.4.66
+
+
+		测试PXC集群
+[root@pxcnode66 ~]# mysql -uroot -p123qqq...A
+mysql> alter table db1.a add  x int primary key auto_increment first;
+mysql> exit
+		在网站服务器访问PXC集群中任意一台服务器都可以存取数据并对方主机都可以看到数据
+web33 ~ ]#  mysql  -h192.168.4.66  -uadmin  -p123qqq...A
+web33 ~ ]#  mysql  -h192.168.4.10  -uadmin  -p123qqq...A 
+web33 ~ ]#  mysql  -h192.168.4.88  -uadmin  -p123qqq...A
+
+
 
 
 四、服务集群
