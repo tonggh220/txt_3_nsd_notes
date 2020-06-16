@@ -1,0 +1,240 @@
+QQ:   240398019
+庞丽静
+静静
+
+校区_2003_姓名
+成都_xx_xx
+
+第三阶段： 数据库课程  （15天）
+
+具备的学习条件：LINUX系统的使用
+
+专业技术： 
+	关系型数据库（RDBMS之MySQL）
+
+		零基础入门
+		数据库进阶
+
+	NoSQL之Redis
+	数据库项目 
+
+
+从事的工作： 数据库管理员 、DBA 
+
+讲课           20-30分钟
+练习时间    15-20分钟  
+排错时间    15-30分钟
+
+
+理论         PPT
+实验步骤  案例
+
++++++++++DBA1_DAY01
+	一、相关概念
+		1.1  什么是数据库 ？ 是一种存储数据的服务（存储数据的仓库）
+		1.2  数据有哪些？ 视频、音频、图片、文本
+		1.3 主流的数据库服务软件?(如何选择数据库服务软件)
+			1.3.1   商业软件 or  开源软件
+			1.3.2   软件是否跨平台  （主流的操作系统  windows  unix   linux）
+			1.3.3   软件来源
+			1.3.4   软件的封包类型    .rpm包      源码包（.tar.gz  .tar.bz2）
+		1.4 专业术语：
+			DB  、 DBMS   、DBS
+
+	二 、搭建数据库服务器
+		2.1 环境准备
+			准备软件： mysql-5.7.17.tar
+			准备虚拟机  ip 192.168.4.50  关 selinux   和 firewalld
+		2.2  MySQL发展历史
+		2.3  应用场景   LNMP    LAMP
+		2.4  MySQL的特点 ？
+		2.5 搭建MySQL数据库服务器 
+			2.5.1 安装软件
+			2.5.2 修改配置文件  （暂时不需要修改使用默认配置运行即可 /etc/my.cnf）
+			2.5.3 启动服务
+			2.5.4 查看初始密码 
+			2.5.4 使用初始密码连接服务（默认只 能数据库管理员root 自己访问自己）
+			2.5.5 修改登录密码为  123qqq...A          断开连接
+			2.5.6 使用新密码登录
+
+			2.5.7 修改密码策略 ？
+				2.5.7  查看密码策略
+mysql> show variables ;  查看所有变量
+mysql> show variables  like "%password%";  查看包含password 字样的变量
+
+				2.5.8 修改密码策略
+
+					命令行 马上生效 （临时的）
+mysql> set global  validate_password_policy = 0 ;  修改密码策略 为0 
+mysql> set global validate_password_length = 6 ;  修改密码长度为6个字符
+mysql> alter user root@"localhost" identified by "tarena" ;  修改新密码
+mysql> exit   断开
+]# mysql   -uroot    -ptarena 使用新密码登录
+
+					永久修改（永久有效）
+]# vim /etc/my.cnf
+[mysqld]
+validate_password_length = 6 自己添加
+validate_password_policy = 0  自己添加
+:wq
+
+	
+
+systemctl  stop  mysqld
+
+rm -rf /var/lib/mysql/*
+
+systemctl start mysqld
+
+netstat  -utnlp  | grep  3306
+
+grep password  /var/log/mysqld.log   | tail  -1 
+
+mysql    -uroot       -p'密码'
+			2.5.8  数据库服务相关的参数
+				主配置文件 /etc/my.cnf
+				默认数据库目录  /var/lib/mysql
+				服务名称  mysqld
+				进程名称  mysqld
+				默认监听端口号   3306
+				数据传输协议 TCP
+				进程的所有者/组 名  mysql
+				错误日志文件 /var/log/mysqld.log
+ 
+	三、基本管理
+		3.1 连机数据库服务的连机方式？
+		3.2 数据存储过程？  连机服务器 --->建库 ---> 建表 ---> 存储数据 ---->断开连接
+			
+		数据库管理命令  SQL（结构化查询语言）
+			SQL命令的使用规则？
+			SQL命令的分类？
+
+		常用命令 ？
+			库的管理命令？
+                         		库名命名规则？
+			表的管理命令
+			记录的管理命令
+create  database  db1;
+show   databases;
+use  db1;
+show tables;
+create  table  db1.stuinfo (name  char (10) ,  class  char(7) );
+select  * from db1.stuinfo ;
+desc  db1.stuinfo ;
+insert into  db1.stuinfo  values ("bob" ,"nsd2003") , ("tom","nsd2002") , ("lucy" ,  "nsd1912") ;
+select  * from db1.stuinfo;
+update  db1.stuinfo  set  class="nsd1912" ;
+select  * from  db1.stuinfo;
+delete from  db1.stuinfo;
+select  * from db1.stuinfo;
+show tables;
+drop tables  db1.stuinfo;
+show tables;
+
+	四、MySQL数据类型
+ 
+		字符类型  char   varchar   ( blob 、  text ）
+
+mysql> create table db1.t2 (
+    -> name char(3) ,  email varchar(10)
+    -> );
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> desc db1.t2;
++-------+-------------+------+-----+---------+-------+
+| Field | Type        | Null | Key | Default | Extra |
++-------+-------------+------+-----+---------+-------+
+| name  | char(3)     | YES  |     | NULL    |       |
+| email | varchar(10) | YES  |     | NULL    |       |
++-------+-------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> 
+mysql> create table db1.t1 ( name char ,  email varchar );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ')' at line 1
+mysql> 
+mysql> create table db1.t1 ( name char ,  email varchar(2) );
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> desc  db1.t1;
++-------+------------+------+-----+---------+-------+
+| Field | Type       | Null | Key | Default | Extra |
++-------+------------+------+-----+---------+-------+
+| name  | char(1)    | YES  |     | NULL    |       |
+| email | varchar(2) | YES  |     | NULL    |       |
++-------+------------+------+-----+---------+-------+
+2 rows in set (0.01 sec)
+
+mysql> 
+			休息到 17：15 
+
+		
+		枚举类型 （字段的值 只能在列举的范围里选择）
+			单选  enum("值1","值2","值3")
+			多选  set("值1","值2","值3")
+mysql> create table  db1.t6 ( 
+name  char(15) , 
+sex  enum("m" , "w" , "no" )  ,  
+likes  set ("eat" , "sleep""game","money" , "nv" ) 
+ );
+mysql> desc db1.t6;
++-------+----------------------------------------+------+-----+---------+-------+
+| Field | Type                                   | Null | Key | Default | Extra |
++-------+----------------------------------------+------+-----+---------+-------+
+| name  | char(15)                               | YES  |     | NULL    |       |
+| sex   | enum('m','w','no')                     | YES  |     | NULL    |       |
+| likes | set('eat','sleep','game','money','nv') | YES  |     | NULL    |       |
++-------+----------------------------------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> insert into db1.t6 values ("bob" , "m" , "film,music");
+ERROR 1265 (01000): Data truncated for column 'likes' at row 1
+mysql> 
+mysql> insert into db1.t6 values ("bob" , "m" , "eat,music");
+ERROR 1265 (01000): Data truncated for column 'likes' at row 1
+mysql> 
+mysql> insert into db1.t6 values ("bob" , "m" , "eat,sleep,nv");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t6;
++------+------+--------------+
+| name | sex  | likes        |
++------+------+--------------+
+| bob  | m    | eat,sleep,nv |
++------+------+--------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+		日期时间类型
+			年       year    YYYY      2020
+			日期   date    YYYYMMDD    20200616
+			时间   time    hhmmss           174658
+			日期时间  datetime或timestamp      yyyymmddhhmmss  20200616174746
+
+create   table   db1.t7(name  char(10) ,  start   year  ,  birthday  date  ,  party   datetime  ,  up_s   time );
+
+insert   into  db1.t7  values ("bob" ,  1990  ,   20201120  ,   20200628203000 ,  090000);
+
+
+mysql> insert   into  db1.t7  values ("bob" ,  1990  ,   20201120  ,   20200628203000 ,  090000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t7;
++------+-------+------------+---------------------+----------+
+| name | start | birthday   | party               | up_s     |
++------+-------+------------+---------------------+----------+
+| bob  |  1990 | 2020-11-20 | 2020-06-28 20:30:00 | 09:00:00 |
++------+-------+------------+---------------------+----------+
+1 row in set (0.00 sec)
+
+mysql>
++++++++++++++++++
+		明天讲
+			时间函数的使用
+
+			数值类型	
