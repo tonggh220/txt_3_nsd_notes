@@ -180,3 +180,60 @@ mysql> insert into  db1.t24 (name,age) values("lucy",21);
 mysql> select  * from db1.t24;
 
 mysql> alter table  db1.t24 add id int primary key auto_increment first; 在已有表里添加自增长字段的命令
+
+
+
+
+外键的使用
+	什么外键？ 给外键字段赋值时， 值必须在指定的另外一张表中指定字段值里选项。
+
+B 表
+	名字（外键） ---->A 表  用户名 （lucy   jim  jack）
+	 
+	应用场景？
+ 
+ 人事   员工表                    
+	         姓名 身份证 部门 工号（被参考）
+		
+				  03
+				  68
+				 
+				 				 
+                                         
+ 运维   工资表   姓名  性别  电话  邮箱  工号（外键）
+                                         03
+					68               
+					
+
+	外键的使用规则？
+			
+	创建外键：
+		建表时创建
+
+		create table 表名(字段名列表, foreign key(字段名) references  表名(字段名 )  on update  cascade   on delete cascade )engine=innodb;
+
+
+create table  db1.yg (yg_id  int  primary key auto_increment , name char(10))engine=innodb;  先创建被参考的表
+
+ insert into  db1.yg(name) values ("bob"),("tom") ;
+
+ select  * from db1.yg;
+
+ 创建有外键的表
+create table  db1.gz (gz_id int , pay int , foreign key(gz_id) references db1.yg(yg_id) on update cascade  on delete cascade ) engine=innodb;
+
+select  *  from db1.gz;
+
+
+
+
+		删除外键
+		show  create  table  库.表；
+		mysql> alter table db1.gz drop foreign key gz_ibfk_1 ;
+
+
+
+		在已有表创建外键
+		alter table  表名  add  foreign key(字段名) references  表名(字段名 )  on update  cascade   on delete cascade ;
+
+mysql> alter table  db1.gz add foreign key(gz_id) references yg(yg_id) on update cascade  on delete cascade ;
