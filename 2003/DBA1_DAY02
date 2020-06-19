@@ -304,3 +304,37 @@ mysql> select  * from db1.yg;
 1 row in set (0.00 sec)
 
 mysql> 
+
+
+优化配置
+mysql> alter table  db1.gz add primary key(gz_id);
+mysql> insert into db1.gz values(3,80000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db1.gz values(4,80000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into db1.gz values(8,80000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.gz
+    -> ;
++-------+-------+
+| gz_id | pay   |
++-------+-------+
+|     3 | 80000 |
+|     4 | 80000 |
+|     8 | 80000 |
++-------+-------+
+3 rows in set (0.00 sec)
+
+mysql> 
+mysql> insert into db1.gz values(8,80000);
+ERROR 1062 (23000): Duplicate entry '8' for key 'PRIMARY'
+mysql> 
+mysql> insert into db1.gz values(null,80000);
+ERROR 1048 (23000): Column 'gz_id' cannot be null
+mysql> 
+mysql> insert into db1.gz values(7,80000);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`db1`.`gz`, CONSTRAINT `gz_ibfk_1` FOREIGN KEY (`gz_id`) REFERENCES `yg` (`yg_id`) ON DELETE CASCADE ON UPDATE CASCADE)
+mysql> 
