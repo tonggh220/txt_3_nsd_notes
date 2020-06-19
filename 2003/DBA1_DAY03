@@ -1,0 +1,47 @@
+++++++++DBA1_DAY03
+1 数据导入与导出(批量处理数据)
+	1.0 默认检索目录（导入导出的文件必须存放在要求的目录下）
+		查看默认检索目录
+mysql> show variables like "secure_file_priv";
++------------------+-----------------------+
+| Variable_name    | Value                 |
++------------------+-----------------------+
+| secure_file_priv | /var/lib/mysql-files/ |
++------------------+-----------------------+
+1 row in set (0.01 sec)
+
+mysql> exit
+Bye
+[root@host50 ~]# ls /var/lib/
+alternatives  dhclient   machines     mysql-keyring   polkit-1   rsyslog    vmware
+authconfig    games      misc         NetworkManager  postfix    stateless  yum
+chrony        initramfs  mysql        os-prober       rpm        systemd
+dbus          logrotate  mysql-files  plymouth        rpm-state  tuned
+[root@host50 ~]# 
+[root@host50 ~]# ls /var/lib/mysql-files/
+[root@host50 ~]#		
+	
+		自定义检索目录
+
+[root@host50 ~]# vim /etc/my.cnf
+[mysqld]
+secure_file_priv="/myload"
+:wq
+[root@host50 ~]# vim /etc/my.cnf
+[root@host50 ~]# 
+[root@host50 ~]# mkdir /myload
+[root@host50 ~]# chown mysql /myload/
+[root@host50 ~]# 
+[root@host50 ~]# setenforce 0
+[root@host50 ~]# 
+[root@host50 ~]# systemctl  restart mysqld
+[root@host50 ~]# mysql -uroot -p123qqq...A
+mysql> show variables like "secure_file_priv";
++------------------+----------+
+| Variable_name    | Value    |
++------------------+----------+
+| secure_file_priv | /myload/ |
++------------------+----------+
+1 row in set (0.00 sec)
+
+mysql> 
