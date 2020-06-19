@@ -163,3 +163,18 @@ mysql> alter table   db1.t23 drop primary key; 删除
 mysql> alter table   db1.t23 add primary key(clientip , port); 添加（主键字段的值要复合要求）	
 
 
+主键与auto_increment 连用
+	      字段值的自增长方式赋值
+
+mysql> create table  db1.t24 ( 
+id  int  primary key  auto_increment, 
+name char(10) , 
+age tinyint  );
+
+mysql> insert into  db1.t24 (name,age) values("bob",19);
+mysql> insert into  db1.t24 (name,age) values("tom",21);
+mysql> select  * from db1.t24;
+mysql> insert into db1.t24 values(7,"bob",19);
+mysql> select  * from db1.t24;
+mysql> insert into  db1.t24 (name,age) values("lucy",21);
+mysql> select  * from db1.t24;
