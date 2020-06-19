@@ -178,3 +178,5 @@ mysql> insert into db1.t24 values(7,"bob",19);
 mysql> select  * from db1.t24;
 mysql> insert into  db1.t24 (name,age) values("lucy",21);
 mysql> select  * from db1.t24;
+
+mysql> alter table  db1.t24 add id int primary key auto_increment first; 在已有表里添加自增长字段的命令
