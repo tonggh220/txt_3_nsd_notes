@@ -45,3 +45,78 @@ mysql> show variables like "secure_file_priv";
 1 row in set (0.00 sec)
 
 mysql> 
+
+
+	1.1 数据导入：把系统文件的内容存储到数据的表里（文件的内容要有一定格式）
+	
+	步骤： 建库 -> 建表 -> 把系统拷贝到 检索目录里-> 执行导入数据命令  	
+	命令格式
+mysql> load data infile "/myload/文件名"  into  table  库.表 
+fields  terminated by "列间隔符号"  lines terminated by "\n";
+
+	例子  把/etc/passwd 文件的内容存储到db3库的user表里
+
+mysql> create database db3 ;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> create table db3.user(
+    -> name char(100), password char(1) , uid  int  , gid  int ,
+    -> comment varchar(150), homeaddr  char(150) , shell char(50)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> desc db3.user;
++----------+--------------+------+-----+---------+-------+
+| Field    | Type         | Null | Key | Default | Extra |
++----------+--------------+------+-----+---------+-------+
+| name     | char(100)    | YES  |     | NULL    |       |
+| password | char(1)      | YES  |     | NULL    |       |
+| uid      | int(11)      | YES  |     | NULL    |       |
+| gid      | int(11)      | YES  |     | NULL    |       |
+| comment  | varchar(150) | YES  |     | NULL    |       |
+| homeaddr | char(150)    | YES  |     | NULL    |       |
+| shell    | char(50)     | YES  |     | NULL    |       |
++----------+--------------+------+-----+---------+-------+
+7 rows in set (0.05 sec)
+
+mysql> select  * from db3.user;
+Empty set (0.00 sec)
+
+mysql> 
+
+mysql> system  cp /etc/passwd  /myload/
+mysql> 
+mysql> system ls /myload/
+passwd
+mysql> 
+mysql> load data infile "/myload/passwd" into table  db3.user
+    -> fields terminated by ":"  lines terminated by "\n" ;
+Query OK, 20 rows affected (0.01 sec)
+Records: 20  Deleted: 0  Skipped: 0  Warnings: 0
+
+mysql> 
+mysql> alter table  db3.user add  id  int  primary key auto_increment first ;
+Query OK, 0 rows affected (0.06 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> select  * from db3.user；
+
+mysql> select  * from db3.user where  id = 15;
++----+------+----------+------+------+--------------------+----------+---------------+
+| id | name | password | uid  | gid  | comment            | homeaddr | shell         |
++----+------+----------+------+------+--------------------+----------+---------------+
+| 15 | dbus | x        |   81 |   81 | System message bus | /        | /sbin/nologin |
++----+------+----------+------+------+--------------------+----------+---------------+
+1 row in set (0.00 sec)
+
+mysql> select  * from db3.user where  id <= 3;
++----+--------+----------+------+------+---------+----------+---------------+
+| id | name   | password | uid  | gid  | comment | homeaddr | shell         |
++----+--------+----------+------+------+---------+----------+---------------+
+|  1 | root   | x        |    0 |    0 | root    | /root    | /bin/bash     |
+|  2 | bin    | x        |    1 |    1 | bin     | /bin     | /sbin/nologin |
+|  3 | daemon | x        |    2 |    2 | daemon  | /sbin    | /sbin/nologin |
++----+--------+----------+------+------+---------+----------+---------------+
+3 rows in set (0.00 sec)
+
+mysql> 
