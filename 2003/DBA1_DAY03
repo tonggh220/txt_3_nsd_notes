@@ -120,3 +120,27 @@ mysql> select  * from db3.user where  id <= 3;
 3 rows in set (0.00 sec)
 
 mysql> 
+
+
+1.2 数据导出：把表里的记录存储到系统文件。
+
+mysql> select  * from db3.user into  outfile  "/myload/user1.txt"
+
+mysql> system ls /myload
+passwd	user1.txt
+mysql> 
+mysql> 
+mysql> system  cat /myload/user1.txt
+
+
+mysql> select  name , shell  , uid  from db3.user where id <= 5  into outfile "/myload/user2.txt" 
+    -> fields terminated by "#" ;
+Query OK, 5 rows affected (0.00 sec)
+
+mysql> system cat /myload/user2.txt
+root#/bin/bash#0
+bin#/sbin/nologin#1
+daemon#/sbin/nologin#2
+adm#/sbin/nologin#3
+lp#/sbin/nologin#4
+mysql> 
