@@ -306,8 +306,13 @@ mysql> select  * from db1.yg;
 mysql> 
 
 
-优化配置
+	优化配置
+mysql> insert into  db1.yg values(“Lucy”),("lili");
+
+
+mysql> delete fromm db1.gz;
 mysql> alter table  db1.gz add primary key(gz_id);
+
 mysql> insert into db1.gz values(3,80000);
 Query OK, 1 row affected (0.00 sec)
 
@@ -316,6 +321,8 @@ Query OK, 1 row affected (0.01 sec)
 
 mysql> insert into db1.gz values(8,80000);
 Query OK, 1 row affected (0.00 sec)
+
+
 
 mysql> select  * from db1.gz
     -> ;
