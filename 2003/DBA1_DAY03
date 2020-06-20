@@ -621,7 +621,7 @@ mysql> select  *  from  db3.user where id <= 10  limit 3,5;
 mysql>
 
 
-          5 dstinct     字段名   不显示字段的重复值
+          5 distinct     字段名   不显示字段的重复值
                 mysql> select distinct shell from  db3.user;
 
 
