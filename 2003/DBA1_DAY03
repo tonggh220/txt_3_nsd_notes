@@ -145,9 +145,25 @@ adm#/sbin/nologin#3
 lp#/sbin/nologin#4
 mysql> 
 
+mysql> select  name , shell ,  uid   from  db3.user  into outfile  "/myload/e.txt"  fields terminated by "****"
+    -> lines terminated by "?????" ;
+
+mysql> system  cat  /myload/e.txt
 
 
++++++++++++++++++++++
+管理表记录 db3.user
 
+		增加表记录 insert into （新记录追加已有记录的末尾）
+		     添加1条记录给所有列赋值
+			insert into  库.表  values(值列表);
+		     添加多条记录给所有列赋值
+			insert into  库.表  values(值列表),(值列表),....;
+		     添加1条记录给指定列赋值
+			insert into  库.表(字段名列表)  values(值列表);
+
+		     添加多条记录给指定列赋值
+			insert into  库.表(字段名列表)  values(值列表),(值列表),....;
 
 insert into db3.user  values(21,"bob","x",2002,2002,"test user","/home/bob","/bin/bash");
 
@@ -161,6 +177,13 @@ insert into db3.user(name,uid,gid) values("jerry",4000,4000);
 insert into db3.user(name,uid,gid) values("jerryA",4000,4000),("jerryb",5000,4000),("jerryC",6000,6000);
 
 select  *  from  db3.user;
+
+
+		查询表记录  select
+			条件的作用是控制显示那些行
+			字段名列表控制显示那些列
+
+			 select  字段名列表 from 库.表 [ where  条件] ;
 
                 mysql> select  name , uid  , shell   from db3.user;
 
@@ -182,6 +205,31 @@ mysql> select  * from db3.user where id >20 ;
 mysql> delete from db3.user where id >20 ;
 mysql> select  * from db3.user where id >20 ;
 
+更新记录列的值 update (修改行中列的值)
+
+		     批量修改  update  库.表  set  字段名=值 , 字段名=值 ；
+
+		     修改指定行 列的值
+		     update  库.表  set  字段名=值 , 字段名=值 [ where  条件 ]；
+
+select  password , comment  from db3.user;
+update db3.user set password="a" , comment="student user" ;
+select  password , comment  from db3.user;
+
+mysql> select  *  from db3.user where name="root" ;
+mysql> update  db3.user set password="x" , comment="admin user" where name="root";
+
+mysql> select  *  from db3.user where name="root"
+
+删除表记录  delete
+
+			删除表里所有行  delete from  库.表；
+			delete  from  db3.user;
+
+			删除表里指定的行 （只删除与条件匹配的行）
+			delete from  库.表 where  条件；
 
 
-
+mysql> select  * from db3.user where id >20 ;
+mysql> delete from db3.user where id >20 ;
+mysql> select  * from db3.user where id >20 ;
