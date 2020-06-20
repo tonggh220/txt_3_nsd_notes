@@ -666,4 +666,76 @@ mysql> select count(name)  from  db3.user where  shell != "/bin/bash";
 
 mysql>
 
+ 四 、 安装图形管理工具-phpmyadmin
+                    4.1 连接数据库服务的连接方式： 命令行 、java|php|python脚本 、 图形软件（web页面 图形窗口）
 
+
+                    4.2 图形软件有哪些？
+
+                    4.3 安装PHPmyadmin 基本思路
+1. 部署环境LAMP
+[root@localhost ~]# rpm -q httpd 
+未安装软件包 httpd 
+[root@localhost ~]# rpm -qa  | grep -i mysql
+mysql-community-libs-5.7.17-1.el7.x86_64
+mysql-community-embedded-5.7.17-1.el7.x86_64
+mysql-community-embedded-devel-5.7.17-1.el7.x86_64
+mysql-community-common-5.7.17-1.el7.x86_64
+mysql-community-client-5.7.17-1.el7.x86_64
+mysql-community-devel-5.7.17-1.el7.x86_64
+mysql-community-test-5.7.17-1.el7.x86_64
+mysql-community-libs-compat-5.7.17-1.el7.x86_64
+mysql-community-minimal-debuginfo-5.7.17-1.el7.x86_64
+mysql-community-server-5.7.17-1.el7.x86_64
+mysql-community-embedded-compat-5.7.17-1.el7.x86_64
+[root@localhost ~]#
+
+[root@localhost ~]# yum -y  install php  php-mysql  httpd
+
+2. 启动httpd服务程序
+[root@localhost ~]#
+[root@localhost ~]#
+
+3. 解压phpMyAdmin包，并移动到网站目录
+[root@localhost ~]# tar -zxvf  /var/ftp/upload/phpMyAdmin-2.11.11-all-languages.tar.gz
+[root@localhost ~]# ls
+phpMyAdmin-2.11.11-all-languages
+[root@localhost ~]#
+[root@localhost ~]# mv phpMyAdmin-2.11.11-all-languages /var/www/html/phpmyadmin
+[root@localhost ~]#
+[root@localhost ~]# ls /var/www/html/
+phpmyadmin
+[root@localhost ~]# cd /var/www/html/phpmyadmin/
+
+
+4. 配置config.inc.php，指定MySQL服务器地址
+[root@localhost phpmyadmin]# ls config.sample.inc.php
+[root@localhost ~]# tar -zxvf  /var/ftp/upload/phpMyAdmin-2.11.11-all-languages.tar.gz
+[root@localhost ~]# ls
+phpMyAdmin-2.11.11-all-languages
+[root@localhost ~]#
+[root@localhost ~]# mv phpMyAdmin-2.11.11-all-languages /var/www/html/phpmyadmin
+[root@localhost ~]#
+[root@localhost ~]# ls /var/www/html/
+phpmyadmin
+
+
+4. 配置config.inc.php，指定MySQL服务器地址
+[root@localhost ~]# cd /var/www/html/phpmyadmin/
+
+[root@localhost phpmyadmin]# ls config.sample.inc.php
+config.sample.inc.php
+[root@localhost phpmyadmin]# 
+[root@localhost phpmyadmin]# cp config.sample.inc.php config.inc.php
+[root@localhost phpmyadmin]#
+[root@localhost phpmyadmin]# ls config.inc.php
+config.inc.php
+[root@localhost phpmyadmin]# vim config.inc.php
+31 $cfg['Servers'][$i]['host'] = 'localhost';
+17 $cfg['blowfish_secret'] = 'plj123';
+:wq
+
+5. 浏览器访问、使用数据库管理员root登录
+   打开真机的浏览器 输入网址 http://192.168.4.50/phpmyadmin
+                登入名称  root (数据库管理员)
+                登录密码  123qqq...A  (数据库管理密码)
