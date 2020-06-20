@@ -324,6 +324,150 @@ mysql> select name , shell  from  db3.user  where shell is not  null ;
 mysql>
 
 
+ 范围内匹配
+                in  (值列表)           在...里
+                not  in  (值列表)      不在...里
+                between 数字  and 数字  在...之间
+
+select  name   from  db3.user  where  name  in ("mysql","apache","sync","root");
+
+select  name , shell    from  db3.user  where  shell not in ("/bin/bash","/sbin/nologin");
+
+
+select  name , uid    from  db3.user  where  uid  in (3, 6 , 12 , 7);
+
+  3分钟 到  14:10
+
+select  name   from  db3.user  where  name  in ("mysql","apache","sync","root");
+
+select  name , shell    from  db3.user  where  shell not in ("/bin/bash","/sbin/nologin");
+
+select  name , shell    from  db3.user  where  shell not in ("/bin/bash","/sbin/nologin");
+select  name , uid    from  db3.user  where  uid  in (3, 6 , 12 , 7);
+
++-----------------+----------------+
+20 rows in set (0.00 sec)
+
+mysql>
+
+                
+                范围内匹配               
+                in  (值列表)           在...里
+                not  in  (值列表)      不在...里 
+                between 数字  and 数字  在...之间
+
+select  name   from  db3.user  where  name  in ("mysql","apache","sync","root");
+
+select  name , shell    from  db3.user  where  shell not in ("/bin/bash","/sbin/nologin");
+select  name , uid    from  db3.user  where  uid  in (3, 6 , 12 , 7);
+
+select  name  , uid   from db3.user where  uid  between 10 and 20 ; 
+select  id , name  , uid   from db3.user where  id  between 5 and 8 ;
+        
+
+
+
+
+
+
+
+
+
+        高级匹配条件
+                模糊查询 like
+                   where  字段名  like  '表达式';
+                         _  单个字符
+
+                         %  零或多个字符
+ select  name  from   db3.user where  name  like  '_ _ _ _';  name字段 的值 必须是5个字符
+ select  name  from   db3.user where  name  like  '%a%';      name字段的值包涵字符a就可以
+ select  name  from   db3.user where  name  like  '_ _ _%_ _';name字段的值至少是5个字符
+ select  name  from   db3.user where  name  like  '_ _ _%_ _';name字段的值至少是5个字符
+ select  name  from   db3.user where  name  like  'a%';       name字段的值是字母a开头
+
+
+
+
+                         %  零或多个字符
+ select  name  from   db3.user where  name  like  '_ _ _ _';  name字段 的值 必须是5个字符
+ select  name  from   db3.user where  name  like  '%a%';      name字段的值包涵字符a就可以
+ select  name  from   db3.user where  name  like  '_ _ _%_ _';name字段的值至少是5个字符
+ select  name  from   db3.user where  name  like  'a%';       name字段的值是字母a开头
+
+
+
+                正则匹配  regexp
+                        where 字段名  regexp   '正则表达式' ；
+
+                正则匹配  regexp   练习10分钟到 14:58
+                        where 字段名  regexp   '正则表达式' ；
+                        正则元字符：^   $   .   [ ]   *    |
+
+select  name  from  db3.user where name  regexp  '^a' ;
+
+select  name  from  db3.user where name  regexp  't$' ;
+                        where 字段名  regexp   '正则表达式' ；
+                        正则元字符：^   $   .   [ ]   *    |
+
+select  name  from  db3.user where name  regexp  '^a' ;
+select  name  from  db3.user where name  regexp  't$' ;
+select  name  from  db3.user where name  regexp  '^r.*t$' ;
+select  name  from  db3.user where name  regexp  '[afdt]' ;
+select  name  from  db3.user where name  regexp  '^[afdt]' ;
+select  name  from  db3.user where name  regexp  '[a-d]' ;
+
+select  name  from  db3.user where name  regexp  '^a|t$' ;
+
+select  name  from  db3.user where name regexp '^a'  or name regexp 't$' ;
+        
+
+
+
+        高级匹配条件
+                模糊查询 like
+                   where  字段名  like  '表达式';
+                         _  单个字符
+
+                         %  零或多个字符
+ select  name  from   db3.user where  name  like  '_ _ _ _';  name字段 的值 必须是5个字符
+ select  name  from   db3.user where  name  like  '%a%';      name字段的值包涵字符a就可以
+ select  name  from   db3.user where  name  like  '_ _ _%_ _';name字段的值至少是5个字符
+ select  name  from   db3.user where  name  like  'a%';       name字段的值是字母a开头
+
+
+
+                正则匹配  regexp   练习10分钟到 14:58
+                        where 字段名  regexp   '正则表达式' ；
+                        正则元字符：^   $   .   [ ]   *    |
+
+select  name  from  db3.user where name  regexp  '^a' ;
+select  name  from  db3.user where name  regexp  't$' ;
+select  name  from  db3.user where name  regexp  '^r.*t$' ;
+select  name  from  db3.user where name  regexp  '[afdt]' ;
+select  name  from  db3.user where name  regexp  '^[afdt]' ;
+select  name  from  db3.user where name  regexp  '[a-d]' ;
+
+select  name  from  db3.user where name  regexp  '^a|t$' ;
+
+select  name  from  db3.user where name regexp '^a'  or name regexp 't$' ;
+
+
+                四则计算 + - * / %
+mysql> select  name , uid , gid , uid + gid  zcj  from  db3.user where name = "mysql";
+
+mysql> select  name , uid , gid , uid + gid  zcj  ,  ( uid + gid ) / 2  pjz
+       from  db3.user where name = "mysql";
+
+mysql> select *  from  db3.user where  id  % 2  =  0 ;
+
+mysql> select *  from  db3.user where  id  % 2  !=  0 ;
+
+mysql> update db3.user  set uid = uid + 1 where id <= 5 ;
+
+mysql> select  *  from  db3.user where  id  <= 5;
+
+mysql> update db3.user  set uid = uid - 1 where id <= 5 ;
+
 
 
 
