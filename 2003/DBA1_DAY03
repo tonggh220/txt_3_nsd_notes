@@ -534,6 +534,97 @@ mysql>
 mysql> select name ,shell  from  db3.user where shell is not null  having name = "mysql";
 
 
+          4  限制显示行数 （默认显示所有与查询条件匹配的行）
+                  select查询 limit 数字； 显示头几行
+                  select查询 limit 数字1,数字2； #指定显示行的范围
+
+                数字1 表示显示的起始行（数字0 表示第1行）
+                数字2 表示显示的总行数
+
+mysql> select  * from db3.user limit 3;
+mysql> select  * from db3.user limit 5;
+
+
+mysql> select  name , uid ,  gid  from db3.user  where shell !="/sbin/nologin" ;
++----------+------+------+
+| name     | uid  | gid  |
++----------+------+------+
+| root     |    0 |    0 |
+| sync     |    5 |    0 |
+| shutdown |    6 |    0 |
+| halt     |    7 |    0 |
+| mysql    |   27 |   27 |
++----------+------+------+
+
+mysql> select  name , uid ,  gid  from db3.user  where shell !="/sbin/nologin"  limit 2;
++------+------+------+
+| name | uid  | gid  |
++------+------+------+
+| root |    0 |    0 |
+| sync |    5 |    0 |
++------+------+------+
+2 rows in set (0.00 sec)
+
+mysql>
+
+
+mysql> select  name , uid ,  gid  from db3.user  where shell !="/sbin/nologin"  limit  0 , 2;
++------+------+------+
+| name | uid  | gid  |
++------+------+------+
+| root |    0 |    0 |
+| sync |    5 |    0 |
++------+------+------+
+2 rows in set (0.00 sec)
+
+mysql> select  name , uid ,  gid  from db3.user  where shell !="/sbin/nologin"  limit  1 , 3;
++----------+------+------+
+| name     | uid  | gid  |
++----------+------+------+
+| sync     |    5 |    0 |
+| shutdown |    6 |    0 |
+| halt     |    7 |    0 |
++----------+------+------+
+3 rows in set (0.00 sec)
+
+mysql>
+
+mysql> select  *  from  db3.user where id <= 10 ;
++----+----------+----------+------+------+--------------+-----------------+----------------+
+| id | name     | password | uid  | gid  | comment      | homeaddr        | shell          |
++----+----------+----------+------+------+--------------+-----------------+----------------+
+|  1 | root     | x        |    0 |    0 | admin user   | /root           | /bin/bash      |
+|  2 | bin      | a        |    1 |    1 | student user | /bin            | /sbin/nologin  |
+|  3 | daemon   | a        |    2 |    2 | student user | /sbin           | /sbin/nologin  |
+|  4 | adm      | a        |    3 |    4 | student user | /var/adm        | /sbin/nologin  |
+|  5 | lp       | a        |    4 |    7 | student user | /var/spool/lpd  | /sbin/nologin  |
+|  6 | sync     | a        |    5 |    0 | student user | /sbin           | /bin/sync      |
+|  7 | shutdown | a        |    6 |    0 | student user | /sbin           | /sbin/shutdown |
+|  8 | halt     | a        |    7 |    0 | student user | /sbin           | /sbin/halt     |
+|  9 | mail     | a        |    8 |   12 | student user | /var/spool/mail | /sbin/nologin  |
+| 10 | operator | a        |   11 |    0 | student user | /root           | /sbin/nologin  |
++----+----------+----------+------+------+--------------+-----------------+----------------+
+10 rows in set (0.01 sec)
+
+mysql> select  *  from  db3.user where id <= 10  limit 3,5;
++----+----------+----------+------+------+--------------+----------------+----------------+
+| id | name     | password | uid  | gid  | comment      | homeaddr       | shell          |
++----+----------+----------+------+------+--------------+----------------+----------------+
+|  4 | adm      | a        |    3 |    4 | student user | /var/adm       | /sbin/nologin  |
+|  5 | lp       | a        |    4 |    7 | student user | /var/spool/lpd | /sbin/nologin  |
+|  6 | sync     | a        |    5 |    0 | student user | /sbin          | /bin/sync      |
+|  7 | shutdown | a        |    6 |    0 | student user | /sbin          | /sbin/shutdown |
+|  8 | halt     | a        |    7 |    0 | student user | /sbin          | /sbin/halt     |
++----+----------+----------+------+------+--------------+----------------+----------------+
+5 rows in set (0.00 sec)
+
+mysql>
+
+
+          5 dstinct     字段名   不显示字段的重复值
+                mysql> select distinct shell from  db3.user;
+
+
 
 
 
