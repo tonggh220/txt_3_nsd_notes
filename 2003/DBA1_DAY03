@@ -168,3 +168,20 @@ select  *  from  db3.user;
                 mysql> select  id , name , uid  , shell   from db3.user where  id <= 10;
                 
                 mysql> select  *   from db3.user where  id <= 10;
+
+select  password , comment  from db3.user;
+update db3.user set password="a" , comment="student user" ;
+select  password , comment  from db3.user;
+
+mysql> select  *  from db3.user where name="root" ;
+mysql> update  db3.user set password="x" , comment="admin user" where name="root";
+
+mysql> select  *  from db3.user where name="root"
+
+mysql> select  * from db3.user where id >20 ;
+mysql> delete from db3.user where id >20 ;
+mysql> select  * from db3.user where id >20 ;
+
+
+
+
