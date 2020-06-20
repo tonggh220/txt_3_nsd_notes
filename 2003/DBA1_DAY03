@@ -469,5 +469,71 @@ mysql> select  *  from  db3.user where  id  <= 5;
 mysql> update db3.user  set uid = uid - 1 where id <= 5 ;
 
 
+操作查询结果（对查找出来的记录再做操作）
+          1  排序 select查询  order by  字段名  排序方式 desc（降序） 或 asc(升序)；
+mysql> select  name  , uid  from  db3.user  where uid >= 10  and  uid<=300 ;
+mysql> select  name  , uid  from  db3.user  where uid >= 10  and  uid<=300  order by  uid asc;
++-----------------+------+
+| name            | uid  |
++-----------------+------+
+| operator        |   11 |
+| games           |   12 |
+| ftp             |   14 |
+| mysql           |   27 |
+| sshd            |   74 |
+| dbus            |   81 |
+| postfix         |   89 |
+| nobody          |   99 |
+| systemd-network |  192 |
++-----------------+------+
+9 rows in set (0.00 sec)
+
+mysql>
+
+mysql> select  name  , uid  from  db3.user  where uid >= 10  and  uid<=300  order by  uid desc;
++-----------------+------+
+| name            | uid  |
++-----------------+------+
+| systemd-network |  192 |
+| nobody          |   99 |
+| postfix         |   89 |
+| dbus            |   81 |
+| sshd            |   74 |
+| mysql           |   27 |
+| ftp             |   14 |
+| games           |   12 |
+| operator        |   11 |
++-----------------+------+
+9 rows in set (0.00 sec)
+
+mysql>
+
+
+
+          2  分组 select查询  group by  字段名；
+
+mysql> select  gid  from db3.user group  by gid;
+
+mysql> select shell from  db3.user where uid < 100  group by  shell ;
++----------------+
+| shell          |
++----------------+
+| /bin/bash      |
+| /bin/false     |
+| /bin/sync      |
+| /sbin/halt     |
+| /sbin/nologin  |
+| /sbin/shutdown |
++----------------+
+6 rows in set (0.00 sec)
+
+mysql>
+
+          3  过滤数据  select查询  having  条件；
+
+mysql> select name ,shell  from  db3.user where shell is not null  having name = "mysql";
+
+
+
 
 
