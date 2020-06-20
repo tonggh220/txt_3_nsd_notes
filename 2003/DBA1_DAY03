@@ -144,3 +144,27 @@ daemon#/sbin/nologin#2
 adm#/sbin/nologin#3
 lp#/sbin/nologin#4
 mysql> 
+
+
+
+
+
+insert into db3.user  values(21,"bob","x",2002,2002,"test user","/home/bob","/bin/bash");
+
+insert into db3.user  values
+(25,"tom","x",3002,3002,"test user","/home/tom","/bin/bash"),
+(27,"john","x",4002,3002,"test user","/home/john","/sbin/nologin");
+
+
+insert into db3.user(name,uid,gid) values("jerry",4000,4000);
+
+insert into db3.user(name,uid,gid) values("jerryA",4000,4000),("jerryb",5000,4000),("jerryC",6000,6000);
+
+select  *  from  db3.user;
+
+                mysql> select  name , uid  , shell   from db3.user;
+
+                mysql> select  id , name , uid  , shell   from db3.user where  id <= 3;
+                mysql> select  id , name , uid  , shell   from db3.user where  id <= 10;
+                
+                mysql> select  *   from db3.user where  id <= 10;
