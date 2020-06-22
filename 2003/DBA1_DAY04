@@ -45,3 +45,57 @@ mysql> grant select,insert,update,delete on db3.* to admin2@"localhost" identifi
                         删除授权用户
                         drop user 用户名@"客户端地址"；
                         登录用户查看自己的访问权限 show grants;
+
+                        查看服务器已有的授权用户
+                      select user , host  from mysql.user;
+
+mysql> select user  , host  from mysql.user;
++-----------+-------------+
+| user      | host        |
++-----------+-------------+
+| admin     | %           |
+| mydba     | %           |
+| admin     | 192.168.4.% |
+| admin2    | localhost   |
+| mysql.sys | localhost   |
+| root      | localhost   |
++-----------+-------------+
+6 rows in set (0.00 sec)
+
+mysql>
+
+                        管理员查看已有授权用户权限
+
+mysql> show grants for mydba@"%";
+mysql>
+
+                        授权用户登录后修改自己的连接密码
+
+[root@host51 ~]# mysql  -h192.168.4.50 -uadmin  -p123qqq...A
+MySQL [(none)]> select  password("456qqq...B");
++-------------------------------------------+
+| password("456qqq...B")                    |
++-------------------------------------------+
+| *5CD115DAC51FB57FD4F6AF18A3AB8B91642A7601 |
++-------------------------------------------+
+1 row in set, 1 warning (0.00 sec)
+
+                   管理员重置授权用户连接密码
+[root@host50 ~]# mysql -uroot -p123qqq...A
+mysql> set password for admin@"192.168.4.%"=password("123qqq...A");
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql>
+[root@host51 ~]# mysql  -h192.168.4.50 -uadmin  -p456qqq...B
+ERROR 1045 (28000): Access denied for user 'admin'@'192.168.4.51' (using password: YES)
+[root@host51 ~]#
+[root@host51 ~]# mysql  -h192.168.4.50 -uadmin  -p123qqq...A
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MySQL connection id is 13
+Server version: 5.7.17 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2017, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MySQL [(none)]>
