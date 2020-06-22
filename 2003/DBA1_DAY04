@@ -304,3 +304,71 @@ Create_tmp_table_priv: N
 1 row in set (0.00 sec)
 
 mysql>
+
+++++++++++++++++++++++++++++++++++++++++
+tables_priv表   记录已有授权用户对表的访问权限  (库名.表名) db1.stu
+
+mysql> select  user , db, table_name from  mysql.tables_priv ;
++-----------+-----+------------+
+| user      | db  | table_name |
++-----------+-----+------------+
+| admin     | db3 | user       |
+| mysql.sys | sys | sys_config |
++-----------+-----+------------+
+2 rows in set (0.00 sec)
+
+mysql> select  host ,user , db, table_name from  mysql.tables_priv ;
++-------------+-----------+-----+------------+
+| host        | user      | db  | table_name |
++-------------+-----------+-----+------------+
+| 192.168.4.% | admin     | db3 | user       |
+| localhost   | mysql.sys | sys | sys_config |
++-------------+-----------+-----+------------+
+2 rows in set (0.00 sec)
+
+mysql> select  * from  mysql.tables_priv where db="db3" and table_name="user" ;
+mysql> select  * from  mysql.tables_priv where db="db3" and table_name="user" ;
++-------------+-----+-------+------------+----------------+---------------------+------------+-------------+
+| Host        | Db  | User  | Table_name | Grantor        | Timestamp           | Table_priv | Column_priv |
++-------------+-----+-------+------------+----------------+---------------------+------------+-------------+
+| 192.168.4.% | db3 | admin | user       | root@localhost | 0000-00-00 00:00:00 | Select     |             |
++-------------+-----+-------+------------+----------------+---------------------+------------+-------------+
+1 row in set (0.00 sec)
+
+mysql> show grants for admin@"192.168.4.%";
++-------------------------------------------------------+
+| Grants for admin@192.168.4.%                          |
++-------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'admin'@'192.168.4.%'           |
+| GRANT SELECT ON `db3`.`user` TO 'admin'@'192.168.4.%' |
++-------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql>
+
+
+mysql> update mysql.tables_priv set  table_priv="select,insert,update" where db="db3" and table_name="user";
+Query OK, 1 row affected (0.03 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> flush privileges;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show grants for admin@"192.168.4.%";
++-----------------------------------------------------------------------+
+| Grants for admin@192.168.4.%                                          |
++-----------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'admin'@'192.168.4.%'                           |
+| GRANT SELECT, INSERT, UPDATE ON `db3`.`user` TO 'admin'@'192.168.4.%' |
++-----------------------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> select  * from  mysql.tables_priv where db="db3" and table_name="user" ;
++-------------+-----+-------+------------+----------------+---------------------+----------------------+-------------+
+| Host        | Db  | User  | Table_name | Grantor        | Timestamp           | Table_priv           | Column_priv |
++-------------+-----+-------+------------+----------------+---------------------+----------------------+-------------+
+| 192.168.4.% | db3 | admin | user       | root@localhost | 2020-06-22 23:49:14 | Select,Insert,Update |             |
++-------------+-----+-------+------------+----------------+---------------------+----------------------+-------------+
+1 row in set (0.00 sec)
+
+mysql>
