@@ -406,4 +406,20 @@ mysql> mysql> select  * from  mysql.tables_priv;
 
 mysql>
 
+MySQL [(none)]> update  db3.user set password="F" ;
+ERROR 1143 (42000): UPDATE command denied to user 'yaya'@'192.168.4.51' for column 'password' in table 'user'
+MySQL [(none)]> 
+MySQL [(none)]> 
+MySQL [(none)]> update  db3.user set uid=1 ;
+Query OK, 22 rows affected (0.05 sec)
+Rows matched: 23  Changed: 22  Warnings: 0
+
+MySQL [(none)]> select uid  from db3.user;
++------+
+| uid  |
++------+
+|    1 |
+|    1 |
+|    1 |
+
 总结： 可以通过 查看表记录可以获取用户权限  ，也可以通过更新记录，修改用户权限。
