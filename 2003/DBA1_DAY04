@@ -99,3 +99,91 @@ Copyright (c) 2000, 2017, Oracle, MariaDB Corporation Ab and others.
 Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
 
 MySQL [(none)]>
+
+
+++++++++++++++++++++++++++++mysql库 记录授权信息，主要表如下：
+
+              +++++++++++++++++  user表  记录已有的授权用户及权限（all  *.*）
+
+select user from mysql.user;
+
+select  host , user  from mysql.user;
+
+select  * from mysql.user where  user="mydba" and host="%"  \G
+
+show grants for mydba@"%" ;
+
+mysql> update mysql.user set  Grant_priv="N" where  user="mydba" and host="%";
+Query OK, 1 row affected (0.05 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> flush privileges;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show grants for mydba@"%";
++--------------------------------------------+
+| Grants for mydba@%                         |
++--------------------------------------------+
+| GRANT ALL PRIVILEGES ON *.* TO 'mydba'@'%' |
++--------------------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select * from mysql.user where  host="%" and user="mydba" \G
+*************************** 1. row ***************************
+                  Host: %
+                  User: mydba
+           Select_priv: Y
+           Insert_priv: Y
+           Update_priv: Y
+           Delete_priv: Y
+           Create_priv: Y
+             Drop_priv: Y
+           Reload_priv: Y
+         Shutdown_priv: Y
+      Lock_tables_priv: Y
+          Execute_priv: Y
+       Repl_slave_priv: Y
+      Repl_client_priv: Y
+      Create_view_priv: Y
+        Show_view_priv: Y
+   Create_routine_priv: Y
+    Alter_routine_priv: Y
+      Create_user_priv: Y
+            Event_priv: Y
+          Trigger_priv: Y
+Create_tablespace_priv: Y
+              ssl_type:
+            ssl_cipher:
+           x509_issuer:
+          x509_subject:
+         max_questions: 0
+           max_updates: 0
+       max_connections: 0
+  max_user_connections: 0
+                plugin: mysql_native_password
+ authentication_string: *F19C699342FA5C91EBCF8E0182FB71470EB2AF30
+      password_expired: N
+ password_last_changed: 2020-06-22 18:33:32
+     password_lifetime: NULL
+        account_locked: N
+1 row in set (0.01 sec)
+
+mysql
+
+mysql> update  mysql.user set select_priv="N" , delete_priv="N"
+    -> where user="mydba" and host="%";
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> flush privileges;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show grants for mydba@"%";
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Grants for mydba@%                                                                                                                                                                                                                                                                                                                      |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| GRANT INSERT, UPDATE, CREATE, DROP, RELOAD, SHUTDOWN, PROCESS, FILE, REFERENCES, INDEX, ALTER, SHOW DATABASES, SUPER, CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, REPLICATION SLAVE, REPLICATION CLIENT, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, CREATE USER, EVENT, TRIGGER, CREATE TABLESPACE ON *.* TO 'mydba'@'%' |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+mysql> 
