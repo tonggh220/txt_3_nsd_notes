@@ -423,3 +423,122 @@ MySQL [(none)]> select uid  from db3.user;
 |    1 |
 
 总结： 可以通过 查看表记录可以获取用户权限  ，也可以通过更新记录，修改用户权限。
+
+
+++++++++++++++++++++++++++++++++++=
+
+                撤销用户权限
+                命令格式
+                        mysql> revoke  权限列表  on  库名.表   from     用户名@"客户端地址";
+
+                例子
+
+
+mysql> select  host , user  from mysql.user;
++-------------+-----------+
+| host        | user      |
++-------------+-----------+
+| %           | mydba     |
+| %           | yaya      |
+| 192.168.4.% | admin     |
+| localhost   | admin2    |
+| localhost   | mysql.sys |
+| localhost   | root      |
++-------------+-----------+
+6 rows in set (0.00 sec)
+
+mysql> show grants  for  mydba@"%";
+1 row in set (0.00 sec)
+
+mysql> revoke INSERT, UPDATE, CREATE, DROP on *.*  from mydba@"%";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>
+
+mysql>
+mysql> show grants  for  mydba@"%";
+1 row in set (0.00 sec)
+
+mysql>
+mysql> revoke all on *.*  from mydba@"%";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show grants  for  mydba@"%";
++-----------------------------------+
+| Grants for mydba@%                |
++-----------------------------------+
+| GRANT USAGE ON *.* TO 'mydba'@'%' |
++-----------------------------------+
+1 row in set (0.00 sec)
+
+mysql>
+
+mysql> select  * from  mysql.user where  user="mydba" and host="%" \G
+*************************** 1. row ***************************
+                  Host: %
+                  User: mydba
+           Select_priv: N
+           Insert_priv: N
+           Update_priv: N
+           Delete_priv: N
+           Create_priv: N
+             Drop_priv: N
+           Reload_priv: N
+         Shutdown_priv: N
+          Process_priv: N
+             File_priv: N
+            Grant_priv: N
+       References_priv: N
+            Index_priv: N
+            Alter_priv: N
+          Show_db_priv: N
+1026 
+1027 mysql> select  * from mysql.tables_priv where db="db3" and  user="admin" ;
+1028 +-------------+-----+-------+------------+----------------+---------------------+---------------+-------------+
+1029 | Host        | Db  | User  | Table_name | Grantor        | Timestamp           | Table_priv    | Column_priv |
+1030 +-------------+-----+-------+------------+----------------+---------------------+---------------+-------------+
+1031 | 192.168.4.% | db3 | admin | user       | root@localhost | 2020-06-22 23:49:14 | Insert,Update |             |
+1032 +-------------+-----+-------+------------+----------------+---------------------+---------------+-------------+
+1033 1 row in set (0.00 sec)
+1034 
+1035 mysql>
+1036 
+1037 
+1038 mysql> grant all on  *.*  to  plj@"%" identified by "123qqq...A" with  grant option ;
+1039 Query OK, 0 rows affected, 1 warning (0.00 sec)
+1040 
+1041 mysql> show grants   for  plj@"%";
+1042 +------------------------------------------------------------+
+1043 | Grants for plj@%                                           |
+1044 +------------------------------------------------------------+
+1045 | GRANT ALL PRIVILEGES ON *.* TO 'plj'@'%' WITH GRANT OPTION |
+1046 +------------------------------------------------------------+
+1047 1 row in set (0.00 sec)
+1048 
+1049 mysql> revoke grant option on  *.*  from   plj@"%";  仅撤销用户的授权权限
+1050 Query OK, 0 rows affected (0.00 sec)
+1051 
+1052 mysql> show grants   for  plj@"%";
+1053 +------------------------------------------+
+1054 | Grants for plj@%                         |
+1055 +------------------------------------------+
+1056 | GRANT ALL PRIVILEGES ON *.* TO 'plj'@'%' |
+1057 +------------------------------------------+
+1058 1 row in set (0.00 sec)
+1059 
+1060 mysql>
+1061 
+1062 mysql> revoke delete , drop  on  *.*  from   plj@"%"; 撤销用户对库表的部分访问权限
+1063 
+1064 mysql> revoke all on  *.*  from   plj@"%";   撤销用户库表的当前所有权限权限
+1065 Query OK, 0 rows affected (0.00 sec)
+1066 
+1067 mysql> show grants   for  plj@"%";
+1068 +---------------------------------+
+1069 | Grants for plj@%                |
+1070 +---------------------------------+
+1071 | GRANT USAGE ON *.* TO 'plj'@'%' |
+1072 +---------------------------------+
+1073 1 row in set (0.00 sec)
+1074 
+1075 mysql>
