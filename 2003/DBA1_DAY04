@@ -946,4 +946,129 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@host51 ~]#
 
 
++++++++++++++++++++++++++++
+
+
+                        2.2 读取日志文件的部分内容恢复数据，
+
+                        日志文件如何区分记录的多条sql命令
+                                        偏移量（记录sql命令的编号）
+                                        时间点（记录sql命令执行的时间）
+
+                        命令格式
+                        ]# mysqlbinlog 选项  目录名/文件名  |  mysql -uroot  -p密码
+                          选项
+                         时间范围
+                                 --start-datetime="yyyy-mm-dd hh:mm:ss"
+                                 --stop-datetime="yyyy-mm-dd hh:mm:ss"
+
+                         偏移量范围
+                                --start-position=数字
+                                --stop-position=数字 
+
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| Variable_name | Value |
++---------------+-------+
+| binlog_format | MIXED |
++---------------+-------+
++------------+----------+--------------+------------------+-------------------+
+[root@host50 mylog]#
+
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("f")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]#
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("fa")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]#
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("fb")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("fa")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]#
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("fb")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("fc")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]#
+
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e "delete from db3.user where name regexp '^a'"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]#
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("w")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e "delete from db3.user where name regexp '^a'"
+[root@host50 mylog]# 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("wb")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]# 
+
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| plj.000002 |     2597 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]#
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("fa")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]#
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("fb")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("fc")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]#
+
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e "delete from db3.user where name regexp '^a'"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]#
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("w")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("wa")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("wb")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]#
+
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000002 |     2597 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 mylog]#
+
+[root@host50 mylog]# mysqlbinlog  /mylog/plj.000002 | grep -i  insert
+SET INSERT_ID=43/*!*/;
+insert into db3.user(name)values("f")
+SET INSERT_ID=44/*!*/;
+insert into db3.user(name)values("fa")
+SET INSERT_ID=45/*!*/;
+insert into db3.user(name)values("fb")
+SET INSERT_ID=46/*!*/;
+insert into db3.user(name)values("fc")
+SET INSERT_ID=47/*!*/;
+insert into db3.user(name)values("w")
+SET INSERT_ID=48/*!*/;
+insert into db3.user(name)values("wa")
+SET INSERT_ID=49/*!*/;
+insert into db3.user(name)values("wb")
+[root@host50 mylog]#
+[root@host50 mylog]# mysqlbinlog  /mylog/plj.000002 | grep -i  delete
+delete from db3.user where name regexp '^a'
+[root@host50 mylog]#
+
+[root@host50 mylog]# scp /mylog/plj.000002  root@192.168.4.51:/root/
+
+
         
