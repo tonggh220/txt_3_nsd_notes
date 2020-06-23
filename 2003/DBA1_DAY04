@@ -847,3 +847,106 @@ mysql> show master status;
 mysql> system cat /mylog/plj.index
 /mylog/plj.000001
 mysql>
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++++
+
+                2 使用binlog日志文件恢复数据
+                        2.1 读取日志文件的所有内容恢复数据，命令格式
+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000001 |      154 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 mylog]#
+[root@host50 mylog]#
+[root@host50 mylog]# mysqldump -uroot -p666qqq...B db3.user > /root/user.sql
+mysqldump: [Warning] Using a password on the command line interface can be insecure.
+mysqldump: Got error: 1049: Unknown database 'db3.user' when selecting the database
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| count(*) |
++----------+
+|       26 |
++----------+
+[root@host51 ~]#
+
+
+[root@host50 mylog]# mysql -uroot -p666qqq...B
+mysql> insert into db3.user(name) values("ab");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db3.user(name) values("abc");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db3.user(name) values("abcd");
+Query OK, 1 row affected (0.06 sec)
+
+mysql> insert into db3.user(name) values("abcde");
+
+                删除已有的日志
+                        mysql> system ls /mylog
+plj.000001  plj.000003  plj.000005  plj.000007  plj.000009  plj.000011  plj.index
+plj.000002  plj.000004  plj.000006  plj.000008  plj.000010  plj.000012
+mysql>
+mysql> purge  master  logs  to  "plj.000006" ;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> system ls /mylog
+plj.000006  plj.000007  plj.000008  plj.000009  plj.000010  plj.000011  plj.000012  plj.index
+mysql>
+mysql> system cat /mylog/plj.index
+/mylog/plj.000006
+/mylog/plj.000007
+/mylog/plj.000008
+/mylog/plj.000009
+/mylog/plj.000010
+/mylog/plj.000011
+/mylog/plj.000012
+/mylog/plj.000013
+mysql>
+
+mysql> reset master ;
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+mysql> system ls /mylog
+plj.000001  plj.index
+mysql>
+mysql> show master status;
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000001 |      154 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> system cat /mylog/plj.index
+/mylog/plj.000001
+mysql>
+
+                2 使用binlog日志文件恢复数据
+[root@host51 ~]#
+[root@host51 ~]# mysql -uroot -p666qqq...B   -e 'select count(*) from db3.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| count(*) |
++----------+
+|       31 |
++----------+
+[root@host51 ~]#
+
+
+[root@host51 ~]# mysql -uroot -p666qqq...B   -e  "select * from db3.user where name regexp '^a'"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------+----------+------+------+--------------+----------+---------------+
+| id | name  | password | uid  | gid  | comment      | homeaddr | shell         |
++----+-------+----------+------+------+--------------+----------+---------------+
+|  4 | adm   | B        |    1 |    4 | student user | /var/adm | /sbin/nologin |
+| 38 | a     | NULL     | NULL | NULL | NULL         | NULL     | NULL          |
+| 39 | ab    | NULL     | NULL | NULL | NULL         | NULL     | NULL          |
+| 40 | abc   | NULL     | NULL | NULL | NULL         | NULL     | NULL          |
+| 41 | abcd  | NULL     | NULL | NULL | NULL         | NULL     | NULL          |
+| 42 | abcde | NULL     | NULL | NULL | NULL         | NULL     | NULL          |
++----+-------+----------+------+------+--------------+----------+---------------+
+[root@host51 ~]#
