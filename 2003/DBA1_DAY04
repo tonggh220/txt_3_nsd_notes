@@ -637,3 +637,53 @@ mysql>
     1.6  授权库mysql (记录授权信息)
     1.7  撤销用户权限
     1.8  root密码管理
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+物理备份
+[root@host50 ~]# tar -zcvf  /opt/mysql.tar.gz   /var/lib/mysql/*
+[root@host50 ~]# cp  -r /var/lib/mysql   /opt/mysql.bak
+
+[root@host50 ~]# ls /opt/
+mysql.bak  mysql.tar.gz
+[root@host50 ~]#
+
+[root@host50 ~]# scp -r /opt/mysql.bak  root@192.168.4.51:/tmp/
+
+物理恢复数据的步骤
+
+[root@host51 ~]# chown  -R mysql:mysql /var/lib/mysql
+
+[root@host51 ~]# setenforce 0
+
+
+[root@host51 ~]# systemctl  start mysqld
+
+[root@host51 ~]# netstat  -utnlp  | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      1976/mysqld
+        把备份的目录拷贝到 /var/lib  目录下
+        修改所有者和组用户为mysql
+        启动mysqld数据库服务
+        数据库管理员root用户登录 查看数据
+
+[root@host51 ~]# systemctl  stop mysqld
+[root@host51 ~]#
+[root@host51 ~]# rm -rf /var/lib/mysql
+
+
+[root@host51 ~]# cp -r /tmp/mysql.bak /var/lib/mysql
+
+[root@host51 ~]# chown  -R mysql:mysql /var/lib/mysql
+
+[root@host51 ~]# setenforce 0
+
+
+[root@host51 ~]# systemctl  start mysqld
+
+[root@host51 ~]# netstat  -utnlp  | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      1976/mysqld
+[root@host51 ~]#
+
+[root@host51 ~]# mysql -uroot -p666qqq...B
+mysql> show databases;
+
