@@ -868,9 +868,7 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +------------+----------+--------------+------------------+-------------------+
 [root@host50 mylog]# 
 [root@host50 mylog]# 
-[root@host50 mylog]# mysqldump -uroot -p666qqq...B db3.user > /root/user.sql
-mysqldump: [Warning] Using a password on the command line interface can be insecure.
-mysqldump: Got error: 1049: Unknown database 'db3.user' when selecting the database
+
 [root@host50 mylog]# mysqldump -uroot -p666qqq...B db3 user > /root/user.sql
 mysqldump: [Warning] Using a password on the command line interface can be insecure.
 [root@host50 mylog]# 
