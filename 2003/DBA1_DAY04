@@ -700,7 +700,57 @@ mysql> show databases;
 ]# mysqldump  -uroot -p666qqq...B  db1  >  /mybak/db1.sql
 ]# mysqldump  -uroot -p666qqq...B -B db1 db3 >  /mybak/twodb.sql
 ]# mysqldump  -uroot -p666qqq...B  db3 user >  /mybak/db3_user.sql
-
+]# scp   /mybak/db1.sql  root@192.168.4.51:/root/
 恢复数据的命令格式
 
 ]# mysql -uroot -p密码  库名   <  目录名/文件名.sql
+[root@host51 ~]# mysql -uroot -p666qqq...B
+mysql> drop table db3.t3;
+
+[root@host51 ~]# mysql -uroot -p666qqq...B  db1  < /root/db1.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 1049 (42000): Unknown database 'db1'
+[root@host51 ~]# 
+[root@host51 ~]# 
+[root@host51 ~]# mysql -uroot -p666qqq...B  -e 'create database db1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host51 ~]# 
+[root@host51 ~]# mysql -uroot -p666qqq...B  -e 'show databases'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| db1                |
+| db3                |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+[root@host51 ~]# mysql -uroot -p666qqq...B  db1  < /root/db1.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host51 ~]# 
+[root@host51 ~]# mysql -uroot -p666qqq...B  -e 'show databases '
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| db1                |
+| db3                |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+[root@host51 ~]# mysql -uroot -p666qqq...B  -e 'use db1; show tables '
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| Tables_in_db1 |
++---------------+
+| gz            |
+| t22           |
+| t23           |
+| t24           |
+| yg            |
++---------------+
+[root@host51 ~]# 
