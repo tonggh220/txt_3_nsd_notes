@@ -754,3 +754,95 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | yg            |
 +---------------+
 [root@host51 ~]# 
+
++++++++++++++++++++++++++++++++
+增量备份 之 binlog日志
+                1 掌握binlog日志的使用
+                        1.1 binlog日志介绍 ？
+                        1.2 启用binlog日志 (时间 5分钟 到 15:51)
+]# vim /etc/my.cnf
+   [mysqld]
+     server_id=50
+     log_bin
+mysql>
+
+                        
+                        自定义日志文件存放目录和日志文件名  练习+休息到 15:15
+]# vim /etc/my.cnf
+[mysqld]
+server_id=50
+#log_bin
+log_bin=/mylog/plj                
+:wq
+
+[root@host50 mysql]# mkdir /mylog
+[root@host50 mysql]# chown  mysql /mylog
+[root@host50 mysql]# setenforce  0
+[root@host50 mysql]#  
+[root@host50 mysql]# systemctl  restart mysqld
+[root@host50 mysql]#
+[root@host50 mysql]# ls /var/lib/mysql/*-bin*
+/var/lib/mysql/host50-bin.000001  /var/lib/mysql/host50-bin.index
+[root@host50 mysql]#
+[root@host50 mysql]# ls /mylog/
+plj.000001  plj.index
+[root@host50 mysql]# mysql -uroot -p666qqq...B -e 'show master status '
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000001 |      154 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 mysql]#
+
+
+
+
+                        [root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'flush logs'
+                        等效于
+                        mysql> flush logs;
+                        [root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'flush logs'
+                        等效于
+                        mysql> flush logs;
+
+                        [root@host50 mylog]# mysqldump -uroot -p666qqq...B  --flush-logs  db3 user > /root/user.sql
+
+                删除已有的日志
+                        mysql> system ls /mylog
+plj.000001  plj.000003  plj.000005  plj.000007  plj.000009  plj.000011  plj.index
+plj.000002  plj.000004  plj.000006  plj.000008  plj.000010  plj.000012
+mysql>
+mysql> purge  master  logs  to  "plj.000006" ;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> system ls /mylog
+plj.000006  plj.000007  plj.000008  plj.000009  plj.000010  plj.000011  plj.000012  plj.index
+mysql>
+mysql> system cat /mylog/plj.index
+/mylog/plj.000006
+/mylog/plj.000007
+/mylog/plj.000008
+/mylog/plj.000009
+/mylog/plj.000010
+/mylog/plj.000011
+/mylog/plj.000012
+/mylog/plj.000013
+mysql>
+
+mysql> reset master ;
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+mysql> system ls /mylog
+plj.000001  plj.index
+mysql>
+mysql> show master status;
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000001 |      154 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> system cat /mylog/plj.index
+/mylog/plj.000001
+mysql>
