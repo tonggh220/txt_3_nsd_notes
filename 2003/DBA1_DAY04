@@ -964,9 +964,38 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 
                          偏移量范围
                                 --start-position=数字
-                                --stop-position=数字 
+                                --stop-position=数字
 
+
+  查看
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e ' show  variables like "binlog_format"'
 mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| binlog_format | ROW   |
++---------------+-------+
+[root@host50 mylog]#
+
+修改 
+]# vim /etc/my.cnf
+[mysqld]
+binlog_format="mixed"
+:wq
+
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e ' show  master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000001 |     1509 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 mylog]#
+[root@host50 mylog]# systemctl  restart mysqld
+[root@host50 mylog]#
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e ' show  variables like "binlog_format"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+
 +------------+----------+--------------+------------------+-------------------+
 | File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
 +------------+----------+--------------+------------------+-------------------+
@@ -974,6 +1003,15 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +---------------+-------+
 | binlog_format | MIXED |
 +---------------+-------+
++------------+----------+--------------+------------------+-------------------+
+[root@host50 mylog]#
+
+[root@host50 mylog]# mysql -uroot -p666qqq...B  -e ' show  master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000002 |      154 |              |                  |                   |
 +------------+----------+--------------+------------------+-------------------+
 [root@host50 mylog]#
 
@@ -1012,13 +1050,7 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@host50 mylog]# 
 
-[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'show master status'
-mysql: [Warning] Using a password on the command line interface can be insecure.
-+------------+----------+--------------+------------------+-------------------+
-| plj.000002 |     2597 |              |                  |                   |
-+------------+----------+--------------+------------------+-------------------+
-mysql: [Warning] Using a password on the command line interface can be insecure.
-[root@host50 mylog]#
+
 [root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("fa")'
 mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@host50 mylog]#
@@ -1071,4 +1103,3 @@ delete from db3.user where name regexp '^a'
 [root@host50 mylog]# scp /mylog/plj.000002  root@192.168.4.51:/root/
 
 
-        
