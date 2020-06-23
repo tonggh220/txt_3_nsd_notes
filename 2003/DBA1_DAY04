@@ -796,11 +796,12 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@host50 mysql]#
 
 
+[root@host50 mysql]# mysqlbinlog /mylog/plj.000001   查看日志文件内容
 
+                手动创建新的日志文件的方式
+                        [root@host50 mylog]# systemctl  restart mysqld
 
-                        [root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'flush logs'
-                        等效于
-                        mysql> flush logs;
+                     
                         [root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'flush logs'
                         等效于
                         mysql> flush logs;
