@@ -687,7 +687,7 @@ tcp6       0      0 :::3306                 :::*                    LISTEN      
 [root@host51 ~]# mysql -uroot -p666qqq...B
 mysql> show databases;
 
-++++++++++++++++++++++++++++++++++++
+
 ++++++++++++++++++++++++数据的完全备份与恢复 之  mysqldump
 完全备份命令格式
 ]# mysqldump -uroot  -p密码  数据库名   >  目录名/文件名.sql
@@ -755,8 +755,7 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +---------------+
 [root@host51 ~]# 
 
-+++++++++++++++++++++++++++++++
-增量备份 之 binlog日志
++++++++++++++++++++++++++++++++增量备份 之 binlog日志
                 1 掌握binlog日志的使用
                         1.1 binlog日志介绍 ？
                         1.2 启用binlog日志 (时间 5分钟 到 15:51)
@@ -844,9 +843,6 @@ mysql> show master status;
 +------------+----------+--------------+------------------+-------------------+
 1 row in set (0.00 sec)
 
-mysql> system cat /mylog/plj.index
-/mylog/plj.000001
-mysql>
 
 
 
@@ -947,8 +943,6 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 
 
 +++++++++++++++++++++++++++
-
-
                         2.2 读取日志文件的部分内容恢复数据，
 
                         日志文件如何区分记录的多条sql命令
@@ -966,6 +960,8 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
                                 --start-position=数字
                                 --stop-position=数字
 
+
+                        修改日志文件格式
 
   查看
 [root@host50 mylog]# mysql -uroot -p666qqq...B  -e ' show  variables like "binlog_format"'
@@ -1038,10 +1034,7 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'insert into db3.user(name)values("w")'
 mysql: [Warning] Using a password on the command line interface can be insecure.
 
-[root@host50 mylog]# mysql -uroot -p666qqq...B  -e 'show master status'
-mysql: [Warning] Using a password on the command line interface can be insecure.
-+------------+----------+--------------+------------------+-------------------+
-| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
+
 [root@host50 mylog]# mysql -uroot -p666qqq...B  -e "delete from db3.user where name regexp '^a'"
 [root@host50 mylog]# 
 mysql: [Warning] Using a password on the command line interface can be insecure.
