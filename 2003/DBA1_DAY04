@@ -1103,3 +1103,27 @@ delete from db3.user where name regexp '^a'
 [root@host50 mylog]# scp /mylog/plj.000002  root@192.168.4.51:/root/
 
 
+[root@host51 ~]# mysql -uroot -p666qqq...B   -e  "select * from db3.user where name regexp '^f'"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+------+----------+------+------+--------------+----------+---------------+
+| id | name | password | uid  | gid  | comment      | homeaddr | shell         |
++----+------+----------+------+------+--------------+----------+---------------+
+| 12 | ftp  | B        |    1 |   50 | student user | /var/ftp | /sbin/nologin |
++----+------+----------+------+------+--------------+----------+---------------+
+[root@host51 ~]#  mysqlbinlog --start-position=325 --stop-position=1389  /root/plj.000002 | mysql -uroot -p666qqq...B
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host51 ~]#
+[root@host51 ~]# mysql -uroot -p666qqq...B   -e  "select * from db3.user where name regexp '^f'"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+------+----------+------+------+--------------+----------+---------------+
+| id | name | password | uid  | gid  | comment      | homeaddr | shell         |
++----+------+----------+------+------+--------------+----------+---------------+
+| 12 | ftp  | B        |    1 |   50 | student user | /var/ftp | /sbin/nologin |
+| 43 | f    | NULL     | NULL | NULL | NULL         | NULL     | NULL          |
+| 44 | fa   | NULL     | NULL | NULL | NULL         | NULL     | NULL          |
+| 45 | fb   | NULL     | NULL | NULL | NULL         | NULL     | NULL          |
+| 46 | fc   | NULL     | NULL | NULL | NULL         | NULL     | NULL          |
++----+------+----------+------+------+--------------+----------+---------------+
+[root@host51 ~]#
+
+
