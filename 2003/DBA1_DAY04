@@ -687,3 +687,20 @@ tcp6       0      0 :::3306                 :::*                    LISTEN      
 [root@host51 ~]# mysql -uroot -p666qqq...B
 mysql> show databases;
 
+++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++数据的完全备份与恢复 之  mysqldump
+完全备份命令格式
+]# mysqldump -uroot  -p密码  数据库名   >  目录名/文件名.sql
+
+数据库名的表示方式 ？
+
+                     时间 到 11:50
+]# mkdir /mybak
+]# mysqldump  -uroot -p666qqq...B  --all-databases  >  /mybak/all.sql
+]# mysqldump  -uroot -p666qqq...B  db1  >  /mybak/db1.sql
+]# mysqldump  -uroot -p666qqq...B -B db1 db3 >  /mybak/twodb.sql
+]# mysqldump  -uroot -p666qqq...B  db3 user >  /mybak/db3_user.sql
+
+恢复数据的命令格式
+
+]# mysql -uroot -p密码  库名   <  目录名/文件名.sql
