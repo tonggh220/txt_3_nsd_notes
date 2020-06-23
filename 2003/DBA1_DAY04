@@ -851,19 +851,37 @@ mysql>
 
 
 ++++++++++++++++++++++++++++++++++++++++++++++
-
                 2 使用binlog日志文件恢复数据
-                        2.1 读取日志文件的所有内容恢复数据，命令格式
-
+                        2.1 读取日志文件的所有内容恢复数据，命令格式 练习10分钟到 16:39
+                        
+                        ]# mysqlbinlog  目录名/文件名  |  mysql -uroot  -p密码
+                        
+                        
+[root@host50 mylog]# mysql -uroot -p666qqq...B -e 'reset master'
+[root@host50 mylog]# 
+[root@host50 mylog]# mysql -uroot -p666qqq...B -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
 | File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
 +------------+----------+--------------+------------------+-------------------+
 | plj.000001 |      154 |              |                  |                   |
 +------------+----------+--------------+------------------+-------------------+
-[root@host50 mylog]#
-[root@host50 mylog]#
+[root@host50 mylog]# 
+[root@host50 mylog]# 
 [root@host50 mylog]# mysqldump -uroot -p666qqq...B db3.user > /root/user.sql
 mysqldump: [Warning] Using a password on the command line interface can be insecure.
 mysqldump: Got error: 1049: Unknown database 'db3.user' when selecting the database
+[root@host50 mylog]# mysqldump -uroot -p666qqq...B db3 user > /root/user.sql
+mysqldump: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 mylog]# 
+[root@host50 mylog]# scp /root/user.sql  root@192.168.4.51:/root/
+
+
+
+[root@host51 ~]# mysql -uroot -p666qqq...B   db3  < /root/user.sql
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host51 ~]# 
+[root@host51 ~]# mysql -uroot -p666qqq...B   -e 'select count(*) from db3.user'
 mysql: [Warning] Using a password on the command line interface can be insecure.
 +----------+
 | count(*) |
@@ -884,48 +902,26 @@ mysql> insert into db3.user(name) values("abcd");
 Query OK, 1 row affected (0.06 sec)
 
 mysql> insert into db3.user(name) values("abcde");
+Query OK, 1 row affected (0.00 sec)
 
-                删除已有的日志
-                        mysql> system ls /mylog
-plj.000001  plj.000003  plj.000005  plj.000007  plj.000009  plj.000011  plj.index
-plj.000002  plj.000004  plj.000006  plj.000008  plj.000010  plj.000012
-mysql>
-mysql> purge  master  logs  to  "plj.000006" ;
-Query OK, 0 rows affected (0.00 sec)
-
-mysql> system ls /mylog
-plj.000006  plj.000007  plj.000008  plj.000009  plj.000010  plj.000011  plj.000012  plj.index
-mysql>
-mysql> system cat /mylog/plj.index
-/mylog/plj.000006
-/mylog/plj.000007
-/mylog/plj.000008
-/mylog/plj.000009
-/mylog/plj.000010
-/mylog/plj.000011
-/mylog/plj.000012
-/mylog/plj.000013
-mysql>
-
-mysql> reset master ;
-Query OK, 0 rows affected, 1 warning (0.01 sec)
-
-mysql> system ls /mylog
-plj.000001  plj.index
-mysql>
 mysql> show master status;
 +------------+----------+--------------+------------------+-------------------+
 | File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
 +------------+----------+--------------+------------------+-------------------+
-| plj.000001 |      154 |              |                  |                   |
+| plj.000001 |     1509 |              |                  |                   |
 +------------+----------+--------------+------------------+-------------------+
 1 row in set (0.00 sec)
 
-mysql> system cat /mylog/plj.index
-/mylog/plj.000001
-mysql>
+mysql> exit
+Bye
+[root@host50 mylog]# scp /mylog/plj.000001  root@192.168.4.51:/root/
 
-                2 使用binlog日志文件恢复数据
+
+[root@host51 ~]# ls /root/plj.000001
+/root/plj.000001
+[root@host51 ~]#
+[root@host51 ~]# mysqlbinlog /root/plj.000001 | mysql -uroot -p666qqq...B
+mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@host51 ~]#
 [root@host51 ~]# mysql -uroot -p666qqq...B   -e 'select count(*) from db3.user'
 mysql: [Warning] Using a password on the command line interface can be insecure.
@@ -950,3 +946,6 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | 42 | abcde | NULL     | NULL | NULL | NULL         | NULL     | NULL          |
 +----+-------+----------+------+------+--------------+----------+---------------+
 [root@host51 ~]#
+
+
+        
