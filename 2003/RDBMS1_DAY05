@@ -160,3 +160,78 @@ mysql> select  * from db3.user;
 [root@host51 ~]# ls /var/lib/mysql/db3/user.*
 /var/lib/mysql/db3/user.frm  /var/lib/mysql/db3/user.ibd
 [root@host51 ~]#
+
+
++++++++++++++++++++++++++++++
+           数据的增量备份与恢复
+		 增量备份
+			命令格式：
+]#innobackupex --user root  --password 密码  --incremental  目录名  --incremental-basedir=目录名   --no-timestamp
+
+
+			工作工程？
+
+
+			例子：
+周一   完全备份
+[root@host50 ~]# innobackupex  --user root --password 666qqq...B  /allbak --no-timestamp
+
+[root@host50 ~]# ls /allbak/
+backup-my.cnf  db3             ibdata1  performance_schema  xtrabackup_binlog_info  xtrabackup_info
+db1            ib_buffer_pool  mysql    sys                 xtrabackup_checkpoints  xtrabackup_logfile
+[root@host50 ~]# 
+
+[root@host50 ~]# cat /allbak/xtrabackup_checkpoints 
+backup_type = full-backuped
+from_lsn = 0
+to_lsn = 2998720
+last_lsn = 2998729
+compact = 0
+recover_binlog_info = 0
+[root@host50 ~]# 
+
+[root@host50 ~]# mysql  -uroot -p666qqq...B  -e 'insert into db3.user(name)values("ZZ")'  多执行几遍
+
+周二   增量备份
+
+
+[root@host50 ~]# innobackupex  --user root --password 666qqq...B  --incremental  /new1dir --incremental-basedir=/allbak --no-timestamp
+
+[root@host50 ~]# ls /new1dir/
+backup-my.cnf  ib_buffer_pool  mysql               xtrabackup_binlog_info  xtrabackup_logfile
+db1            ibdata1.delta   performance_schema  xtrabackup_checkpoints
+db3            ibdata1.meta    sys                 xtrabackup_info
+[root@host50 ~]# 
+[root@host50 ~]# 
+[root@host50 ~]# 
+[root@host50 ~]# cat /new1dir/xtrabackup_checkpoints 
+backup_type = incremental
+from_lsn = 2998720
+to_lsn = 3004198
+last_lsn = 3004207
+compact = 0
+recover_binlog_info = 0
+[root@host50 ~]# 
+
+[root@host50 ~]# mysql  -uroot -p666qqq...B  -e 'insert into db3.user(name)values("YY")' 多执行几遍
+
+
+周三   增量备份 
+
+[root@host50 ~]# innobackupex --user root --password 666qqq...B --incremental  /new2dir --incremental-basedir=/new1dir  --no-timestamp
+
+[root@host50 ~]# ls /new2dir/
+backup-my.cnf  ib_buffer_pool  mysql               xtrabackup_binlog_info  xtrabackup_logfile
+db1            ibdata1.delta   performance_schema  xtrabackup_checkpoints
+db3            ibdata1.meta    sys                 xtrabackup_info
+[root@host50 ~]# 
+[root@host50 ~]# 
+[root@host50 ~]# 
+[root@host50 ~]# cat /new2dir/xtrabackup_checkpoints 
+backup_type = incremental
+from_lsn = 3004198
+to_lsn = 3010064
+last_lsn = 3010073
+compact = 0
+recover_binlog_info = 0
+[root@host50 ~]# 
