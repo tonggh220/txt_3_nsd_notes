@@ -71,3 +71,92 @@ recover_binlog_info = 0
 			8 管理员root登录查看数据
 [root@host51 ~]# mysql -uroot -p666qqq...B
 mysql> show  databases;
+
+
++++++++++++++++++++++++++++++++++++++++++++++恢复单张表的数据
+           使用完全备份，恢复1张表的所有数据  51
+数据丢失
+[root@host51 ~]# mysql -uroot -p666qqq...B -e 'delete from db3.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host51 ~]# 
+[root@host51 ~]# mysql -uroot -p666qqq...B -e 'select count(*) from db3.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| count(*) |
++----------+
+|        0 |
++----------+
+[root@host51 ~]# 
+
+		具体恢复步骤：
+			表空间： 存储数据的文件 (表名.ibd)
+
+			1 删除表空间
+mysql> alter table db3.user discard  tablespace;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select  * from db3.user;
+ERROR 1814 (HY000): Tablespace has been discarded for table 'user'
+mysql> 
+mysql> system ls /var/lib/mysql/db3/user*
+/var/lib/mysql/db3/user.frm
+mysql> 
+mysql> desc db3.user;
++----------+--------------+------+-----+---------+----------------+
+| Field    | Type         | Null | Key | Default | Extra          |
++----------+--------------+------+-----+---------+----------------+
+| id       | int(11)      | NO   | PRI | NULL    | auto_increment |
+| name     | char(100)    | YES  |     | NULL    |                |
+| password | char(1)      | YES  |     | NULL    |                |
+| uid      | int(11)      | YES  |     | NULL    |                |
+| gid      | int(11)      | YES  |     | NULL    |                |
+| comment  | varchar(150) | YES  |     | NULL    |                |
+| homeaddr | char(150)    | YES  |     | NULL    |                |
+| shell    | char(50)     | YES  |     | NULL    |                |
++----------+--------------+------+-----+---------+----------------+
+8 rows in set (0.00 sec)
+
+mysql>
+
+
+
+2导出表信息
+[root@host51 ~]# ls /opt/fullbak/db3/
+db.opt  user.frm  user.ibd
+[root@host51 ~]#
+
+[root@host51 ~]# innobackupex --apply-log --export /opt/fullbak
+
+
+3拷贝表信息文件到数据库目录下
+[root@host51 ~]# ls /opt/fullbak/db3/
+db.opt  user.cfg  user.exp  user.frm  user.ibd
+[root@host51 ~]# 
+[root@host51 ~]# cp /opt/fullbak/db3/user.{cfg,exp,ibd} /var/lib/mysql/db3/
+[root@host51 ~]# 
+[root@host51 ~]# ls /var/lib/mysql/db3/user.*
+/var/lib/mysql/db3/user.cfg  /var/lib/mysql/db3/user.frm
+/var/lib/mysql/db3/user.exp  /var/lib/mysql/db3/user.ibd
+[root@host51 ~]# 
+
+
+4修改表信息文件的所有者及组用户为mysql
+[root@host51 ~]# chown  -R mysql:mysql /var/lib/mysql/db3/user.*
+
+5导入表空间
+[root@host51 ~]# mysql -uroot -p666qqq...B
+mysql> select  * from db3.user;
+ERROR 1814 (HY000): Tablespace has been discarded for table 'user'
+mysql>
+mysql> alter table  db3.user import tablespace ;
+Query OK, 0 rows affected (0.04 sec)
+6 查看表记录
+mysql> select  * from db3.user;
+
+7删除数据库目录下的表信息文件
+[root@host51 ~]# rm -rf /var/lib/mysql/db3/user.cfg 
+[root@host51 ~]# rm -rf /var/lib/mysql/db3/user.exp 
+[root@host51 ~]# 
+[root@host51 ~]# ls /var/lib/mysql/db3/user.*
+/var/lib/mysql/db3/user.frm  /var/lib/mysql/db3/user.ibd
+[root@host51 ~]#
