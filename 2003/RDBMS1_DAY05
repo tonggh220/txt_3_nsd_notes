@@ -336,3 +336,22 @@ ib_buffer_pool  sys                 xtrabackup_info
 			    管理员登录查看数据
 [root@host51 ~]# systemctl  start mysqld
 [root@host51 ~]# mysql -uroot -p666qqq...B -e 'select name from  db3.user'
+
+
+数据的差异备份
+周一完全备份
+]# innobackupex --user root --password  666qqq...B  /wqdir --no-timestamp
+
+有新数据存入
+
+周二 差异备份
+]# innobackupex --user root --password  666qqq...B  --incremental /dir1  --incremental-basedir=/wqdir --no-timestamp
+
+有新数据存入
+
+周三 差异备份
+]# innobackupex --user root --password  666qqq...B  --incremental /dir2  --incremental-basedir=/wqdir --no-timestamp
+有新数据存入
+
+周四 差异备份
+]# innobackupex --user root --password  666qqq...B  --incremental /dir3  --incremental-basedir=/wqdir --no-timestamp
