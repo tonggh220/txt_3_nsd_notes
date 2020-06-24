@@ -235,3 +235,104 @@ last_lsn = 3010073
 compact = 0
 recover_binlog_info = 0
 [root@host50 ~]# 
+
+		工作工程？
+			innobackupex 命令在执行备份时，如何知道是否有新数据产生呢？如果有新数据，如何知道得 哪些是新数据呢？
+
+
+事务日志文件： 记录 对innodb存储引擎的表执行的操作的日志文件
+cd /var/lib/mysql/
+ibdata1
+ib_logfile1
+ib_logfile0
+
+LSN  日志序列号   
+
+[root@host50 ~]# scp -r  /allbak    root@192.168.4.51:/root/
+[root@host50 ~]# scp -r  /new1dir    root@192.168.4.51:/root/
+[root@host50 ~]# scp -r  /new2dir   root@192.168.4.51:/root/
+
+	
+ 
+		增量恢复
+			命令格式
+]#innobackupex  --apply-log  --redo-only  首次备份目录名   #准备恢复数据
+]#innobackupex  --apply-log --redo-only 首次备份目录名   --incremental-dir=增量备份目录名  #合并数据
+    
+			步骤如下：
+			    停止数据库服务
+			    清空数据库目录
+			    准备恢复数据
+
+[root@host51 ~]# cat /root/allbak/xtrabackup_checkpoints 
+backup_type = full-backuped
+from_lsn = 0
+to_lsn = 2998720
+last_lsn = 2998729
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+[root@host51 ~]# innobackupex --apply-log --redo-only /root/allbak
+
+[root@host51 ~]# cat /root/allbak/xtrabackup_checkpoints 
+backup_type = log-applied
+from_lsn = 0
+to_lsn = 2998720
+last_lsn = 2998729
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+
+			    合并数据
+
+[root@host51 ~]# innobackupex --apply-log --redo-only /root/allbak  --incremental-dir=/root/new1dir
+
+[root@host51 ~]# cat /root/allbak/xtrabackup_checkpoints 
+backup_type = log-applied
+from_lsn = 0
+to_lsn = 3004198
+last_lsn = 3004207
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]#
+
+[root@host51 ~]# innobackupex --apply-log --redo-only /root/allbak  --incremental-dir=/root/new2dir
+
+[root@host51 ~]# cat /root/allbak/xtrabackup_checkpoints 
+backup_type = log-applied
+from_lsn = 0
+to_lsn = 3010064
+last_lsn = 3010073
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+[root@host51 ~]# cat /root/new2dir/xtrabackup_checkpoints 
+backup_type = incremental
+from_lsn = 3004198
+to_lsn = 3010064
+last_lsn = 3010073
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+
+[root@host51 ~]# rm -rf /root/new1dir/
+[root@host51 ~]# rm -rf /root/new2dir/
+[root@host51 ~]# 
+[root@host51 ~]# 
+[root@host51 ~]# ls /root/allbak/
+backup-my.cnf   ibdata1             xtrabackup_binlog_info        xtrabackup_logfile
+db1             mysql               xtrabackup_binlog_pos_innodb
+db3             performance_schema  xtrabackup_checkpoints
+ib_buffer_pool  sys                 xtrabackup_info
+[root@host51 ~]# 
+
+			    拷贝数据到数据库目录
+[root@host51 ~]# innobackupex --copy-back /root/allbak/
+
+			    修改文件的用户和组 为mysql
+[root@host51 ~]# chown -R mysql:mysql /var/lib/mysql
+
+			    启动数据库服务
+			    管理员登录查看数据
+[root@host51 ~]# systemctl  start mysqld
+[root@host51 ~]# mysql -uroot -p666qqq...B -e 'select name from  db3.user'
