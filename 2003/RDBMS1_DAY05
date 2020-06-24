@@ -1,0 +1,73 @@
++++++++++++RDBMS1_DAY05 之 innobackupex
+           innobackupex的特点
+
+	   安装软件
+]# rpm -ivh libev-4.15-1.el6.rf.x86_64.rpm 
+ 
+]# yum -y install  percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 		
+
+[root@host50 ~]# which  innobackupex
+/usr/bin/innobackupex
+[root@host50 ~]# 
+[root@host50 ~]# man innobackupex  //查看命令详细帮助信息
+
+           命令格式 ]# innobackupex  <选项>
+           常用选项介绍？ 
+
+           休息10分钟到 10:11 
+
+	   数据的完全备份与恢复
+		 完全备份 50
+[root@host50 ~]# innobackupex --user root --password 666qqq...B  /fullbak  --no-timestamp
+
+[root@host50 ~]# ls /fullbak/
+backup-my.cnf  db3             ibdata1  performance_schema  xtrabackup_binlog_info  xtrabackup_info
+db1            ib_buffer_pool  mysql    sys                 xtrabackup_checkpoints  xtrabackup_logfile
+[root@host50 ~]# 
+
+[root@host50 ~]# scp -r  /fullbak  root@192.168.4.51:/opt/						
+		 完全恢复 51
+			1 安装软件包
+			2 停止数据库服务
+			3 清空数据库目录  rm -rf /var/lib/mysql/*
+			4 准备恢复数据
+[root@host51 ~]# ls /opt/fullbak/
+backup-my.cnf  ib_buffer_pool  performance_schema      xtrabackup_checkpoints
+db1            ibdata1         sys                     xtrabackup_info
+db3            mysql           xtrabackup_binlog_info  xtrabackup_logfile
+[root@host51 ~]# 
+
+[root@host51 ~]# cat /opt/fullbak/xtrabackup_checkpoints 
+backup_type = full-backuped
+from_lsn = 0
+to_lsn = 2998720
+last_lsn = 2998729
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+
+[root@host51 ~]# innobackupex --apply-log /opt/fullbak/  准备恢复数据
+
+[root@host51 ~]# cat /opt/fullbak/xtrabackup_checkpoints 
+backup_type = full-prepared
+from_lsn = 0
+to_lsn = 2998720
+last_lsn = 2998729
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+
+			5 拷贝数据到数据库目录下
+[root@host51 ~]#  ls /var/lib/mysql/
+[root@host51 ~]# innobackupex --copy-back /opt/fullbak/  拷贝数据
+[root@host51 ~]#  ls /var/lib/mysql/
+
+			6 修改数据库目录的所有者和组用户为mysql
+[root@host51 ~]# chown -R mysql:mysql /var/lib/mysql
+
+			7 启动服务
+[root@host51 ~]# systemctl start mysqld
+ 
+			8 管理员root登录查看数据
+[root@host51 ~]# mysql -uroot -p666qqq...B
+mysql> show  databases;
