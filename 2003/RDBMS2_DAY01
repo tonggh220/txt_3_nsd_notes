@@ -36,3 +36,29 @@ mysql> show master status;
 1 row in set (0.00 sec)
 
 mysql> 
+
+
+					1.3.2  配置从数据库服务器52
+1、 设置server_id 
+]# vim /etc/my.cnf
+   [mysqld]
+   server_id=52
+:wq
+
+]# systemctl restart mysqld
+
+
+
+2 确保与主服务器数据一致。
+	[root@host51 ~]# mysqldump -uroot -p66qqq...B  --master-data  --all-databases > /root/all.sql 
+
+--master-data  备份完成后，记录已备份的数据对应的日志名称和偏移量
+
+[root@host51 ~]# ls /root/all.sql
+/root/all.sql
+[root@host51 ~]# 
+
+[root@host51 ~]# scp /root/all.sql   root@192.168.4.52:/opt/
+
+[root@host52 ~]# mysql -uroot -p666qqq...B  < /opt/all.sql
+[root@host52 ~]# mysql -uroot -p666qqq...B  -e 'show databases'
