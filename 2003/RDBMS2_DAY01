@@ -233,3 +233,40 @@ mysql> show master status;
 1 row in set (0.00 sec)
 
 mysql>
+
+	配置从数据库服务器192.168.4.54
+[root@host54 ~]# vim /etc/my.cnf
+[mysqld]
+server_id=54
+log_bin=master54
+log_slave_updates
+:wq
+
+[root@host54 ~]# systemctl  restart mysqld
+[root@host54 ~]# mysql -uroot -p密码
+mysql> grant replication slave on  *.*  to repluser2@"%" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master54.000001 |      442 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql>
+mysql> show slave status \G
+Empty set (0.00 sec)
+
+mysql> 
+mysql> change master to  master_host="192.168.4.53" , master_user="repluser" ,  master_password="123qqq...A" ,  master_log_file="master53.000001" ,  master_log_pos=441 ;
+Query OK, 0 rows affected, 2 warnings (0.02 sec)
+
+mysql> start slave;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> show slave status \G
+	    Master_Host: 192.168.4.53
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
