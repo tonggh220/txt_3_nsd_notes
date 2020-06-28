@@ -135,3 +135,56 @@ mysqldump: [Warning] Using a password on the command line interface can be insec
 [root@host51 ~]# ls /root/all2.sql 
 /root/all2.sql
 [root@host51 ~]# scp /root/all2.sql  root@192.168.4.53:/root/
+
+
+[root@host53 ~]# mysql -uroot -p123qqq...A < /root/all2.sql
+[root@host53 ~]# systemctl restart mysqld 
+[root@host53 ~]# mysql -uroot -p666qqq...B -e 'show databases'
+
+[root@host53 ~]# mysql -h192.168.4.51 -urepluser -p123qqq...A
+
+[root@host53 ~]# grep  master51  /root/all2.sql 
+CHANGE MASTER TO MASTER_LOG_FILE='master51.000002', MASTER_LOG_POS=1001;
+[root@host53 ~]#
+
+mysql> show slave status;
+Empty set (0.00 sec)
+
+mysql>		
+mysql> change master to  master_host="192.168.4.51" ,  master_user="repluser" ,  master_password="123qqq...A" ,  master_log_file="master51.000002" , master_log_pos=1001 ;
+Query OK, 0 rows affected, 2 warnings (0.01 sec)
+
+mysql> start slave;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show slave status \G
+            Master_Host: 192.168.4.51
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+
+[root@host50 ~]# mysql -h192.168.4.51 -ujing -p123qqq...A  -e 'insert into db3.user(name,uid) values("bbb",2002),("BBB",2003),("ccc",2004)'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# 
+
+[root@host52 ~]# mysql -uroot -p666qqq...B -e 'select name,uid from db3.user where  name in ("aaa","bbb","ccc")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+
+| name | uid  |
++------+------+
+| bbb  | 2002 |
+| BBB  | 2003 |
+| ccc  | 2004 |
++------+------+
+[root@host52 ~]#
+
+[root@host53 ~]# mysql -uroot -p666qqq...B -e 'select name,uid from db3.user where  name in ("aaa","bbb","ccc")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+
+| name | uid  |
++------+------+
+| bbb  | 2002 |
+| BBB  | 2003 |
+| ccc  | 2004 |
++------+------+
+[root@host53 ~]# 
