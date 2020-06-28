@@ -216,7 +216,7 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 host53 ~ ]# vim /etc/my.cnf
 [mysqld]
 server_id=53
-bin_log=master53
+log_bin=master53
 :wq
 
 host53 ~ ]# systemctl  restart mysqld
