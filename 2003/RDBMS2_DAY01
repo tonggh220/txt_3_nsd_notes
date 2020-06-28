@@ -188,3 +188,26 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | ccc  | 2004 |
 +------+------+
 [root@host53 ~]# 
+
+++++++++++++++++++++配置主从从结构
+为了节省机器 把 53恢复为独立的数据库服务器 搭建主从同步结构，步骤如下：
+
+   39  cd /var/lib/mysql
+   40  ls auto.cnf 
+   41  ls master.info 
+   42  ls relay-log.info 
+   43  ls host53-relay-bin.*
+   44  rm -rf master.info  relay-log.info  host53-relay-bin.*
+   48  systemctl  restart mysqld
+   mysql -uroot -p666qqq...B -e 'drop database db1 ; drop database db3'
+   [root@host53 mysql]# mysql -uroot -p666qqq...B -e 'show databases'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+[root@host53 mysql]# 
