@@ -62,3 +62,37 @@ mysql>
 
 [root@host52 ~]# mysql -uroot -p666qqq...B  < /opt/all.sql
 [root@host52 ~]# mysql -uroot -p666qqq...B  -e 'show databases'
+
+
+指定主服务器信息（主服务器的ip地址 、连接用户及密码 、 binlog日志名 及偏移量）
+[root@host52 ~]# grep  -i master51  /opt/all.sql
+
+[root@host52 ~]# mysql -uroot -p666qqq...B
+mysql> show slave status ;
+Empty set (0.00 sec)
+mysql> change master to master_host="192.168.4.51" , master_user="repluser" , master_password="123qqq...A" , master_log_file="master51.000002" , master_log_pos=154 ;
+Query OK, 0 rows affected, 2 warnings (0.01 sec)
+
+mysql> 
+
+
+启动slave程序
+mysql> start slave ;
+Query OK, 0 rows affected (0.00 sec)
+
+查看状态信息
+mysql> 
+mysql> show slave status \G
+            Master_Host: 192.168.4.51
+	    Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+	     Last_IO_Error: IO线程的报错信息
+             Last_SQL_Error: SQL线程的报错信息
+
+相关的文件
+	master.info  (主服务器信息文件)
+	主机名-relay-bin.编号  中继日志文件
+	主机名-relay-bin.index  中继日志索引文件
+	relay-log.info 中继日志信息
+
+删除此4个文件把数据库服务重启，可以主机还原为独立的数据库服务器。
