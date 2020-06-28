@@ -270,3 +270,86 @@ mysql> show slave status \G
 	    Master_Host: 192.168.4.53
             Slave_IO_Running: Yes
             Slave_SQL_Running: Yes
+
+
+配置从服务器192.168.4.55
+
+]# vim /etc/my.cnf
+   [mysqld]
+   server_id=55
+:wq
+]# systemctl restart mysqld
+]# mysql -uroot -p密码
+
+mysql> change master to master_host="192.168.4.54" , master_user="repluser2" , master_password="123qqq...A" , master_log_file="master54.000001" ,  master_log_pos=442;
+Query OK, 0 rows affected, 2 warnings (0.02 sec)
+
+mysql> start slave;
+Query OK, 0 rows affected (0.02 sec)
+mysql> show slave status \G
+	    Master_Host: 192.168.4.54
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+ 
+
+	验证主从从的配置
+		1 在53主机添加授权用户给客户端连接使用
+
+mysql> grant all on  bbsdb.* to yaya100@"%" identified by "123qqq...A"；
+
+		2 客户端连接主服务器53，存储数据
+[root@host50 ~]# mysql -h192.168.4.53 -uyaya100 -p123qqq...A
+mysql> show grants;
++----------------------------------------------------+
+| Grants for yaya100@%                               |
++----------------------------------------------------+
+| GRANT USAGE ON *.* TO 'yaya100'@'%'                |
+| GRANT ALL PRIVILEGES ON `bbsdb`.* TO 'yaya100'@'%' |
++----------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
++--------------------+
+1 row in set (0.00 sec)
+
+mysql> create database bbsdb;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> create table bbsdb.t1(id int)
+    -> ;
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> insert into bbsdb.t1 values(888);
+Query OK, 1 row affected (0.06 sec)
+
+mysql> select  * from bbsdb.t1;
++------+
+| id   |
++------+
+|  888 |
++------+
+1 row in set (0.00 sec)
+
+mysql>
+		3 在2台从服务器本机分别查看数据
+
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'select  * from bbsdb.t1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  888 |
++------+
+[root@host54 ~]#
+ [root@host55 ~]# mysql -uroot -p123qqq...A -e 'select  * from bbsdb.t1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  888 |
++------+
+[root@host55 ~]# 
