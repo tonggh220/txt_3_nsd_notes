@@ -141,3 +141,55 @@ MaxScale> exit
 [root@host57 ~]# ls /var/log/maxscale/
 maxscale.log
 
+
+			4.2.3 测试配置：客户端连接代理服务57访问
+数据
+				1 在主数据库服务器添加授权用户，给客户端连接使用
+
+[root@host51 ~]# mysql -uroot -p666qqq...B -e 'grant select,insert on db3.* to yaya1088@"%" identified by "123qqq...A"'
+
+			2 在从服务器查看是否同步授权用户yaya1088
+[root@host52 ~]# mysql -uroot -p666qqq...B -e 'select user from mysql.user where user="yaya1088"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| user     |
++----------+
+| yaya1088 |
++----------+
+[root@host52 ~]# 
+
+			3 客户端连接57主机 访问数据
+                    
+[root@host50 ~]# mysql -h192.168.4.57 -P4006 -uyaya1088 -p123qqq...A
+mysql> show grants;
+
+mysql> insert into db3.user(name,uid,gid)values("YYY",666,888);
+Query OK, 1 row affected (0.12 sec)
+
+mysql> select name,uid,gid from db3.user where name="yyy";
++------+------+------+
+| name | uid  | gid  |
++------+------+------+
+| YYY  |  666 |  888 |
++------+------+------+
+1 row in set (0.00 sec)
+
+mysql>
+
+
+
+		测试57 主机的读写分离功能
+host51~]# mysql  -uroot -p密码
+mysql> create database gamedb;
+mysql> create table gamedb.t1(id int);
+mysql> grant select,insert on gamedb.* to yaya1066@"%" identified by "123qqq...A";
+
+
+host52~]# mysql  -uroot -p密码
+mysql> insert into gamedb.t1 values(52);
+mysql> select  * from gamedb.t1;
+
+host50~]# mysql -h192.168.4.57 -P4006 -uyaya1066 -p123qqq...A
+mysql> select  * from gamedb.t1; #查看有52的记录
+mysql> insert into gamedb.t1 values(51);
+mysql> select  * from gamedb.t1; # 查看到2条记录
