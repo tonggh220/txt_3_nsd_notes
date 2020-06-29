@@ -247,3 +247,27 @@ mysqlbinlog        mysqldumpslow               mysqltest_embedded
 [root@host57 ~]# tail -1  /etc/bashrc 
 export PATH=/usr/local/mysql/bin:$PATH
 [root@host57 ~]#
+
+		2 创建并编辑主配置文件
+]# rm -rf /etc/my.cnf (如果此文件有的话要删除)
+
+]# vim /etc/my.cnf(创建并打开新文件)
+
+[mysqld_multi]定义多实例服务的运行配置
+服务运行时使用程序
+修改管理员root用户密码的命令
+启动服务的用户
+
+[mysqld1]创建编号为1的多实例服务
+数据库目录
+端口号
+PID文件
+日志文件
+socket文件
+
+[mysqld2]创建编号为2的多实例服务
+数据库目录
+端口号
+PID文件
+日志文件
+socket文件
