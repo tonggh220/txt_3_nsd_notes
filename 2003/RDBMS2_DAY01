@@ -353,3 +353,91 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 |  888 |
 +------+
 [root@host55 ~]# 
+
++++++++++++++++++++++
+				2.4 复制模式
+					2.4.1 复制模式介绍
+从服务器与主服务同步数据的方式：
+	1 异步复制（默认）
+	2 半同步复制 （默认没有启用）
+					
+	2.4.2 配置半同步复制模式
+		公共配置：
+			查看是否可以动态加载模块
+mysql> show  variables  like  'have_dynamic_loading';
++----------------------+-------+
+| Variable_name        | Value |
++----------------------+-------+
+| have_dynamic_loading | YES   |
++----------------------+-------+
+1 row in set (0.16 sec)
+
+mysql> 
+			加载模块
+install  plugin  模块类型   SONAME   "模块名";  
+
+			查看模块是否加载成功
+mysql> select  plugin_name, plugin_status from  information_schema.plugins  where plugin_name like '%semi%';  
++----------------------+---------------+
+| plugin_name          | plugin_status |
++----------------------+---------------+
+| rpl_semi_sync_master | ACTIVE        |
++----------------------+---------------+
+1 row in set (0.00 sec)
+
+mysql> 
+			启用模块
+                        mysql> set  global 选项=1; 
+
+
+			查看模块是否启用成功
+mysql> show  variables  like  "rpl_semi_sync_%_enabled" ;
+
+		配置主数据库服务器
+			加载master模块并启用
+mysql> install  plugin  rpl_semi_sync_master   SONAME   "semisync_master.so";
+
+mysql> set  global rpl_semi_sync_master_enabled=1; 
+
+			永久配置
+			]#vim /etc/my.cnf
+			[mysqld]
+plugin-load=rpl_semi_sync_master=semisync_master.so
+rpl_semi_sync_master_enabled=1
+:wq			
+
+		
+		配置从数据库服务器
+			加载slave模块并启用
+mysql> install  plugin  rpl_semi_sync_slave   SONAME   "semisync_slave.so";
+
+mysql> set  global rpl_semi_sync_slave_enabled=1; 
+
+			永久配置
+			]#vim /etc/my.cnf
+			[mysqld]
+plugin-load=rpl_semi_sync_slave=semisync_slave.so
+rpl_semi_sync_slave_enabled=1
+:wq			
+
+
+		如果1台服务器即是主服务器又是从服务器
+			2种模块都要加载都要启用
+install  plugin  rpl_semi_sync_master   SONAME   "semisync_master.so";
+install  plugin  rpl_semi_sync_slave   SONAME   "semisync_slave.so";
+set  global rpl_semi_sync_slave_enabled=1; 
+set  global rpl_semi_sync_master_enabled=1;
+ 
+			永久配置
+			]#vim /etc/my.cnf
+			[mysqld]
+plugin-load= "rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1
+:wq
+
+
+
+
+
+
