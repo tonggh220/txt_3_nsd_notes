@@ -193,3 +193,57 @@ host50~]# mysql -h192.168.4.57 -P4006 -uyaya1066 -p123qqq...A
 mysql> select  * from gamedb.t1; #查看有52的记录
 mysql> insert into gamedb.t1 values(51);
 mysql> select  * from gamedb.t1; # 查看到2条记录
+
+
+2 MySQL多实例
+	2.1 什么是多实例？
+		在1台服务器上运行多个mysql服务
+
+
+	2.2 为什么要使用多实例？
+
+	2.3 配置多实例: 192.168.4.57
+		1 安装源码软件
+[root@host57 ~]# rpm -q libaio
+libaio-0.3.109-13.el7.x86_64
+[root@host57 ~]# 
+[root@host57 ~]# id mysql
+id: mysql: no such user
+[root@host57 ~]# 
+[root@host57 ~]# useradd mysql
+[root@host57 ~]#
+[root@host57 ~]# tar -zxvf /var/ftp/upload/mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz
+[root@host57 ~]# ls
+anaconda-ks.cfg  mysql-5.7.20-linux-glibc2.12-x86_64
+[root@host57 ~]# 
+[root@host57 ~]# ls
+anaconda-ks.cfg  mysql-5.7.20-linux-glibc2.12-x86_64
+[root@host57 ~]# 
+[root@host57 ~]# mv mysql-5.7.20-linux-glibc2.12-x86_64 /usr/local/mysql
+[root@host57 ~]# 
+[root@host57 ~]# ls /usr/local/mysql/
+bin  COPYING  docs  include  lib  man  README  share  support-files
+[root@host57 ~]# 
+[root@host57 ~]# ls /usr/local/mysql/bin/
+innochecksum       mysqlcheck                  mysql_embedded             mysql_tzinfo_to_sql
+lz4_decompress     mysql_client_test_embedded  mysqlimport                mysql_upgrade
+myisamchk          mysql_config                mysql_install_db           mysqlxtest
+myisam_ftdump      mysql_config_editor         mysql_plugin               perror
+myisamlog          mysqld                      mysqlpump                  replace
+myisampack         mysqld-debug                mysql_secure_installation  resolveip
+my_print_defaults  mysqld_multi                mysqlshow                  resolve_stack_dump
+mysql              mysqld_safe                 mysqlslap                  zlib_decompress
+mysqladmin         mysqldump                   mysql_ssl_rsa_setup
+mysqlbinlog        mysqldumpslow               mysqltest_embedded
+[root@host57 ~]# 
+[root@host57 ~]# echo $PATH
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
+[root@host57 ~]# 
+[root@host57 ~]# PATH=/usr/local/mysql/bin:$PATH
+[root@host57 ~]# echo  $PATH
+/usr/local/mysql/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
+[root@host57 ~]#
+[root@host57 ~]# vim /etc/bashrc 
+[root@host57 ~]# tail -1  /etc/bashrc 
+export PATH=/usr/local/mysql/bin:$PATH
+[root@host57 ~]#
