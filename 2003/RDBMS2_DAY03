@@ -135,3 +135,70 @@ mycat.log  mycat.pid  wrapper.log
 [root@mycat56 mycat]# netstat -utnlp  | grep  8066
 tcp6       0      0 :::8066                 :::*                    LISTEN      1777/java           
 [root@mycat56 mycat]# 
+
+5.7 统一排错 
+		]# cat /usr/local/mycat/logs/wrapper.log
+
+cp  /usr/local/mycat/conf/schema.xml  /root/
+
+rm -rf /usr/local/mycat
+
+tar -zxvf Mycat.....tar.gz
+
+mv mycat /usr/local/
+rm -rf /usr/local/mycat/conf/schema.xml
+cp /root/schema.xml /usr/local/mycat/conf/
+
+/usr/local/mycat/bin/mycat start 
+
+
+	    5.8 客户端连接分片服务器56 存/取数据 时间 5分钟到 17:45
+
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| TESTDB   |
++----------+
+1 row in set (0.01 sec)
+
+mysql> use TESTDB;
+mysql> show tables;
++------------------+
+| Tables in TESTDB |
++------------------+
+| company          |
+| customer         |
+| customer_addr    |
+| employee         |
+| goods            |
+| hotnews          |
+| orders           |
+| order_items      |
+| travelrecord     |
++------------------+
+9 rows in set (0.01 sec)
+
+mysql> desc company;
+ERROR 1146 (42S02): Table 'db1.company' doesn't exist
+mysql> 
+mysql> desc company;
+ERROR 1146 (42S02): Table 'db3.company' doesn't exist
+mysql> 
+mysql> desc company;
+ERROR 1146 (42S02): Table 'db2.company' doesn't exist
+mysql> 
+mysql> desc employee;
+ERROR 1146 (42S02): Table 'db2.employee' doesn't exist
+mysql> 
+mysql> desc employee;
+ERROR 1146 (42S02): Table 'db1.employee' doesn't exist
+
+mysql> desc employee;
+ERROR 1146 (42S02): Table 'db3.employee' doesn't exist
+mysql> 
+
+mysql> exit
+Bye
+[root@host50 ~]#
