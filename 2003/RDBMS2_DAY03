@@ -118,4 +118,20 @@ bin  catlet  conf  lib  logs  version.txt
 
 [root@host55 ~]# mysql -uroot -p666qqq...B -e 'grant all on  *.*  to pljadmin@"%" identified by "123qqq...A"'
 
+		5.4 启动mycat服务
+[root@mycat56 mycat]# netstat  -utnlp  | grep 8066
+[root@mycat56 mycat]# 
+[root@mycat56 mycat]# ls /usr/local/mycat/logs/
+[root@mycat56 mycat]# 
+[root@mycat56 mycat]# /usr/local/mycat/bin/mycat  start
+Starting Mycat-server...
+[root@mycat56 mycat]# 
 
+
+		5.6 查看服务状态
+[root@mycat56 mycat]# ls /usr/local/mycat/logs/
+mycat.log  mycat.pid  wrapper.log
+[root@mycat56 mycat]# 
+[root@mycat56 mycat]# netstat -utnlp  | grep  8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      1777/java           
+[root@mycat56 mycat]# 
