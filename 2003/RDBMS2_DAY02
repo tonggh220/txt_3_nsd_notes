@@ -398,3 +398,70 @@ db1       ibdata1         ib_logfile1  mysqld1.err  sys
 auto.cnf  ib_buffer_pool  ib_logfile0  mysql        performance_schema
 bbsdb     ibdata1         ib_logfile1  mysqld2.err  sys
 [root@host57 ~]# 
+
+5.2 客户端访问
+				使用root连接实例，做用户授权
+[root@host57 ~]# mysql -uroot -p123456 -S /dir1/mysqld1.socket
+mysql> grant all on gamedb.*  to gameuser@"%" identified by "123456";
+
+]# vim /etc/my.cnf
+[mysqld1]
+server_id=1
+log_bin=mysqld1
+
+:wq
+[root@host57 ~]# mysqld_multi --user=root --password=123456 stop 1
+[root@host57 ~]# mysqld_multi start 1
+[root@host57 ~]# ls /dir1
+auto.cnf        ibdata1      ibtmp1          mysqld1.err    mysqld1.socket       sys
+db1             ib_logfile0  mysql           mysqld1.index  mysqld1.socket.lock
+ib_buffer_pool  ib_logfile1  mysqld1.000001  mysqld1.pid    performance_schema
+[root@host57 ~]# 
+
+				客户端连接实例服务
+
+[root@host50 ~]# mysql -h192.168.4.57 -P3307  -ugameuser -p123456
+mysql> show grants;
++------------------------------------------------------+
+| Grants for gameuser@%                                |
++------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'gameuser'@'%'                 |
+| GRANT ALL PRIVILEGES ON `gamedb`.* TO 'gameuser'@'%' |
++------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
++--------------------+
+1 row in set (0.00 sec)
+
+mysql> create database gamedb;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> create table gamedb.t1(id int);
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> insert into gamedb.t1 values(111);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> select  * from gamedb.t1;
++------+
+| id   |
++------+
+|  111 |
++------+
+1 row in set (0.01 sec)
+
+mysql> 
+
+[root@host57 ~]# ls /dir1
+auto.cnf        ibdata1      mysql           mysqld1.pid          sys
+db1             ib_logfile0  mysqld1.000001  mysqld1.socket
+gamedb          ib_logfile1  mysqld1.err     mysqld1.socket.lock
+ib_buffer_pool  ibtmp1       mysqld1.index   performance_schema
+[root@host57 ~]# ls /dir1/gamedb/
+db.opt  t1.frm  t1.ibd
+[root@host57 ~]# 
