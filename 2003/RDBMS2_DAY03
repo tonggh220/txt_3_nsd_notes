@@ -1,6 +1,106 @@
-环境准备
-把数据库服务器 53  54  55  还原 为独立数据库服务器：具体操作
-把/etc/my.cnf文件里 添加的配置都注释，只保留默认的4个数据库，其他的库全都删除。
-有虚拟机 56 即可 不用运行mysqld服务
-50 主机 做客户端  不用运行mysqld服务
+++++++RDBMS2_DAY03   数据分片 (mycat)(数据存储服务架构)
+	1 相关概念
+	2 软件介绍
+	3 实验拓扑
+  	4 mycat 服务工作过程
+	5配置数据服务器mycat
+		5.1 安装软件 （ 3分钟到 14:17 ）
+[root@mycat56 ~]# yum -y install java-1.8.0-openjdk.x86_64
+[root@mycat56 ~]# tar -zxvf /var/ftp/upload/Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz 
+[root@mycat56 ~]# ls
+anaconda-ks.cfg  mycat
+[root@mycat56 ~]# ls mycat/
+bin  catlet  conf  lib  logs  version.txt
+[root@mycat56 ~]# 
+[root@mycat56 ~]# 
+[root@mycat56 ~]# mv mycat /usr/local/
+[root@mycat56 ~]# 
+[root@mycat56 ~]# ls /usr/local/mycat/
+bin  catlet  conf  lib  logs  version.txt
+[root@mycat56 ~]# 
+
+
+
+		5.2 修改配置文件  XML  扩展标记语言 标签要成对出现
+                                  注释符号 <!--       -->
+
+			5.2.1 设置连接mycat服务使用的用户名、密码、及逻辑库名
+			      vim /usr/local/mycat/server.xml  使用默认配置即可
+		TESTDB
+
+			5.2.2 设置数据分片存储的表
+文件的结构  休息10分钟到 15:05 
+
+<mycat:schema ....>
+	<schema ....> 定义分片的表
+		<table   />  定义表名
+		<table .... ></table> 定义表名
+        </schema>
+
+
+	<dataNode ...... /> 定义数据库服务器主机名
+
+        <dataHost .....>   </dataHost>定义数据库服务器的Ip地址
+</mycat:schema>
+
+[root@mycat56 mycat]# cp conf/schema.xml  /root/
+[root@mycat56 mycat]# wc  -l conf/schema.xml 
+77 conf/schema.xml
+[root@mycat56 mycat]#
+[root@mycat56 mycat]# sed -i '56,77d' conf/schema.xml  
+[root@mycat56 mycat]# sed -i '39,42d' conf/schema.xml 
+
+[root@mycat56 mycat]# vim conf/schema.xml 
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+        <schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
+                <table name="travelrecord" dataNode="dn1,dn2,dn3" rule="auto-sharding-long" />
+                <table name="company" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+                <table name="goods" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+                <table name="hotnews" primaryKey="ID" autoIncrement="true" dataNode="dn1,dn2,dn3"
+                           rule="mod-long" />
+                <table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+                <table name="customer" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile">
+                        <childTable name="orders" primaryKey="ID" joinKey="customer_id"
+                                                parentKey="id">
+                                <childTable name="order_items" joinKey="order_id"
+                                                        parentKey="id" />
+                        </childTable>
+                        <childTable name="customer_addr" primaryKey="ID" joinKey="customer_id"
+                                                parentKey="id" />
+                </table>
+        </schema>
+        <dataNode name="dn1" dataHost="mysql53" database="db1" />
+        <dataNode name="dn2" dataHost="mysql54" database="db2" />
+        <dataNode name="dn3" dataHost="mysql55" database="db3" />
+
+        <dataHost name="mysql53" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM1" url="192.168.4.53:3306" user="pljadmin"
+                                   password="123qqq...A">
+                </writeHost>
+        </dataHost>
+
+        <dataHost name="mysql54" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM2" url="192.168.4.54:3306" user="pljadmin"
+                                   password="123qqq...A">
+                </writeHost>
+        </dataHost>
+
+        <dataHost name="mysql55" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM3" url="192.168.4.55:3306" user="pljadmin"
+                                   password="123qqq...A">
+                </writeHost>
+        </dataHost>
+
+</mycat:schema>
+:wq
+
+
 
