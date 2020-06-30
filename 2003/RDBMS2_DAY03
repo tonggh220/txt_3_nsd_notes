@@ -102,5 +102,20 @@ bin  catlet  conf  lib  logs  version.txt
 </mycat:schema>
 :wq
 
+5.3 配置数据库服务器 53 54 55
+			1 运行MySQL数据库服务
+		]# netstat  -utnlp  | grep 3306
+
+			2 创建存储数据的库
+[root@host53 ~]# mysql -uroot -p666qqq...B -e 'create database db1'
+[root@host54 ~]# mysql -uroot -p666qqq...B -e 'create database db2'
+[root@host55 ~]# mysql -uroot -p666qqq...B -e 'create database db3'
+
+			3 添加授权用户pljadmin
+[root@host53 ~]# mysql -uroot -p666qqq...B -e 'grant all on  *.*  to pljadmin@"%" identified by "123qqq...A"'
+
+[root@host54 ~]# mysql -uroot -p666qqq...B -e 'grant all on  *.*  to pljadmin@"%" identified by "123qqq...A"'
+
+[root@host55 ~]# mysql -uroot -p666qqq...B -e 'grant all on  *.*  to pljadmin@"%" identified by "123qqq...A"'
 
 
