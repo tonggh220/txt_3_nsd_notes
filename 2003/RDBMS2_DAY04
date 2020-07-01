@@ -1,0 +1,104 @@
++++++++++++++++++RDBMS02_DAY04   MySQL高可用集群（软件 MHA）
+		  
+什么是集群？多台服务器一起提供相同的服务（httpd  mysqld）
+集群的分类？ 负载均衡集群 LB (多台服务器平均分摊客户端的多次访问)
+	     高可用集群   HA  （主备模式  正在提供服务主机称为主 主不能够提供服务备用的主机顶替继续提供服务，顶替的过程对客户端是透明）
+
+
+对应的集群软件： 
+             LB   : LVS  haproxy  nginx
+	     HA   ： keepalived  
+	     
+		休息到 16:10 
+1 mha软件介绍
+2 MHA服务工作过程
+3 实验拓扑
+4 配置MHA集群
+	4.1 部署集群环境
+		 1.4.1 在所有主机(57 51 52 53 )安装依赖的软件perl (10分钟到16:42)
+			]# cd mha
+			]# yum -y  install perl-*.rpm
+		 1.4.2 配置ssh免密登录
+				1 数据库服务器主机之间ssh免密登录
+[root@host51 mha]# ssh-keygen
+[root@host51 mha]# ssh-copy-id  root@192.168.4.52
+[root@host51 mha]# ssh-copy-id  root@192.168.4.53
+
+[root@host51 mha]# ssh root@192.168.4.52
+Last login: Thu Jul  2 00:41:13 2020 from 192.168.4.1
+[root@host52 ~]# exit
+登出
+Connection to 192.168.4.52 closed.
+
+[root@host51 mha]# ssh root@192.168.4.53
+Last login: Wed Jul  1 17:18:45 2020 from 192.168.4.1
+[root@host53 ~]# exit
+登出
+Connection to 192.168.4.53 closed.
+[root@host51 mha]#
+
+
+[root@host52 mha]# ssh-keygen
+[root@host52 mha]# ssh-copy-id  root@192.168.4.51
+[root@host52 mha]# ssh-copy-id  root@192.168.4.53
+
+[root@host52 mha]# ssh root@192.168.4.51
+Last login: Thu Jul  2 00:33:01 2020 from 192.168.4.1
+[root@host51 ~]# exit
+登出
+Connection to 192.168.4.51 closed.
+[root@host52 mha]# 
+[root@host52 mha]# ssh root@192.168.4.53
+Last login: Thu Jul  2 00:47:53 2020 from 192.168.4.51
+[root@host53 ~]# 
+[root@host53 ~]# exit
+登出
+Connection to 192.168.4.53 closed.
+[root@host52 mha]#
+
+
+
+[root@host53 mha]# ssh-keygen
+[root@host53 mha]# ssh-copy-id  root@192.168.4.52
+[root@host53 mha]# ssh-copy-id  root@192.168.4.51
+
+[root@host53 mha]# ssh  root@192.168.4.52
+Last login: Thu Jul  2 00:47:48 2020 from 192.168.4.51
+[root@host52 ~]# exit
+登出
+Connection to 192.168.4.52 closed.
+[root@host53 mha]# 
+[root@host53 mha]# ssh  root@192.168.4.51
+Last login: Thu Jul  2 00:48:57 2020 from 192.168.4.52
+[root@host51 ~]# exit
+登出
+Connection to 192.168.4.51 closed.
+[root@host53 mha]#
+
+
+				2 管理主机57 ，ssh免密登录所有数据库服务器 
+
+[root@host57 mha]# ssh-keygen 
+[root@host57 mha]# ssh-copy-id  root@192.168.4.53
+[root@host57 mha]# ssh-copy-id  root@192.168.4.52
+[root@host57 mha]# ssh-copy-id  root@192.168.4.51
+		
+[root@host57 mha]# ssh root@192.168.4.51
+Last login: Thu Jul  2 00:50:34 2020 from 192.168.4.53
+[root@host51 ~]# exit
+登出
+Connection to 192.168.4.51 closed.
+[root@host57 mha]# 
+[root@host57 mha]# ssh root@192.168.4.52
+Last login: Thu Jul  2 00:51:01 2020 from 192.168.4.53
+[root@host52 ~]# 
+[root@host52 ~]# exit
+登出
+Connection to 192.168.4.52 closed.
+[root@host57 mha]# 
+[root@host57 mha]# ssh root@192.168.4.53
+Last login: Thu Jul  2 00:49:35 2020 from 192.168.4.52
+[root@host53 ~]# exit
+登出
+Connection to 192.168.4.53 closed.
+[root@host57 mha]# 
