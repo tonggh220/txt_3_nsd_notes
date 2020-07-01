@@ -461,7 +461,6 @@ mysql> desc hotnews;
 +---------+-------------+------+-----+---------+----------------+
 | Field   | Type        | Null | Key | Default | Extra          |
 +---------+-------------+------+-----+---------+----------------+
-| ID      | int(11)     | NO   | PRI | NULL    | auto_increment |
 | num     | int(11)     | YES  |     | NULL    |                |
 | title   | char(10)    | YES  |     | NULL    |                |
 | comment | varchar(30) | YES  |     | NULL    |                |
@@ -557,3 +556,126 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 |    8 | zzz   | zzz     | zzz    |
 +------+-------+---------+--------+
 [root@host55 ~]# 
+
+
+	
+	7 添加新库新表
+	
+[root@host56 ~]# vim /usr/local/mycat/conf/server.xml  定义逻辑库
+
+        <user name="root">
+                <property name="password">123456</property>
+                <property name="schemas">TESTDB,GAMEDB</property>
+
+        </user>
+
+        <user name="user">
+                <property name="password">user</property>
+                <property name="schemas">TESTDB,GAMEDB</property>
+                <property name="readOnly">true</property>
+        </user>
+
+:wq
+[root@host56 ~]# vim /usr/local/mycat/conf/schema.xml 定义逻辑表
+<mycat:schema xmlns:mycat="http://io.mycat/">
+
+        <schema name="GAMEDB" checkSQLschema="false" sqlMaxLimit="100">
+                <table name="user" dataNode="dn1,dn2,dn3" rule="sharding-by-intfile" />
+                <table name="pay"  dataNode="dn1,dn2,dn3" type="global" />
+        </schema>
+        
+        <schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
+:wq
+
+		   重启mycat服务
+[root@host56 ~]# /usr/local/mycat/bin/mycat  stop
+[root@host56 ~]# /usr/local/mycat/bin/mycat  start
+Starting Mycat-server...
+[root@host56 ~]# 
+[root@host56 ~]# 
+[root@host56 ~]# ls /usr/local/mycat/logs/
+2020-07  mycat.log  mycat.pid  wrapper.log
+[root@host56 ~]# 
+[root@host56 ~]# netstat  -utnlp  | grep  8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      2799/java           
+[root@host56 ~]# 
+
+		  客户端连接56 查看新库新表，存储数据
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| GAMEDB   |
+| TESTDB   |
++----------+
+2 rows in set (0.00 sec)
+
+mysql> use GAMEDB;
+mysql> show tables;
++------------------+
+| Tables in GAMEDB |
++------------------+
+| pay              |
+| user             |
++------------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> create table pay(name char(10) , age int);
+Query OK, 0 rows affected (0.09 sec)
+
+mysql> insert into pay(name,age)values("bob",21),("tom",27);
+Query OK, 2 rows affected (0.18 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+mysql> insert into pay(name,age)values("boba",21),("toma",27);
+Query OK, 2 rows affected (0.01 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+mysql> select  * from pay;
++------+------+
+| name | age  |
++------+------+
+| bob  |   21 |
+| tom  |   27 |
+| boba |   21 |
+| toma |   27 |
++------+------+
+4 rows in set (0.15 sec)
+
+mysql> 
+
+[root@host53 ~]# mysql -uroot -p666qqq...B -e 'select  * from db1.pay'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+
+| name | age  |
++------+------+
+| bob  |   21 |
+| tom  |   27 |
+| boba |   21 |
+| toma |   27 |
++------+------+
+[root@host53 ~]#
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'select * from db2.pay;'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+
+| name | age  |
++------+------+
+| bob  |   21 |
+| tom  |   27 |
+| boba |   21 |
+| toma |   27 |
++------+------+
+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select  * from db3.pay'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+
+| name | age  |
++------+------+
+| bob  |   21 |
+| tom  |   27 |
+| boba |   21 |
+| toma |   27 |
++------+------+
+[root@host55 ~]#
