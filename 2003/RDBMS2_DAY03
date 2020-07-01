@@ -412,8 +412,8 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 
 		查看使用mod_log 分片规则的表
 		cat schema.xml
- <table name="hotnews" primaryKey="ID" autoIncrement="true" dataNode="dn1,dn2,dn3"
-                           rule="mod-long" />
+ <table name="hotnews" dataNode="dn1,dn2,dn3" rule="mod-long" />
+                           
 
 
 
@@ -447,3 +447,113 @@ Starting Mycat-server...
 [root@host56 ~]# netstat -utnlp | grep 8066
 tcp6       0      0 :::8066                 :::*                    LISTEN      2227/java           
 [root@host56 ~]#
+
+建表存储数据
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> use TESTDB;
+mysql> desc hotnews;
+ERROR 1146 (42S02): Table 'db1.hotnews' doesn't exist
+mysql> 
+mysql> create table hotnews( num int , title char(10) , comment varchar(30), worker char(10));
+Query OK, 0 rows affected (0.16 sec)
+
+mysql> desc hotnews;
++---------+-------------+------+-----+---------+----------------+
+| Field   | Type        | Null | Key | Default | Extra          |
++---------+-------------+------+-----+---------+----------------+
+| ID      | int(11)     | NO   | PRI | NULL    | auto_increment |
+| num     | int(11)     | YES  |     | NULL    |                |
+| title   | char(10)    | YES  |     | NULL    |                |
+| comment | varchar(30) | YES  |     | NULL    |                |
+| worker  | char(10)    | YES  |     | NULL    |                |
++---------+-------------+------+-----+---------+----------------+
+5 rows in set (0.00 sec)
+
+mysql> 
+
+
+[root@host53 ~]# mysql -uroot -p666qqq...B -e 'use db1 ; show tables'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| Tables_in_db1 |
++---------------+
+| employee      |
+| hotnews       |
++---------------+
+[root@host53 ~]# 
+
+
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'use db2 ; show tables'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| Tables_in_db2 |
++---------------+
+| employee      |
+| hotnews       |
++---------------+
+[root@host54 ~]# 
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'use db3 ;  show tables'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| Tables_in_db3 |
++---------------+
+| employee      |
+| hotnews       |
++---------------+
+[root@host55 ~]# 
+
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> select  * from hotnews;
+Empty set (0.39 sec)
+
+mysql> insert into hotnews(num,title,comment,worker)values(9,"xxx","xxxx","xxx"),(9,"yyy","yyyy","yyyy"),(9,"zzz","zzz","zzz");
+Query OK, 3 rows affected (0.20 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> insert into hotnews(num,title,comment,worker)values(6,"xxx","xxxx","xxx"),(7,"yyy","yyyy","yyyy"),(8,"zzz","zzz","zzz");
+Query OK, 3 rows affected (0.02 sec)
+
+mysql> select  * from hotnews;
++------+-------+---------+--------+
+| num  | title | comment | worker |
++------+-------+---------+--------+
+|    7 | yyy   | yyyy    | yyyy   |
+|    9 | xxx   | xxxx    | xxx    |
+|    9 | xxx   | xxxx    | xxx    |
+|    9 | yyy   | yyyy    | yyyy   |
+|    9 | zzz   | zzz     | zzz    |
+|    6 | xxx   | xxxx    | xxx    |
+|    8 | zzz   | zzz     | zzz    |
++------+-------+---------+--------+
+7 rows in set (0.19 sec)
+
+mysql>
+
+[root@host53 ~]# mysql -uroot -p666qqq...B -e 'select  * from db1.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+---------+--------+
+| num  | title | comment | worker |
++------+-------+---------+--------+
+|    9 | xxx   | xxxx    | xxx    |
+|    9 | yyy   | yyyy    | yyyy   |
+|    9 | zzz   | zzz     | zzz    |
+|    6 | xxx   | xxxx    | xxx    |
++------+-------+---------+--------+
+[root@host53 ~]# 
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'select * from db2.hotnews;'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+---------+--------+
+| num  | title | comment | worker |
++------+-------+---------+--------+
+|    7 | yyy   | yyyy    | yyyy   |
++------+-------+---------+--------+
+[root@host54 ~]# 
+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select  * from db3.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+---------+--------+
+| num  | title | comment | worker |
++------+-------+---------+--------+
+|    8 | zzz   | zzz     | zzz    |
++------+-------+---------+--------+
+[root@host55 ~]# 
