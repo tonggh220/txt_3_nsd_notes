@@ -404,3 +404,46 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 |  5 |       10020 | C      | BJ   |
 +----+-------------+--------+------+
 [root@host55 ~]#        
+
+
+++++++++++++++++++++++++++++++++
+	
+	mod_long 求模分片规则: 根据"分片字段的值"与设定的"数字" 求模结果 存储数据
+
+		查看使用mod_log 分片规则的表
+		cat schema.xml
+ <table name="hotnews" primaryKey="ID" autoIncrement="true" dataNode="dn1,dn2,dn3"
+                           rule="mod-long" />
+
+
+
+		找到分片字段名
+		cat  rule.xml
+        <tableRule name="mod-long">
+                <rule> 
+                        <columns>num</columns> 分片字段名  
+                        <algorithm>mod-long</algorithm> 算法
+                </rule>
+        </tableRule>
+
+		设置求模的数字
+            <function name="mod-long" class="io.mycat.route.function.PartitionByMod">
+                <!-- how many data nodes -->
+                <property name="count">3</property>  
+        </function>
+      
+
+		若修改了配置文件需要重启mycat 服务
+[root@host56 ~]# /usr/local/mycat/bin/mycat stop
+Stopping Mycat-server...
+Stopped Mycat-server.
+[root@host56 ~]# 
+[root@host56 ~]# /usr/local/mycat/bin/mycat start
+Starting Mycat-server...
+[root@host56 ~]# 
+[root@host56 ~]# ls /usr/local/mycat/logs/*.pid
+/usr/local/mycat/logs/mycat.pid
+[root@host56 ~]# 
+[root@host56 ~]# netstat -utnlp | grep 8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      2227/java           
+[root@host56 ~]#
