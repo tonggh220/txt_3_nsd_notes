@@ -249,4 +249,158 @@ Starting Mycat-server...
 tcp6       0      0 :::8066                 :::*                    LISTEN      2008/java           
 [root@host56 ~]#
 
-休息10分钟 ，  配置10分钟 到10:32 
+ 客户端访问56主机，建表存储数据
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> use TESTDB;
+mysql> create  table employee(ID int primary key auto_increment , sharding_id int , name char(10) , addr  varchar(30) );
+Query OK, 0 rows affected (0.65 sec)
+
+mysql> desc employee;
++-------------+-------------+------+-----+---------+----------------+
+| Field       | Type        | Null | Key | Default | Extra          |
++-------------+-------------+------+-----+---------+----------------+
+| ID          | int(11)     | NO   | PRI | NULL    | auto_increment |
+| sharding_id | int(11)     | YES  |     | NULL    |                |
+| name        | char(10)    | YES  |     | NULL    |                |
+| addr        | varchar(30) | YES  |     | NULL    |                |
++-------------+-------------+------+-----+---------+----------------+
+4 rows in set (0.23 sec)
+
+mysql> select  * from  employee;
+Empty set (1.96 sec)
+
+mysql> 
+
+[root@host53 ~]# mysql -uroot -p666qqq...B -e 'use db1 ; show tables'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| Tables_in_db1 |
++---------------+
+| employee      |
++---------------+
+[root@host53 ~]# 
+
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'use db2 ; show tables'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| Tables_in_db2 |
++---------------+
+| employee      |
++---------------+
+[root@host54 ~]# 
+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'use db3 ;  show tables'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| Tables_in_db3 |
++---------------+
+| employee      |
++---------------+
+[root@host55 ~]# 
+
+
+]# mysql  -h192.168.4.56  -P8066  -uroot -p123456
+mysql> select  * from  employee;
+Empty set (1.96 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10030,"tom","bj");
+ERROR 1064 (HY000): can't find any valid datanode :EMPLOYEE -> SHARDING_ID -> 10030
+mysql> 
+
+mysql> 
+mysql> insert into employee(sharding_id,name,addr)values(10000,"tom","bj");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10000,"tomA","bj");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10000,"tomB","bj");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10010,"jim","bj");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10010,"jim","bj");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10010,"jim","bj");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10010,"jim","bj");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10020,"jerry","bj");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10020,"jerry","bj");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10020,"jerrya","bj");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10020,"jerryb","bj");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> 
+mysql> insert into employee(sharding_id,name,addr)values(10000,"A","bj"),(10010,"b","bj"),(10020,"C","BJ");
+Query OK, 3 rows affected (0.01 sec)
+
+mysql> select  * from employee;
++----+-------------+--------+------+
+| ID | sharding_id | name   | addr |
++----+-------------+--------+------+
+|  1 |       10000 | tom    | bj   |
+|  2 |       10000 | tomA   | bj   |
+|  3 |       10000 | tomB   | bj   |
+|  4 |       10000 | A      | bj   |
+|  1 |       10020 | jerry  | bj   |
+|  2 |       10020 | jerry  | bj   |
+|  3 |       10020 | jerrya | bj   |
+|  4 |       10020 | jerryb | bj   |
+|  5 |       10020 | C      | BJ   |
+|  1 |       10010 | jim    | bj   |
+|  2 |       10010 | jim    | bj   |
+|  3 |       10010 | jim    | bj   |
+|  4 |       10010 | jim    | bj   |
+|  5 |       10010 | b      | bj   |
++----+-------------+--------+------+
+14 rows in set (0.03 sec)
+
+mysql>
+
+[root@host53 ~]# mysql -uroot -p666qqq...B -e 'select  * from db1.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | addr |
++----+-------------+------+------+
+|  1 |       10000 | tom  | bj   |
+|  2 |       10000 | tomA | bj   |
+|  3 |       10000 | tomB | bj   |
+|  4 |       10000 | A    | bj   |
++----+-------------+------+------+
+[root@host53 ~]# 
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'select  * from db2.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | addr |
++----+-------------+------+------+
+|  1 |       10010 | jim  | bj   |
+|  2 |       10010 | jim  | bj   |
+|  3 |       10010 | jim  | bj   |
+|  4 |       10010 | jim  | bj   |
+|  5 |       10010 | b    | bj   |
++----+-------------+------+------+
+[root@host54 ~]# 
+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select * from db3.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+--------+------+
+| ID | sharding_id | name   | addr |
++----+-------------+--------+------+
+|  1 |       10020 | jerry  | bj   |
+|  2 |       10020 | jerry  | bj   |
+|  3 |       10020 | jerrya | bj   |
+|  4 |       10020 | jerryb | bj   |
+|  5 |       10020 | C      | BJ   |
++----+-------------+--------+------+
+[root@host55 ~]#        
