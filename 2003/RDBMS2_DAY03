@@ -202,3 +202,51 @@ mysql>
 mysql> exit
 Bye
 [root@host50 ~]#
+
+6 分片规则的使用
+		6.1 枚举法 sharding-by-intfile
+			表中分片字段的值 必须在 规则文件 定义的值里 选择
+
+           cat schema.xml
+ <table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3" rule="sharding-by-intfile" />          
+
+  ]# cat  rule.xml  (存放分片规则 及 对应的 算法（计算规则）)
+	<tableRule name="sharding-by-intfile">  分片规则名称
+                <rule>
+                        <columns>sharding_id</columns>  分片字段名
+                        <algorithm>hash-int</algorithm>  算法
+                </rule>
+        </tableRule>
+
+	 <function name="hash-int"
+                class="io.mycat.route.function.PartitionByFileMap"> 算法调用的程序
+                <property name="mapFile">partition-hash-int.txt</property> 分片规则的配置文件
+         </function>
+
+
+  ]# vim /usr/local/mycat/conf/partition-hash-int.txt  定义分片字段的值
+分片字段值=第几台数据库服务器
+10000=0  #0 匹配第1台数据库服务器 dn1  mysql53  192.168.4.53 db1
+10010=1  #1 匹配第2台数据库服务器 dn2  mysql54  192.168.4.54 db2
+10020=2  #2 匹配第3台数据库服务器 dn3  mysql55  192.168.4.55 db3
+
+[root@host56 ~]# /usr/local/mycat/bin/mycat stop
+Stopping Mycat-server...
+Stopped Mycat-server.
+[root@host56 ~]# 
+[root@host56 ~]# ls /usr/local/mycat/logs/*.pid
+ls: 无法访问/usr/local/mycat/logs/*.pid: 没有那个文件或目录
+[root@host56 ~]# 
+[root@host56 ~]# netstat -utnlp  | grep  8066
+[root@host56 ~]# 
+[root@host56 ~]# 
+[root@host56 ~]# /usr/local/mycat/bin/mycat  start
+Starting Mycat-server...
+[root@host56 ~]# netstat -utnlp  | grep  8066
+[root@host56 ~]# ls /usr/local/mycat/logs/*.pid
+/usr/local/mycat/logs/mycat.pid
+[root@host56 ~]# netstat -utnlp  | grep  8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      2008/java           
+[root@host56 ~]#
+
+休息10分钟 ，  配置10分钟 到10:32 
