@@ -350,3 +350,51 @@ app1 (pid:1917) is running(0:PING_OK), master:192.168.4.51
 [root@host57 ~]# ls /etc/mha/  查看工作目录文件列表
 app1.cnf  app1.master_status.health  manager.log  master_ip_failover
 [root@host57 ~]# 
+
+#######################################################################
+	4.5 访问集群
+		在当前的主服务器51 添加客户端连接账号
+]# mysql -uroot -p123qqq...A
+mysql> create database db9;
+mysql> create table db9.t1(id int);
+mysql> grant  select , insert on  plj99@"%" identified by "123qqq...A";
+		
+
+		客户端连接vip 访问数据库服务 
+		
+[root@host50 ~]# mysql -h192.168.4.100 -uplj99 -p123qqq...A
+
+mysql> insert into db9.t1 values(999);
+mysql> select  * from db9.t1;
++------+
+| id   |
++------+
+|  999 |
++------+
+1 row in set (0.00 sec)
+
+mysql>	
+
+#########################################################################
+	4.6 测试集群的高可用：
+            测试结果：51的数据库服务停止后 客户端50 依然可以连接192.168.4.100访问数据
+
+[root@host51 ~]# systemctl  stop  mysqld  （会释放vip地址100）
+
+57主机的管理服务会自动停止 
+[root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf
+
+
+在52 或 53 主机查看vip 地址
+]# ip addr show  | grep  -i 192 （谁被选举为新master 谁就有vip100）
+
+另一台 数据库服务器会自动做新的master的从服务器 ]# mysql -uroot -p666qqq...B -e 'show slave status \G '
+
+
+客户端50 依然可以连接192.168.4.100访问数据 host50]# mysql -h192.168.4.100 -uplj99 -p123qqq...A
+
+在管理主机57查看app1.cnf文件， 只剩下2台数据库服务器，启动管理服务会自动监控当前的主数据库服务器
+
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf  --ignore_last_failover 
+
+ [root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf  开新终端查看服务的状态
