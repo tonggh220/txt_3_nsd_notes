@@ -357,7 +357,7 @@ app1.cnf  app1.master_status.health  manager.log  master_ip_failover
 ]# mysql -uroot -p123qqq...A
 mysql> create database db9;
 mysql> create table db9.t1(id int);
-mysql> grant  select , insert on  plj99@"%" identified by "123qqq...A";
+mysql> grant  select , insert on *.*  to  plj99@"%" identified by "123qqq...A";
 		
 
 		客户端连接vip 访问数据库服务 
