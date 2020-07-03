@@ -460,7 +460,7 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 app1 (pid:3495) is running(0:PING_OK), master:192.168.4.52
 [root@host57 ~]# 
 			检查主从同步
-[root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf （此时没有51）			
+[root@host57 ~]# masterha_check_repl   --conf=/etc/mha/app1.cnf （此时没有51）			
 
 			修改主配置文件，添加主机51
 [root@host57 ~]# vim /etc/mha/app1.cnf
