@@ -319,4 +319,34 @@ rpl_semi_sync_slave_enabled=1
 			再重启51 的 数据库服务
 			然后查看 52 和 53 主机 slave 进程的状态
 
+        4.4 启动管理服务
+		在57  测试ssh免密登录配置
+[root@host57 ~]# masterha_check_ssh --conf=/etc/mha/app1.cnf 
 
+Fri Jul  3 22:07:53 2020 - [info] All SSH connection tests passed successfully.
+
+
+		在57  测试主从同步配置
+[root@host57 ~]# masterha_check_repl --conf=/etc/mha/app1.cnf 
+MySQL Replication Health is OK.
+
+		在57  启动管理服务
+
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf  --ignore_last_failover   启动服务，启动信息会占用终端显示
+Fri Jul  3 22:27:18 2020 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Fri Jul  3 22:27:18 2020 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Fri Jul  3 22:27:18 2020 - [info] Reading server configuration from /etc/mha/app1.cnf..
+
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf  #开新终端查看状态
+app1 (pid:1917) is running(0:PING_OK), master:192.168.4.51
+[root@host57 ~]# 
+
+查看主服务器 51 使用部署的vip 地址 192.168.4.100
+[root@host51 ~]# ip addr show  | grep  192
+    inet 192.168.4.51/24 brd 192.168.4.255 scope global noprefixroute ens33
+    inet 192.168.4.100/24 brd 192.168.4.255 scope global secondary ens33:1
+[root@localhost ~]# 
+
+[root@host57 ~]# ls /etc/mha/  查看工作目录文件列表
+app1.cnf  app1.master_status.health  manager.log  master_ip_failover
+[root@host57 ~]# 
