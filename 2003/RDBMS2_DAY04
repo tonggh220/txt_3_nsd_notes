@@ -287,4 +287,36 @@ net-tools-2.0-0.22.20131004git.el7.x86_64
     inet 192.168.4.100/24 brd 192.168.4.255 scope global secondary ens33:1
 [root@localhost ~]#
 
+                4.3 优化数据库服务器的配置 （没有新知识 ，要理解问什么要这样配置）
+		4.3.1  在所有数据库服务器51 52 53 安装mha_node软件
+	]# yum -y install /var/ftp/upload/mha/mha4mysql-node-0.56-0.el6.noarch.rpm
+	
+		4.3.2 用户授权
+			 在数据库服务器51 52 53 添加监控用户root
+		mysql> grant all on  *.*  to root@"%" identified by "123qqq...A";
+
+			 在备用数据库服务器 52 53 添加同步数据连接用户repluser
+
+		mysql> grant replication slave on *.*  to repluser@"%" 	identified by "123qqq...A";	
+
+
+		4.3.3 在所有数据库服务器启用半同步复制模式
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so;"
+
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1
+
+
+	        4.3.4 在备用数据库服务器 52 53 上启用binlog日志
+			log_bin=日志名
+
+		4.3.5 禁止51 52 53自动删除本机的中继日志文件
+			relay_log_purge=0
+
+
+	        4.3.6 重启数据库服务
+			先重启52 和 53 的数据库服务
+			再重启51 的 数据库服务
+			然后查看 52 和 53 主机 slave 进程的状态
+
 
