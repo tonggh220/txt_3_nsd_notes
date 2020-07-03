@@ -398,3 +398,91 @@ mysql>
 [root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf  --ignore_last_failover 
 
  [root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf  开新终端查看服务的状态
+
+
+ 	4.7 修复宕机的数据库服务器
+		4.7.1 配置数据库服务器51
+			启动mysql服务  ]# systemctl  start  mysqld 
+
+			与主服务器数据一致
+[root@host52 ~]# ls /var/lib/mysql
+[root@host52 ~]# scp /var/lib/mysql/master52.000001  root@192.168.4.51:/root/
+[root@localhost ~]# mysqlbinlog  /root/master52.000001 | mysql -uroot -p123qqq...A
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@localhost ~]# 
+[root@localhost ~]# mysql -uroot -p123qqq...A -e 'select * from db9.t1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  999 |
+|  888 |
++------+
+[root@localhost ~]# 
+[root@host52 ~]# mysql -uroot -p666qqq...B  -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master52.000001 |      402 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@host52 ~]# 
+			指定主服务器信息
+[root@localhost ~]# mysql -uroot -p123qqq...A -e 'show slave status \g'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@localhost ~]# 
+[root@localhost ~]# mysql -uroot -p123qqq...A -e 'change master to  master_host="192.168.4.52",master_user="repluser",master_password="123qqq...A",master_log_file="master52.000001",master_log_pos=402'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@localhost ~]# 
+
+				启动slave进程
+[root@localhost ~]# mysql -uroot -p123qqq...A -e 'start slave'
+
+
+
+				查看状态信息
+[root@localhost ~]# mysql -uroot -p123qqq...A -e 'show slave status \G' | grep  -i yes
+
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+ 
+[root@localhost ~]# mysql -uroot -p123qqq...A -e 'show slave status \G' | grep  -i master_host
+
+                  Master_Host: 192.168.4.52
+[root@localhost ~]# 
+			
+			
+
+
+		4.7.2 配置管理主机57
+			查看57管理服务的状态
+[root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf 
+app1 (pid:3495) is running(0:PING_OK), master:192.168.4.52
+[root@host57 ~]# 
+			检查主从同步
+[root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf （此时没有51）			
+
+			修改主配置文件，添加主机51
+[root@host57 ~]# vim /etc/mha/app1.cnf
+[server1]
+candidate_master=1
+hostname=192.168.4.51
+port=3306
+:wq
+			
+
+			测试集群环境(检查主从同步)
+[root@host57 ~]# masterha_check_repl  --conf=/etc/mha/app1.cnf
+MySQL Replication Health is OK.
+
+			重启管理服务
+[root@host57 ~]# masterha_stop  --conf=/etc/mha/app1.cnf 
+Stopped app1 successfully.
+[root@host57 ~]# 
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf  --ignore_last_failover (开新终端执行启动服务的命令)
+
+			查看服务状态
+
+[root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf 
+app1 (pid:5114) is running(0:PING_OK), master:192.168.4.52
+[root@host57 ~]# 
