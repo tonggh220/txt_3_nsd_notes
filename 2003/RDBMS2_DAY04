@@ -177,3 +177,34 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 mysql: [Warning] Using a password on the command line interface can be insecure.
                   Master_Host: 192.168.4.51
 [root@host53 mha]#
+
+
+	4.2 配置管理主机
+		4.2.1  安装MHA_manager软件
+			[root@host57 ~]# yum -y install  /var/ftp/upload/mha/mha4mysql-node-0.56-0.el6.noarch.rpm
+
+			]# yum -y install  perl-ExtUtils-*  perl-CPAN*
+
+			[root@host57 ~]# tar -zxvf /var/ftp/upload/mha/mha4mysql-manager-0.56.tar.gz 
+
+[root@host57 ~]# cd mha4mysql-manager-0.56/
+
+[root@host57 mha4mysql-manager-0.56]# perl Makefile.PL 
+*** Module::AutoInstall version 1.03
+*** Checking for Perl dependencies...
+[Core Features]
+- DBI                   ...loaded. (1.627)
+- DBD::mysql            ...loaded. (4.023)
+- Time::HiRes           ...loaded. (1.9725)
+- Config::Tiny          ...loaded. (2.14)
+- Log::Dispatch         ...loaded. (2.41)
+- Parallel::ForkManager ...loaded. (1.18)
+- MHA::NodeConst        ...loaded. (0.56)
+*** Module::AutoInstall configuration finished.
+Checking if your kit is complete...
+Looks good
+Writing Makefile for mha4mysql::manager
+Writing MYMETA.yml and MYMETA.json
+[root@host57 mha4mysql-manager-0.56]#
+[root@host57 mha4mysql-manager-0.56]# make  
+[root@host57 mha4mysql-manager-0.56]# make  install
