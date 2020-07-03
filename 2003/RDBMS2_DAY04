@@ -259,3 +259,32 @@ candidate_master=1
 [root@host57 mha4mysql-manager-0.56]# 
 
 
+
+		根据配置文件app1.cnf的设置，创建故障切换脚本，指定vip地址和网卡名
+
+[root@host57 ~ ]# cp /var/ftp/upload/mha/master_ip_failover /etc/mha/
+
+[root@host57 ~ ]# chmod  +x  /etc/mha/master_ip_failover
+
+[root@host57 ~ ]# vim +35 /etc/mha/master_ip_failover
+
+my $vip = '192.168.4.100/24';  # 指定vip地址 
+my $key = "1";  #VIP地址编号
+my $ssh_start_vip = "/sbin/ifconfig ens33:$key $vip";  #部署vip地址
+my $ssh_stop_vip = "/sbin/ifconfig ens33:$key down";   #释放vip地址
+:wq
+
+		把vip地址100 部署在当前的主服务器51 上
+[root@localhost ~]# which  ifconfig
+/usr/sbin/ifconfig
+[root@localhost ~]# rpm -qf /usr/sbin/ifconfig 
+net-tools-2.0-0.22.20131004git.el7.x86_64
+[root@localhost ~]# 			
+[root@localhost ~]# ifconfig ens33:1 192.168.4.100
+[root@localhost ~]# 
+[root@localhost ~]# ip addr show  | grep -i 192
+    inet 192.168.4.51/24 brd 192.168.4.255 scope global noprefixroute ens33
+    inet 192.168.4.100/24 brd 192.168.4.255 scope global secondary ens33:1
+[root@localhost ~]#
+
+
