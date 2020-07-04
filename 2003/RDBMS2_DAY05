@@ -473,3 +473,147 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 		 
 
 	    6 工作过程	
+
+        	二、MySQL存储引擎（纯理论： 难点概念和专业术语的理解）             
+		2.1存储引擎介绍（什么是存储引擎）
+			MySQL服务软件自带功能程序。不同的存储引擎有不同数据存储方式和功能。存储引擎是表的处理器。
+
+
+
+			MySQL服务的体系结构
+			MySQL服务工作过程
+			MySQL服务处理查询请求的过程
+		    
+		2.2 存储引擎的使用
+			查看数据库服务器已有表使用的存储引擎
+			show create table 库.表 \G
+
+mysql> show create table db10.t1 \G
+*************************** 1. row ***************************
+       Table: t1
+Create Table: CREATE TABLE `t1` (
+  `id` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+1 row in set (0.01 sec)
+
+mysql> 
+			
+			查看数据库服务支持的存储引擎
+
+			]# mysql -uroot -p密码 -e 'show  engines' 
+
+
+
+			修改数据库服务默认使用的存储引擎  5分钟 15:59
+]# vim /etc/my.cnf
+	[mysqld]
+	default_storage_engine="myisam"
+:wq
+
+]# systemctl restart mysqld
+
+]# mysql -uroot -p密码 -e 'show  engines'
+myisam   default
+
+			
+
+			建表时指定表使用的存储引擎
+			create table 库名.表名（字段名列表）engine=存储引擎名；
+
+			修改表使用的存储引擎
+			alter table  库名.表名 engine=存储引擎名；
+
+mysql> use db10;
+Database changed
+mysql> 
+mysql> create table  db10.t3(name char(10))engine=memory;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> create table  db10.t4(name char(10))engine=innodb;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> create table  db10.t5(name char(10));
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> 
+
+mysql> system  ls /var/lib/mysql/db10/t3.*
+/var/lib/mysql/db10/t3.frm
+mysql> 
+mysql> system  ls /var/lib/mysql/db10/t4.*
+/var/lib/mysql/db10/t4.frm  /var/lib/mysql/db10/t4.ibd
+mysql> 
+mysql> system  ls /var/lib/mysql/db10/t5.*
+/var/lib/mysql/db10/t5.frm  /var/lib/mysql/db10/t5.MYD	/var/lib/mysql/db10/t5.MYI
+mysql>
+
+mysql> insert into db10.t3 values("bbb");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db10.t4 values("bbb");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db10.t5 values("bbb");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db10.t3;
++------+
+| name |
++------+
+| bbb  |
++------+
+1 row in set (0.00 sec)
+
+mysql> select  * from db10.t4;
++------+
+| name |
++------+
+| bbb  |
++------+
+1 row in set (0.00 sec)
+
+mysql> select  * from db10.t5;
++------+
+| name |
++------+
+| bbb  |
++------+
+1 row in set (0.00 sec)
+
+mysql>exit
+
+[root@host50 ~]# systemctl  restart mysqld
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'select  * from  db10.t3'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'desc  db10.t3'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| name  | char(10) | YES  |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
+[root@host50 ~]# 
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'select  * from  db10.t4'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| name |
++------+
+| bbb  |
++------+
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'select  * from  db10.t5'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| name |
++------+
+| bbb  |
++------+
+[root@host50 ~]#   
+mysql> alter table db10.t3 engine=myisam;
+Query OK, 0 rows affected (0.01 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+
+mysql> 
+mysql> system ls /var/lib/mysql/db10/t3.*
+/var/lib/mysql/db10/t3.frm  /var/lib/mysql/db10/t3.MYD	/var/lib/mysql/db10/t3.MYI
+mysql>  
