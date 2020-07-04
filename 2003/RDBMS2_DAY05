@@ -642,3 +642,60 @@ mysql> system ls /var/lib/mysql/db10/t3.*
 mysql>  
 
 
+	 	2.3 常用存储引擎介绍
+			myisam存储引擎特点
+				支持表级锁
+				不支持事务、事务回滚、外键
+				对应的表文件（3个表文件） 
+					表名.frm 表结构 (desc 表名)
+					表名.MYI 索引   (show index from 表名 ）
+					表名.MYD	 数据   (select  * from 表名)	
+		
+			innodb存储引擎特点
+				支持行级锁定
+				支持事务、事务回滚、外键
+				对应的表文件（2个表文件）
+					表名.frm 表结构 (desc 表名)
+					表名.ibd (索引+数据)
+
+		   相关概念：
+		    	事务？ 建立连接--->执行一系列的SQL命令--->断开连接
+
+			       这个过程被称为事务。
+
+			事务回滚？建立连接后，在执行一系列的SQL命令时，可以把错误的操作结果，恢复到出错之前的正确状态。
+
+			事务日志文件：记录对innodb存储引擎的表执行的sql操作
+			cd /var/lib/mysql/
+			ib_logfile0   ib_logfile1  ibdata1
+
+			表级锁(myisam)：对表做查询数据（select）或写入数据(insert update delete )时，无论访问的是表的一行还多行，都把整张表锁上，锁上后就不允许其他客户端访问了。当前访问完成后会自动释放锁，其他客户端才可以访问。
+如 select  * from t1 where id =1  ;
+   update  t1 set age=19 where  id <=10 ;
+
+ 
+
+			行级锁(innodb)对表做查询数据（select）或写入数据(insert update delete )时，仅仅对被访问的行分别加锁。没有被访问不加锁，其他客户端可以同时访问没有被加锁的行
+
+如 select  * from t1 where id =1  ;  仅对第1行加锁
+   update  t1 set age=19 where  id <=10 ;  仅对第10行加锁
+
+
+			加锁的目的：解决并发访问的冲突文件
+pc1  update  t1  set name ="bob" where id=1;
+pc2  update  t1  set name ="tom" where id=2;  
+
+			锁类型：
+				读锁（select）共享锁（加了读锁，如果再有客户端访问执行的是select 可以同时查 如果是写访问会被拒绝）
+
+				写锁 (insert update delete)  排它锁，（加了写锁后，再有客户端访问无论是查和写都会被禁止，只有释放写锁后才允许访问）
+
+			事务的特点？ ACID
+			原子性 隔离性 一致性 持久性
+				
+			事务特点演示：明天演示。
+
+		2.4 工作中，建表时，如何决定表使用哪个存储引擎
+查询（select）访问多的表，适合使用myisam存储引擎，可以节省系统硬件资源
+写(insert update delete)访问多的表，适合使用innodb存储引擎，好处处理的并发访问量大。
+
