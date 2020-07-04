@@ -23,3 +23,47 @@ yum -y install  Percona-XtraDB-Cluster-*.rpm
 ]# ls /etc/percona-xtradb-cluster.conf.d/
 mysqld.cnf  mysqld_safe.cnf  wsrep.cnf
 [root@pxc71 pxc]#
+
+			4.2 在3台主机分别修改配置文件
+				1 修改MySQL服务配置文件(只需要修改server_id)
+pxc71~]# mysqld.cnf
+[mysqld]
+server-id=71
+:wq
+
+pxc72~]# mysqld.cnf
+[mysqld]
+server-id=72
+:wq
+
+pxc73~]# mysqld.cnf
+[mysqld]
+server-id=73
+:wq
+
+				2 修改集群配置文件
+pxc71~]# vim  wsrep.cnf
+         8 wsrep_cluster_address=gcomm://192.168.4.71,192.168.4.72,192.168.4.73
+	 25 wsrep_node_address=192.168.4.71
+	 27 wsrep_cluster_name=pxc-cluster
+	 30 wsrep_node_name=pxc-cluster-node-71
+         39 wsrep_sst_auth="sstuser:123qqq...A"
+:wq
+
+pxc72~]# vim  wsrep.cnf
+         8 wsrep_cluster_address=gcomm://192.168.4.71,192.168.4.72,192.168.4.73
+	 25 wsrep_node_address=192.168.4.72
+	 27 wsrep_cluster_name=pxc-cluster
+	 30 wsrep_node_name=pxc-cluster-node-72
+         39 wsrep_sst_auth="sstuser:123qqq...A"
+
+pxc73~]# vim  wsrep.cnf
+ 	 8 wsrep_cluster_address=gcomm://192.168.4.71,192.168.4.72,192.168.4.73
+	 25 wsrep_node_address=192.168.4.73
+	 27 wsrep_cluster_name=pxc-cluster
+	 30 wsrep_node_name=pxc-cluster-node-73
+         39 wsrep_sst_auth="sstuser:123qqq...A"
+:wq
+
+				3 mysql进程的运行参数文件默认即可
+				]# cat  mysqld_safe.cnf
