@@ -111,6 +111,9 @@ mysql>
 mysql> grant reload, lock tables,replication client,process on *.* to sstuser@"localhost" identified by  "123qqq...A"; 
 Query OK, 0 rows affected, 1 warning (0.01 sec)
 
+reload, lock tables,replication client,process
+装载数据，锁表，查看MySQL服务状态，可以使用命令停止MySQL服务
+
 mysql> select user from mysql.user where user="sstuser";
 +---------+
 | user    |
