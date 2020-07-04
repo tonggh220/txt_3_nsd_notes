@@ -1,0 +1,19 @@
+cd pxc/
+
+ls
+
+yum -y  install libev-4.15-1.el6.rf.x86_64.rpm 
+
+yum -y install percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm 
+
+yum -y install qpress-1.1-14.11.x86_64.rpm 
+
+tar -xvf Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar 
+
+ls Percona-XtraDB-Cluster-*.rpm
+
+yum -y install  Percona-XtraDB-Cluster-*.rpm
+
+]# ls /etc/percona-xtradb-cluster.conf.d/
+mysqld.cnf  mysqld_safe.cnf  wsrep.cnf
+[root@pxc71 pxc]#
