@@ -155,3 +155,109 @@ mysql> show databases;
 5 rows in set (0.00 sec)
 
 mysql> 
+
+[root@pxc71 ~]# setenforce 0
+[root@pxc71 ~]# systemctl  stop firewalld
+[root@pxc71 ~]# netstat  -utnlp  | grep  4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      15043/mysqld        
+[root@pxc71 ~]#
+
+			4.4 在另外2台主机启动mysql服务
+[root@pxc72 ~]# systemctl  stop firewalld
+[root@pxc72 ~]# setenforce 0
+[root@pxc72 ~]# ls /var/lib/mysql
+[root@pxc72 ~]# ls /var/lib/mysql
+[root@pxc72 ~]# 
+[root@pxc72 ~]# systemctl  start mysql
+[root@pxc72 ~]# 
+[root@pxc72 ~]# ls /var/lib/mysql
+auto.cnf         gvwstate.dat            mysql               server-cert.pem
+bbsdb            ib_buffer_pool          mysql.sock          server-key.pem
+ca-key.pem       ibdata1                 mysql.sock.lock     sys
+ca.pem           ib_logfile0             performance_schema  xb_doublewrite
+client-cert.pem  ib_logfile1             private_key.pem     xtrabackup_binlog_pos_innodb
+client-key.pem   ibtmp1                  public_key.pem      xtrabackup_galera_info
+galera.cache     innobackup.move.log     pxc72-bin.000001    xtrabackup_info
+grastate.dat     innobackup.prepare.log  pxc72-bin.index     xtrabackup_master_key_id
+[root@pxc72 ~]# 
+[root@pxc72 ~]# netstat  -utnlp  | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      13998/mysqld        
+[root@pxc72 ~]# netstat  -utnlp  | grep  4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      13998/mysqld        
+[root@pxc72 ~]# mysql -uroot -p123456 -e 'show databases'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| bbsdb              |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+[root@pxc72 ~]# mysql -uroot -p123456 -e 'select user from mysql.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| user          |
++---------------+
+| mysql.session |
+| mysql.sys     |
+| root          |
+| sstuser       |
++---------------+
+[root@pxc72 ~]# 
+
+
+
+
+
+
+
+[root@pxc73 ~]# setenforce 0
+[root@pxc73 ~]# systemctl  stop firewalld
+[root@pxc73 ~]# ls /var/lib/mysql
+[root@pxc73 ~]#
+[root@pxc73 ~]# ls /var/lib/mysql
+[root@pxc73 ~]# 
+[root@pxc73 ~]# systemctl  start mysql
+[root@pxc73 ~]# 
+[root@pxc73 ~]# ls /var/lib/mysql
+auto.cnf         gvwstate.dat            mysql               server-cert.pem
+bbsdb            ib_buffer_pool          mysql.sock          server-key.pem
+ca-key.pem       ibdata1                 mysql.sock.lock     sys
+ca.pem           ib_logfile0             performance_schema  xb_doublewrite
+client-cert.pem  ib_logfile1             private_key.pem     xtrabackup_binlog_pos_innodb
+client-key.pem   ibtmp1                  public_key.pem      xtrabackup_galera_info
+galera.cache     innobackup.move.log     pxc73-bin.000001    xtrabackup_info
+grastate.dat     innobackup.prepare.log  pxc73-bin.index     xtrabackup_master_key_id
+[root@pxc73 ~]# 
+[root@pxc73 ~]# netstat  -utnlp  | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      11918/mysqld        
+[root@pxc73 ~]# netstat  -utnlp  | grep 4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      11918/mysqld        
+[root@pxc73 ~]# 
+[root@pxc73 ~]# mysql -uroot -p123456
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| bbsdb              |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.07 sec)
+
+mysql> select user from mysql.user;
++---------------+
+| user          |
++---------------+
+| mysql.session |
+| mysql.sys     |
+| root          |
+| sstuser       |
++---------------+
+4 rows in set (0.00 sec)
+
+mysql> 	
