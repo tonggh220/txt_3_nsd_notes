@@ -262,6 +262,131 @@ mysql> select user from mysql.user;
 
 mysql> 
 
+##################################################################################
+ 	    5 测试集群
+			1 连接集群存取数据（要求表中必须有主键）
+客户端连接集群中的任意1台服务器都可以存取数据，另外2台服务器会自动同步数据到本机
+
+				1.1 在集群中的任意1台服务器添加客户端连接的用户
+				mysql> grant select , insert  on bbsdb.*  to  plj@"%" identified by "123456";
+
+				1.2 客户端访问数据库服务
+
+host50~]# mysql  -h集群中的任意1台服务器 -u用户名 -p密码
+
+[root@host50 ~]# mysql -h192.168.4.71 -uplj -p123456
+MySQL [(none)]> show grants;
++------------------------------------------------+
+| Grants for plj@%                               |
++------------------------------------------------+
+| GRANT USAGE ON *.* TO 'plj'@'%'                |
+| GRANT SELECT, INSERT ON `bbsdb`.* TO 'plj'@'%' |
++------------------------------------------------+
+2 rows in set (0.00 sec)
+
+MySQL [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| bbsdb              |
++--------------------+
+2 rows in set (0.00 sec)
+
+MySQL [(none)]> use bbsdb;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+MySQL [bbsdb]> show tables;
++-----------------+
+| Tables_in_bbsdb |
++-----------------+
+| t1              |
++-----------------+
+1 row in set (0.00 sec)
+
+MySQL [bbsdb]> desc t1;
++-------+----------+------+-----+---------+----------------+
+| Field | Type     | Null | Key | Default | Extra          |
++-------+----------+------+-----+---------+----------------+
+| id    | int(11)  | NO   | PRI | NULL    | auto_increment |
+| name  | char(10) | YES  |     | NULL    |                |
++-------+----------+------+-----+---------+----------------+
+2 rows in set (0.01 sec)
+
+MySQL [bbsdb]> 
+MySQL [bbsdb]> insert into  bbsdb.t1(name) values("a");
+Query OK, 1 row affected (0.00 sec)
+
+MySQL [bbsdb]> insert into  bbsdb.t1(name) values("aa");
+Query OK, 1 row affected (0.07 sec)
+
+MySQL [bbsdb]> insert into  bbsdb.t1(name) values("aaa");
+Query OK, 1 row affected (0.04 sec)
+
+MySQL [bbsdb]> select @@hostname;
++------------+
+| @@hostname |
++------------+
+| pxc71      |
++------------+
+1 row in set (0.00 sec)
+
+MySQL [bbsdb]> select  * from  bbsdb.t1;
++----+------+
+| id | name |
++----+------+
+|  1 | a    |
+|  4 | aa   |
+|  7 | aaa  |
++----+------+
+3 rows in set (0.00 sec)
+
+MySQL [bbsdb]>exit
+ [root@host50 ~]# mysql -h192.168.4.72 -uplj -p123456 -e 'select * from bbsdb.t1'
++----+------+
+| id | name |
++----+------+
+|  1 | a    |
+|  4 | aa   |
+|  7 | aaa  |
++----+------+
+[root@host50 ~]# mysql -h192.168.4.73 -uplj -p123456 -e 'select * from bbsdb.t1'
++----+------+
+| id | name |
++----+------+
+|  1 | a    |
+|  4 | aa   |
+|  7 | aaa  |
++----+------+
+[root@host50 ~]#
+
+[root@host50 ~]# mysql -h192.168.4.72 -uplj -p123456 -e 'insert into bbsdb.t1(name) values("b"),("bb"),("bbb")'
+[root@host50 ~]# mysql -h192.168.4.72 -uplj -p123456 -e 'select * from bbsdb.t1'
++----+------+
+| id | name |
++----+------+
+|  1 | a    |
+|  4 | aa   |
+|  7 | aaa  |
+|  8 | b    |
+| 11 | bb   |
+| 14 | bbb  |
++----+------+
+[root@host50 ~]# mysql -h192.168.4.73 -uplj -p123456 -e 'select * from bbsdb.t1'
++----+------+
+| id | name |
++----+------+
+|  1 | a    |
+|  4 | aa   |
+|  7 | aaa  |
+|  8 | b    |
+| 11 | bb   |
+| 14 | bbb  |
++----+------+
+[root@host50 ~]#            
+
 
 
 			2 测试高可用
