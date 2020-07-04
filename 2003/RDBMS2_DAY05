@@ -260,4 +260,91 @@ mysql> select user from mysql.user;
 +---------------+
 4 rows in set (0.00 sec)
 
-mysql> 	
+mysql> 
+
+
+
+			2 测试高可用
+集群中的任意1台服务器宕机 ，都不影响另外2台服务器提供服务，（如果3台同时都宕机了集群就坏了。）
+			查看集群状态信息
+			]# mysql -uroot -p123456 -e 'show status like "%wsrep%";'
+
+[root@pxc71 ~]# systemctl  stop  mysql@bootstrap.service  (如果停止72 和 73 的服务 执行 systemctl stop mysql)
+[root@pxc71 ~]# 
+
+[root@host50 ~]# mysql -h192.168.4.71 -uplj -p123456 -e 'select * from bbsdb.t1'
+ERROR 2003 (HY000): Can't connect to MySQL server on '192.168.4.71' (111)
+
+[root@host50 ~]# mysql -h192.168.4.72 -uplj -p123456 -e 'select * from bbsdb.t1'
++----+------+
+| id | name |
++----+------+
+|  1 | a    |
+|  4 | aa   |
+|  7 | aaa  |
+|  8 | b    |
+| 11 | bb   |
+| 14 | bbb  |
++----+------+
+[root@host50 ~]# mysql -h192.168.4.73 -uplj -p123456 -e 'select * from bbsdb.t1'
++----+------+
+| id | name |
++----+------+
+|  1 | a    |
+|  4 | aa   |
+|  7 | aaa  |
+|  8 | b    |
+| 11 | bb   |
+| 14 | bbb  |
++----+------+
+[root@host50 ~]# 
+
+
+[root@host50 ~]# mysql -h192.168.4.72 -uplj -p123456 -e 'insert into bbsdb.t1(name) values("c"),("cc"),("ccc")'
+[root@host50 ~]# mysql -h192.168.4.72 -uplj -p123456 -e 'insert into bbsdb.t1(name) values("c"),("cc"),("ccc")'
+[root@host50 ~]# 
+
+[root@host50 ~]# mysql -h192.168.4.73 -uplj -p123456 -e 'select * from bbsdb.t1'
++----+------+
+| id | name |
++----+------+
+|  1 | a    |
+|  4 | aa   |
+|  7 | aaa  |
+|  8 | b    |
+| 11 | bb   |
+| 14 | bbb  |
+| 17 | c    |
+| 19 | cc   |
+| 21 | ccc  |
+| 23 | c    |
+| 25 | cc   |
+| 27 | ccc  |
++----+------+
+[root@host50 ~]# 
+
+			3 测试主机的自动恢复
+[root@pxc71 ~]# systemctl  start  mysql
+[root@pxc71 ~]# mysql -uroot -p123456 -e 'show status like "%wsrep%"'
+[root@pxc71 ~]# mysql -uroot -p123456 -e 'select  * from bbsdb.t1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+------+
+| id | name |
++----+------+
+|  1 | a    |
+|  4 | aa   |
+|  7 | aaa  |
+|  8 | b    |
+| 11 | bb   |
+| 14 | bbb  |
+| 17 | c    |
+| 19 | cc   |
+| 21 | ccc  |
+| 23 | c    |
+| 25 | cc   |
+| 27 | ccc  |
++----+------+
+[root@pxc71 ~]#
+		 
+
+	    6 工作过程	
