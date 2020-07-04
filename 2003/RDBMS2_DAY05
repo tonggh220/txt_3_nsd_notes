@@ -67,3 +67,88 @@ pxc73~]# vim  wsrep.cnf
 
 				3 mysql进程的运行参数文件默认即可
 				]# cat  mysqld_safe.cnf
+
+4.3 在任意1台主机做集群初始化操作
+[root@pxc71 ~]# ls /var/lib/mysql
+[root@pxc71 ~]# 
+[root@pxc71 ~]# systemctl  start  mysql@bootstrap.service
+[root@pxc71 ~]# 
+[root@pxc71 ~]# ls /var/lib/mysql
+auto.cnf         grastate.dat    ibtmp1              private_key.pem   server-key.pem
+ca-key.pem       gvwstate.dat    mysql               public_key.pem    sys
+ca.pem           ib_buffer_pool  mysqld_safe.pid     pxc71-bin.000001  xb_doublewrite
+client-cert.pem  ibdata1         mysql.sock          pxc71-bin.000002
+client-key.pem   ib_logfile0     mysql.sock.lock     pxc71-bin.index
+galera.cache     ib_logfile1     performance_schema  server-cert.pem
+[root@pxc71 ~]# 
+[root@pxc71 ~]# netstat  -utnlp  | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      15043/mysqld        
+[root@pxc71 ~]# ls /var/log/mysqld.log 
+/var/log/mysqld.log
+[root@pxc71 ~]# 
+[root@pxc71 ~]# grep password /var/log/mysqld.log 
+2020-07-04T11:01:17.432587Z 1 [Note] A temporary password is generated for root@localhost: Bh_rrOVnU1uY
+[root@pxc71 ~]# 
+[root@pxc71 ~]# mysql -uroot -p'Bh_rrOVnU1uY'
+mysql> show databases;
+ERROR 1820 (HY000): You must reset your password using ALTER USER statement before executing this statement.
+mysql> 
+mysql> alter user root@"localhost" identified by "123456";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql> 
+mysql> grant reload, lock tables,replication client,process on *.* to sstuser@"localhost" identified by  "123qqq...A"; 
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+mysql> select user from mysql.user where user="sstuser";
++---------+
+| user    |
++---------+
+| sstuser |
++---------+
+1 row in set (0.00 sec)
+
+mysql> exit
+Bye
+[root@pxc71 ~]# mysql -uroot -p123456
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql> create database bbsdb;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> create table bbsdb.t1(id int primary key auto_increment , name char(10));
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| bbsdb              |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+
+mysql> 
