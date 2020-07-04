@@ -678,7 +678,7 @@ mysql>
 			行级锁(innodb)对表做查询数据（select）或写入数据(insert update delete )时，仅仅对被访问的行分别加锁。没有被访问不加锁，其他客户端可以同时访问没有被加锁的行
 
 如 select  * from t1 where id =1  ;  仅对第1行加锁
-   update  t1 set age=19 where  id <=10 ;  仅对第10行加锁
+   update  t1 set age=19 where  id <=10 ;  仅对前10行分别加锁
 
 
 			加锁的目的：解决并发访问的冲突文件
