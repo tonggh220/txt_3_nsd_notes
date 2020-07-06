@@ -76,3 +76,273 @@ OK
 127.0.0.1:6379> exit  断开连接
 [root@host50 ~]#
 [root@host50 ~]# ls /var/lib/redis/6379/  到存储时间后会自动把内存里的数据保存到数据库目录下
+
+
+		常用管理命令的使用  
+		
+
+
+127.0.0.1:6379> mset x 1 y 2 z 3
+OK
+127.0.0.1:6379> keys *
+1) "x"
+2) "y"
+3) "class"
+4) "age"
+5) "z"
+6) "name"
+127.0.0.1:6379>
+
+127.0.0.1:6379> mget  x y z age
+1) "1"
+2) "2"
+3) "3"
+4) "19"
+127.0.0.1:6379>
+127.0.0.1:6379> get w
+(nil)
+127.0.0.1:6379> keys *
+1) "x"
+2) "y"
+3) "class"
+4) "age"
+5) "z"
+6) "name"
+127.0.0.1:6379> mget x y w
+1) "1"
+2) "2"
+3) (nil)
+127.0.0.1:6379> 
+
+
+127.0.0.1:6379> keys *
+1) "x"
+2) "y"
+3) "class"
+4) "age"
+5) "z"
+6) "name"
+127.0.0.1:6379> select 1
+OK
+127.0.0.1:6379[1]> keys *
+(empty list or set)
+127.0.0.1:6379[1]> select  0
+OK
+127.0.0.1:6379> keys *
+1) "x"
+2) "y"
+3) "class"
+4) "age"
+5) "z"
+6) "name"
+127.0.0.1:6379>
+127.0.0.1:6379> select 16
+(error) ERR DB index is out of range
+127.0.0.1:6379> 
+127.0.0.1:6379> select 15
+OK
+127.0.0.1:6379[15]> select 0
+OK
+127.0.0.1:6379>
+
+127.0.0.1:6379> keys  school
+(empty list or set)
+127.0.0.1:6379> keys  ?
+1) "x"
+2) "y"
+3) "z"
+127.0.0.1:6379> 
+127.0.0.1:6379> keys  ???
+1) "age"
+127.0.0.1:6379> 
+127.0.0.1:6379> keys  a??
+1) "age"
+127.0.0.1:6379> keys  *
+1) "x"
+2) "y"
+3) "class"
+4) "age"
+5) "z"
+6) "name"
+127.0.0.1:6379> keys name
+1) "name"
+127.0.0.1:6379> 
+
+127.0.0.1:6379> EXISTS name
+(integer) 1
+127.0.0.1:6379> EXISTS nameA
+(integer) 0
+127.0.0.1:6379> keys *
+1) "x"
+2) "y"
+3) "class"
+4) "age"
+5) "z"
+6) "name"
+127.0.0.1:6379>
+
+127.0.0.1:6379> keys *
+1) "x"
+2) "y"
+3) "class"
+4) "age"
+5) "z"
+6) "name"
+127.0.0.1:6379> ttl x
+(integer) -1
+127.0.0.1:6379> EXPIRE x 20
+(integer) 1
+127.0.0.1:6379> ttl x
+(integer) 13
+127.0.0.1:6379> ttl x
+(integer) 9
+127.0.0.1:6379> ttl x
+(integer) 4
+127.0.0.1:6379> ttl x
+(integer) -2
+127.0.0.1:6379> keys *
+1) "y"
+2) "class"
+3) "age"
+4) "z"
+5) "name"
+127.0.0.1:6379> ttl x
+(integer) -2
+127.0.0.1:6379>
+
+127.0.0.1:6379> set i 9
+OK
+127.0.0.1:6379> type i
+string
+127.0.0.1:6379> mset j 5 k 8
+OK
+127.0.0.1:6379> type j  k
+(error) ERR wrong number of arguments for 'type' command
+127.0.0.1:6379> type j  
+string
+127.0.0.1:6379> type k
+string
+127.0.0.1:6379> 
+
+
+127.0.0.1:6379> lpush tea wk nb dmy plj lx zzg
+(integer) 6
+127.0.0.1:6379> keys *
+1) "y"
+2) "z"
+3) "name"
+4) "i"
+5) "class"
+6) "j"
+7) "k"
+8) "age"
+9) "tea"
+127.0.0.1:6379> get tea
+(error) WRONGTYPE Operation against a key holding the wrong kind of value
+127.0.0.1:6379> 
+127.0.0.1:6379> type tea
+list
+127.0.0.1:6379> LRANGE tea 0 -1
+1) "zzg"
+2) "lx"
+3) "plj"
+4) "dmy"
+5) "nb"
+6) "wk"
+127.0.0.1:6379>
+
+
+127.0.0.1:6379> keys *
+1) "y"
+2) "z"
+3) "name"
+4) "i"
+5) "class"
+6) "j"
+7) "k"
+8) "age"
+9) "tea"
+127.0.0.1:6379> move tea 1
+(integer) 1
+127.0.0.1:6379> keys *
+1) "y"
+2) "z"
+3) "name"
+4) "i"
+5) "class"
+6) "j"
+7) "k"
+8) "age"
+127.0.0.1:6379> select 1
+OK
+127.0.0.1:6379[1]> keys *
+1) "tea"
+127.0.0.1:6379[1]> 
+
+127.0.0.1:6379[1]> keys *
+1) "tea"
+127.0.0.1:6379[1]> del tea
+(integer) 1
+127.0.0.1:6379[1]> keys *
+(empty list or set)
+127.0.0.1:6379[1]> 
+127.0.0.1:6379[1]> 
+127.0.0.1:6379> keys *
+1) "y"
+2) "z"
+3) "name"
+4) "i"
+5) "class"
+6) "j"
+7) "k"
+8) "age"
+127.0.0.1:6379> flushdb
+OK
+127.0.0.1:6379> keys *
+(empty list or set)
+127.0.0.1:6379> 
+
+
+127.0.0.1:6379> flushall
+OK
+127.0.0.1:6379> 
+
+127.0.0.1:6379> keys *
+1) "x"
+2) "y"
+127.0.0.1:6379> save
+
+[root@host50 ~]# redis-cli 
+127.0.0.1:6379> 
+127.0.0.1:6379> shutdown
+not connected> 
+not connected> 
+not connected> keys *
+Could not connect to Redis at 127.0.0.1:6379: Connection refused
+not connected>exit
+[root@host50 ~]# netstat  -utnlp  | grep  6379
+[root@host50 ~]# 
+[root@host50 ~]# /etc/init.d/redis_6379 status
+cat: /var/run/redis_6379.pid: No such file or directory
+Redis is running ()
+[root@host50 ~]# 
+[root@host50 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host50 ~]# 
+[root@host50 ~]# /etc/init.d/redis_6379 status
+Redis is running (4987)
+[root@host50 ~]# 
+[root@host50 ~]# /etc/init.d/redis_6379 stop
+Stopping ...
+Redis stopped
+[root@host50 ~]# /etc/init.d/redis_6379 status
+cat: /var/run/redis_6379.pid: No such file or directory
+Redis is running ()
+[root@host50 ~]# 
+[root@host50 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host50 ~]# 
+
+命令总结：
+set  mset  get  mget  select  keys   EXISTS  ttl  expire  type  move  del  flushdb
+flushall  save  shutdown
