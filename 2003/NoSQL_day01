@@ -347,7 +347,50 @@ Starting Redis server...
 set  mset  get  mget  select  keys   EXISTS  ttl  expire  type  move  del  flushdb
 flushall  save  shutdown
 ##################################################################################
-   配置文件解析（配置项说明）
+配置文件解析（配置项说明，改变redis服务的运行配置）
+		vim /etc/redis/6379.conf
+		port 6350
+		bind 192.168.4.50
+	        :wq
+              重启redis服务，重新加载配置文件
+		]# /etc/init.d/redis_6379 stop
+                ]# /etc/init.d/redis_6379 start
+
+[root@host50 ~]# netstat  -utnlp  | grep 6350
+tcp        0      0 192.168.4.50:6350       0.0.0.0:*               LISTEN      5213/redis-server 1 
+[root@host50 ~]#
+
+		连接50主机的redis服务
+[root@host50 ~]# which redis-cli
+[root@host50 ~]# scp /usr/local/bin/redis-cli  root@192.168.4.71:/usr/local/bin/
+		
+[root@host71 ~]# redis-cli -h 192.168.4.50 -p 6350
+192.168.4.50:6350> 
+192.168.4.50:6350> keys *
+1) "x"
+2) "y"
+192.168.4.50:6350> set z 101
+OK
+192.168.4.50:6350> keys *
+1) "x"
+2) "y"
+3) "z"
+192.168.4.50:6350> exit
+[root@host71 ~]# 
+
+
+			修改脚本，可以使用脚本停止服务
+	
+[root@host50 ~]# vim +43 /etc/init.d/redis_6379 
+	 $CLIEXEC -h 192.168.4.50  -p 6350 shutdown	
+：wq
+
+		或者 不修改脚本使用命令停止
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350 shutdown
+
+
+
+
 
 ################################################################################3
 
