@@ -699,3 +699,102 @@ pc2  update  t1  set name ="tom" where id=2;
 查询（select）访问多的表，适合使用myisam存储引擎，可以节省系统硬件资源
 写(insert update delete)访问多的表，适合使用innodb存储引擎，好处处理的并发访问量大。
 
+
+#########################################事务特点演示
+
+			涉及到的命令： 
+				查看数据库服务是否开启了自动提交功能 默认是开启的
+                                show variables like "autocommit";
+
+
+				关闭自动提交功能
+				set autocommit=off;
+
+				手动提交  commit;
+				回滚 rollback;
+
+连接1 
+	mysql> create  table db10.user(id int)engine=innodb;
+        mysql> show variables like "autocommit";
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| autocommit    | OFF   |
++---------------+-------+
+1 row in set (0.00 sec)
+
+mysql> insert into db10.user values(888);
+mysql> insert into db10.user values(888);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db10.user;
++------+
+| id   |
++------+
+|  888 |
++------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+连接2 查看数据 看不数据
+        mysql> select  * from db10.user;
+Empty set (0.00 sec)
+
+
+连接1  执行提交命令	
+	mysql> commit 	
+
+
+连接2 查看数据 可以看到数据
+			
+mysql> select  * from db10.user;
++------+
+| id   |
++------+
+|  888 |
++------+
+1 row in set (0.00 sec)
+
+mysql>
+
+
+连接1 
+
+	insert db10.user values(666);
+	update db10.user set id =777 where id = 888;
+	delete from db10.user;
+	select  * from db10.user;
+
+连接2 查数据，数据依然存在 select  * from db10.user;
+mysql> select  * from db10.user;
++------+
+| id   |
++------+
+|  888 |
++------+
+
+连接1 没有提交，可以执行回滚
+      rollback;
+      select  * from db10.user; 查看操作前的数据了 。
+mysql> select  * from db10.user;
++------+
+| id   |
++------+
+|  888 |
++------+
+
+       delete from db10.user;
+       commit;  此时永久生效
+
+连接2 
+       select  * from db10.user; 查不到数据
+
+
+连接1 rollback ;  回滚数据失败，因为已经提交
+
+
+
+ 
+
