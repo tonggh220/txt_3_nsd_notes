@@ -389,6 +389,70 @@ OK
 [root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350 shutdown
 
 
+      内存清除策略 LRU  LFU  random  ttl  noeviction
+
+
+	设置redis服务连接密码
+
+[root@host50 ~]# /etc/init.d/redis_6379  stop
+Stopping ...
+Redis stopped
+[root@host50 ~]# 
+[root@host50 ~]# netstat  -utnlp  | grep 6350
+[root@host50 ~]# 
+
+[root@host50 ~]# vim +501 /etc/redis/6379.conf
+501 requirepass 123456
+:wq
+
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350 
+192.168.4.50:6350> 
+192.168.4.50:6350> ping
+(error) NOAUTH Authentication required.
+192.168.4.50:6350> 
+192.168.4.50:6350> keys *
+(error) NOAUTH Authentication required.
+192.168.4.50:6350> 
+192.168.4.50:6350> auth 123456
+OK
+192.168.4.50:6350> ping
+PONG
+192.168.4.50:6350> keys *
+1) "x"
+2) "z"
+3) "y"
+192.168.4.50:6350> exit
+[root@host50 ~]# 
+
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350  -a 123456
+192.168.4.50:6350> ping
+PONG
+192.168.4.50:6350> keys *
+1) "x"
+2) "z"
+3) "y"
+192.168.4.50:6350>
+
+
+[root@host71 ~]# redis-cli -h 192.168.4.50 -p 6350 -a 123456
+192.168.4.50:6350> keys *
+1) "x"
+2) "z"
+3) "y"
+192.168.4.50:6350> exit
+
+
+	修改脚本添加连接密码，停止服务
+[root@host50 ~]# vim  +43 /etc/init.d/redis_6379 
+ $CLIEXEC -h 192.168.4.50  -p 6350 -a 123456  shutdown
+：wq
+
+[root@host50 ~]# /etc/init.d/redis_6379 stop
+
+	或命令行停止
+	[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350  -a 123456 shutdown
+  
+
 
 
 
