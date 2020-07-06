@@ -531,9 +531,68 @@ echo  $i ;
 [root@host71 ~]# setenforce 0
 打开真机的浏览器，在地址栏输入网址 http://192.168.4.71/test.php
 
-			
-			2 搭建redis服务器 192.168.4.50
+					2 搭建redis服务器 192.168.4.50
+[root@host50 ~]# netstat  -utnlp  | grep 6350
+tcp        0      0 192.168.4.50:6350       0.0.0.0:*               LISTEN      5340/redis-server 1 
+[root@host50 ~]# 
 
 			3 配置网站可以连接redis服务器存取数据
+				3.1  PHP是否能连接redis服务
+				[root@host71 ~]# yum  -y  install php php-devel
+				[root@host71 ~]# php -m | grep  -i  redis
 
-			4 客户端访问网站，存取数据
+
+				3.2 安装提供redis模块软件包
+[root@host71 ~]# rpm -q autoconf
+autoconf-2.69-11.el7.noarch
+[root@host71 ~]# rpm -q automake
+automake-1.13.4-3.el7.noarch
+[root@host71 ~]# 
+   
+[root@host71 ~]# tar -zxvf upload/php-redis-2.2.4.tar.gz 
+[root@host71 ~]# cd phpredis-2.2.4/
+[root@host71 phpredis-2.2.4]# ls
+arrays.markdown  CREDITS           mkdeb.sh         redis_array_impl.c  serialize.list
+common.h         debian            package.xml      redis_array_impl.h  tests
+config.h         debian.control    php_redis.h      redis.c
+config.m4        library.c         README.markdown  redis_session.c
+config.w32       library.h         redis_array.c    redis_session.h
+COPYING          mkdeb-apache2.sh  redis_array.h    rpm
+[root@host71 phpredis-2.2.4]# 
+[root@host71 phpredis-2.2.4]# phpize 
+Configuring for:
+PHP Api Version:         20100412
+Zend Module Api No:      20100525
+Zend Extension Api No:   220100525
+[root@host71 phpredis-2.2.4]# 
+[root@host71 phpredis-2.2.4]# ls
+acinclude.m4     config.m4       install-sh        package.xml         redis_session.h
+aclocal.m4       config.sub      library.c         php_redis.h         rpm
+arrays.markdown  configure       library.h         README.markdown     run-tests.php
+autom4te.cache   configure.in    ltmain.sh         redis_array.c       serialize.list
+build            config.w32      Makefile.global   redis_array.h       tests
+common.h         COPYING         missing           redis_array_impl.c
+config.guess     CREDITS         mkdeb-apache2.sh  redis_array_impl.h
+config.h         debian          mkdeb.sh          redis.c
+config.h.in      debian.control  mkinstalldirs     redis_session.c
+[root@host71 phpredis-2.2.4]# 
+[root@host71 phpredis-2.2.4]# ./configure --with-php-config=/usr/bin/php-config
+[root@host71 phpredis-2.2.4]# make
+[root@host71 phpredis-2.2.4]# make install
+Installing shared extensions:     /usr/lib64/php/modules/
+[root@host71 phpredis-2.2.4]# 
+[root@host71 phpredis-2.2.4]# ls /usr/lib64/php/modules/
+curl.so  fileinfo.so  json.so  phar.so  redis.so  zip.so
+[root@host71 phpredis-2.2.4]# 
+
+				3.3 修改/etc/php.ini 加载模块
+[root@host71 phpredis-2.2.4]# vim +728 /etc/php.ini 
+728 extension_dir = "/usr/lib64/php/modules/"
+730 extension = "redis.so"
+:wq
+[root@host71 phpredis-2.2.4]# systemctl  restart php-fpm
+[root@host71 phpredis-2.2.4]# 
+[root@host71 phpredis-2.2.4]# php -m  | grep  -i redis
+redis
+[root@host71 phpredis-2.2.4]# 	
+		
