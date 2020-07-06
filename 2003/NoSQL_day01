@@ -596,3 +596,73 @@ curl.so  fileinfo.so  json.so  phar.so  redis.so  zip.so
 redis
 [root@host71 phpredis-2.2.4]# 	
 		
+
+
+				3.4 编写存储数据的PHP脚本和读取数据的PHP脚本
+					1 存储数据的PHP脚本 set.php
+[root@host71 ~]# vim /usr/local/nginx/html/set.php
+<?php
+$redis = new redis();
+$redis->connect("192.168.4.50","6350");
+$redis->auth("123456");
+$redis->set("school","TARENA");
+echo "date save ok";
+?>
+:wq
+
+
+					2 读取数据的PHP脚本 get.php
+[root@host71 ~]# vim /usr/local/nginx/html/get.php
+<?php
+$redis = new redis();
+$redis->connect("192.168.4.50","6350");
+$redis->auth("123456");
+echo  $redis->get("school");
+?>
+:wq
+
+[root@host71 ~]# ls /usr/local/nginx/html/
+50x.html  get.php  index.html  set.php  test.php
+[root@host71 ~]# 
+
+			4 客户端访问网站脚本，存/取数据
+				4.1 命令行测试连接Redis服务器存取数据
+				[root@host50 ~]# which redis-cli
+				/usr/local/bin/redis-cli
+				[root@host50 ~]# scp /usr/local/bin/redis-cli  root@192.168.4.71:/usr/local/bin/
+
+
+[root@host71 ~]# which redis-cli
+/usr/local/bin/redis-cli
+[root@host71 ~]# 
+
+[root@host71 ~]# redis-cli -h 192.168.4.50  -p 6350 -a 123456
+192.168.4.50:6350> keys *
+1) "x"
+2) "y"
+3) "z"
+192.168.4.50:6350> set i 101
+OK
+192.168.4.50:6350> get i 
+"101"
+192.168.4.50:6350> exit
+
+
+			4.2 客户端访问php脚本存、取数据
+			打开真机的浏览器 输入网址访问脚本
+http://192.168.4.71/set.php
+
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350 -a 123456
+192.168.4.50:6350> keys *
+1) "x"
+2) "z"
+3) "school"
+4) "y"
+5) "i"
+192.168.4.50:6350> get school
+"TARENA"
+192.168.4.50:6350> exit
+[root@host50 ~]# 
+
+http://192.168.4.71/get.php
+TARENA
