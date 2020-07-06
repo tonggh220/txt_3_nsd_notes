@@ -346,3 +346,87 @@ Starting Redis server...
 命令总结：
 set  mset  get  mget  select  keys   EXISTS  ttl  expire  type  move  del  flushdb
 flushall  save  shutdown
+##################################################################################
+   配置文件解析（配置项说明）
+
+################################################################################3
+
+ 		部署LNMP+Redis
+			1 部署网站运行平台 lnmp  （192.168.4.71）
+                               安装源码的nginx
+[root@host71 ~]# rpm -q gcc 
+package gcc is not installed
+[root@host71 ~]# rpm -q pcre-devel
+pcre-devel-8.32-17.el7.x86_64
+[root@host71 ~]# 
+[root@host71 ~]# rpm -q zlib-devel
+zlib-devel-1.2.7-17.el7.x86_64
+[root@host71 ~]# 
+[root@host71 ~]# yum -y install gcc 
+    7  tar -zxvf upload/nginx-1.12.2.tar.gz 
+    8  ls
+    9  cd nginx-1.12.2/
+   10  ./configure 
+   11  make 
+   12  make  install
+[root@host71 nginx-1.12.2]# ls /usr/local/nginx/
+conf  html  logs  sbin
+[root@host71 nginx-1.12.2]#
+
+			       安装php-fpm  并启动服务
+[root@host71 ~]# rpm -q php-fpm
+package php-fpm is not installed
+[root@host71 ~]# 
+[root@host71 ~]# yum -y install  php-fpm
+
+[root@host71 ~]# systemctl  start php-fpm 
+[root@host71 ~]# systemctl  enable php-fpm 
+Created symlink from /etc/systemd/system/multi-user.target.wants/php-fpm.service to /usr/lib/systemd/system/php-fpm.service.
+[root@host71 ~]# 
+[root@host71 ~]# netstat  -utnlp  | grep 9000
+tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      7302/php-fpm: maste 
+[root@host71 ~]#
+
+			       启动nginx服务
+[root@host71 ~]# vim +65 /usr/local/nginx/conf/nginx.conf
+ 65         location ~ \.php$ {
+ 66             root           html;
+ 67             fastcgi_pass   127.0.0.1:9000;
+ 68             fastcgi_index  index.php;
+ 69             include        fastcgi.conf;
+ 70         }
+:wq
+[root@host71 ~]# [root@host71 ~]# /usr/local/nginx/sbin/nginx  -t
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+[root@host71 ~]# 
+[root@host71 ~]# /usr/local/nginx/sbin/nginx
+[root@host71 ~]# 
+[root@host71 ~]# netstat  -utnlp  | grep 80
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      7331/nginx: master  
+[root@host71 ~]#
+
+			       测试配置
+[root@host71 ~]# vim /usr/local/nginx/html/test.php
+<?php
+$i = 99 ;
+echo  $i ;
+?>
+:wq
+
+命令行测试
+
+[root@host71 ~]# curl  http://localhost/test.php
+99
+
+浏览器访问
+[root@host71 ~]# systemctl  stop firewalld
+[root@host71 ~]# setenforce 0
+打开真机的浏览器，在地址栏输入网址 http://192.168.4.71/test.php
+
+			
+			2 搭建redis服务器 192.168.4.50
+
+			3 配置网站可以连接redis服务器存取数据
+
+			4 客户端访问网站，存取数据
