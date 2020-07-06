@@ -1,0 +1,78 @@
+DAY01 搭建Redis数据库服务器 常用管理命令的使用  配置项说名 部署LNMP+Redis
+	概念？
+	关系型数据库服务   统称RDBMS     软件
+	非关系型数据库服务  统称NoSQL     软件
+        Redis软件介绍
+
+	搭建Redis数据库服务器 192.168.4.50
+		1 安装软件
+			]# rpm -q gcc  ||  yum  -y install gcc 
+			]# tar -zxvf upload/redis-4.0.8.tar.gz 
+ 
+   ]# cd redis-4.0.8/
+   ]# make 
+   ]# make install
+
+		2 初始化配置（初始化配置完成后会自动运行redis服务）
+[root@host50 redis-4.0.8]# ./utils/install_server.sh 
+Welcome to the redis service installer
+This script will help you easily set up a running redis server
+
+Please select the redis port for this instance: [6379] 
+Selecting default: 6379
+Please select the redis config file name [/etc/redis/6379.conf] 
+Selected default - /etc/redis/6379.conf
+Please select the redis log file name [/var/log/redis_6379.log] 
+Selected default - /var/log/redis_6379.log
+Please select the data directory for this instance [/var/lib/redis/6379] 
+Selected default - /var/lib/redis/6379
+Please select the redis executable path [/usr/local/bin/redis-server] 
+Selected config:
+Port           : 6379
+Config file    : /etc/redis/6379.conf
+Log file       : /var/log/redis_6379.log
+Data dir       : /var/lib/redis/6379
+Executable     : /usr/local/bin/redis-server
+Cli Executable : /usr/local/bin/redis-cli
+Is this ok? Then press ENTER to go on or Ctrl-C to abort. 回车
+Copied /tmp/6379.conf => /etc/init.d/redis_6379
+Installing service...
+Successfully added to chkconfig!
+Successfully added to runlevels 345!
+Starting Redis server...
+Installation successful!
+[root@host50 redis-4.0.8]# 
+
+		3 查看服务状态
+[root@host50 redis-4.0.8]# netstat  -utnlp | grep 6379
+tcp        0      0 127.0.0.1:6379          0.0.0.0:*               LISTEN      4942/redis-server 1 
+[root@host50 redis-4.0.8]#
+
+		4 访问服务（默认只能自己访问自己）
+[root@host50 ~]# redis-cli 
+127.0.0.1:6379>
+
+		5 查看数据 、存储数据 、读取数据
+127.0.0.1:6379> keys *   查看数据 
+(empty list or set)
+127.0.0.1:6379> 
+127.0.0.1:6379> set name plj 存储数据
+OK
+127.0.0.1:6379> 		
+127.0.0.1:6379> keys *   查看数据
+1) "name"
+127.0.0.1:6379> 
+127.0.0.1:6379> get name 读取数据
+"plj"
+127.0.0.1:6379> 
+127.0.0.1:6379> set age 19
+OK
+127.0.0.1:6379> set class nsd2003
+OK
+127.0.0.1:6379> keys *   这些数据时存储在内存里
+1) "age"
+2) "class"
+3) "name"
+127.0.0.1:6379> exit  断开连接
+[root@host50 ~]#
+[root@host50 ~]# ls /var/lib/redis/6379/  到存储时间后会自动把内存里的数据保存到数据库目录下
