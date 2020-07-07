@@ -1,0 +1,83 @@
+#################DAY02 之 Redis集群 （分布式存储高可用集群）
+	1 创建集群
+		1.1 集群环境准备
+			准备6台redis服务器（51-56），运行其他主机Redis服务，不需要设置连接密码，且要清空内存（在没有创建成集群之前内存里不允许数据）
+
+			准备1台机器做管理主机57
+			准备1台做客户端50
+
+		1.2 创建集群
+			1.2.1 配置管理主机  57
+				1.2.1.1 部署ruby脚本运行环境
+[root@mgm57 ~]# yum -y install ruby
+[root@mgm57 ~]# gem install upload/redis-3.2.1.gem 
+Successfully installed redis-3.2.1
+Parsing documentation for redis-3.2.1
+Installing ri documentation for redis-3.2.1
+1 gem installed
+[root@mgm57 ~]# 
+
+				1.2.1.2 创建ruby脚本
+[root@mgm57 ~]# tar -zxvf upload/redis-4.0.8.tar.gz
+[root@mgm57 ~]# ls
+anaconda-ks.cfg  redis-4.0.8  upload
+[root@mgm57 ~]# 
+[root@mgm57 ~]# cd redis-4.0.8/
+[root@mgm57 redis-4.0.8]# 
+[root@mgm57 redis-4.0.8]# ls src/*.rb
+src/redis-trib.rb
+[root@mgm57 redis-4.0.8]# echo  $PATH
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
+[root@mgm57 redis-4.0.8]# 
+[root@mgm57 redis-4.0.8]# ls /root/bin
+ls: cannot access /root/bin: No such file or directory
+[root@mgm57 redis-4.0.8]# 
+[root@mgm57 redis-4.0.8]# mkdir /root/bin
+[root@mgm57 redis-4.0.8]# 
+[root@mgm57 redis-4.0.8]# cp  src/redis-trib.rb /root/bin/
+[root@mgm57 redis-4.0.8]# 
+[root@mgm57 redis-4.0.8]# ls /root/bin/
+redis-trib.rb
+[root@mgm57 redis-4.0.8]# chmod +x  /root/bin/redis-trib.rb 
+[root@mgm57 redis-4.0.8]#
+
+
+				1.2.1.3 查看脚本的帮助信息
+[root@mgm57 ~]# redis-trib.rb help
+Usage: redis-trib <command> <options> <arguments ...>
+
+  create          host1:port1 ... hostN:portN
+                  --replicas <arg>
+  check           host:port
+  info            host:port
+  fix             host:port
+                  --timeout <arg>
+  reshard         host:port
+                  --from <arg>
+                  --to <arg>
+                  --slots <arg>
+                  --yes
+                  --timeout <arg>
+                  --pipeline <arg>
+  rebalance       host:port
+                  --weight <arg>
+                  --auto-weights
+                  --use-empty-masters
+                  --timeout <arg>
+                  --simulate
+                  --pipeline <arg>
+                  --threshold <arg>
+  add-node        new_host:new_port existing_host:existing_port
+                  --slave
+                  --master-id <arg>
+  del-node        host:port node_id
+  set-timeout     host:port milliseconds
+  call            host:port command arg arg .. arg
+  import          host:port
+                  --from <arg>
+                  --copy
+                  --replace
+  help            (show this help)
+
+For check, fix, reshard, del-node, set-timeout you can specify the host and port of any working node in the cluster.
+[root@mgm57 ~]# 
