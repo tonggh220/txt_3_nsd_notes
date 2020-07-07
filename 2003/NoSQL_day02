@@ -425,3 +425,70 @@ Do you want to proceed with the proposed reshard plan (yes/no)? yes
 M: 14e88d207534d53e02acbf2252ca97a2644f2e40 192.168.4.58:6379
    slots:0-1364,5461-6826,10923-12287 (4096 slots) master
    0 additional replica(s)
+
+#######################################################################################3
+
+		2.2 把服务器从集群移除
+			移除slave角色的服务器（直接移除即可，因为不占用hash slots）
+[root@mgm57 ~]# redis-trib.rb check 192.168.4.51:6351  #查看主机ID 
+
+[root@mgm57 ~]# redis-trib.rb del-node 192.168.4.51:6351
+ bbece6d690946a6d17996139ac54f36369964784
+>>> Removing node bbece6d690946a6d17996139ac54f36369964784 from cluster 192.168.4.51:6351
+>>> Sending CLUSTER FORGET messages to the cluster...
+>>> SHUTDOWN the node.
+[root@mgm57 ~]# 
+
+[root@mgm57 ~]# redis-trib.rb info 192.168.4.54:6354
+192.168.4.54:6354 (a1a2b3db...) -> 3 keys | 4096 slots | 0 slaves.
+192.168.4.55:6355 (b948d8ef...) -> 1 keys | 4096 slots | 1 slaves.
+192.168.4.59:6379 (0653e3fc...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.52:6352 (b3f4d842...) -> 2 keys | 4096 slots | 1 slaves.
+[OK] 8 keys in 4 masters.
+0.00 keys per slot on average.
+[root@mgm57 ~]#	
+				  
+			  移除master角色的服务器
+				1 释放占用的hash slots
+[root@mgm57 ~]# redis-trib.rb reshard 192.168.4.54:6354
+How many slots do you want to move (from 1 to 16384)? 4096  释放槽的个数
+What is the receiving node ID? b3f4d8421ffd93c61ae4b0f310cf7196fe873e80 接收槽，mster主机的id 
+
+Source node #1:b3f4d8421ffd93c61ae4b0f310cf7196fe873e88 释放槽master服务器的id 
+Source node #2:done 结束id值的填写
+Do you want to proceed with the proposed reshard plan (yes/no)? yes 同意
+
+[root@mgm57 ~]# redis-trib.rb info 192.168.4.54:6354
+192.168.4.54:6354 (a1a2b3db...) -> 0 keys | 0 slots | 0 slaves.
+192.168.4.55:6355 (b948d8ef...) -> 1 keys | 4096 slots | 1 slaves.
+192.168.4.59:6379 (0653e3fc...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.52:6352 (b3f4d842...) -> 5 keys | 8192 slots | 1 slaves.
+[OK] 8 keys in 4 masters.
+0.00 keys per slot on average.
+[root@mgm57 ~]# 
+				2 移除master主机
+[root@mgm57 ~]# redis-trib.rb  del-node 192.168.4.52:6352 a1a2b3db19b967c2da3a0e9c58292747a2dfef61
+>>> Removing node a1a2b3db19b967c2da3a0e9c58292747a2dfef61 from cluster 192.168.4.52:6352
+>>> Sending CLUSTER FORGET messages to the cluster...
+>>> SHUTDOWN the node.
+[root@mgm57 ~]# 
+				
+[root@mgm57 ~]# redis-trib.rb info 192.168.4.52:6352
+192.168.4.52:6352 (b3f4d842...) -> 5 keys | 8192 slots | 1 slaves.
+192.168.4.59:6379 (0653e3fc...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.55:6355 (b948d8ef...) -> 1 keys | 4096 slots | 1 slaves.
+[OK] 8 keys in 3 masters.
+0.00 keys per slot on average.
+[root@mgm57 ~]# 
+
+			重新平均分配hash slots , 使其存储数据的机会平均
+[root@mgm57 ~]# redis-trib.rb rebalance  192.168.4.52:6352
+
+[root@mgm57 ~]# redis-trib.rb info 192.168.4.52:6352
+192.168.4.52:6352 (b3f4d842...) -> 3 keys | 5461 slots | 1 slaves.
+192.168.4.59:6379 (0653e3fc...) -> 4 keys | 5462 slots | 1 slaves.
+192.168.4.55:6355 (b948d8ef...) -> 1 keys | 5461 slots | 1 slaves.
+[OK] 8 keys in 3 masters.
+0.00 keys per slot on average.
+[root@mgm57 ~]# 
+
