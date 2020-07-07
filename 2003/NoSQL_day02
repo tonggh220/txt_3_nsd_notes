@@ -267,3 +267,90 @@ a1a2b3db19b967c2da3a0e9c58292747a2dfef61 192.168.4.54:6354@16354 slave bbece6d69
 	清空数据库目录 rm -rf /var/lib/redis/6379/*
         启动服务
 	执行创建集群的命令
+
+    			1.2.5 访问集群，存取数据
+[root@host50 ~]# redis-cli -c -h 192.168.4.52 -p 6352
+192.168.4.52:6352> keys *
+(empty list or set)
+192.168.4.52:6352> set x 1
+-> Redirected to slot [16287] located at 192.168.4.53:6353
+OK
+192.168.4.53:6353> keys *
+1) "x"
+192.168.4.53:6353> set y 2
+OK
+192.168.4.53:6353> keys *
+1) "y"
+2) "x"
+192.168.4.53:6353> set z 3
+-> Redirected to slot [8157] located at 192.168.4.52:6352
+OK
+192.168.4.52:6352> keys *
+1) "z"
+192.168.4.52:6352> get x
+-> Redirected to slot [16287] located at 192.168.4.53:6353
+"1"
+192.168.4.53:6353> exit
+[root@host50 ~]#
+ 
+		从服务器会自动同步主服务器的数据
+[root@host50 ~]# redis-cli -c -h 192.168.4.54 -p 6354
+
+192.168.4.54:6354> info replication
+# Replication
+role:slave
+master_host:192.168.4.53
+master_port:6353
+master_link_status:up
+.....
+.....
+192.168.4.54:6354> keys *
+1) "y"
+2) "x"
+
+			测试Redis集群的高可用功能
+			停止任意主服务器的redis服务，对应的从会自动升级为主
+[root@host51 ~]# redis-cli  -h 192.168.4.51  -p 6351  shutdown
+[root@host51 ~]# netstat  -utnlp  | grep redis-server
+
+[root@mgm57 ~]# redis-trib.rb  info 192.168.4.52:6352
+192.168.4.52:6352 (b3f4d842...) -> 1 keys | 5462 slots | 1 slaves.
+192.168.4.53:6353 (bbece6d6...) -> 2 keys | 5461 slots | 1 slaves.
+192.168.4.55:6355 (b948d8ef...) -> 0 keys | 5461 slots | 0 slaves.
+[OK] 3 keys in 3 masters.
+0.00 keys per slot on average.
+[root@mgm57 ~]#
+[root@host50 ~]# redis-cli -c -h 192.168.4.55 -p 6355
+192.168.4.55:6355> keys *
+(empty list or set)
+192.168.4.55:6355> set i 9
+-> Redirected to slot [15759] located at 192.168.4.53:6353
+OK
+192.168.4.53:6353> set j 8
+-> Redirected to slot [3564] located at 192.168.4.55:6355
+OK
+192.168.4.55:6355> set k 7
+-> Redirected to slot [7629] located at 192.168.4.52:6352
+OK
+192.168.4.52:6352> exit
+[root@host50 ~]# 
+
+			当原master启动后 会自动配置为当前master的slave
+[root@host51 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host51 ~]# netstat  -utnlp  | grep redis-server
+tcp        0      0 192.168.4.51:16351      0.0.0.0:*               LISTEN      14795/redis-server  
+tcp        0      0 192.168.4.51:6351       0.0.0.0:*               LISTEN      14795/redis-server  
+[root@host51 ~]#
+
+[root@host51 ~]# redis-cli  -h 192.168.4.51  -p 6351
+192.168.4.51:6351> info replication
+# Replication
+role:slave
+master_host:192.168.4.55
+master_port:6355
+master_link_status:up
+。。。。
+192.168.4.51:6351> keys *
+1) "j"
+192.168.4.51:6351> 
