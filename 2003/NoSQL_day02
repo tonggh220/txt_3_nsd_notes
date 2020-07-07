@@ -81,3 +81,51 @@ Usage: redis-trib <command> <options> <arguments ...>
 
 For check, fix, reshard, del-node, set-timeout you can specify the host and port of any working node in the cluster.
 [root@mgm57 ~]# 
+
+
+			1.2.2 配置redis服务器 (51-56)
+				1.2.2.1 查看是否启用集群功能(以51为例)
+[root@host51 ~]# redis-cli  -h 192.168.4.51  -p 6351
+192.168.4.51:6351> cluster info
+ERR This instance has cluster support disabled  # 没有启用
+192.168.4.51:6351> 
+192.168.4.51:6351> exit
+[root@host51 ~]# 
+[root@host51 ~]# redis-cli  -h 192.168.4.51  -p 6351 shutdown
+[root@host51 ~]# vim /etc/redis/6379.conf
+815 cluster-enabled yes
+823 cluster-config-file nodes-6379.conf
+829 cluster-node-timeout 5000
+:wq
+[root@host51 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host51 ~]# 
+[root@host51 ~]# netstat -utnlp  | grep  redis-server
+tcp        0      0 192.168.4.51:16351      0.0.0.0:*               LISTEN      14734/redis-server  
+tcp        0      0 192.168.4.51:6351       0.0.0.0:*               LISTEN      14734/redis-server  
+[root@host51 ~]#
+
+[root@host51 ~]# redis-cli  -h 192.168.4.51  -p 6351 
+192.168.4.51:6351> cluster info
+cluster_state:fail
+cluster_slots_assigned:0
+cluster_slots_ok:0
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:1
+cluster_size:0
+cluster_current_epoch:0
+cluster_my_epoch:0
+cluster_stats_messages_sent:0
+cluster_stats_messages_received:0
+192.168.4.51:6351> 
+192.168.4.51:6351> exit
+[root@host51 ~]# 
+[root@host51 ~]# ls /var/lib/redis/6379/
+dump.rdb  nodes-6379.conf
+[root@host51 ~]# cat /var/lib/redis/6379/nodes-6379.conf 
+9830748d562c8f2cbe5d80667ec5bc4a4ca91c79 :0@0 myself,master - 0 0 0 connected
+vars currentEpoch 0 lastVoteEpoch 0
+[root@host51 ~]#
+[root@host51 ~]# setenforce 0
+[root@host51 ~]# systemctl  stop firewalld
