@@ -492,3 +492,50 @@ Do you want to proceed with the proposed reshard plan (yes/no)? yes 同意
 0.00 keys per slot on average.
 [root@mgm57 ~]# 
 
+
+####################################################
+		2.3 把移除redis服务器再次添加到集群里
+			1 启动redis服务
+[root@host53 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host53 ~]# netstat  -utnlp  | grep redis-server
+tcp        0      0 192.168.4.53:16353      0.0.0.0:*               LISTEN      11908/redis-server  
+tcp        0      0 192.168.4.53:6353       0.0.0.0:*               LISTEN      11908/redis-server  
+[root@host53 ~]# 
+		
+			2 还原设置
+[root@host53 ~]# redis-cli -h 192.168.4.53 -p 6353
+192.168.4.53:6353> cluster reset
+OK
+192.168.4.53:6353> flushall 
+192.168.4.53:6353> save
+192.168.4.53:6353> exit
+
+
+			3 添加主机到集群	
+[root@mgm57 ~]# redis-trib.rb info 192.168.4.52:6352
+192.168.4.52:6352 (b3f4d842...) -> 3 keys | 5461 slots | 1 slaves.
+192.168.4.55:6355 (b948d8ef...) -> 1 keys | 5461 slots | 1 slaves.
+192.168.4.58:6379 (14e88d20...) -> 4 keys | 5462 slots | 1 slaves.
+[OK] 8 keys in 3 masters.
+0.00 keys per slot on average.
+[root@mgm57 ~]# 
+[root@mgm57 ~]# redis-trib.rb check 192.168.4.52:6352	
+[root@mgm57 ~]# redis-trib.rb add-node --slave --master-id 14e88d207534d53e02acbf2252ca97a2644f2e40  192.168.4.53:6353  192.168.4.51:6351
+
+[root@mgm57 ~]# redis-trib.rb info 192.168.4.52:6352
+192.168.4.52:6352 (b3f4d842...) -> 3 keys | 5461 slots | 1 slaves.
+192.168.4.55:6355 (b948d8ef...) -> 1 keys | 5461 slots | 1 slaves.
+192.168.4.58:6379 (14e88d20...) -> 4 keys | 5462 slots | 2 slaves.
+[OK] 8 keys in 3 masters.
+0.00 keys per slot on average.
+[root@mgm57 ~]# 
+
+	
+
+
+		把集群中主机还原为独立数据库服务器：
+			停止redis服务
+			清空数据库目录
+			把配置文件中的集群功能注释(IP 和端口 不用修改)
+			启动redis服务
