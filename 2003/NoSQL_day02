@@ -354,3 +354,74 @@ master_link_status:up
 192.168.4.51:6351> keys *
 1) "j"
 192.168.4.51:6351> 
+
+                			1.2.6 集群的工作过程 （难点、重点）
+				
+				
+
+	2 管理集群
+		2.1 向集群添加新的redis服务器
+			添加master角色的服务器（192.168.4.58）
+				1 配置Redis服务器
+					运行redis服务并启用了集群配置
+					
+				2 配置管理主机 57
+					2.1 向集群添加master角色服务器
+[root@mgm57 ~]# redis-trib.rb add-node  192.168.4.58:6379 192.168.4.54:6354
+>>> Adding node 192.168.4.58:6379 to cluster 192.168.4.54:6354
+>>> Performing Cluster Check (using node 192.168.4.54:6354)
+M: a1a2b3db19b967c2da3a0e9c58292747a2dfef61 192.168.4.54:6354
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+M: b948d8efcb168c6018a014a2c2f40c9d09ff17c6 192.168.4.55:6355
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+S: 4337da5f3fc35d942dd1044a0ff521b352f853ac 192.168.4.56:6356
+   slots: (0 slots) slave
+   replicates b3f4d8421ffd93c61ae4b0f310cf7196fe873e80
+S: 9830748d562c8f2cbe5d80667ec5bc4a4ca91c79 192.168.4.51:6351
+   slots: (0 slots) slave
+   replicates b948d8efcb168c6018a014a2c2f40c9d09ff17c6
+S: bbece6d690946a6d17996139ac54f36369964784 192.168.4.53:6353
+   slots: (0 slots) slave
+   replicates a1a2b3db19b967c2da3a0e9c58292747a2dfef61
+M: b3f4d8421ffd93c61ae4b0f310cf7196fe873e80 192.168.4.52:6352
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+>>> Send CLUSTER MEET to node 192.168.4.58:6379 to make it join the cluster.
+[OK] New node added correctly.
+[root@mgm57 ~]# 
+[root@mgm57 ~]# redis-trib.rb info 192.168.4.54:6354
+192.168.4.54:6354 (a1a2b3db...) -> 4 keys | 5461 slots | 1 slaves.
+192.168.4.55:6355 (b948d8ef...) -> 2 keys | 5461 slots | 1 slaves.
+192.168.4.58:6379 (14e88d20...) -> 0 keys | 0 slots | 0 slaves.
+192.168.4.52:6352 (b3f4d842...) -> 2 keys | 5462 slots | 1 slaves.
+[OK] 8 keys in 4 masters.
+0.00 keys per slot on average.
+[root@mgm57 ~]#
+					2.2 给新的master分配hash slots
+[root@mgm57 ~]# redis-trib.rb reshard 192.168.4.54:6354
+
+How many slots do you want to move (from 1 to 16384)? 4096
+What is the receiving node ID? 14e88d207534d53e02acbf2252ca97a2644f2e40
+Source node #1:all   
+Do you want to proceed with the proposed reshard plan (yes/no)? yes
+
+[root@mgm57 ~]# redis-trib.rb info 192.168.4.54:6354
+192.168.4.54:6354 (a1a2b3db...) -> 3 keys | 4096 slots | 1 slaves.
+192.168.4.55:6355 (b948d8ef...) -> 1 keys | 4096 slots | 1 slaves.
+192.168.4.58:6379 (14e88d20...) -> 2 keys | 4096 slots | 0 slaves.
+192.168.4.52:6352 (b3f4d842...) -> 2 keys | 4096 slots | 1 slaves.
+[OK] 8 keys in 4 masters.
+0.00 keys per slot on average.
+[root@mgm57 ~]#
+
+[root@mgm57 ~]# redis-trib.rb check 192.168.4.54:6354
+
+M: 14e88d207534d53e02acbf2252ca97a2644f2e40 192.168.4.58:6379
+   slots:0-1364,5461-6826,10923-12287 (4096 slots) master
+   0 additional replica(s)
