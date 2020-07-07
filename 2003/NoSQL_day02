@@ -129,3 +129,141 @@ vars currentEpoch 0 lastVoteEpoch 0
 [root@host51 ~]#
 [root@host51 ~]# setenforce 0
 [root@host51 ~]# systemctl  stop firewalld
+
+			1.2.3 创建集群 57
+[root@mgm57 ~]# redis-trib.rb  create  192.168.4.51:6351 192.168.4.52:6352 192.168.4.53:6353 192.168.4.54:6354 192.168.4.55:6355 192.168.4.56:6356 --replicas 1
+>>> Creating cluster
+>>> Performing hash slots allocation on 6 nodes...
+Using 3 masters:
+192.168.4.51:6351
+192.168.4.52:6352
+192.168.4.53:6353
+Adding replica 192.168.4.55:6355 to 192.168.4.51:6351
+Adding replica 192.168.4.56:6356 to 192.168.4.52:6352
+Adding replica 192.168.4.54:6354 to 192.168.4.53:6353
+M: 9830748d562c8f2cbe5d80667ec5bc4a4ca91c79 192.168.4.51:6351
+   slots:0-5460 (5461 slots) master
+M: b3f4d8421ffd93c61ae4b0f310cf7196fe873e80 192.168.4.52:6352
+   slots:5461-10922 (5462 slots) master
+M: bbece6d690946a6d17996139ac54f36369964784 192.168.4.53:6353
+   slots:10923-16383 (5461 slots) master
+S: a1a2b3db19b967c2da3a0e9c58292747a2dfef61 192.168.4.54:6354
+   replicates bbece6d690946a6d17996139ac54f36369964784
+S: b948d8efcb168c6018a014a2c2f40c9d09ff17c6 192.168.4.55:6355
+   replicates 9830748d562c8f2cbe5d80667ec5bc4a4ca91c79
+S: 4337da5f3fc35d942dd1044a0ff521b352f853ac 192.168.4.56:6356
+   replicates b3f4d8421ffd93c61ae4b0f310cf7196fe873e80
+Can I set the above configuration? (type 'yes' to accept): yes 同意
+
+>>> Nodes configuration updated
+>>> Assign a different config epoch to each node
+>>> Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join...
+>>> Performing Cluster Check (using node 192.168.4.51:6351)
+M: 9830748d562c8f2cbe5d80667ec5bc4a4ca91c79 192.168.4.51:6351
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+S: a1a2b3db19b967c2da3a0e9c58292747a2dfef61 192.168.4.54:6354
+   slots: (0 slots) slave
+   replicates bbece6d690946a6d17996139ac54f36369964784
+S: 4337da5f3fc35d942dd1044a0ff521b352f853ac 192.168.4.56:6356
+   slots: (0 slots) slave
+   replicates b3f4d8421ffd93c61ae4b0f310cf7196fe873e80
+S: b948d8efcb168c6018a014a2c2f40c9d09ff17c6 192.168.4.55:6355
+   slots: (0 slots) slave
+   replicates 9830748d562c8f2cbe5d80667ec5bc4a4ca91c79
+M: b3f4d8421ffd93c61ae4b0f310cf7196fe873e80 192.168.4.52:6352
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+M: bbece6d690946a6d17996139ac54f36369964784 192.168.4.53:6353
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+[root@mgm57 ~]# 
+
+			1.2.4 查看集群信息
+				在管理主机57 查看集群信息
+[root@mgm57 ~]# redis-trib.rb  info 192.168.4.52:6352  #统计信息
+192.168.4.52:6352 (b3f4d842...) -> 0 keys | 5462 slots | 1 slaves.
+192.168.4.53:6353 (bbece6d6...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.4.51:6351 (9830748d...) -> 0 keys | 5461 slots | 1 slaves.
+[OK] 0 keys in 3 masters.
+0.00 keys per slot on average.
+[root@mgm57 ~]# 
+
+[root@mgm57 ~]# redis-trib.rb  check 192.168.4.52:6352 #查看详细
+>>> Performing Cluster Check (using node 192.168.4.52:6352)
+M: b3f4d8421ffd93c61ae4b0f310cf7196fe873e80 192.168.4.52:6352
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+M: bbece6d690946a6d17996139ac54f36369964784 192.168.4.53:6353
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+S: b948d8efcb168c6018a014a2c2f40c9d09ff17c6 192.168.4.55:6355
+   slots: (0 slots) slave
+   replicates 9830748d562c8f2cbe5d80667ec5bc4a4ca91c79
+S: a1a2b3db19b967c2da3a0e9c58292747a2dfef61 192.168.4.54:6354
+   slots: (0 slots) slave
+   replicates bbece6d690946a6d17996139ac54f36369964784
+S: 4337da5f3fc35d942dd1044a0ff521b352f853ac 192.168.4.56:6356
+   slots: (0 slots) slave
+   replicates b3f4d8421ffd93c61ae4b0f310cf7196fe873e80
+M: 9830748d562c8f2cbe5d80667ec5bc4a4ca91c79 192.168.4.51:6351
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+[root@mgm57 ~]#
+
+
+			        在任意1台redis服务本机查看集群信息（已52为例）
+[root@host52 ~]# cat /var/lib/redis/6379/nodes-6379.conf 
+b3f4d8421ffd93c61ae4b0f310cf7196fe873e80 192.168.4.52:6352@16352 myself,master - 0 1594119195000 2 connected 5461-10922
+bbece6d690946a6d17996139ac54f36369964784 192.168.4.53:6353@16353 master - 1594119201687 1594119195074 3 connected 10923-16383
+b948d8efcb168c6018a014a2c2f40c9d09ff17c6 192.168.4.55:6355@16355 slave 9830748d562c8f2cbe5d80667ec5bc4a4ca91c79 1594119201687 1594119194068 5 connected
+a1a2b3db19b967c2da3a0e9c58292747a2dfef61 192.168.4.54:6354@16354 slave bbece6d690946a6d17996139ac54f36369964784 1594119201687 1594119194674 4 connected
+4337da5f3fc35d942dd1044a0ff521b352f853ac 192.168.4.56:6356@16356 slave b3f4d8421ffd93c61ae4b0f310cf7196fe873e80 1594119201687 1594119195000 6 connected
+9830748d562c8f2cbe5d80667ec5bc4a4ca91c79 192.168.4.51:6351@16351 master - 1594119201687 1594119195580 1 connected 0-5460
+vars currentEpoch 6 lastVoteEpoch 0
+[root@host52 ~]# 				
+[root@host52 ~]# redis-cli -h 192.168.4.52 -p 6352
+192.168.4.52:6352> cluster info
+cluster_state:ok
+cluster_slots_assigned:16384
+cluster_slots_ok:16384
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:6
+cluster_size:3
+cluster_current_epoch:6
+cluster_my_epoch:2
+cluster_stats_messages_ping_sent:729
+cluster_stats_messages_pong_sent:687
+cluster_stats_messages_meet_sent:4
+cluster_stats_messages_sent:1420
+cluster_stats_messages_ping_received:686
+cluster_stats_messages_pong_received:733
+cluster_stats_messages_meet_received:1
+cluster_stats_messages_received:1420
+192.168.4.52:6352> 
+192.168.4.52:6352> cluster nodes
+b3f4d8421ffd93c61ae4b0f310cf7196fe873e80 192.168.4.52:6352@16352 myself,master - 0 1594119676000 2 connected 5461-10922
+bbece6d690946a6d17996139ac54f36369964784 192.168.4.53:6353@16353 master - 0 1594119675918 3 connected 10923-16383
+b948d8efcb168c6018a014a2c2f40c9d09ff17c6 192.168.4.55:6355@16355 slave 9830748d562c8f2cbe5d80667ec5bc4a4ca91c79 0 1594119675000 5 connected
+a1a2b3db19b967c2da3a0e9c58292747a2dfef61 192.168.4.54:6354@16354 slave bbece6d690946a6d17996139ac54f36369964784 0 1594119674506 4 connected
+4337da5f3fc35d942dd1044a0ff521b352f853ac 192.168.4.56:6356@16356 slave b3f4d8421ffd93c61ae4b0f310cf7196fe873e80 0 1594119676526 6 connected
+9830748d562c8f2cbe5d80667ec5bc4a4ca91c79 192.168.4.51:6351@16351 master - 0 1594119675514 1 connected 0-5460
+192.168.4.52:6352> exit
+
+
+
+重新创建集群的方法：
+	停止redis服务
+	清空数据库目录 rm -rf /var/lib/redis/6379/*
+        启动服务
+	执行创建集群的命令
