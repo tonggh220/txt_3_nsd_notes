@@ -43,15 +43,51 @@
 
 			2.1 配置带验证的主从从结构
 
-			2.2 配置哨兵服务器192.168.4.56
+		    			2.2 配置哨兵服务器192.168.4.56
 				1  安装源码的redis软件
+					]# yum -y  install gcc
+					]# tar -zxvf  redis-4.0.8.tar.gz
+					]# cd redis-4.0.8
+					]# make  
+					]# make install
+
 				2  创建并编辑哨兵服务的主配置文件
+					]# vim  /etc/sentinel.conf
+				bind 192.168.4.56
+				sentinel monitor  redisserver  192.168.4.51 6351  1
+				sentinel auth-pass redisserver 123456
+					:wq
+
 				3  启动哨兵服务
+	[root@host56 ~]# redis-sentinel /etc/sentinel.conf #启动信息输出到当前终端显示
+			
 				4  查看服务状态
+1469:X 08 Jul 22:27:49.196 # +monitor master redisserver 192.168.4.51 6351 quorum 1
+1469:X 08 Jul 22:27:49.208 * +slave slave 192.168.4.53:6353 192.168.4.53 6353 @ redisserver 192.168.4.51 6351
 				5 测试配置
 					把主服务器的redis服务停止
-					在对应的从服务器查看复制信息（发现从服务器的角色自动变成了master）
+
+]# redis-cli  -h 192.168.4.51 -p 6351 -a 123456 shutdown
+
+					在对应的slave服务器查看复制信息（发现从服务器的角色自动变成了master）
+
+192.168.4.53:6353> info replication
+# Replication
+role:master
+192.168.4.53:6353> mset x1 8  x2 aa x3 bb x4  cc
 
 				6 把宕机的master主机的redis服务启动，会自动做当前主服务器的slave 
 
+]# /etc/init.d/redis_6379 start
+]# redis-cli -h 192.168.4.51 -p 6351 -a 123456
+192.168.4.51:6351> config set masterauth 123456  #命令行指定主服务器的密码
+OK
+192.168.4.51:6351> config rewrite #把命令行的设置保存到文件里
+OK
+192.168.4.51:6351> keys *
+
 				7 哨兵服务会自动监视当前的master服务器。
+[root@host56 ~]# cat /etc/sentinel.conf 
+......
+sentinel monitor redisserver 192.168.4.53 6353 1
+......
