@@ -1,0 +1,57 @@
+	1 配置Redis主从服务 
+		主数据库服务器： 被客户端访问的服务器
+		从数据库服务器： 自动到主服务器通同步数据
+		结构模式：
+			一主一从
+			一主多从
+			  主从从
+
+		涉及到命令 
+			> info replication #查看复制信息
+			> slaveof 主服务器IP  端口号  #指定主服务器
+			> slaveof no one    #临时恢复为主服务器
+
+		配置文件里配置项
+		]# vim /etc/redis/6379.conf
+			slaveof 主服务器IP  端口号
+		:wq
+
+		
+		主从同步工作过程？
+
+
+		思考题：redis 能不能配置主主结构
+
+
+		带验证的主从同步配置（主服务器有连接密码）
+		  给主服务器设置连接密码
+			]# redis-cli  -h ip地址 -p 端口 shutdown
+			]#  vim +501 /etc/redis/6379.conf
+				requirepass 123456  连接密码
+			  :wq
+			]# /etc/init.d/redis_6379 start
+
+		 从数据库服务器指定主的连接密码
+			
+			]# redis-cli  -h ip地址 -p 端口 shutdown
+			]#  vim  /etc/redis/6379.conf
+				masterauth 主机服务器密码
+			  :wq
+			]# /etc/init.d/redis_6379 start
+		
+	2 哨兵服务 （监视主从同步结构中的主服务器，当发现主服务器宕机，会自动把对应的slave服务器设置为master服务器）
+
+			2.1 配置带验证的主从从结构
+
+			2.2 配置哨兵服务器192.168.4.56
+				1  安装源码的redis软件
+				2  创建并编辑哨兵服务的主配置文件
+				3  启动哨兵服务
+				4  查看服务状态
+				5 测试配置
+					把主服务器的redis服务停止
+					在对应的从服务器查看复制信息（发现从服务器的角色自动变成了master）
+
+				6 把宕机的master主机的redis服务启动，会自动做当前主服务器的slave 
+
+				7 哨兵服务会自动监视当前的master服务器。
