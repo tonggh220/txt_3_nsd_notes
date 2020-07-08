@@ -176,3 +176,21 @@ appendfilename "appendonly.aof"
 Starting Redis server...
 [root@host58 ~]# redis-cli  -h 192.168.4.58 -p 6379 
 192.168.4.58:6379> keys *
+
+
+与aof相关的配置项
+				1 记录命令的方式：3种
+
+				2 触发AOF文件重新(把类似的命令合并)
+
+s
+				3 修复AOF文件:把文件恢复到最后一次的正确操作(格式错误会导致服务启动失败)
+[root@localhost 6379]# redis-check-aof  --fix  /var/lib/redis/6379/appendonly.aof 
+0x             19e: Expected prefix '*', got: 'f'
+AOF analyzed: size=445, ok_up_to=414, diff=31
+This will shrink the AOF from 445 bytes, with 31 bytes, to 414 bytes
+Continue? [y/N]: y
+Successfully truncated AOF
+[root@localhost 6379]#
+
+		AOF优点与缺点？
