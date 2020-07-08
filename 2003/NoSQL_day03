@@ -115,3 +115,27 @@ sentinel monitor redisserver 192.168.4.53 6353 1
 				拷贝备份的dump.rdb 到数据库目录下
 				启动redis服务
 				访问服务查看数据
+
+                 验证存盘频率实验
+				]# redis-cli  -h 192.168.4.55  -p 6355   shutdown
+
+]# vim /etc/redis/6379.conf
+save 900 1
+save 120 10
+save 60 10000
+:wq
+	
+[root@localhost 6379]# ls
+dump.rdb
+[root@localhost 6379]# rm -rf /var/lib/redis/6379/dump.rdb 
+[root@localhost 6379]# 
+[root@localhost 6379]# ls /var/lib/redis/6379/
+[root@localhost 6379]# 	
+
+[root@localhost 6379]# /etc/init.d/redis_6379  start
+Starting Redis server...
+[root@localhost 6379]#		
+		测试方法：
+			访问服务在在存盘时间内有对应个数的变量产生 会创建dump.rdb文件保存数据			
+		
+		RDB的优点与缺点？
