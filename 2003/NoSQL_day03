@@ -139,3 +139,40 @@ Starting Redis server...
 			访问服务在在存盘时间内有对应个数的变量产生 会创建dump.rdb文件保存数据			
 		
 		RDB的优点与缺点？
+
+
+        2  AOF（也是实现数据永久存储的方式，默认没有开启）
+			       AOF介绍？
+
+			       启用aof文件
+[root@host55 6379]# redis-cli  -h 192.168.4.55  -p 6355 
+192.168.4.55:6355> config set appendonly yes
+OK
+192.168.4.55:6355> config rewrite
+OK
+192.168.4.55:6355> exit
+[root@localhost 6379]# pwd
+/var/lib/redis/6379
+[root@localhost 6379]# ls
+appendonly.aof  dump.rdb
+[root@localhost 6379]# cat appendonly.aof 
+			       
+
+			使用备份的aof恢复数据
+host55 ~]# scp  /var/lib/redis/6379/appendonly.aof  root@192.168.4.58:/opt/
+
+
+[root@host58 ~]# redis-cli  -h 192.168.4.58 -p 6379 shutdown
+[root@host58 ~]# rm -rf /var/lib/redis/6379/*
+[root@host58 ~]# cp /opt/appendonly.aof  /var/lib/redis/6379/
+[root@host58 ~]# ls /var/lib/redis/6379/
+appendonly.aof
+[root@host58 ~]# 
+[root@host58 ~]# vim /etc/redis/6379.conf
+appendonly yes
+appendfilename "appendonly.aof"
+:wq
+[root@host58 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host58 ~]# redis-cli  -h 192.168.4.58 -p 6379 
+192.168.4.58:6379> keys *
