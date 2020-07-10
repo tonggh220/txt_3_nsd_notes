@@ -477,3 +477,67 @@ OK
 
 练习命令使用，具体如下： 练习 到10:50
 lpush   llen      lrange   lpop   lindex  lset   rpush     rpop
+
+
+		hash表类型变量的管理命令
+			让变量可以 存储多列 每列对应不同的值
+			
+192.168.4.50:6350> hset site tarena www.tedu.cn
+(integer) 1
+192.168.4.50:6350> keys *
+
+192.168.4.50:6350> get site
+(error) WRONGTYPE Operation against a key holding the wrong kind of value
+192.168.4.50:6350> 
+192.168.4.50:6350> type site
+hash
+192.168.4.50:6350> 
+192.168.4.50:6350> hget site tarena
+"www.tedu.cn"
+192.168.4.50:6350>
+
+192.168.4.50:6350> hset site jd www.jd.com
+(integer) 1
+192.168.4.50:6350> hset site tmall  www.taobao.com
+(integer) 1
+192.168.4.50:6350> 
+192.168.4.50:6350> 
+192.168.4.50:6350> hkeys site
+1) "tarena"
+2) "jd"
+3) "tmall"
+192.168.4.50:6350>
+
+192.168.4.50:6350> hvals site
+1) "www.tedu.cn"
+2) "www.jd.com"
+3) "www.taobao.com"
+192.168.4.50:6350> 
+
+
+192.168.4.50:6350> HGETALL site
+1) "tarena"
+2) "www.tedu.cn"
+3) "jd"
+4) "www.jd.com"
+5) "tmall"
+6) "www.taobao.com"
+192.168.4.50:6350> 
+
+192.168.4.50:6350> hdel site jd tmall
+(integer) 2
+192.168.4.50:6350> hgetall site
+1) "tarena"
+2) "www.tedu.cn"
+192.168.4.50:6350> 
+
+192.168.4.50:6350> hmset site 163 www.163.com   12306  www.12306.com
+OK
+192.168.4.50:6350> hkeys site
+1) "tarena"
+2) "163"
+3) "12306"
+192.168.4.50:6350> 
+
+练习命令使用，具体如下： 练习 + 休息 +订餐 到 11：25
+hset  hmset  hgetall hkeys  hvals  hget  hmget  hdel
