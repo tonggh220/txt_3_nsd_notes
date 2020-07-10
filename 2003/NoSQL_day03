@@ -349,3 +349,131 @@ OK
 练习命令的使用，具体命令如下：  练习+休息到 10:15 
 set  getrange   strlen   append  setbit   bitcount 
 decr   decrby  incr   incrby    incrbyfloat
+
+
+	列表类型（list）变量的管理命令
+	list:	一个变量存储多个值
+
+192.168.4.50:6350> lpush tea nb wk dmy plj lx zzg
+(integer) 6
+192.168.4.50:6350> keys *
+
+192.168.4.50:6350> get tea
+(error) WRONGTYPE Operation against a key holding the wrong kind of value
+192.168.4.50:6350> 
+192.168.4.50:6350> type tea
+list
+192.168.4.50:6350> 
+192.168.4.50:6350> LRANGE tea 0 -1
+1) "zzg"
+2) "lx"
+3) "plj"
+4) "dmy"
+5) "wk"
+6) "nb"
+192.168.4.50:6350>
+192.168.4.50:6350> LRANGE tea 0 1
+1) "zzg"
+2) "lx"
+192.168.4.50:6350> LRANGE tea -2 -1
+1) "wk"
+2) "nb"
+192.168.4.50:6350> LRANGE tea 2 3
+1) "plj"
+2) "dmy"
+192.168.4.50:6350> 
+192.168.4.50:6350> lpush tea A B
+(integer) 8
+192.168.4.50:6350> LRANGE tea 0 -1
+1) "B"
+2) "A"
+3) "zzg"
+4) "lx"
+5) "plj"
+6) "dmy"
+7) "wk"
+8) "nb"
+192.168.4.50:6350> LLEN tea
+(integer) 8
+192.168.4.50:6350>
+ 
+192.168.4.50:6350> lpop tea
+"B"
+192.168.4.50:6350> LRANGE tea 0 -1
+1) "A"
+2) "zzg"
+3) "lx"
+4) "plj"
+5) "dmy"
+6) "wk"
+7) "nb"
+192.168.4.50:6350> 
+
+192.168.4.50:6350> LRANGE tea 0 -1
+1) "A"
+2) "zzg"
+3) "lx"
+4) "plj"
+5) "dmy"
+6) "wk"
+7) "nb"
+192.168.4.50:6350> lset tea 0 BBB
+OK
+192.168.4.50:6350> lset tea 1 zhangzhigang
+OK
+192.168.4.50:6350> lrange tea 0 -1
+1) "BBB"
+2) "zhangzhigang"
+3) "lx"
+4) "plj"
+5) "dmy"
+6) "wk"
+7) "nb"
+192.168.4.50:6350> 
+192.168.4.50:6350> lrange tea 0 -1
+1) "BBB"
+2) "zhangzhigang"
+3) "lx"
+4) "plj"
+5) "dmy"
+6) "wk"
+7) "nb"
+192.168.4.50:6350> LINDEX tea 0
+"BBB"
+192.168.4.50:6350> LINDEX tea 1
+"zhangzhigang"
+192.168.4.50:6350> 
+192.168.4.50:6350> LINDEX tea -1
+"nb"
+192.168.4.50:6350> 
+192.168.4.50:6350> rpush tea X Y Z
+(integer) 10
+192.168.4.50:6350> lrange tea 0 -1
+ 1) "BBB"
+ 2) "zhangzhigang"
+ 3) "lx"
+ 4) "plj"
+ 5) "dmy"
+ 6) "wk"
+ 7) "nb"
+ 8) "X"
+ 9) "Y"
+10) "Z"
+192.168.4.50:6350> 
+192.168.4.50:6350> rpop tea
+"Z"
+192.168.4.50:6350> rpop tea
+"Y"
+192.168.4.50:6350> lrange tea 0 -1
+1) "BBB"
+2) "zhangzhigang"
+3) "lx"
+4) "plj"
+5) "dmy"
+6) "wk"
+7) "nb"
+8) "X"
+192.168.4.50:6350> 
+
+练习命令使用，具体如下： 练习 到10:50
+lpush   llen      lrange   lpop   lindex  lset   rpush     rpop
