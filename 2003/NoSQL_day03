@@ -194,3 +194,158 @@ Successfully truncated AOF
 [root@localhost 6379]#
 
 		AOF优点与缺点？
+
+        	4 数据类型 (学习管理存在内存里数据的命令)
+	  	字符类型(string)变量的管理命令:
+192.168.4.50:6350> set x 1 ex 15
+192.168.4.50:6350> set y 1 px 15
+192.168.4.50:6350> set name tom nx
+(nil)
+192.168.4.50:6350> get name
+"bob"
+192.168.4.50:6350> set name tom 
+OK
+192.168.4.50:6350> get name
+"tom"
+192.168.4.50:6350> set name lucy xx 
+OK
+192.168.4.50:6350> get name
+"lucy"
+192.168.4.50:6350> 
+192.168.4.50:6350> set v1 99
+OK
+192.168.4.50:6350> type v1
+string
+192.168.4.50:6350> 
+
+
+192.168.4.50:6350> set x2 ABCDEF
+OK
+192.168.4.50:6350> keys *
+1) "x2"
+2) "v1"
+3) "name"
+192.168.4.50:6350> get x2
+"ABCDEF"
+192.168.4.50:6350> setrange x2 0 ***
+(integer) 6
+192.168.4.50:6350> get x2
+"***DEF"
+192.168.4.50:6350> 
+
+192.168.4.50:6350> strlen x2
+(integer) 6
+192.168.4.50:6350> strlen name
+(integer) 4
+192.168.4.50:6350> get name
+"lucy"
+192.168.4.50:6350> 
+192.168.4.50:6350> keys *
+1) "x2"
+2) "v1"
+3) "name"
+192.168.4.50:6350> APPEND age 19
+(integer) 2
+192.168.4.50:6350> keys *
+1) "x2"
+2) "age"
+3) "v1"
+4) "name"
+192.168.4.50:6350> append age 88
+(integer) 4
+192.168.4.50:6350> get age
+"1988"
+192.168.4.50:6350>
+
+
+setbit   让变量存储二进制数  0或1 目的为了节省内存
+
+
+1G=1024M
+1M=1024K
+1K=1024bytes
+1B=8bit 
+1bit=0或1
+             
+setbit 变量名  第几位  值
+
+192.168.4.50:6350> setbit ttb 1 1
+(integer) 0
+192.168.4.50:6350> setbit ttb 2 0
+(integer) 0
+192.168.4.50:6350> setbit ttb 3 0
+(integer) 0
+192.168.4.50:6350> setbit ttb 4 0
+(integer) 0
+192.168.4.50:6350> setbit ttb 5 1
+(integer) 0
+192.168.4.50:6350> setbit ttb 6 1
+(integer) 0
+192.168.4.50:6350> setbit ttb 7 1
+(integer) 0
+192.168.4.50:6350> setbit ttb 8 0
+(integer) 0
+192.168.4.50:6350>
+192.168.4.50:6350> keys *
+1) "x2"
+2) "age"
+3) "name"
+4) "v1"
+5) "ttb"
+192.168.4.50:6350> bitcount ttb
+(integer) 4
+192.168.4.50:6350> 
+
+192.168.4.50:6350> set i 11
+OK
+192.168.4.50:6350> get i
+"11"
+192.168.4.50:6350> decr i
+(integer) 10
+192.168.4.50:6350> decr i
+(integer) 9
+192.168.4.50:6350> get i
+"9"
+192.168.4.50:6350> decrby i 3
+(integer) 6
+192.168.4.50:6350> decrby i 5
+(integer) 1
+192.168.4.50:6350> get i
+"1"
+192.168.4.50:6350>
+192.168.4.50:6350> set x2 ABCDEF
+OK
+192.168.4.50:6350> get x2
+"ABCDEF"
+192.168.4.50:6350> getrange x2 0 2
+"ABC"
+192.168.4.50:6350> getrange x2 2 4
+"CDE"
+192.168.4.50:6350> 
+192.168.4.50:6350> getrange x2 -3 -1
+"DEF"
+192.168.4.50:6350> 
+
+192.168.4.50:6350> set x 7
+OK
+192.168.4.50:6350> incr x
+(integer) 8
+192.168.4.50:6350> get x
+"8"
+192.168.4.50:6350> incrby x 6
+(integer) 14
+192.168.4.50:6350> get x
+"14"
+192.168.4.50:6350> incrby x 7
+(integer) 21
+192.168.4.50:6350> get x
+"21"
+192.168.4.50:6350> INCRBYFLOAT x 0.5
+"21.5"
+192.168.4.50:6350> get x
+"21.5"
+192.168.4.50:6350> 
+
+练习命令的使用，具体命令如下：  练习+休息到 10:15 
+set  getrange   strlen   append  setbit   bitcount 
+decr   decrby  incr   incrby    incrbyfloat
