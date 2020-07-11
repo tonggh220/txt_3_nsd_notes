@@ -45,4 +45,31 @@ echo $client->get("j");
 echo $client->get("k");
 ?>
 [root@nfs30 sitedir]# 
+
+
+			2.2.5.5   访问网站服务器存数据php脚本
+[root@MaxScale77 ~]# curl  http://192.168.4.33/set.php
+data save ok
+
+			1.2.5.6   在redis集群主机本机查看数据
+[root@host51 ~]# redis-cli -c -h 192.168.4.51 -p 6379
+192.168.4.51:6379> keys *
+1) "j"
+192.168.4.51:6379> exit
+[root@host51 ~]# 
+[root@host51 ~]# redis-cli -c -h 192.168.4.52 -p 6379
+192.168.4.52:6379> keys *
+1) "k"
+192.168.4.52:6379> exit
+[root@host51 ~]# 
+[root@host51 ~]# redis-cli -c -h 192.168.4.53 -p 6379
+192.168.4.53:6379> keys *
+1) "i"
+192.168.4.53:6379>
+			
+			2.2.5.7   访问网站服务器取数据的php脚本
+[root@MaxScale77 ~]# curl  http://192.168.4.33/get.php
+tarenaA tarenaB tarenaC 
+
+
             
