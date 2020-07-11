@@ -1,0 +1,48 @@
+一、升级网站运行平台到lnmp （2台网站服务器都要配置）
+	1.1 清除网站的当前配置
+	1.2 部署lnmp环境
+
+二、部署缓存服务
+	2.1 准备6台Redis服务器（运行redis服务并启用了集群功能）
+	2.2 部署管理主机 192.168.4.77
+		2.2.1 配置集群管理脚本运行环境
+		2.2.2 创建管理脚本
+
+		2.2.3 创建集群
+]# redis-trib.rb create --replicas 1 192.168.4.51:6379 192.168.4.52:6379 192.168.4.53:6379 192.168.4.54:6379 192.168.4.56:6379 192.168.4.57:6379
+
+		2.2.4 查看集群信息
+]# redis-trib.rb info  192.168.4.51:6379 
+
+		2.2.5  配置网站服务器，可以连接redis集群存数据、取数据 （2台网站服务器都要配置）
+			2.2.5.1  安装提供连接集群模块的软件
+			2.2.5.2  修改PHP程序的配置文件加载模块
+			2.2.5.3  重启php-fpm服务
+
+                  测试配置
+			2.2.5.4  在30主机的共享目录下并PHP脚本
+					1 连接redis集群存数据的脚本
+[root@nfs30 sitedir]# cat /sitedir/set.php 
+<?php
+$redis_list = ['192.168.4.51:6379','192.168.4.52:6379','192.168.4.53:6379','192.168.4.54:6379','192.168.4.56:6379','192.168.4.57:6379'];
+$client = new RedisCluster(NUll,$redis_list);
+$client->set("i","tarenaA ");
+$client->set("j","tarenaB ");
+$client->set("k","tarenaC ");
+echo  "data save ok ";
+?>
+[root@nfs30 sitedir]# 
+
+					2 连接redis集群存数据的脚本
+[root@nfs30 sitedir]# cat /sitedir/get.php 
+<?php
+$redis_list = ['192.168.4.51:6379','192.168.4.52:6379','192.168.4.53:6379','192.168.4.54:6379','192.168.4.56:6379','192.168.4.57:6379'];
+
+$client = new RedisCluster(NUll,$redis_list);
+
+echo $client->get("i");
+echo $client->get("j");
+echo $client->get("k");
+?>
+[root@nfs30 sitedir]# 
+            
