@@ -171,3 +171,88 @@ mysql> select  * from t5;
 4 rows in set (0.00 sec)
 
 mysql> 
+
+
+
+			浮点型（有小数点的数）11.88
+			     float  单精度（存储的范围小）
+			     double 双精度（存储的范围大）
+
+mysql> create table  db1.t7(name char(15) , yzl double );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> desc db1.t7;
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| name  | char(15) | YES  |     | NULL    |       |
+| yzl   | double   | YES  |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> insert into db1.t7  values ("zhuchongzhi" , 3.1415926 );
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t7;
++-------------+-----------+
+| name        | yzl       |
++-------------+-----------+
+| zhuchongzhi | 3.1415926 |
++-------------+-----------+
+1 row in set (0.00 sec)
+
+mysql> insert into db1.t7  values ("zhuchongzhiA" , 3 );
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t7;
++--------------+-----------+
+| name         | yzl       |
++--------------+-----------+
+| zhuchongzhi  | 3.1415926 |
+| zhuchongzhiA |         3 |
++--------------+-----------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+小数的组成  整数.小数
+	    
+mysql> create table db1.t8( name  char(10), gz  float(5,2));
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> desc db1.t8;
++-------+------------+------+-----+---------+-------+
+| Field | Type       | Null | Key | Default | Extra |
++-------+------------+------+-----+---------+-------+
+| name  | char(10)   | YES  |     | NULL    |       |
+| gz    | float(5,2) | YES  |     | NULL    |       |
++-------+------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> insert into  db1.t8 values ("bob" , 30000);
+ERROR 1264 (22003): Out of range value for column 'gz' at row 1
+mysql> 
+mysql> insert into  db1.t8 values ("bob" , 900);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t8;
++------+--------+
+| name | gz     |
++------+--------+
+| bob  | 900.00 |
++------+--------+
+1 row in set (0.00 sec)
+
+mysql> insert into  db1.t8 values ("boba" , 999.52);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t8;
++------+--------+
+| name | gz     |
++------+--------+
+| bob  | 900.00 |
+| boba | 999.52 |
++------+--------+
+2 rows in set (0.00 sec)
+
+mysql> 
