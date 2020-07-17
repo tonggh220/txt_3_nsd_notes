@@ -84,7 +84,7 @@ mysql> desc mysql.user;   练习到16:30
 			微小整型 小整型  中整型 大整型 极大整型 	
 
 			整型类型有分为有符号 和无符号存储范围
-			unsigned  使用有符号存储范围（可以存储负数）
+			unsigned  使用无符号存储范围（不可以存储负数）
 mysql> create table t5( name  char(10) , age tinyint );
 Query OK, 0 rows affected (0.01 sec)
 
