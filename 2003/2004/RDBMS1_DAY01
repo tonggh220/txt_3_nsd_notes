@@ -256,3 +256,40 @@ mysql> select  * from db1.t8;
 2 rows in set (0.00 sec)
 
 mysql> 
+
+ 	
+		枚举类型 （让字段的值 只能在列举的范围里选择）
+			enum(值列表)单选
+			set(值列表) 多选项
+mysql> create table db1.t9 ( name char(10) , sex enum("boy","girl") , loves set("eat","game","sleep","happly") );
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> desc db1.t9;
++-------+------------------------------------+------+-----+---------+-------+
+| Field | Type                               | Null | Key | Default | Extra |
++-------+------------------------------------+------+-----+---------+-------+
+| name  | char(10)                           | YES  |     | NULL    |       |
+| sex   | enum('boy','girl')                 | YES  |     | NULL    |       |
+| loves | set('eat','game','sleep','happly') | YES  |     | NULL    |       |
++-------+------------------------------------+------+-----+---------+-------+
+3 rows in set (0.01 sec)
+
+mysql>
+mysql> insert into db1.t9 values ("tom","man","music,sleep");
+ERROR 1265 (01000): Data truncated for column 'sex' at row 1
+mysql> 
+mysql> insert into db1.t9 values ("tom","boy","music,sleep");
+ERROR 1265 (01000): Data truncated for column 'loves' at row 1
+mysql> 
+mysql> insert into db1.t9 values ("tom","boy","eat,sleep");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t9;
++------+------+-----------+
+| name | sex  | loves     |
++------+------+-----------+
+| tom  | boy  | eat,sleep |
++------+------+-----------+
+1 row in set (0.00 sec)
+
+mysql> 
