@@ -326,3 +326,80 @@ mysql> select  * from db1.stuinfo;
 3 rows in set (0.00 sec)
 
 mysql> show tables;
+
+二、MySQL键值
+	2.1 键值的种类（设置在表的字段上；每一种键都各自的作用）
+		普通索引 index
+		唯一索引 unique
+		主键     primary key
+		外键     foreign key 
+		全文索引 fulltext
+
+	2.2 普通索引Index的使用
+		2.2.1 什么是索引？ 为什么要使用索引？
+		2.2.2 索引的使用：
+			  2.2.2.1  
+				  查看  desc 库.表；
+				  查看索引的详细信息 show index 
+                 from  库.表；
+
+			 2.2.2.2 创建索引
+				  建表时创建索引 index(字段)
+mysql> create table db1.t14(name char(10) , age int ,  class char(7) , index(name) , index(age));
+
+mysql> desc db1.t14;
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| name  | char(10) | YES  | MUL | NULL    |       |
+| age   | int(11)  | YES  | MUL | NULL    |       |
+| class | char(7)  | YES  |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql>
+mysql> show  index from db1.t14 \G
+Key_name: name
+Column_name: name
+Index_type: BTREE
+Null: YES
+
+				  在已有表创建索引
+mysql> create index  xxx  on   db1.t3(name);
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> desc  db1.t3;
++----------+------------+------+-----+---------+-------+
+| Field    | Type       | Null | Key | Default | Extra |
++----------+------------+------+-----+---------+-------+
+| name     | char(1)    | YES  | MUL | NULL    |       |
+| homeaddr | varchar(3) | YES  |     | NULL    |       |
++----------+------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> mysql> show  index from db1.t3 \G
+
+						
+			2.2.2.3 删除索引
+mysql> drop index  xxx  on db1.t3;
+Query OK, 0 rows affected (0.01 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> desc  db1.t3;
++----------+------------+------+-----+---------+-------+
+| Field    | Type       | Null | Key | Default | Extra |
++----------+------------+------+-----+---------+-------+
+| name     | char(1)    | YES  |     | NULL    |       |
+| homeaddr | varchar(3) | YES  |     | NULL    |       |
++----------+------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> show  index  from db1.t3 
+    -> ;
+Empty set (0.00 sec)
+
+mysql> 
+
+
+			2.2.2.4 索引的使用规则？
