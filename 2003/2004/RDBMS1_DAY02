@@ -52,7 +52,7 @@ mysql>
 
 		       字段名  类型  default 默认值
 
-create table db1.t13(name char(10) not null , age int default 25 , class char(7)   default "nsd2004" , loves  set("a","b","c") not null default "c,a" );
+create table db1.t13(name char(10) not null , age int default 25 , class char(7)   default "nsd2004" , loves  set("a","b","c") not null default ("c,a" ));
 
 mysql> desc db1.t13;
 +-------+------------------+------+-----+---------+-------+
