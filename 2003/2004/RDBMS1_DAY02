@@ -46,3 +46,50 @@ mysql> select  * from db1.t12;
 2 rows in set (0.00 sec)
 
 mysql>
+
+		1.1.2 设置字段默认值 默认情况默认值是null
+		      添加新行时，不给字段赋值使用默认值赋值
+
+		       字段名  类型  default 默认值
+
+create table db1.t13(name char(10) not null , age int default 25 , class char(7)   default "nsd2004" , loves  set("a","b","c") not null default "c,a" );
+
+mysql> desc db1.t13;
++-------+------------------+------+-----+---------+-------+
+| Field | Type             | Null | Key | Default | Extra |
++-------+------------------+------+-----+---------+-------+
+| name  | char(10)         | NO   |     | NULL    |       |
+| age   | int(11)          | YES  |     | 25      |       |
+| class | char(7)          | YES  |     | nsd2004 |       |
+| loves | set('a','b','c') | NO   |     | a,c     |       |
++-------+------------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> insert into  db1.t13(name) values("bob");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t13;
++------+------+---------+-------+
+| name | age  | class   | loves |
++------+------+---------+-------+
+| bob  |   25 | nsd2004 | a,c   |
++------+------+---------+-------+
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> insert into db1.t13 values ("tom",null,"nsd2012",null );
+ERROR 1048 (23000): Column 'loves' cannot be null
+mysql> 
+mysql> insert into db1.t13 values ("tom",null,"nsd2012","b" );
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t13;
++------+------+---------+-------+
+| name | age  | class   | loves |
++------+------+---------+-------+
+| bob  |   25 | nsd2004 | a,c   |
+| tom  | NULL | nsd2012 | b     |
++------+------+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql>
