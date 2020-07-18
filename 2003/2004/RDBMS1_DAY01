@@ -293,3 +293,125 @@ mysql> select  * from db1.t9;
 1 row in set (0.00 sec)
 
 mysql> 
+
+
+
+		日期时间类型 
+			年     year   YYYY          2020
+			日期   date   YYYYMMDD      20200718
+			时间   time   HHMMSS        090000
+
+			日期时间类型  datetime或timestamp  
+			YYYYMMDDHHMMSS  20200718091328
+mysql> create table  db1.t10(
+    -> name char(10) , your_s  year , birthday  date , up_class  time ,
+    -> party  datetime );
+Query OK, 0 rows affected (0.06 sec)
+
+mysql> desc db1.t10 ;
++----------+----------+------+-----+---------+-------+
+| Field    | Type     | Null | Key | Default | Extra |
++----------+----------+------+-----+---------+-------+
+| name     | char(10) | YES  |     | NULL    |       |
+| your_s   | year(4)  | YES  |     | NULL    |       |
+| birthday | date     | YES  |     | NULL    |       |
+| up_class | time     | YES  |     | NULL    |       |
+| party    | datetime | YES  |     | NULL    |       |
++----------+----------+------+-----+---------+-------+
+5 rows in set (0.00 sec)
+
+mysql>
+mysql> insert into db1.t10 values ("bob" , 1990 , 20201120 , 090000 , 20200719203000);
+
+mysql> select  * from  db1.t10;
++------+--------+------------+----------+---------------------+
+| name | your_s | birthday   | up_class | party               |
++------+--------+------------+----------+---------------------+
+| bob  |   1990 | 2020-11-20 | 09:00:00 | 2020-07-19 20:30:00 |
++------+--------+------------+----------+---------------------+
+1 row in set (0.00 sec)
+
+mysql>
+
+		时间函数(获取数据库服务器时间的命令)
+mysql> select curtime();
++-----------+
+| curtime() |
++-----------+
+| 09:24:54  |
++-----------+
+1 row in set (0.00 sec)	
+
+mysql> select curdate();
++------------+
+| curdate()  |
++------------+
+| 2020-07-18 |
++------------+
+1 row in set (0.00 sec)	
+
+mysql> select now();
++---------------------+
+| now()               |
++---------------------+
+| 2020-07-18 09:31:06 |
++---------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> select year(now());
++-------------+
+| year(now()) |
++-------------+
+|        2020 |
++-------------+
+1 row in set (0.00 sec)
+
+
+mysql> select month(now());
++--------------+
+| month(now()) |
++--------------+
+|            7 |
++--------------+
+1 row in set (0.00 sec)
+
+mysql> select day(now());
++------------+
+| day(now()) |
++------------+
+|         18 |
++------------+
+1 row in set (0.00 sec)
+
+mysql> select date(now());
++-------------+
+| date(now()) |
++-------------+
+| 2020-07-18  |
++-------------+
+1 row in set (0.00 sec)
+
+mysql> select time(now());
++-------------+
+| time(now()) |
++-------------+
+| 09:33:01    |
++-------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+mysql> insert into db1.t10 values ("jerry" , year(now()) , curdate() , curtime() , now() );
+		
+mysql> select  * from db1.t10;
++-------+--------+------------+----------+---------------------+
+| name  | your_s | birthday   | up_class | party               |
++-------+--------+------------+----------+---------------------+
+| bob   |   1990 | 2020-11-20 | 09:00:00 | 2020-07-19 20:30:00 |
+| jerry |   2020 | 2020-07-18 | 09:33:45 | 2020-07-18 09:33:45 |
++-------+--------+------------+----------+---------------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
