@@ -187,9 +187,126 @@ mysql> desc db1.t1;
 4 rows in set (0.00 sec)
 
 mysql> 
-
 		1.2.3 修改字段类型 modify
+			如果字段已经有数据了，修改的设置不能与已经存储的数据冲突，冲突不允许修改。
+
+mysql> delete from  db1.stuinfo;
+mysql> select  * from stuinfo;
+
+mysql> desc stuinfo;
++---------+----------+------+-----+---------+-------+
+| Field   | Type     | Null | Key | Default | Extra |
++---------+----------+------+-----+---------+-------+
+| stu_num | int(11)  | YES  |     | NULL    |       |
+| name    | char(10) | YES  |     | NULL    |       |
+| QQ      | char(11) | YES  |     | NULL    |       |
+| age     | int(11)  | YES  |     | NULL    |       |
++---------+----------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> alter  table db1.stuinfo modify age int not null default 19 ;
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> desc stuinfo;
++---------+----------+------+-----+---------+-------+
+| Field   | Type     | Null | Key | Default | Extra |
++---------+----------+------+-----+---------+-------+
+| stu_num | int(11)  | YES  |     | NULL    |       |
+| name    | char(10) | YES  |     | NULL    |       |
+| QQ      | char(11) | YES  |     | NULL    |       |
+| age     | int(11)  | NO   |     | 19      |       |
++---------+----------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> alter  table db1.stuinfo modify age tinyint ;
+Query OK, 0 rows affected (0.04 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> desc stuinfo;
++---------+------------+------+-----+---------+-------+
+| Field   | Type       | Null | Key | Default | Extra |
++---------+------------+------+-----+---------+-------+
+| stu_num | int(11)    | YES  |     | NULL    |       |
+| name    | char(10)   | YES  |     | NULL    |       |
+| QQ      | char(11)   | YES  |     | NULL    |       |
+| age     | tinyint(4) | YES  |     | NULL    |       |
++---------+------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> insert into db1.stuinfo  values (8,"bob","240398019",58);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.stuinfo;
++---------+------+-----------+------+
+| stu_num | name | QQ        | age  |
++---------+------+-----------+------+
+|       8 | bob  | 240398019 |   58 |
++---------+------+-----------+------+
+1 row in set (0.00 sec)
+
+mysql> alter table  db1.stuinfo  modify age tinyint after name ;
+Query OK, 0 rows affected (0.05 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> select  * from db1.stuinfo;
++---------+------+------+-----------+
+| stu_num | name | age  | QQ        |
++---------+------+------+-----------+
+|       8 | bob  |   58 | 240398019 |
++---------+------+------+-----------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+
 		1.2.4 修改字段名  change
+mysql> desc db1.stuinfo;
++---------+------------+------+-----+---------+-------+
+| Field   | Type       | Null | Key | Default | Extra |
++---------+------------+------+-----+---------+-------+
+| stu_num | int(11)    | YES  |     | NULL    |       |
+| name    | char(10)   | YES  |     | NULL    |       |
+| age     | tinyint(4) | YES  |     | NULL    |       |
+| QQ      | char(11)   | YES  |     | NULL    |       |
++---------+------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> alter table db1.stuinfo change name  user varchar(10) not null default "tarena"  ;
+Query OK, 1 row affected (0.02 sec)
+Records: 1  Duplicates: 0  Warnings: 0
+
+mysql> desc db1.stuinfo;
++---------+-------------+------+-----+---------+-------+
+| Field   | Type        | Null | Key | Default | Extra |
++---------+-------------+------+-----+---------+-------+
+| stu_num | int(11)     | YES  |     | NULL    |       |
+| user    | varchar(10) | NO   |     | tarena  |       |
+| age     | tinyint(4)  | YES  |     | NULL    |       |
+| QQ      | char(11)    | YES  |     | NULL    |       |
++---------+-------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> alter table  db1.stuinfo change QQ  tenxun char(11) ;
+Query OK, 0 rows affected (0.00 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> desc db1.stuinfo;
++---------+-------------+------+-----+---------+-------+
+| Field   | Type        | Null | Key | Default | Extra |
++---------+-------------+------+-----+---------+-------+
+| stu_num | int(11)     | YES  |     | NULL    |       |
+| user    | varchar(10) | NO   |     | tarena  |       |
+| age     | tinyint(4)  | YES  |     | NULL    |       |
+| tenxun  | char(11)    | YES  |     | NULL    |       |
++---------+-------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql>
 
 		1.2.5 修改表名	rename
 mysql> alter table  db1.t1 rename db1.stuinfo ;
