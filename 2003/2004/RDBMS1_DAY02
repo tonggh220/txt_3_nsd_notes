@@ -710,8 +710,160 @@ mysql>
 
 
 ##############################################3
-
 		      主键通常与auto_increment 连用
+				自增长
+
+create table  db1.t18( x  int primary key auto_increment , name char(2), age tinyint );
+
+mysql> desc db1.t18;
++-------+------------+------+-----+---------+----------------+
+| Field | Type       | Null | Key | Default | Extra          |
++-------+------------+------+-----+---------+----------------+
+| x     | int(11)    | NO   | PRI | NULL    | auto_increment |
+| name  | char(2)    | YES  |     | NULL    |                |
+| age   | tinyint(4) | YES  |     | NULL    |                |
++-------+------------+------+-----+---------+----------------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> select  * from db1.t18;
+Empty set (0.00 sec)
+
+mysql> insert into db1.t18(name,age)values("A",21);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t18;
++---+------+------+
+| x | name | age  |
++---+------+------+
+| 1 | A    |   21 |
++---+------+------+
+1 row in set (0.00 sec)
+
+mysql> insert into db1.t18(name,age)values("B",32);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t18;
++---+------+------+
+| x | name | age  |
++---+------+------+
+| 1 | A    |   21 |
+| 2 | B    |   32 |
++---+------+------+
+2 rows in set (0.00 sec)
+
+mysql> insert into db1.t18(name,age)values("C",32);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db1.t18(name,age)values("C",32);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t18;
++---+------+------+
+| x | name | age  |
++---+------+------+
+| 1 | A    |   21 |
+| 2 | B    |   32 |
+| 3 | C    |   32 |
+| 4 | C    |   32 |
++---+------+------+
+4 rows in set (0.00 sec)
+
+mysql>
+mysql> insert into db1.t18  values(null,"C",32);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t18;
++---+------+------+
+| x | name | age  |
++---+------+------+
+| 1 | A    |   21 |
+| 2 | B    |   32 |
+| 3 | C    |   32 |
+| 4 | C    |   32 |
+| 5 | C    |   32 |
++---+------+------+
+5 rows in set (0.00 sec)
+
+mysql> insert into db1.t18  values(3,"C",32);
+ERROR 1062 (23000): Duplicate entry '3' for key 'PRIMARY'
+mysql> insert into db1.t18  values(13,"C",32);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t18;
++----+------+------+
+| x  | name | age  |
++----+------+------+
+|  1 | A    |   21 |
+|  2 | B    |   32 |
+|  3 | C    |   32 |
+|  4 | C    |   32 |
+|  5 | C    |   32 |
+| 13 | C    |   32 |
++----+------+------+
+6 rows in set (0.00 sec)
+
+mysql>
+mysql> insert into db1.t18(name,age)values("C",32);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t18;
++----+------+------+
+| x  | name | age  |
++----+------+------+
+|  1 | A    |   21 |
+|  2 | B    |   32 |
+|  3 | C    |   32 |
+|  4 | C    |   32 |
+|  5 | C    |   32 |
+| 13 | C    |   32 |
+| 14 | C    |   32 |
++----+------+------+
+7 rows in set (0.00 sec)
+
+mysql> insert into db1.t18(name,age)values("C2",32);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t18;
++----+------+------+
+| x  | name | age  |
++----+------+------+
+|  1 | A    |   21 |
+|  2 | B    |   32 |
+|  3 | C    |   32 |
+|  4 | C    |   32 |
+|  5 | C    |   32 |
+| 13 | C    |   32 |
+| 14 | C    |   32 |
+| 15 | C2   |   32 |
++----+------+------+
+8 rows in set (0.00 sec)
+
+mysql> 
+mysql> delete from db1.t18;
+Query OK, 8 rows affected (0.01 sec)
+
+mysql> select  * from db1.t18;
+Empty set (0.00 sec)
+
+mysql> insert into db1.t18(name,age)values("D",32);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t18;
++----+------+------+
+| x  | name | age  |
++----+------+------+
+| 16 | D    |   32 |
++----+------+------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+
+
+ <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<             
 
 
 		2.3.3 查看主键  
