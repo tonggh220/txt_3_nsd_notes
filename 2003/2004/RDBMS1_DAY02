@@ -550,7 +550,166 @@ Create Table: CREATE TABLE `t3` (
 
 mysql>             
 
-创建复合主键
+#############################################
+		      创建复合主键（表的多列一起做主键，赋值时 主键列的值 不可以同时重复）
+
+ 主键      主键
+clientip   port  status
+1.1.1.1    22     allow
+1.1.1.1   3306     deny
+2.1.1.1   3306     deny
+
+
+create  table db1.t17(
+clientip  char(15), port  smallint , status  enum("allow","deny"),
+primary key( clientip , port ));
+
+mysql> desc  db1.t17;
++----------+----------------------+------+-----+---------+-------+
+| Field    | Type                 | Null | Key | Default | Extra |
++----------+----------------------+------+-----+---------+-------+
+| clientip | char(15)             | NO   | PRI | NULL    |       |
+| port     | smallint(6)          | NO   | PRI | NULL    |       |
+| status   | enum('allow','deny') | YES  |     | NULL    |       |
++----------+----------------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> 
+mysql> insert into  db1.t17 values ("1.1.1.1",22,"allow");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from db1.t17;
++----------+------+--------+
+| clientip | port | status |
++----------+------+--------+
+| 1.1.1.1  |   22 | allow  |
++----------+------+--------+
+1 row in set (0.00 sec)
+
+mysql> insert into  db1.t17 values ("1.1.1.1",22,"allow");
+ERROR 1062 (23000): Duplicate entry '1.1.1.1-22' for key 'PRIMARY'
+mysql> 
+mysql> insert into  db1.t17 values ("1.1.1.1",3306,"allow");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into  db1.t17 values ("2.1.1.1",3306,"allow");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into  db1.t17 values ("2.1.1.1",3306,"allow");
+ERROR 1062 (23000): Duplicate entry '2.1.1.1-3306' for key 'PRIMARY'
+mysql> 
+mysql> select * from db1.t17;
++----------+------+--------+
+| clientip | port | status |
++----------+------+--------+
+| 1.1.1.1  |   22 | allow  |
+| 1.1.1.1  | 3306 | allow  |
+| 2.1.1.1  | 3306 | allow  |
++----------+------+--------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> alter table  db1.t17 drop primary key;
+
+
+mysql> desc  db1.t17;
++----------+----------------------+------+-----+---------+-------+
+| Field    | Type                 | Null | Key | Default | Extra |
++----------+----------------------+------+-----+---------+-------+
+| clientip | char(15)             | NO   |     | NULL    |       |
+| port     | smallint(6)          | NO   |     | NULL    |       |
+| status   | enum('allow','deny') | YES  |     | NULL    |       |
++----------+----------------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> select * from db1.t17;
++----------+------+--------+
+| clientip | port | status |
++----------+------+--------+
+| 1.1.1.1  |   22 | allow  |
+| 1.1.1.1  | 3306 | allow  |
+| 2.1.1.1  | 3306 | allow  |
++----------+------+--------+
+3 rows in set (0.00 sec)
+
+mysql> insert into  db1.t17 values ("2.1.1.1",3306,"allow");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into  db1.t17 values ("2.1.1.1",3306,"allow");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into  db1.t17 values (null,null,"allow");
+ERROR 1048 (23000): Column 'clientip' cannot be null
+mysql> 
+
+mysql> delete from  db1.t17;
+Query OK, 5 rows affected (0.00 sec)
+
+mysql> select  * from db1.t17;
+Empty set (0.00 sec)
+
+mysql> desc  db1.t17;
++----------+----------------------+------+-----+---------+-------+
+| Field    | Type                 | Null | Key | Default | Extra |
++----------+----------------------+------+-----+---------+-------+
+| clientip | char(15)             | NO   |     | NULL    |       |
+| port     | smallint(6)          | NO   |     | NULL    |       |
+| status   | enum('allow','deny') | YES  |     | NULL    |       |
++----------+----------------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> alter table  db1.t17 add primary key(clientip , port);
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> desc  db1.t17;
++----------+----------------------+------+-----+---------+-------+
+| Field    | Type                 | Null | Key | Default | Extra |
++----------+----------------------+------+-----+---------+-------+
+| clientip | char(15)             | NO   | PRI | NULL    |       |
+| port     | smallint(6)          | NO   | PRI | NULL    |       |
+| status   | enum('allow','deny') | YES  |     | NULL    |       |
++----------+----------------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> insert into  db1.t17 values ("2.1.1.1",3306,"allow");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t17;
++----------+------+--------+
+| clientip | port | status |
++----------+------+--------+
+| 2.1.1.1  | 3306 | allow  |
++----------+------+--------+
+1 row in set (0.00 sec)
+
+mysql> insert into  db1.t17 values ("2.1.1.1",3306,"allow");
+ERROR 1062 (23000): Duplicate entry '2.1.1.1-3306' for key 'PRIMARY'
+mysql> 
+mysql> 
+mysql> insert into  db1.t17 values ("2.1.1.1",3306,"deny");
+ERROR 1062 (23000): Duplicate entry '2.1.1.1-3306' for key 'PRIMARY'
+mysql> 
+mysql> 
+mysql> insert into  db1.t17 values ("1.1.1.1",3306,"allow");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t17;
++----------+------+--------+
+| clientip | port | status |
++----------+------+--------+
+| 1.1.1.1  | 3306 | allow  |
+| 2.1.1.1  | 3306 | allow  |
++----------+------+--------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+
+##############################################3
 
 		      主键通常与auto_increment 连用
 
