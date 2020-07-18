@@ -1,0 +1,48 @@
+一、修改表结构
+	1.1 字段约束条件（限制字段赋值）
+	查看字段约束 desc 库名.表名；
+		1.1.1 是否允许字段赋空（null）值 默认允许
+
+			字段名  类型  not null ;
+mysql> create table db1.t12( name char(10) not  null , addr  char(30) not null );
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> desc db1.t12;
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| name  | char(10) | NO   |     | NULL    |       |
+| addr  | char(30) | NO   |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> insert into db1.t12 values (null , null );
+ERROR 1048 (23000): Column 'name' cannot be null
+mysql> 
+mysql> insert into db1.t12 values ("null" , null );
+ERROR 1048 (23000): Column 'addr' cannot be null
+mysql> 
+mysql> insert into db1.t12 values ("null" , "beijing" );
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t12;
++------+---------+
+| name | addr    |
++------+---------+
+| null | beijing |
++------+---------+
+1 row in set (0.00 sec)
+
+mysql> insert into db1.t12 values ("" , "shanghai" );
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t12;
++------+----------+
+| name | addr     |
++------+----------+
+| null | beijing  |
+|      | shanghai |
++------+----------+
+2 rows in set (0.00 sec)
+
+mysql>
