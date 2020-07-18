@@ -403,3 +403,149 @@ mysql>
 
 
 			2.2.2.4 索引的使用规则？
+
+
+ 
+	2.3 主键的使用	(限制字段赋值，设置在表里的列上)
+	    核心功能 字段值不允许重复，且不允许赋NULL值
+
+		2.3.1 使用规则？
+
+		2.3.2 创建主键
+			  建表时创建主键
+mysql> create table db1.t15(name char(10), sex enum("m","w"),stu_id int , primary key(stu_id));
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> desc  db1.t15;
++--------+---------------+------+-----+---------+-------+
+| Field  | Type          | Null | Key | Default | Extra |
++--------+---------------+------+-----+---------+-------+
+| name   | char(10)      | YES  |     | NULL    |       |
+| sex    | enum('m','w') | YES  |     | NULL    |       |
+| stu_id | int(11)       | NO   | PRI | NULL    |       |
++--------+---------------+------+-----+---------+-------+
+3 rows in set (0.01 sec)
+
+mysql> 
+
+  第2种格式
+mysql> create table db1.t16(name char(10), sex enum("m","w"),stu_id int primary key);
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> desc db1.t16;
++--------+---------------+------+-----+---------+-------+
+| Field  | Type          | Null | Key | Default | Extra |
++--------+---------------+------+-----+---------+-------+
+| name   | char(10)      | YES  |     | NULL    |       |
+| sex    | enum('m','w') | YES  |     | NULL    |       |
+| stu_id | int(11)       | NO   | PRI | NULL    |       |
++--------+---------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
+			  在已有表里创建主键
+mysql> desc t3;
++----------+------------+------+-----+---------+-------+
+| Field    | Type       | Null | Key | Default | Extra |
++----------+------------+------+-----+---------+-------+
+| name     | char(1)    | YES  | MUL | NULL    |       |
+| homeaddr | varchar(3) | YES  | MUL | NULL    |       |
++----------+------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> select  * from db1.t3;
++------+----------+
+| name | homeaddr |
++------+----------+
+| a    | jim      |
+| a    | ddd      |
+| a    | ddd      |
+| a    | ddd      |
++------+----------+
+4 rows in set (0.00 sec)
+
+mysql> alter  table  db1.t3  add  primary key(name);
+ERROR 1062 (23000): Duplicate entry 'a' for key 'PRIMARY'
+mysql> 
+mysql> delete from  db1.t3;
+Query OK, 4 rows affected (0.00 sec)
+
+mysql> select  * from db1.t3;
+Empty set (0.00 sec)
+
+mysql> alter  table  db1.t3  add  primary key(name);
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+
+mysql> desc db1.t3;
++----------+------------+------+-----+---------+-------+
+| Field    | Type       | Null | Key | Default | Extra |
++----------+------------+------+-----+---------+-------+
+| name     | char(1)    | NO   | PRI | NULL    |       |
+| homeaddr | varchar(3) | YES  | MUL | NULL    |       |
++----------+------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> show index from  db1.t3 \G
+*************************** 1. row ***************************
+        Table: t3
+   Non_unique: 0
+     Key_name: PRIMARY
+ Seq_in_index: 1
+  Column_name: name
+    Collation: A
+  Cardinality: 0
+     Sub_part: NULL
+       Packed: NULL
+         Null: 
+   Index_type: BTREE
+      Comment: 
+Index_comment: 
+*************************** 2. row ***************************
+        Table: t3
+   Non_unique: 1
+     Key_name: xxx
+ Seq_in_index: 1
+  Column_name: name
+    Collation: A
+  Cardinality: 0
+     Sub_part: NULL
+       Packed: NULL
+         Null: 
+   Index_type: BTREE
+      Comment: 
+Index_comment: 
+*************************** 3. row ***************************
+        Table: t3
+   Non_unique: 1
+     Key_name: yyy
+ Seq_in_index: 1
+  Column_name: homeaddr
+    Collation: A
+  Cardinality: 0
+     Sub_part: NULL
+       Packed: NULL
+         Null: YES
+   Index_type: BTREE
+      Comment: 
+Index_comment: 
+3 rows in set (0.00 sec)
+
+mysql> 
+mysql> 
+mysql> show create table db1.t3 \G
+*************************** 1. row ***************************
+       Table: t3
+Create Table: CREATE TABLE `t3` (
+  `name` char(1) NOT NULL,
+  `homeaddr` varchar(3) DEFAULT NULL,
+  PRIMARY KEY (`name`),
+  KEY `xxx` (`name`),
+  KEY `yyy` (`homeaddr`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+1 row in set (0.00 sec)
+
+mysql>             
