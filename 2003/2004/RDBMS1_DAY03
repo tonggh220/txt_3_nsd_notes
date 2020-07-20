@@ -143,3 +143,61 @@ mysql> insert into db3.user(name ,  uid , shell ) values("jerry",3001,"/sbin/nol
 mysql> insert into 库.表(字段名列表 ) values(值列表),(值列表),(值列表)......;
 mysql> insert into db3.user(name ,  uid , shell ) values("alices",3002,"/sbin/nologin"),("alicesA",3003,"/sbin/nologin"),("alicesd",3004,"/sbin/nologin");
 
+2.2 查询表记录 select
+命令格式
+select  字段名列表  from 库.表 【where 条件】;
+
+字段名列表 作用 控制显示的列
+where 条件 作用控制显示的行
+字段名列表  用 *  表示所有列表
+
+mysql> select  *  from db3.user; 查看所有行所有列
+mysql> select  id,name,shell    from db3.user;  查看所有行
+mysql> select  id , name,shell    from db3.user where id <= 3; 查看指定行指定列
+
+
+
+	2.3 更新记录字段的值  update
+作用是修改行中 列的值
+命令格式
+
+update  库.表   set  字段名=值 ，字段名=值 ，.....  where 条件 ；
+
+ where 条件 作用控制修改的行 ，如果不写条件是修改所有行。
+ set 控制修改的列
+
+mysql> update  db3.user set password="a";
+
+mysql> select  id , password from db3.user;
+
+
+ mysql> update db3.user set password="x" , comment="admin" where id <= 3;
+
+
+mysql> select * from db3.user where id <= 3;
+
+	2.4 删除表记录  delete from 
+删除表里的行
+格式
+delete  from  库.表 where  条件；
+where  条件 作用是控制删除的行，如果不加是删除所有行
+mysql> delete from db3.user where name = "yaya";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select  * from db3.user where name = "bob";
++----+------+----------+------+------+-----------+-----------+-----------+
+| id | name | password | uid  | gid  | comment   | homedir   | shell     |
++----+------+----------+------+------+-----------+-----------+-----------+
+| 20 | bob  | a        | 2000 | 2000 | test user | /home/bob | /bin/bash |
+| 25 | bob  | a        | 2000 | 2000 | test user | /home/bob | /bin/bash |
+| 27 | bob  | a        | 2000 | 2000 | test user | /home/bob | /bin/bash |
++----+------+----------+------+------+-----------+-----------+-----------+
+3 rows in set (0.00 sec)
+
+mysql> delete from db3.user where name = "bob";
+Query OK, 3 rows affected (0.00 sec)
+
+mysql> select  * from db3.user where name = "bob";
+Empty set (0.00 sec)
+
+mysql> 
