@@ -121,3 +121,25 @@ mysql> system ls /myload
 
 mysql> system cat /myload/a.txt
 
+
+2 管理表记录
+	2.1 插入新记录 insert into
+插入1条记录给所有列赋值
+mysql> insert into  库.表  values (值列表);
+
+mysql> insert into  db3.user  values (20,"bob","x",2000,2000,"test user","/home/bob","/bin/bash");
+
+
+插入多条记录给所有列赋值
+mysql> insert into  库.表  values (值列表), (值列表).....;
+mysql> insert into  db3.user  values (25,"tom","x",2001,2001,"test user","/home/tom","/bin/bash"),(27,"lucy","x",2002,2002,"test user","/home/lucy","/bin/bash");
+
+插入1条记录给指定列赋值
+mysql> insert into 库.表(字段名列表 ) values(值列表);
+mysql> insert into db3.user(name ,  uid , shell ) values("jerry",3001,"/sbin/nologin");
+
+
+插入多条记录给指定列赋值
+mysql> insert into 库.表(字段名列表 ) values(值列表),(值列表),(值列表)......;
+mysql> insert into db3.user(name ,  uid , shell ) values("alices",3002,"/sbin/nologin"),("alicesA",3003,"/sbin/nologin"),("alicesd",3004,"/sbin/nologin");
+
