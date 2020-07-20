@@ -387,3 +387,254 @@ mysql> select name from db3.user  where name="root" ;
 1 row in set (0.00 sec)
 
 mysql> select name from db3.user  where name!="root" ;
+
+
+	3.2 高级匹配条件
+		模糊查询
+where 字段名  like   '通配符'
+_ ：表示1个字符
+%：表示0~n个字符
+
+mysql> select name from  db3.user  where name like '____';
++------+
+| name |
++------+
+| root |
+| sync |
+| halt |
+| mail |
+| dbus |
+| sshd |
++------+
+6 rows in set (0.00 sec)
+
+mysql> select name from  db3.user  where name like '___';
++------+
+| name |
++------+
+| bin  |
+| adm  |
+| ftp  |
+| bob  |
++------+
+4 rows in set (0.00 sec)
+
+mysql>
+
+mysql> select name from  db3.user  where name like '%a%';
++----------+
+| name     |
++----------+
+| daemon   |
+| adm      |
+| halt     |
+| mail     |
+| operator |
+| games    |
+| alices   |
+| alicesA  |
+| alicesd  |
++----------+
+9 rows in set (0.00 sec)
+
+mysql> 
+mysql> select name from  db3.user  where name like 'a%';
++---------+
+| name    |
++---------+
+| adm     |
+| alices  |
+| alicesA |
+| alicesd |
++---------+
+4 rows in set (0.00 sec)
+
+mysql> select name from  db3.user  where name like '%a';
++---------+
+| name    |
++---------+
+| alicesA |
++---------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+mysql> select name from  db3.user  where name like '__%__';
++-----------------+
+| name            |
++-----------------+
+| root            |
+| daemon          |
+| sync            |
+| shutdown        |
+| halt            |
+| mail            |
+| operator        |
+| games           |
+| nobody          |
+| systemd-network |
+| dbus            |
+| polkitd         |
+| sshd            |
+| postfix         |
+| mysql           |
+| jerry           |
+| alices          |
+| alicesA         |
+| alicesd         |
++-----------------+
+19 rows in set (0.00 sec)
+
+mysql> 
+
+
+		正则匹配
+where 字段名  regexp   ‘正则表达式’
+正则元字符：^   $   .   [ ]   *    |
+
+mysql> select name , uid  from db3.user where  uid regexp '^....$';
++---------+------+
+| name    | uid  |
++---------+------+
+| jerry   | 3001 |
+| alices  | 3002 |
+| alicesA | 3003 |
+| alicesd | 3004 |
++---------+------+
+4 rows in set (0.13 sec)
+
+mysql> select name , uid  from db3.user where  uid regexp '^..$';
++----------+------+
+| name     | uid  |
++----------+------+
+| operator |   11 |
+| games    |   12 |
+| ftp      |   14 |
+| nobody   |   99 |
+| dbus     |   81 |
+| sshd     |   74 |
+| postfix  |   89 |
+| mysql    |   27 |
++----------+------+
+8 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> select name , uid  from db3.user where  name regexp '^a|t$';
++---------+------+
+| name    | uid  |
++---------+------+
+| root    |    0 |
+| adm     |    3 |
+| halt    |    7 |
+| alices  | 3002 |
+| alicesA | 3003 |
+| alicesd | 3004 |
++---------+------+
+6 rows in set (0.00 sec)
+
+mysql>
+
+mysql> select name from db3.user where name regexp '[0-9]';
+Empty set (0.00 sec)
+
+mysql> insert into  db3.user(name)values("yaya9"),("6yaya"),("ya3ya");
+Query OK, 3 rows affected (0.00 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> select name from db3.user where name regexp '[0-9]';
++-------+
+| name  |
++-------+
+| yaya9 |
+| 6yaya |
+| ya3ya |
++-------+
+3 rows in set (0.00 sec)
+
+mysql>  
+
+		四则计算  + - *  /  %
+符号2边必须是数值类型的字段
+mysql> select name , uid from  db3.user where  uid % 2  = 0 ;
++-----------------+------+
+| name            | uid  |
++-----------------+------+
+| root            |    0 |
+| daemon          |    2 |
+| lp              |    4 |
+| shutdown        |    6 |
+| mail            |    8 |
+| games           |   12 |
+| ftp             |   14 |
+| systemd-network |  192 |
+| sshd            |   74 |
+| alices          | 3002 |
+| alicesd         | 3004 |
++-----------------+------+
+11 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> select id , name , uid from  db3.user where  id % 2  = 1 ;
++----+----------+------+
+| id | name     | uid  |
++----+----------+------+
+|  1 | root     |    0 |
+|  3 | daemon   |    2 |
+|  5 | lp       |    4 |
+|  7 | shutdown |    6 |
+|  9 | mail     |    8 |
+| 11 | games    |   12 |
+| 13 | nobody   |   99 |
+| 15 | dbus     |   81 |
+| 17 | sshd     |   74 |
+| 19 | mysql    |   27 |
+| 29 | alices   | 3002 |
+| 31 | alicesd  | 3004 |
+| 33 | yaya9    | NULL |
+| 35 | ya3ya    | NULL |
++----+----------+------+
+14 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> select * from  db3.user where id <= 3;
++----+--------+----------+------+------+---------+---------+---------------+
+| id | name   | password | uid  | gid  | comment | homedir | shell         |
++----+--------+----------+------+------+---------+---------+---------------+
+|  1 | root   | x        |    0 |    0 | admin   | /root   | /bin/bash     |
+|  2 | bin    | x        |    1 |    1 | admin   | /bin    | /sbin/nologin |
+|  3 | daemon | x        |    2 |    2 | admin   | /sbin   | /sbin/nologin |
++----+--------+----------+------+------+---------+---------+---------------+
+3 rows in set (0.00 sec)
+
+mysql> update db3.user set uid = uid + 1  where id <= 3 ;
+Query OK, 3 rows affected (0.00 sec)
+Rows matched: 3  Changed: 3  Warnings: 0
+
+mysql> select * from  db3.user where id <= 3;
++----+--------+----------+------+------+---------+---------+---------------+
+| id | name   | password | uid  | gid  | comment | homedir | shell         |
++----+--------+----------+------+------+---------+---------+---------------+
+|  1 | root   | x        |    1 |    0 | admin   | /root   | /bin/bash     |
+|  2 | bin    | x        |    2 |    1 | admin   | /bin    | /sbin/nologin |
+|  3 | daemon | x        |    3 |    2 | admin   | /sbin   | /sbin/nologin |
++----+--------+----------+------+------+---------+---------+---------------+
+3 rows in set (0.00 sec)
+
+mysql> update db3.user set uid = uid - 1  where id <= 3 ;
+Query OK, 3 rows affected (0.00 sec)
+Rows matched: 3  Changed: 3  Warnings: 0
+
+mysql> select * from  db3.user where id <= 3;
++----+--------+----------+------+------+---------+---------+---------------+
+| id | name   | password | uid  | gid  | comment | homedir | shell         |
++----+--------+----------+------+------+---------+---------+---------------+
+|  1 | root   | x        |    0 |    0 | admin   | /root   | /bin/bash     |
+|  2 | bin    | x        |    1 |    1 | admin   | /bin    | /sbin/nologin |
+|  3 | daemon | x        |    2 |    2 | admin   | /sbin   | /sbin/nologin |
++----+--------+----------+------+------+---------+---------+---------------+
+3 rows in set (0.00 sec)
+
+mysql> 
