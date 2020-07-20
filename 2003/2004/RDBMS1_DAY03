@@ -1,0 +1,78 @@
+1 数据导入导出
+	1.1 检索目录：数据导入和导出是文件数据的文件要求的目录
+查看默认的检索目录：
+mysql> show variables like "%file%";
+mysql> show variables like "secure_file_priv";
++------------------+-----------------------+
+| Variable_name    | Value                 |
++------------------+-----------------------+
+| secure_file_priv | /var/lib/mysql-files/ |
++------------------+-----------------------+
+1 row in set (0.04 sec)
+
+mysql> 
+
+[root@host50 ~]# ls -ld  /var/lib/mysql-files/
+drwxr-x---. 2 mysql mysql 6 Nov 29  2016 /var/lib/mysql-files/
+
+修改检索目录
+
+[root@host50 ~]# vim /etc/my.cnf
+[mysqld]
+secure_file_priv="/myload"
+:wq
+[root@host50 ~]# setenforce  0
+[root@host50 ~]# mkdir /myload
+[root@host50 ~]# chown  mysql /myload
+[root@host50 ~]# systemctl  restart mysqld
+[root@host50 ~]# mysql -hlocalhost -uroot -ptarena
+
+mysql> show variables like "secure_file_priv";
++------------------+----------+
+| Variable_name    | Value    |
++------------------+----------+
+| secure_file_priv | /myload/ |
++------------------+----------+
+1 row in set (0.11 sec)
+
+mysql> 
+
+	1.2 数据导入: 把系统文件的内容存储到数据库的表里
+
+    命令格式：
+
+
+             例子：
+
+mysql> create database db3;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> create table db3.user( name char(50) , password  char(1) , uid  int , gid int , comment varchar(150) , homedir varchar(100) , shell  char(60) );
+Query OK, 0 rows affected (0.08 sec)
+
+mysql> desc db3.user;
++----------+--------------+------+-----+---------+-------+
+| Field    | Type         | Null | Key | Default | Extra |
++----------+--------------+------+-----+---------+-------+
+| name     | char(50)     | YES  |     | NULL    |       |
+| password | char(1)      | YES  |     | NULL    |       |
+| uid      | int(11)      | YES  |     | NULL    |       |
+| gid      | int(11)      | YES  |     | NULL    |       |
+| comment  | varchar(150) | YES  |     | NULL    |       |
+| homedir  | varchar(100) | YES  |     | NULL    |       |
+| shell    | char(60)     | YES  |     | NULL    |       |
++----------+--------------+------+-----+---------+-------+
+7 rows in set (0.04 sec)
+
+mysql> select  * from db3.user;
+Empty set (0.00 sec)
+
+mysql> system  cp /etc/passwd  /myload/
+mysql> system ls /myload
+passwd
+mysql>
+
+
+	1.3 数据导出：把数据库表里的记录存储到系统文件里
+
+
