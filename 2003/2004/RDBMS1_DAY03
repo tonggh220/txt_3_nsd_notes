@@ -71,7 +71,37 @@ mysql> system  cp /etc/passwd  /myload/
 mysql> system ls /myload
 passwd
 mysql>
+导入数据
+mysql> load data infile "/myload/passwd" into table db3.user
+    -> fields terminated by ":"  lines terminated by "\n" ;
+Query OK, 19 rows affected (0.01 sec)
+Records: 19  Deleted: 0  Skipped: 0  Warnings: 0
 
+mysql> 
+mysql> alter table  db3.user  add id  int primary key auto_increment  first;
+mysql> select  * from  db3.user;
+mysql> select  * from  db3.user where id = 5 ;
++----+------+----------+------+------+---------+----------------+---------------+
+| id | name | password | uid  | gid  | comment | homedir        | shell         |
++----+------+----------+------+------+---------+----------------+---------------+
+|  5 | lp   | x        |    4 |    7 | lp      | /var/spool/lpd | /sbin/nologin |
++----+------+----------+------+------+---------+----------------+---------------+
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> select  * from  db3.user where id <= 5 ;
++----+--------+----------+------+------+---------+----------------+---------------+
+| id | name   | password | uid  | gid  | comment | homedir        | shell         |
++----+--------+----------+------+------+---------+----------------+---------------+
+|  1 | root   | x        |    0 |    0 | root    | /root          | /bin/bash     |
+|  2 | bin    | x        |    1 |    1 | bin     | /bin           | /sbin/nologin |
+|  3 | daemon | x        |    2 |    2 | daemon  | /sbin          | /sbin/nologin |
+|  4 | adm    | x        |    3 |    4 | adm     | /var/adm       | /sbin/nologin |
+|  5 | lp     | x        |    4 |    7 | lp      | /var/spool/lpd | /sbin/nologin |
++----+--------+----------+------+------+---------+----------------+---------------+
+5 rows in set (0.08 sec)
+
+mysql> 
 
 	1.3 数据导出：把数据库表里的记录存储到系统文件里
 
