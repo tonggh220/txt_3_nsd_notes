@@ -201,3 +201,93 @@ mysql> select  * from db3.user where name = "bob";
 Empty set (0.00 sec)
 
 mysql> 
+
+3 匹配条件 (查询select 修改记录update  删除delete from  都可以加条件)
+	3.1 基本匹配条件
+		数值比较  >  <   >=  <=  =  !=
+where    数值类型字段名   比较符号  数字
+
+select * from  db3.user where  id <= 10; 
+mysql> select name , uid ,  gid  from db3.user  where uid  =  gid ;
+
+		字符比较  =   !=
+where    字符类型字段名   比较符号  “字符”
+
+mysql> select  name,shell  from db3.user  where shell="/bin/bash";
+
+mysql> select  name,shell  from db3.user  where shell != "/bin/bash";
+
+mysql> select  name,shell  from db3.user  where name = "yaya";
+Empty set (0.00 sec)
+
+mysql> select  name,shell  from db3.user  where name = "mysql";
++-------+------------+
+| name  | shell      |
++-------+------------+
+| mysql | /bin/false |
++-------+------------+
+1 row in set (0.00 sec)
+
+mysql> 
+		范围匹配
+
+
+		逻辑比较
+		匹配空   is  null
+mysql> select  *  from  db3.user where shell is  null;
+Empty set (0.11 sec)
+
+mysql> insert into db3.user(name,shell) values ("bob",null);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db3.user where name="bob";
++----+------+----------+------+------+---------+---------+-------+
+| id | name | password | uid  | gid  | comment | homedir | shell |
++----+------+----------+------+------+---------+---------+-------+
+| 32 | bob  | NULL     | NULL | NULL | NULL    | NULL    | NULL  |
++----+------+----------+------+------+---------+---------+-------+
+1 row in set (0.01 sec)
+
+mysql> select  *  from  db3.user where shell is  null;
++----+------+----------+------+------+---------+---------+-------+
+| id | name | password | uid  | gid  | comment | homedir | shell |
++----+------+----------+------+------+---------+---------+-------+
+| 32 | bob  | NULL     | NULL | NULL | NULL    | NULL    | NULL  |
++----+------+----------+------+------+---------+---------+-------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+		匹配非空   is  not  null
+mysql> select name,shell from db3.user where shell is null;
++------+-------+
+| name | shell |
++------+-------+
+| bob  | NULL  |
++------+-------+
+1 row in set (0.00 sec)
+
+mysql> select name,shell from db3.user where shell is not null;
+
+mysql> select name,shell from db3.user where shell is null;
++------+-------+
+| name | shell |
++------+-------+
+| bob  | NULL  |
++------+-------+
+1 row in set (0.00 sec)
+
+mysql> update db3.user set shell="/bin/bash" where shell is null ;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> 
+mysql> select name,shell from db3.user where name="bob";
++------+-----------+
+| name | shell     |
++------+-----------+
+| bob  | /bin/bash |
++------+-----------+
+1 row in set (0.00 sec)
+
+mysql> 
