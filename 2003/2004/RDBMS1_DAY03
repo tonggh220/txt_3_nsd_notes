@@ -291,3 +291,99 @@ mysql> select name,shell from db3.user where name="bob";
 1 row in set (0.00 sec)
 
 mysql> 
+
+ 范围匹配
+                             
+字段名  in  (值列表)    在.....里
+字段名  not  in  (值列表)    不在.....里
+字段名  between 数字  and  数字   在...之间
+mysql> select name from  db3.user where name in ("zs","lisi","ww");
+Empty set (0.00 sec)
+
+mysql> select name from  db3.user where name in ("mysql","root","sync");
++-------+
+| name  |
++-------+
+| root  |
+| sync  |
+| mysql |
++-------+
+3 rows in set (0.00 sec)
+
+mysql> select name,uid from  db3.user where uid in (3,7,102,44);
++------+------+
+| name | uid  |
++------+------+
+| adm  |    3 |
+| halt |    7 |
++------+------+
+2 rows in set (0.00 sec)
+
+mysql>
+
+mysql> select name,shell from db3.user where shell not in ("/bin/bash","/sbin/nlogin");
+
+mysql> select  * from db3.user where uid between 10 and  20 ;
++----+----------+----------+------+------+----------+------------+---------------+
+| id | name     | password | uid  | gid  | comment  | homedir    | shell         |
++----+----------+----------+------+------+----------+------------+---------------+
+| 10 | operator | a        |   11 |    0 | operator | /root      | /sbin/nologin |
+| 11 | games    | a        |   12 |  100 | games    | /usr/games | /sbin/nologin |
+| 12 | ftp      | a        |   14 |   50 | FTP User | /var/ftp   | /sbin/nologin |
++----+----------+----------+------+------+----------+------------+---------------+
+3 rows in set (0.00 sec)
+
+mysql> select  * from db3.user where uid between 1 and  5 ;
+
+
+
+		逻辑比较 （有多个比较条件）
+逻辑与  and   &&  (多个条件必须同时满足)
+逻辑或  or       ||    (多个条件满足其中一个条件即可)
+
+mysql> select  * from  db3.user where  uid>=6  and  uid<=10 ;
++----+----------+----------+------+------+----------+-----------------+----------------+
+| id | name     | password | uid  | gid  | comment  | homedir         | shell          |
++----+----------+----------+------+------+----------+-----------------+----------------+
+|  7 | shutdown | a        |    6 |    0 | shutdown | /sbin           | /sbin/shutdown |
+|  8 | halt     | a        |    7 |    0 | halt     | /sbin           | /sbin/halt     |
+|  9 | mail     | a        |    8 |   12 | mail     | /var/spool/mail | /sbin/nologin  |
++----+----------+----------+------+------+----------+-----------------+----------------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
+
+mysql> select  * from db3.user where id=10  or id=6  or name="root";
++----+----------+----------+------+------+----------+---------+---------------+
+| id | name     | password | uid  | gid  | comment  | homedir | shell         |
++----+----------+----------+------+------+----------+---------+---------------+
+|  1 | root     | x        |    0 |    0 | admin    | /root   | /bin/bash     |
+|  6 | sync     | a        |    5 |    0 | sync     | /sbin   | /bin/sync     |
+| 10 | operator | a        |   11 |    0 | operator | /root   | /sbin/nologin |
++----+----------+----------+------+------+----------+---------+---------------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
+逻辑非 取反  ! 和 not 
+mysql> select shell from db3.user  where shell is null;
+Empty set (0.00 sec)
+
+mysql> select shell from db3.user  where shell is not  null;
+
+
+mysql> select shell from db3.user  where shell in("/bin/bash","/sbin/nologin");
+
+mysql> select shell from db3.user  where shell   not    in("/bin/bash","/sbin/nologin");
+
+
+mysql> select name from db3.user  where name="root" ;
++------+
+| name |
++------+
+| root |
++------+
+1 row in set (0.00 sec)
+
+mysql> select name from db3.user  where name!="root" ;
