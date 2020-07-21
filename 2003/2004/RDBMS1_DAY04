@@ -267,3 +267,56 @@ Create_tmp_table_priv: N
 1 row in set (0.00 sec)
 
 mysql> 
+
+
+tables_priv表  记录已有授权用户对表的访问权限
+
+mysql> desc mysql.talbes_priv;
+mysql> grant  select,insert  on  db1.t10  to  yaya@"localhost" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> 
+mysql> select  * from mysql.tables_priv where table_name="t10";
++-----------+-----+------+------------+----------------+---------------------+---------------+-------------+
+| Host      | Db  | User | Table_name | Grantor        | Timestamp           | Table_priv    | Column_priv |
++-----------+-----+------+------------+----------------+---------------------+---------------+-------------+
+| localhost | db1 | yaya | t10        | root@localhost | 0000-00-00 00:00:00 | Select,Insert |             |
++-----------+-----+------+------------+----------------+---------------------+---------------+-------------+
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> grant  select,insert  on  db1.t10  to  yaya2@"192.168.4.51" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> 
+mysql> select  * from mysql.tables_priv where table_name="t10";
++--------------+-----+-------+------------+----------------+---------------------+---------------+-------------+
+| Host         | Db  | User  | Table_name | Grantor        | Timestamp           | Table_priv    | Column_priv |
++--------------+-----+-------+------------+----------------+---------------------+---------------+-------------+
+| localhost    | db1 | yaya  | t10        | root@localhost | 0000-00-00 00:00:00 | Select,Insert |             |
+| 192.168.4.51 | db1 | yaya2 | t10        | root@localhost | 0000-00-00 00:00:00 | Select,Insert |             |
++--------------+-----+-------+------------+----------------+---------------------+---------------+-------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+
+columns_priv表  记录已有授权用户对字段的访问权限
+mysql> desc mysql.columns_priv;
+mysql> select  * from  mysql.columns_priv;
+Empty set (0.00 sec)
+
+mysql> grant select(name) , update(password,uid) on  db3.user to yaya3@"localhost" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.03 sec)
+
+mysql> select  * from  mysql.columns_priv;
++-----------+-----+-------+------------+-------------+---------------------+-------------+
+| Host      | Db  | User  | Table_name | Column_name | Timestamp           | Column_priv |
++-----------+-----+-------+------------+-------------+---------------------+-------------+
+| localhost | db3 | yaya3 | user       | name        | 0000-00-00 00:00:00 | Select      |
+| localhost | db3 | yaya3 | user       | password    | 0000-00-00 00:00:00 | Update      |
+| localhost | db3 | yaya3 | user       | uid         | 0000-00-00 00:00:00 | Update      |
++-----------+-----+-------+------------+-------------+---------------------+-------------+
+3 rows in set (0.00 sec)
+
+mysql> 
