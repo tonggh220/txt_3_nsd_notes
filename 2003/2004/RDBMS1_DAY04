@@ -18,16 +18,118 @@ with grant option 可选项
 mysql> grant  all on  *.*  to mydba@"%"  identified by "123qqq...A" with grant option ;
 Query OK, 0 rows affected, 1 warning (0.09 sec)
 
+mysql> grant  select  on  db3.user  to admin@"192.168.4.%" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.04 sec)
+
+
+mysql> grant  select , insert , update , delete  on db3.* to admin2@"localhost" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.05 sec)
+
 mysql>
 
-
 1.5 相关命令
+mysql> select user();
++--------------------+
+| user()             |
++--------------------+
+| admin@192.168.4.51 |
++--------------------+
+1 row in set (0.00 sec)
+
+mysql> select  @@hostname ;
++------------+
+| @@hostname |
++------------+
+| host50     |
++------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+mysql> show grants;
++-------------------------------------------------------+
+| Grants for admin@192.168.4.%                          |
++-------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'admin'@'192.168.4.%'           |
+| GRANT SELECT ON `db3`.`user` TO 'admin'@'192.168.4.%' |
++-------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> show grants for admin3@"localhost" ;
+ERROR 1141 (42000): There is no such grant defined for user 'admin3' on host 'localhost'
+mysql> 
+mysql> show grants for admin2@"localhost" ;
++-------------------------------------------------------------------------+
+| Grants for admin2@localhost                                             |
++-------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'admin2'@'localhost'                              |
+| GRANT SELECT, INSERT, UPDATE, DELETE ON `db3`.* TO 'admin2'@'localhost' |
++-------------------------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+[root@host51 ~]# mysql -h192.168.4.50 -uadmin  -p123qqq...A 
+mysql> select  password("abc123") ;
++-------------------------------------------+
+| password("abc123")                        |
++-------------------------------------------+
+| *6691484EA6B50DDDE1926A220DA01FA9E575C18A |
++-------------------------------------------+
+1 row in set, 1 warning (0.01 sec)
+
+mysql> set password=password("A...qqq321");
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+mysql> exit;
+[root@host51 ~]# mysql -h192.168.4.50 -uadmin  -p123qqq...A
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 1045 (28000): Access denied for user 'admin'@'192.168.4.51' (using password: YES)
+[root@host51 ~]# 
+[root@host51 ~]# mysql -h192.168.4.50 -uadmin  -pA...qqq321
+mysql> 
+
+
+[root@host50 ~]# mysql  -uroot -ptarena
+mysql> set password for admin@"192.168.4.%"=password("123qqq...A");
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> 
+
+[root@host51 ~]# mysql -h192.168.4.50 -uadmin  -p123qqq...A
+MySQL>
+[root@host50 ~]# mysql root   -p123qqq...A
+mysql> drop user admin@"192.168.4.%";
+Query OK, 0 rows affected (0.03 sec)
 
 1.6 测试授权
 ]# mysql  -h数据库服务器ip  -u授权用户名  -p密码
 
-[root@host51 ~]# mysql -h192.168.4.50 -uadmin -p123qqq...A
+[root@host51 ~]# mysql -h192.168.4.50 -umydba -p123qqq...A
 mysql> show databases;
 mysql> create database db4;
 mysql> show databases;
 mysql> exit
+
+
+[root@host51 ~]# mysql -h192.168.4.50 -uadmin -p123qqq...A
+mysql> show databases;
+mysql> delete from  db3.user;
+mysql> select  * from db3.user;
+mysql> exit
+
+[root@host51 ~]# mysql -h192.168.4.50 -uadmin2  -p123qqq...A
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 1045 (28000): Access denied for user 'admin2'@'192.168.4.51' (using password: YES)
+[root@host51 ~]# 
+
+[root@host50 ~]# mysql  -uadmin2 -p123qqq...A
+mysql> drop table db3.user;
+ERROR 1142 (42000): DROP command denied to user 'admin2'@'localhost' for table 'user'
+mysql> 
+mysql> select  * from db3.user where id >= 21;
+mysql> update db3.user set password="a" , shell="/bin/bash" where id >= 21;
+Query OK, 8 rows affected (0.01 sec)
+mysql> delete from db3.user where id >= 21;
+Query OK, 8 rows affected (0.00 sec)
