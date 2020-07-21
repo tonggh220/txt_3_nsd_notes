@@ -133,3 +133,39 @@ mysql> update db3.user set password="a" , shell="/bin/bash" where id >= 21;
 Query OK, 8 rows affected (0.01 sec)
 mysql> delete from db3.user where id >= 21;
 Query OK, 8 rows affected (0.00 sec)
+
+
+1.7 授权库mysql
+查看表记录可以获取用户权限；也可以通过更新记录，修改用户权限
+
+•mysql库 记录授权信息，主要表如下：
+user表  记录已有的授权用户及权限
+mysql> desc mysql.user;
+mysql> select host , user from  mysql.user;
++-----------+-----------+
+| host      | user      |
++-----------+-----------+
+| %         | mydba     |
+| localhost | admin2    |
+| localhost | mysql.sys |
+| localhost | root      |
++-----------+-----------+
+4 rows in set (0.00 sec)
+
+mysql> 
+mysql> show grants for mydba@"%";
++--------------------------------------------------------------+
+| Grants for mydba@%                                           |
++--------------------------------------------------------------+
+| GRANT ALL PRIVILEGES ON *.* TO 'mydba'@'%' WITH GRANT OPTION |
++--------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select  * from mysql.user where  host="%" and user="mydba" \G
+
+mysql> update mysql.user set  Delete_priv="N" where  host="%" and user="mydba" ;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> flush privileges;
+Query OK, 0 rows affected (0.00 sec)
