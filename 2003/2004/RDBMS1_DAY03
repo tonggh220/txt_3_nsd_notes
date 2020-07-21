@@ -1025,3 +1025,44 @@ mysql> select name , uid ,gid  from  db3.user where  uid between 10 and 60  orde
 1 row in set (0.01 sec)
 
 mysql> 
+
+4 MySQL管理工具
+	4.1 图形管理工具软件介绍
+	4.2 安装phpmyadmin软件 管理数据库服务器
+[root@host50 ~]# rpm -q httpd
+package httpd is not installed
+[root@host50 ~]# rpm -q php
+package php is not installed
+[root@host50 ~]# rpm -q php-mysql
+package php-mysql is not installed
+[root@host50 ~]# 
+[root@host50 ~]# yum -y install httpd  php  php-mysql
+
+[root@host50 ~]# systemctl start httpd
+[root@host50 ~]# systemctl enable httpd
+Created symlink from /etc/systemd/system/multi-user.target.wants/httpd.service to /usr/lib/systemd/system/httpd.service.
+[root@host50 ~]# 
+[root@host50 ~]# ls /var/www/html/
+[root@host50 ~]# tar -zxvf upload/phpMyAdmin-2.11.11-all-languages.tar.gz 
+
+[root@host50 ~]# mv phpMyAdmin-2.11.11-all-languages /var/www/html/phpmyadmin
+[root@host50 ~]# cd /var/www/html/phpmyadmin/
+
+[root@host50 phpmyadmin]# 
+[root@host50 phpmyadmin]# ls config.sample.inc.php 
+config.sample.inc.php
+[root@host50 phpmyadmin]# cp config.sample.inc.php  config.inc.php 
+[root@host50 phpmyadmin]# 
+[root@host50 phpmyadmin]# ls config.inc.php 
+config.inc.php
+[root@host50 phpmyadmin]# 
+[root@host50 phpmyadmin]# vim config.inc.php 
+$cfg['blowfish_secret'] = 'plj123';
+$cfg['Servers'][$i]['host'] = 'localhost';
+:wq
+
+打开真机的浏览器 输入网址访问  
+http://192.168.4.50/phpmyadmin
+
+用户 root(数据库管理员)
+密码 管理员的密码
