@@ -169,3 +169,101 @@ Rows matched: 1  Changed: 1  Warnings: 0
 
 mysql> flush privileges;
 Query OK, 0 rows affected (0.00 sec)
+
+
+db表  记录已有授权用户对数据库的访问权限
+mysql> desc mysql.db;
+mysql> select   user , host , db  from mysql.db;
++-----------+-----------+-----+
+| user      | host      | db  |
++-----------+-----------+-----+
+| admin2    | localhost | db3 |
+| mysql.sys | localhost | sys |
++-----------+-----------+-----+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> 
+
+mysql> select  *  from mysql.db where db="db3" \G
+*************************** 1. row ***************************
+                 Host: localhost
+                   Db: db3
+                 User: admin2
+          Select_priv: Y
+          Insert_priv: Y
+          Update_priv: Y
+          Delete_priv: Y
+          Create_priv: N
+            Drop_priv: Y
+           Grant_priv: N
+      References_priv: N
+           Index_priv: N
+           Alter_priv: N
+Create_tmp_table_priv: N
+     Lock_tables_priv: N
+     Create_view_priv: N
+       Show_view_priv: N
+  Create_routine_priv: N
+   Alter_routine_priv: N
+         Execute_priv: N
+           Event_priv: N
+         Trigger_priv: N
+1 row in set (0.01 sec)
+
+mysql> 
+mysql> 
+mysql> show grants for  admin2@"localhost";
++-------------------------------------------------------------------------------+
+| Grants for admin2@localhost                                                   |
++-------------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'admin2'@'localhost'                                    |
+| GRANT SELECT, INSERT, UPDATE, DELETE, DROP ON `db3`.* TO 'admin2'@'localhost' |
++-------------------------------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> update  mysql.db  set  Create_priv="Y" where db="db3";
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> flush privileges;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>
+mysql> show grants for  admin2@"localhost";
++---------------------------------------------------------------------------------------+
+| Grants for admin2@localhost                                                           |
++---------------------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'admin2'@'localhost'                                            |
+| GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP ON `db3`.* TO 'admin2'@'localhost' |
++---------------------------------------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> select  *  from mysql.db where db="db3" \G
+*************************** 1. row ***************************
+                 Host: localhost
+                   Db: db3
+                 User: admin2
+          Select_priv: Y
+          Insert_priv: Y
+          Update_priv: Y
+          Delete_priv: Y
+          Create_priv: Y
+            Drop_priv: Y
+           Grant_priv: N
+      References_priv: N
+           Index_priv: N
+           Alter_priv: N
+Create_tmp_table_priv: N
+     Lock_tables_priv: N
+     Create_view_priv: N
+       Show_view_priv: N
+  Create_routine_priv: N
+   Alter_routine_priv: N
+         Execute_priv: N
+           Event_priv: N
+         Trigger_priv: N
+1 row in set (0.00 sec)
+
+mysql> 
