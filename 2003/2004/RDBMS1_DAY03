@@ -638,3 +638,91 @@ mysql> select * from  db3.user where id <= 3;
 3 rows in set (0.00 sec)
 
 mysql> 
+
+
+3 操作查询结果
+3.1聚集函数
+–avg(字段名)  //统计字段平均值
+–sum(字段名)   //统计字段之和
+–min(字段名)   //统计字段最小值
+–max(字段名)   //统计字段最大值
+–count(字段名)   //统计字段值个数
+
+例子
+mysql> select max(uid)  from db3.user;
++----------+
+| max(uid) |
++----------+
+|     3004 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> select min(uid)  from db3.user;
++----------+
+| min(uid) |
++----------+
+|        0 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> select avg(uid)  from db3.user;
++----------+
+| avg(uid) |
++----------+
+| 593.2174 |
++----------+
+1 row in set (0.01 sec)
+
+mysql> select sum(uid)  from db3.user;
++----------+
+| sum(uid) |
++----------+
+|    13644 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> select  min(uid) from  db3.user where id <= 10;
++----------+
+| min(uid) |
++----------+
+|        0 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+mysql> select count(name) zrs from db3.user where shell = "/bin/bash";
++-----+
+| zrs |
++-----+
+|   2 |
++-----+
+1 row in set (0.00 sec)
+
+mysql> select count(name)  from db3.user where shell = "/bin/bash";
++-------------+
+| count(name) |
++-------------+
+|           2 |
++-------------+
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> select count(*) from db3.user;
++----------+
+| count(*) |
++----------+
+|       27 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> select count(*) zhs from db3.user;
++-----+
+| zhs |
++-----+
+|  27 |
++-----+
+1 row in set (0.00 sec)
+
+mysql>
