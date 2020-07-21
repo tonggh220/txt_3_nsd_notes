@@ -726,3 +726,174 @@ mysql> select count(*) zhs from db3.user;
 1 row in set (0.00 sec)
 
 mysql>
+
+		排序
+select 查询  order by 字段名 排序方式
+				    asc | desc							      升序   降序
+mysql> select name , uid  from  db3.user  where uid >=10 and uid<=100;
++----------+------+
+| name     | uid  |
++----------+------+
+| operator |   11 |
+| games    |   12 |
+| ftp      |   14 |
+| nobody   |   99 |
+| dbus     |   81 |
+| sshd     |   74 |
+| postfix  |   89 |
+| mysql    |   27 |
++----------+------+
+8 rows in set (0.00 sec)
+
+mysql> select name , uid  from  db3.user  where uid >=10 and uid<=100 order by uid ;
++----------+------+
+| name     | uid  |
++----------+------+
+| operator |   11 |
+| games    |   12 |
+| ftp      |   14 |
+| mysql    |   27 |
+| sshd     |   74 |
+| dbus     |   81 |
+| postfix  |   89 |
+| nobody   |   99 |
++----------+------+
+8 rows in set (0.00 sec)
+
+mysql> select name , uid  from  db3.user  where uid >=10 and uid<=100 order by uid asc;
++----------+------+
+| name     | uid  |
++----------+------+
+| operator |   11 |
+| games    |   12 |
+| ftp      |   14 |
+| mysql    |   27 |
+| sshd     |   74 |
+| dbus     |   81 |
+| postfix  |   89 |
+| nobody   |   99 |
++----------+------+
+8 rows in set (0.00 sec)
+
+mysql> select name , uid  from  db3.user  where uid >=10 and uid<=100 order by uid desc;
++----------+------+
+| name     | uid  |
++----------+------+
+| nobody   |   99 |
+| postfix  |   89 |
+| dbus     |   81 |
+| sshd     |   74 |
+| mysql    |   27 |
+| ftp      |   14 |
+| games    |   12 |
+| operator |   11 |
++----------+------+
+8 rows in set (0.00 sec)
+
+mysql> 
+
+
+
+		分组  group by  字段名；
+mysql> select shell from  db3.user group by shell;
++----------------+
+| shell          |
++----------------+
+| NULL           |
+| /bin/bash      |
+| /bin/false     |
+| /bin/sync      |
+| /sbin/halt     |
+| /sbin/nologin  |
+| /sbin/shutdown |
++----------------+
+7 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> select shell from  db3.user where  uid <= 500 group by shell;
++----------------+
+| shell          |
++----------------+
+| /bin/bash      |
+| /bin/false     |
+| /bin/sync      |
+| /sbin/halt     |
+| /sbin/nologin  |
+| /sbin/shutdown |
++----------------+
+6 rows in set (0.00 sec)
+
+mysql> select count(shell) from  db3.user where  uid <= 500 group by shell;
++--------------+
+| count(shell) |
++--------------+
+|            1 |
+|            1 |
+|            1 |
+|            1 |
+|           13 |
+|            1 |
++--------------+
+6 rows in set (0.00 sec)
+
+mysql> 
+
+
+		去重显示  distinct  字段名
+mysql> select  distinct gid  from db3.user;
++------+
+| gid  |
++------+
+|    0 |
+|    1 |
+|    2 |
+|    4 |
+|    7 |
+|   12 |
+|  100 |
+|   50 |
+|   99 |
+|  192 |
+|   81 |
+|  998 |
+|   74 |
+|   89 |
+|   27 |
+| NULL |
++------+
+16 rows in set (0.00 sec)
+
+mysql> 
+mysql> 
+mysql> 
+mysql> select  distinct gid  from db3.user where id <= 15 ;
+
+
+
+mysql> select  distinct shell  from db3.user  ;
++----------------+
+| shell          |
++----------------+
+| /bin/bash      |
+| /sbin/nologin  |
+| /bin/sync      |
+| /sbin/shutdown |
+| /sbin/halt     |
+| /bin/false     |
+| NULL           |
++----------------+
+7 rows in set (0.00 sec)
+
+mysql>
+
+mysql> select  distinct shell  from db3.user  where id <= 5 ;
++---------------+
+| shell         |
++---------------+
+| /bin/bash     |
+| /sbin/nologin |
++---------------+
+2 rows in set (0.00 sec)
+
+mysql> 
