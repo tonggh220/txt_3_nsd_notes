@@ -897,3 +897,131 @@ mysql> select  distinct shell  from db3.user  where id <= 5 ;
 2 rows in set (0.00 sec)
 
 mysql> 
+
+		过滤查询结果  having 条件
+
+mysql> select name from db3.user where shell is not null ;
+
+
+mysql> select name from db3.user where shell is not null  having name="mysql";
++-------+
+| name  |
++-------+
+| mysql |
++-------+
+1 row in set (0.00 sec)
+
+mysql> select name from db3.user where shell is not null  having name="mysql2";
+Empty set (0.00 sec)
+
+mysql> 
+mysql> 
+mysql> select name from db3.user where shell is not null  and  name="mysql";
++-------+
+| name  |
++-------+
+| mysql |
++-------+
+1 row in set (0.00 sec)
+
+mysql> ^C
+mysql> 
+mysql> select name from  db3.user where shell != "/bin/bash" having name="mysql";
++-------+
+| name  |
++-------+
+| mysql |
++-------+
+1 row in set (0.00 sec)
+
+mysql> select name from  db3.user where shell != "/bin/bash" having name="root";
+Empty set (0.00 sec)
+
+mysql> 
+		限制查询结果显示行数 limit
+如果不限制，显示所有与查询条件匹配的行
+
+SELECT 查询  limit  数字； 显示查询结果的头几行
+
+mysql> select  name , uid ,  shell   from  db3.user where shell != "/bin/bash";
+
+
+mysql> select  name , uid ,  shell   from  db3.user where shell != "/bin/bash"  limit  1;
+
++------+------+---------------+
+| name | uid  | shell         |
++------+------+---------------+
+| bin  |    1 | /sbin/nologin |
++------+------+---------------+
+1 row in set (0.00 sec)
+
+mysql> select  name , uid ,  shell   from  db3.user where shell != "/bin/bash" limit 2;
++--------+------+---------------+
+| name   | uid  | shell         |
++--------+------+---------------+
+| bin    |    1 | /sbin/nologin |
+| daemon |    2 | /sbin/nologin |
++--------+------+---------------+
+2 rows in set (0.00 sec)
+
+mysql> select  name , uid ,  shell   from  db3.user where shell != "/bin/bash" limit 3;
++--------+------+---------------+
+| name   | uid  | shell         |
++--------+------+---------------+
+| bin    |    1 | /sbin/nologin |
+| daemon |    2 | /sbin/nologin |
+| adm    |    3 | /sbin/nologin |
++--------+------+---------------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
+
+SELECT 查询  limit  数字1 ，数字2； 显示指定范围的行
+
+数字1  表示起始行 （第1行 用数字0 表示）
+数字2  表示显示数字的总行号 
+
+mysql> select  name , uid ,  shell   from  db3.user where shell != "/bin/bash" limit 0,2;
++--------+------+---------------+
+| name   | uid  | shell         |
++--------+------+---------------+
+| bin    |    1 | /sbin/nologin |
+| daemon |    2 | /sbin/nologin |
++--------+------+---------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> select  name , uid ,  shell   from  db3.user where shell != "/bin/bash" limit 4,4;
++----------+------+----------------+
+| name     | uid  | shell          |
++----------+------+----------------+
+| sync     |    5 | /bin/sync      |
+| shutdown |    6 | /sbin/shutdown |
+| halt     |    7 | /sbin/halt     |
+| mail     |    8 | /sbin/nologin  |
++----------+------+----------------+
+4 rows in set (0.00 sec)
+
+mysql> select  name , uid ,  shell   from  db3.user where shell != "/bin/bash" limit 4,2;
++----------+------+----------------+
+| name     | uid  | shell          |
++----------+------+----------------+
+| sync     |    5 | /bin/sync      |
+| shutdown |    6 | /sbin/shutdown |
++----------+------+----------------+
+2 rows in set (0.00 sec)
+
+
+
+综合应用的例子
+mysql> select name , uid ,gid  from  db3.user where  uid between 10 and 60  order by  uid limit  1;
++----------+------+------+
+| name     | uid  | gid  |
++----------+------+------+
+| operator |   11 |    0 |
++----------+------+------+
+1 row in set (0.01 sec)
+
+mysql> 
