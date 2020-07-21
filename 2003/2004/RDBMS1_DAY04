@@ -320,3 +320,79 @@ mysql> select  * from  mysql.columns_priv;
 3 rows in set (0.00 sec)
 
 mysql> 
+1.8 撤销权限
+作用：删除用户的权限
+命令格式：
+revoke  权限列表 on 库名  from  用户@"客户端地址"；
+例子：
+mysql> select host , user from mysql.user;
++--------------+-----------+
+| host         | user      |
++--------------+-----------+
+| %            | mydba     |
+| 192.168.4.51 | yaya2     |
+| localhost    | admin2    |
+| localhost    | mysql.sys |
+| localhost    | root      |
+| localhost    | yaya      |
+| localhost    | yaya3     |
++--------------+-----------+
+7 rows in set (0.00 sec)
+
+mysql> show grants for mydba@"%";
+mysql> revoke grant option on *.*  from mydba@'%';
+mysql> revoke select,update,create on *.*  from mydba@'%';
+
+mysql> show grants for mydba@"%";
++-----------------------------------+
+| Grants for mydba@%                |
++-----------------------------------+
+| GRANT USAGE ON *.* TO 'mydba'@'%' |
++-----------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select user ,host from mysql.user;
++-----------+--------------+
+| user      | host         |
++-----------+--------------+
+| mydba     | %            |
+| yaya2     | 192.168.4.51 |
+| admin2    | localhost    |
+| mysql.sys | localhost    |
+| root      | localhost    |
+| yaya      | localhost    |
+| yaya3     | localhost    |
++-----------+--------------+
+7 rows in set (0.00 sec)
+
+mysql> select user ,host from mysql.user;
++-----------+--------------+
+| user      | host         |
++-----------+--------------+
+| mydba     | %            |
+| yaya2     | 192.168.4.51 |
+| admin2    | localhost    |
+| mysql.sys | localhost    |
+| root      | localhost    |
+| yaya      | localhost    |
+| yaya3     | localhost    |
++-----------+--------------+
+7 rows in set (0.00 sec)
+
+mysql> drop user mydba@"%";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select user ,host from mysql.user;
++-----------+--------------+
+| user      | host         |
++-----------+--------------+
+| yaya2     | 192.168.4.51 |
+| admin2    | localhost    |
+| mysql.sys | localhost    |
+| root      | localhost    |
+| yaya      | localhost    |
+| yaya3     | localhost    |
++-----------+--------------+
+6 rows in set (0.00 sec)
+
+mysql> 
