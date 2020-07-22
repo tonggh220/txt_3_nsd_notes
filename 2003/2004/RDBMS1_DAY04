@@ -486,3 +486,117 @@ ca.pem      db4              ib_logfile1     private_key.pem
 
 [root@host51 ~]# mysql -uroot -p123qqq...A
 mysql> show databases;
+
+逻辑备份：使用数据库服务软件自带的命令或安装其他软件提供的命令对数据做备份。在执行备份命令时，根据已有的数据自动创建对应的命令，把命令保存到定义的备份文件里。
+
+
+
+			备份策略？
+				完全备份： 备份所有数据（1张表  1个库  1台服务器）
+
+				差异备份    备份完全备份后 ，备份所有新产生的数据
+				增量备份	    备份上次备份后，备份所有新产生的数据			
+
+
+			常用的备份策略
+				完全+增量
+				完全+差异
+
+差异备份  现在的数据  减去 完全备的数据   剩下的 就是要备份的数据
+
+增量备份  只备份新增的数据
+
+
+聂佳豪
+
+		数据完全备份 （命令mysqldump)
+			命令格式
+]# mysqldump  --help
+]# man  mysqldump
+
+			]# mysqldump -uroot  -p密码  库名 >  目录名/文件名.sql
+							
+		库名的表示方式？
+			1张表   库名 表名     例如 db1 t10
+			1个库   库名          例如 mysql
+			1台服务器  --all-databases 或 -A 
+
+			-B  库名 库名 库名  一起备份多个库的所有数据
+
+		数据完全恢复  （命令mysql)
+			命令格式
+			]# mysql -uroot -p密码	库名  <  目录名/文件名.sql
+
+
+	例子
+		完全备份数据192.168.4.50
+[root@host50 ~]# mkdir  /mybak
+
+[root@host50 ~]# mysqldump -uroot -p123qqq...A  --all-databases > /mybak/allbak.sql
+
+[root@host50 ~]# ls /mybak/
+allbak.sql
+[root@host50 ~]# ls /mybak/ -l
+total 788
+-rw-r--r--. 1 root root 803618 Jul 22 22:23 allbak.sql
+[root@host50 ~]# 
+[root@host50 ~]# vim /mybak/allbak.sql
+
+
+[root@host50 ~]# mysqldump -uroot -p123qqq...A  db1  > /mybak/db1all.sql
+
+[root@host50 ~]# mysqldump -uroot -p123qqq...A  db3 user  > /mybak/db3_user.sql
+mysqldump: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# 
+[root@host50 ~]# ls /mybak
+allbak.sql  db1all.sql  db3_user.sql
+[root@host50 ~]# 
+
+[root@host50 ~]# mysqldump -uroot -p123qqq...A  -B db3 db1  > /mybak/twodb.sql
+mysqldump: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# 
+[root@host50 ~]# ls /mybak/
+allbak.sql  db1all.sql  db3_user.sql  twodb.sql
+[root@host50 ~]#  
+		
+                 完全恢复数据192.168.4.51
+[root@host51 ~]# mysql -uroot -p123qqq...A
+mysql> drop  database  mysql  ;  drop database db3 ; drop database db1 ;
+
+[root@host51 ~]# scp  root@192.168.4.50:/mybak/allbak.sql /opt/
+[root@host51 ~]# ls /opt/*.sql
+/opt/allbak.sql
+[root@host51 ~]# 
+[root@host51 ~]# mysql -uroot -p123qqq...A  < /opt/allbak.sql
+
+[root@host51 ~]# mysql -uroot -p123qqq...A 
+mysql> show databases;
+			
+
+mysql> delete from db3.user;
+Query OK, 19 rows affected (0.13 sec)
+
+mysql> select  * from db3.user;
+Empty set (0.00 sec)
+
+[root@host51 ~]# scp root@192.168.4.50:/mybak/db3_user.sql  /opt/
+root@192.168.4.50's password: 
+db3_user.sql                                           100% 3188     1.5MB/s   00:00    
+[root@host51 ~]# 
+[root@host51 ~]# ls /opt/*.sql
+/opt/allbak.sql  /opt/db3_user.sql
+[root@host51 ~]# 
+[root@host51 ~]# mysql -uroot -p123qqq...A  db3 < /opt/db3_user.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host51 ~]#
+
+[root@host51 ~]# mysql -uroot -p123qqq...A 
+mysql> select count(* )from db3.user;
++-----------+
+| count(* ) |
++-----------+
+|        19 |
++-----------+
+1 row in set (0.11 sec)
+
+mysql> 
