@@ -441,3 +441,48 @@ validate_password_length=6
 使用修改的密码登录
 [root@host50 ~]# mysql -uroot -p123qqq...A
 MYSQL> 
+
+
+2 完全备份
+               相关概念
+			什么是备份？
+			备份的目的？
+			备份的手段？执行写好数据备份脚本
+				    搭建服务结构对数据做备份
+
+			备份的方式？
+				物理备份 直接拷贝数据库目录
+					 cp  tar
+
+物理备份
+
+[root@host50 ~]# cp  -r /var/lib/mysql /root/mysql.bak
+[root@host50 ~]# scp  -r /root/mysql.bak  root@192.168.4.51:/opt/
+
+
+物理恢复
+				具体操作如下：
+					停止数据服务
+					删除数据库目录
+					拷贝备份文件
+					修改所有者和组用户为mysql
+					启动服务
+					管理员登录并查看数据
+[root@host51 ~]# systemctl  stop mysqld
+[root@host51 ~]# rm  -rf /var/lib/mysql
+[root@host51 ~]# 
+[root@host51 ~]# cp -r /opt/mysql.bak /var/lib/mysql
+[root@host51 ~]# 
+[root@host51 ~]# ls /var/lib/mysql
+auto.cnf    client-cert.pem  gamedb          ibtmp1              public_key.pem
+bbsdb       client-key.pem   ib_buffer_pool  mysql               server-cert.pem
+BBSDB       db1              ibdata1         mysql.sock.lock     server-key.pem
+ca-key.pem  db3              ib_logfile0     performance_schema  sys
+ca.pem      db4              ib_logfile1     private_key.pem
+[root@host51 ~]#
+[root@host51 ~]# chown  -R mysql:mysql  /var/lib/mysql
+
+[root@host51 ~]# systemctl  start mysqld
+
+[root@host51 ~]# mysql -uroot -p123qqq...A
+mysql> show databases;
