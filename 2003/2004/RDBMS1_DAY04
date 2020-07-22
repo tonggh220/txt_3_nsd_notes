@@ -728,3 +728,108 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | plj.000001 |      154 |              |                  |                   |
 +------------+----------+--------------+------------------+-------------------+
 [root@host50 ~]# 
+
+########使用日志恢复数据
+			<<<<<<<恢复所有数据
+			命令格式
+]# mysqlbinlog  目录名/日志文件名  |  mysql -uroot -p密码
+
+			例子
+[root@host50 ~]# mysql -uroot -p123qqq...A -e ' select count(*) from db3.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| count(*) |
++----------+
+|       23 |
++----------+
+[root@host50 ~]#
+
+第数据做完全备份
+
+[root@host50 ~]# mysqldump -uroot -p123qqq...A  --flush-logs db3  >  /root/db3.sql
+mysqldump: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# 
+
+
+[root@host50 ~]# ls /root/db3.sql 
+/root/db3.sql
+[root@host50 ~]# scp /root/db3.sql  root@192.168.4.51:/root/
+root@192.168.4.51's password: 
+db3.sql                                                100% 3358     2.1MB/s   00:00    
+[root@host50 ~]# 
+
+
+51主机使用 完全备份文件恢复数据			
+[root@host51 ~]# mysql -uroot -p123qqq...A db3  < /root/db3.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host51 ~]# 
+[root@host51 ~]# mysql -uroot -p123qqq...A -e ' select count(*) from db3.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| count(*) |
++----------+
+|       23 |
++----------+
+[root@host51 ~]# 
+
+存储新数据
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'insert into db3.user(name)values("a"),("b"),("c"),("d")'
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'insert into db3.user(name)values("FFFF")'
+
+[root@host50 ~]# mysql -uroot -p123qqq...A -e ' show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000007 |      716 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 ~]#
+
+[root@host50 ~]# mysql -uroot -p123qqq...A -e ' select count(*) from db3.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| count(*) |
++----------+
+|       28 |
++----------+
+[root@host50 ~]# 
+
+[root@host50 ~]# scp /mylog/plj.000007  root@192.168.4.51:/root/
+
+
+读取日志恢复新产生的数据
+
+[root@host51 ~]# mysqlbinlog /root/plj.000007  | mysql -uroot -p123qqq...A
+
+[root@host51 ~]# 
+[root@host51 ~]# mysql -uroot -p123qqq...A -e ' select count(*) from db3.user'
+
++----------+
+| count(*) |
++----------+
+|       28 |
++----------+
+[root@host51 ~]#
+
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e "select name from  db3.user where name regexp  '(^[a-z]$)' "
+
++------+
+| name |
++------+
+| a    |
+| b    |
+| c    |
+| d    |
++------+
+[root@host51 ~]
+
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'select name from  db3.user where name="FFFF"'
+
++------+
+| name |
++------+
+| FFFF |
++------+
+[root@host51 ~]# 
