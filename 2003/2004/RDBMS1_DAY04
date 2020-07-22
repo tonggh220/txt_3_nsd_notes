@@ -660,3 +660,71 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | plj.000001 |      425 |              |                  |                   |
 +------------+----------+--------------+------------------+-------------------+
 [root@host50 ~]#
+
+
+			手动创建新的日志文件
+[root@host50 ~]# systemctl  restart mysqld
+
+mysql> flush logs;
+
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'flush logs'
+
+[root@host50 ~]# mysqldump -uroot -p123qqq...A  --flush-logs db1 > /root/db1.sql
+
+[root@host50 ~]# mysqldump -uroot -p123qqq...A  --flush-logs -B db1 db3 mysql > /root/threedb.sql
+
+
+			删除已有的日志文件
+
+[root@host50 ~]# ls /mylog
+plj.000001  plj.000003  plj.000005  plj.000007  plj.000009  plj.000011
+plj.000002  plj.000004  plj.000006  plj.000008  plj.000010  plj.index
+[root@host50 ~]# 
+[root@host50 ~]# 
+[root@host50 ~]# mysql -uroot -p123qqq...A -e ' purge  master  logs  to  "plj.000005" '
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# 
+[root@host50 ~]# ls /mylog
+plj.000005  plj.000007  plj.000009  plj.000011
+plj.000006  plj.000008  plj.000010  plj.index
+[root@host50 ~]# 
+[root@host50 ~]# cat /mylog/plj.index 
+/mylog/plj.000005
+/mylog/plj.000006
+/mylog/plj.000007
+/mylog/plj.000008
+/mylog/plj.000009
+/mylog/plj.000010
+/mylog/plj.000011
+[root@host50 ~]# 
+
+[root@host50 ~]# mysql -uroot -p123qqq...A -e ' show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000011 |      154 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 ~]# 
+[root@host50 ~]# 
+[root@host50 ~]# ls /mylog
+plj.000005  plj.000007  plj.000009  plj.000011
+plj.000006  plj.000008  plj.000010  plj.index
+[root@host50 ~]# 
+[root@host50 ~]# mysql -uroot -p123qqq...A -e ' reset master'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# 
+[root@host50 ~]# ls /mylog
+plj.000001  plj.index
+[root@host50 ~]# 
+[root@host50 ~]# cat /mylog/plj.index 
+/mylog/plj.000001
+[root@host50 ~]# 
+[root@host50 ~]# mysql -uroot -p123qqq...A -e ' show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000001 |      154 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 ~]# 
