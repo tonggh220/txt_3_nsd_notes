@@ -600,3 +600,28 @@ mysql> select count(* )from db3.user;
 1 row in set (0.11 sec)
 
 mysql> 
+	3 增量备份（使用mysql服务的 binlog日志实现数据的备份和恢复）
+		日志的管理（日志的使用）
+			日志介绍（binlog日志是什么）
+			启用日志
+]# vim /etc/my.cnf
+[mysqld]
+server_id=50
+log_bin
+:wq
+]# systemctl restart mysqld
+
+]# mysql -uroot -p密码
+mysql> show master status;
++-------------------+----------+--------------+------------------+-------------------+
+| File              | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-------------------+----------+--------------+------------------+-------------------+
+| host50-bin.000001 |      154 |              |                  |                   |
++-------------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+mysql> exit
+
+]# cd /var/lib/mysql/
+[root@host50 ~]# ls /var/lib/mysql/*-bin.*
+/var/lib/mysql/host50-bin.000001  /var/lib/mysql/host50-bin.index
+[root@host50 ~]# 
