@@ -396,3 +396,48 @@ mysql> select user ,host from mysql.user;
 6 rows in set (0.00 sec)
 
 mysql> 
+
+ root密码管理
+		修改数据管理员本机登录密码
+命令格式
+[root@host50 ~]# mysqladmin -hlocalhost -uroot -p旧密码 password  "新密码"
+例子
+[root@host50 ~]# mysqladmin -hlocalhost -uroot -ptarena  password "123456"
+
+验证 使用新密码登录
+[root@host50 ~]# mysql -uroot -p123456
+MySQL >
+
+		恢复数据库管理员本机登录密码
+                          具体步骤如下：
+修改配置文件
+[root@host50 ~]# vim /etc/my.cnf
+[mysqld]
+skip-grant-tables
+
+#validate_password_policy=0
+#validate_password_length=6
+:wq
+
+重启数据库服务
+[root@host50 ~]# systemctl  restart mysqld
+
+无密登录
+[root@host50 ~]# mysql
+
+修改密码字段的值 并执行刷新
+mysql> update mysql.user set  authentication_string=password("123qqq...A") where user="root" and host="localhost";
+mysql> flush privileges;
+mysql> exit
+修改配置文件 并重启服务
+[root@host50 ~]# vim /etc/my.cnf
+[mysqld]
+#skip-grant-tables
+validate_password_policy=0
+validate_password_length=6
+:wq
+[root@host50 ~]# systemctl  restart mysqld
+
+使用修改的密码登录
+[root@host50 ~]# mysql -uroot -p123qqq...A
+MYSQL> 
