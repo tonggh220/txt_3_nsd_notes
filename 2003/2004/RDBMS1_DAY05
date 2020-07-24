@@ -108,4 +108,72 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | sys                |
 +--------------------+
 [root@host51 ~]# 
-	
+	######################################3
+    			innobackupex使用完全备份文件恢复1张表的所有数据
+误删除数据
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'select  count(*) from db3.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| count(*) |
++----------+
+|       30 |
++----------+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'delete from db3.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'select  count(*) from db3.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| count(*) |
++----------+
+|        0 |
++----------+
+[root@host51 ~]#
+	恢复表的所有记录，步骤如下：
+
+表空间？存储表记录的文件 表名.ibd  select  * from 库.表名 ；
+
+1 删除表空间
+mysql> alter table db3.user discard  tablespace; 
+[root@host51 db3]# ls /var/lib/mysql/db3/user*
+user.frm
+[root@host51 db3]# 
+
+2 导出表信息
+[root@host51 db3]# ls /root/allbak/db3/user.*
+/root/allbak/db3/user.frm  /root/allbak/db3/user.ibd
+[root@host51 db3]# 
+[root@host51 db3]# innobackupex --apply-log --export  /root/allbak/
+
+[root@host51 db3]# ls /root/allbak/db3/user.*
+/root/allbak/db3/user.cfg  /root/allbak/db3/user.frm
+/root/allbak/db3/user.exp  /root/allbak/db3/user.ibd
+[root@host51 db3]#
+
+
+3 拷贝表信息文件到数据库目录下
+[root@host51 db3]# cp /root/allbak/db3/user.{cfg,exp,ibd} /var/lib/mysql/db3/
+[root@host51 db3]# ls /var/lib/mysql/db3/user.*
+/var/lib/mysql/db3/user.cfg  /var/lib/mysql/db3/user.frm
+/var/lib/mysql/db3/user.exp  /var/lib/mysql/db3/user.ibd
+[root@host51 db3]# 
+
+4 修改表信息文件的所有者及组用户为mysql
+
+[root@host51 db3]# chown -R mysql:mysql /var/lib/mysql/db3/user.*
+
+5 导入表空间
+mysql> select  * from  db3.user;
+ERROR 1814 (HY000): Tablespace has been discarded for table 'user'
+mysql> 
+
+mysql> alter  table  db3.user   import  tablespace;
+
+
+6 删除数据库目录下的表信息文件
+[root@host51 db3]# rm -rf /var/lib/mysql/db3/user.cfg 
+[root@host51 db3]# rm -rf /var/lib/mysql/db3/user.exp
+[root@host51 db3]# ls /var/lib/mysql/db3/user.*
+/var/lib/mysql/db3/user.frm  /var/lib/mysql/db3/user.ibd
+[root@host51 db3]# 
+7 查看表记录
+mysql> select  * from  db3.user; 
