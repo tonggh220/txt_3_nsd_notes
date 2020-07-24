@@ -833,3 +833,75 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | FFFF |
 +------+
 [root@host51 ~]# 
+
+
+
+			恢复部分数据
+			
+
+			修改日志文件格式
+[root@host50 ~]# vim /etc/my.cnf
+[mysqld]
+binlog_format="mixed"
+:wq
+[root@host50 ~]# systemctl  restart mysqld
+
+			查看日志文件格式
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'show variables like "binlog_format" '
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| binlog_format | MIXED |
++---------------+-------+
+[root@host50 ~]# 
+
+
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'show master status '
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000009 |      154 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 ~]# 
+
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'insert into db3.user(name) values("a1")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'insert into db3.user(name) values("a2")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'insert into db3.user(name) values("a3")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'delete from  db3.user where name="a1"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'update db3.user set name="aaa4" where name="a2"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]#
+
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'show master status '
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000009 |     1646 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 ~]# 
+
+  254  mysqlbinlog  /mylog/plj.000009  | grep  -i  insert
+  255  mysqlbinlog  /mylog/plj.000009  | grep  -i  update
+  256  mysqlbinlog  /mylog/plj.000009  | grep  -i  delete
+
+命令格式
+]# mysqlbinlog  选项 目录名/文件名 | mysql -uroot -p密码
+
+	选项
+		指定偏移量范围查看
+
+		--start-position=数字 #起始偏移量 
+		--stop-position=数字 #结束偏移量
+
+		指定时间范围查看 
+		--start-datetime="yyyy/mm/dd hh:mm:ss" #起始时间 
+		--stop-datetime="yyyy/mm/dd hh:mm:ss" #结束时间
+
+	恢复例子
