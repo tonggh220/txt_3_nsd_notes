@@ -1,0 +1,111 @@
+RDBMS1_DAY05 数据的备份与恢复 (percona软件的使用)
+
+		软件介绍 
+
+安装+休息+订餐 17分钟到 11:15 上课
+
+		安装软件
+]# yum -y install libev-4.15-1.el6.rf.x86_64.rpm 
+]# yum -y  install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+]# which innobackupex 
+/usr/bin/innobackupex
+
+]# innobackupex --help
+]# man innobackupex
+
+
+		命令格式
+                       ]# innobackupex  <选项>
+		
+		选项 说明？
+
+		数据的备份与恢复
+			innobackupex完全备份与恢复
+
+			完全备份命令格式
+]#innobackupex  --user root  --password 密码 [ --databases="库名列表" ]  备份目录名 [ --no-timestamp ] 
+
+
+
+
+
+			完全恢复命令格式
+			     准备恢复数据
+]#innobackupex  --apply-log  备份目录名
+
+			     恢复数据
+]#innobackupex  --copy-back  备份目录名
+
+		例子
+
+50备份数据
+
+[root@host50 ~]# innobackupex --user root --password 123qqq...A  /allbak  --no-timestamp
+
+
+[root@host50 ~]# ls /allbak/ 
+backup-my.cnf   ibdata1             sys                     xtrabackup_info
+db3             mysql               xtrabackup_binlog_info  xtrabackup_logfile
+ib_buffer_pool  performance_schema  xtrabackup_checkpoints
+[root@host50 ~]#
+
+50拷贝备份文件给51服务器
+[root@host50 ~]# scp  -r  /allbak  root@192.168.4.51:/root/
+
+
+
+51主机使用备份文件恢复数据,具体步骤如下：
+	停止数据库服务
+	清空数据库目录
+	准备恢复数据
+[root@host51 ~]# cat /root/allbak/xtrabackup_checkpoints 
+backup_type = full-backuped
+from_lsn = 0
+to_lsn = 3153152
+last_lsn = 3153161
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+
+[root@host51 ~]# innobackupex --apply-log  /root/allbak/
+
+[root@host51 ~]# cat /root/allbak/xtrabackup_checkpoints 
+backup_type = full-prepared
+from_lsn = 0
+to_lsn = 3153152
+last_lsn = 3153161
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+
+	拷贝数据
+[root@host51 ~]# ls /var/lib/mysql
+[root@host51 ~]#
+[root@host51 ~]# innobackupex --copy-back  /root/allbak/
+
+	修改所有者、组用户为mysql
+[root@host51 ~]# chown -R mysql:mysql /var/lib/mysql
+[root@host51 ~]# 
+[root@host51 ~]# ls /var/lib/mysql
+db3             ib_logfile0  mysql               xtrabackup_binlog_pos_innodb
+ib_buffer_pool  ib_logfile1  performance_schema  xtrabackup_info
+ibdata1         ibtmp1       sys
+[root@host51 ~]# 
+
+
+	启动服务
+	管理员登录查看数据
+[root@host51 ~]# systemctl  start mysqld
+[root@host51 ~]# mysql -uroot -p123qqq...A -e ' show  databases'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| db3                |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+[root@host51 ~]# 
+	
