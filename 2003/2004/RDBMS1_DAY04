@@ -903,5 +903,47 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 		指定时间范围查看 
 		--start-datetime="yyyy/mm/dd hh:mm:ss" #起始时间 
 		--stop-datetime="yyyy/mm/dd hh:mm:ss" #结束时间
+恢复例子
+共享日志给51主机
+[root@host50 ~]# scp /mylog/plj.000009 root@192.168.4.51:/root/
 
-	恢复例子
+51主机使用日志恢复数据
+[root@host51 ~]# ls /root/plj.000009 
+/root/plj.000009
+[root@host51 ~]# 
+
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e ' select name from db3.user where name in ("a1","a2")'
+
+[root@host51 ~]# mysqlbinlog --start-position=325 --stop-position=774 /root/plj.000009   | mysql -uroot -p123qqq...A
+
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e ' select name from db3.user where name in ("a1","a2")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| name |
++------+
+| a1   |
+| a2   |
++------+
+[root@host51 ~]# 
+
+
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e ' select name from db3.user where name="a3"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host51 ~]# 
+
+[root@host51 ~]# mysqlbinlog --start-datetime="2020/07/24 17:19:38" --stop-datetime="2020/07/24 17:20:07" /root/plj.000009   | mysql -uroot -p123qqq...A 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host51 ~]# 
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e ' select name from db3.user where name="a3"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| name |
++------+
+| a3   |
++------+
+[root@host51 ~]#
+
