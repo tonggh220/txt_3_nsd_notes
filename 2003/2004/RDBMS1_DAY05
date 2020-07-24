@@ -55,8 +55,8 @@ ib_buffer_pool  performance_schema  xtrabackup_checkpoints
 
 
 51主机使用备份文件恢复数据,具体步骤如下：
-	停止数据库服务
-	清空数据库目录
+	停止数据库服务  systemctl  stop  mysqld
+	清空数据库目录  rm  -rf /var/lib/mysql/*
 	准备恢复数据
 [root@host51 ~]# cat /root/allbak/xtrabackup_checkpoints 
 backup_type = full-backuped
