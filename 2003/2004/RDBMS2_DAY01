@@ -436,3 +436,34 @@ mysql>
 		mysql> start slave;
 		mysql> show slave status \G #IO线程和SQL线程同时是yes
 
+        		测试配置
+			1 在主服务器53 授权用户给客户端连接使用
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.* to yaya66@"%" identified by "123qqq...A"'
+
+
+			2 客户端使用授权用户连接主服务器53，存储数据
+[root@host50 ~]# mysql -h192.168.4.53 -uyaya66 -p123qqq...A 
+mysql> create database gamedb;
+mysql> create table gamedb.t1(id int);
+mysql> insert into gamedb.t1 values(101);
+mysql> select  * fron gamedb.t1;
+
+			3 分别在54 和 55 本机查看数据
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'select  * from gamedb.t1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  101 |
++------+
+[root@host54 ~]# 
+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select  * from gamedb.t1'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  101 |
++------+
+[root@host55 ~]#
+
