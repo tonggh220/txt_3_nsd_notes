@@ -1,0 +1,68 @@
+1 MySQL数据读写分离
+
+		
+2 MySQL多实例 
+	环境准备
+		（创建1台新的虚拟机192.168.4.58 ， 不安装数据库服务 ）
+		软件包 mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz
+
+	MySQL多实例介绍：在1台物理服务器上运行多个数据库服务（就是启动多个mysqld进程）
+
+	为什么要使用多实例：节约运维成本 或  存储结构测试
+	
+	配置多实例服务，步骤如下：
+		1 安装数据库服务软件 17:26
+[root@host58 ~]# rpm -q libaio || yum  -y install  libaio
+libaio-0.3.109-13.el7.x86_64
+[root@host58 ~]# 
+
+[root@host58 ~]# grep mysql /etc/passwd || useradd mysql
+[root@host58 ~]# grep mysql /etc/passwd
+mysql:x:1000:1000::/home/mysql:/bin/bash
+[root@host58 ~]#
+[root@host58 ~]# tar -zxvf upload/mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz 
+anaconda-ks.cfg  mysql-5.7.20-linux-glibc2.12-x86_64  upload
+[root@host58 ~]# 
+[root@host58 ~]# mv mysql-5.7.20-linux-glibc2.12-x86_64/ /usr/local/mysql
+[root@host58 ~]# ls /usr/local/mysql/
+bin  COPYING  docs  include  lib  man  README  share  support-files
+[root@host58 ~]#
+
+		2 做优化配置  3分钟到 17:39
+]# vim /etc/bashrc
+export PATH=/usr/local/mysql/bin:$PATH   #在末尾添加一行
+:wq
+]# source  /etc/bashrc
+]#which  mysql
+/usr/local/mysql/bin/mysql
+[root@host58 ~]# 
+
+		3 创建并编辑服务的主配置文件
+		vim /etc/my.cnf
+		[mysqld_multi] #多实例服务的运行配置
+		服务启动是调用的命令
+		修改数据库管理登录密码的命令
+		启动多实例服务的用户名
+
+		[mysqld数字] #定义实例
+		
+		数据库目录
+		端口号
+		pid号文件
+		错误日志
+		socket文件  (在数据库本机自己连接自己的使用的文件)
+
+例子
+
+		
+
+
+		4 启动实例，并做初始配置
+
+		mysqld_mulit start 2
+		5 访问多实例服务
+			5.1 本机访问
+			5.2 客户端访问
+
+
+周一 要使用到的机器  51  52  50  57  58
