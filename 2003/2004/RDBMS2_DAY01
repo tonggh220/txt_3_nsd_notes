@@ -467,3 +467,80 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +------+
 [root@host55 ~]#
 
+主主结构（互为主从）	（晚自习练习题）
+		把数据库服务器56 和 57 配置为主主结构
+
+	2.4 主从同步复制模式	
+		2.4.1 复制模式介绍
+			异步复制模式（默认）
+			全同步复制模式（现在没有了）
+			半同步复制模式
+
+		2.4.2 配置半同步复制模式
+			安装模块(是什么角色就安装什么模块)
+				查看是否允许安装模块
+mysql> show  variables  like  'have_dynamic_loading';
++----------------------+-------+
+| Variable_name        | Value |
++----------------------+-------+
+| have_dynamic_loading | YES   |
++----------------------+-------+
+1 row in set (0.05 sec)
+
+mysql> 
+				安装模块
+mysql> install  plugin  rpl_semi_sync_master SONAME   "semisync_master.so";   #安装master模块
+
+mysql> install  plugin  rpl_semi_sync_slave SONAME   "semisync_slave.so"; #安装slave模块
+
+				查看模块是否安装？
+mysql> select  plugin_name, plugin_status from  information_schema.plugins  where plugin_name like '%semi%';  
++----------------------+---------------+
+| plugin_name          | plugin_status |
++----------------------+---------------+
+| rpl_semi_sync_master | ACTIVE        |
+| rpl_semi_sync_slave  | ACTIVE        |
++----------------------+---------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+			启用模块(是什么角色就启用什么模块)
+				查看模块是否启用
+mysql> show  variables  like  "rpl_semi_sync_%_enabled";
++------------------------------+-------+
+| Variable_name                | Value |
++------------------------------+-------+
+| rpl_semi_sync_master_enabled | OFF   |
+| rpl_semi_sync_slave_enabled  | OFF   |
++------------------------------+-------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+				启用模块
+					命令行启用
+mysql> set  global rpl_semi_sync_slave_enabled=1; #启用slave模块
+mysql> set  global rpl_semi_sync_master_enabled=1;#启用master模块
+
+mysql> show  variables  like  "rpl_semi_sync_%_enabled";
++------------------------------+-------+
+| Variable_name                | Value |
++------------------------------+-------+
+| rpl_semi_sync_master_enabled | ON    |
+| rpl_semi_sync_slave_enabled  | ON    |
++------------------------------+-------+
+2 rows in set (0.01 sec)
+
+mysql> 
+
+					永久启用	
+					    vim /etc/my.cnf
+					      [mysqld]
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_slave_enabled=1
+rpl_semi_sync_master_enabled=1
+					
+				            :wq
+
+
