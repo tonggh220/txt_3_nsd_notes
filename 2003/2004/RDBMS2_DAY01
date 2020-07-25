@@ -57,3 +57,77 @@ mysql> show master status;
 1 row in set (0.00 sec)
 
 mysql>	
+
+
+配置从数据库服务器 192.168.4.52
+
+]# vim  /etc/my.cnf
+[mysqld]
+server_id=52
+:wq
+
+[root@host52 ~]# systemctl  restart mysqld
+
+
+[root@host51 ~]# mysqldump -uroot -p123qqq...A db3  > /root/db3.sql
+ 
+[root@host51 ~]# ls /root/*.sql
+/root/db1all.sql  /root/db3.sql  /root/sys.sql
+ 
+[root@host51 ~]# scp /root/db3.sql  root@192.168.4.52:/opt/
+
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'create database db3'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host52 ~]# 
+[root@host52 ~]# mysql -uroot -p123qqq...A db3 < /opt/db3.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host52 ~]# 
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'use db3 ; show tables'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| Tables_in_db3 |
++---------------+
+| user          |
++---------------+
+[root@host52 ~]# 
+
+
+[root@host52 ~]# mysql -uroot -p123qqq...A 
+
+mysql> change master to master_host="192.168.4.51" , master_user="repluser" , master_password="123qqq...A" , master_log_file="master51.000002" , master_log_pos=154 ;
+Query OK, 0 rows affected, 2 warnings (0.04 sec)
+
+mysql> 
+mysql> start slave ;
+mysql> show slave status \G
+	    Master_Host: 192.168.4.51
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+
+	相关文件
+[root@host52 ~]# cat /var/lib/mysql/master.info  主服务器信息
+/var/lib/mysql/master.info
+
+[root@host52 ~]# ls /var/lib/mysql/host52-relay-bin.* 中继日志文件
+/var/lib/mysql/host52-relay-bin.000003  /var/lib/mysql/host52-relay-bin.index
+/var/lib/mysql/host52-relay-bin.000004
+[root@host52 ~]# 
+[root@host52 ~]# 
+[root@host52 ~]# cat /var/lib/mysql/host52-relay-bin.index  中继日志索引文件
+./host52-relay-bin.000003
+./host52-relay-bin.000004
+[root@host52 ~]# 
+
+
+[root@host52 ~]# cat /var/lib/mysql/relay-log.info  中继日志文件
+7
+./host52-relay-bin.000004
+319
+master51.000002
+154
+0
+0
+1
+
+[root@host52 ~]# 
