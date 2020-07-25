@@ -358,3 +358,81 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | xxx  |
 +------+
 [root@host53 ~]# 
+
+
+
+
+##########################################################################
+2.3 配置主从从
+
+		
+		把数据库服务器 53 54  55  配置为主从从结构
+			
+		***把53主机恢复为独立的数据库服务器
+[root@host53 ~]# systemctl  stop mysqld
+[root@host53 ~]# rm -rf /var/lib/mysql/master.info 
+[root@host53 ~]# rm -rf /var/lib/mysql/relay-log.info 
+[root@host53 ~]# rm -rf /var/lib/mysql/*-relay-bin.*
+[root@host53 ~]# ls /var/lib/mysql
+auto.cnf         client-key.pem  ib_logfile0         private_key.pem  sys
+ca-key.pem       db3             ib_logfile1         public_key.pem
+ca.pem           ib_buffer_pool  mysql               server-cert.pem
+client-cert.pem  ibdata1         performance_schema  server-key.pem
+[root@host53 ~]# systemctl  start mysqld
+[root@host53 ~]# 
+[root@host53 ~]# mysql -uroot -p123qqq...A  -e 'drop database db3'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host53 ~]#
+		配置主服务器53（恢复为独立数据库服务器）
+			[root@host53 ~]# vim /etc/my.cnf
+				[mysqld]
+				server_id=53
+				log_bin=db53
+				:wq
+
+[root@host53 ~]# systemctl  restart mysqld
+
+[root@host53 ~]# mysql -uroot -p123qqq...A
+mysql> grant replication slave on *.*  to panglj@"%" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> show master status;
++-------------+----------+--------------+------------------+-------------------+
+| File        | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-------------+----------+--------------+------------------+-------------------+
+| db53.000001 |      439 |              |                  |                   |
++-------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+	
+
+		配置从服务器54
+			vim /etc/my.cnf
+			[mysqld]
+			server_id=54
+			log_bin=master54
+			log_slave_updates #启用级联复制
+		:wq
+		]# systemctl  restart mysqld
+		]# mysql -uroot -p123qqq...A
+		mysql> change master to master_host="192.168.4.53",master_user="panglj" , master_password="123qqq...A" , master_log_file="db53.000001" , master_log_pos=439;
+		mysql> start slave;
+		mysql> show slave status \G  #IO线程和SQL线程同时是yes
+ 
+		mysql> grant replication slave on *.* to plj998@"%" identified  by "123qqq...A" ;
+
+		mysql> show master status ;
+			master54.000001   198
+
+		配置从服务器55
+			vim /etc/my.cnf
+			[mysqld]
+			 server_id=55
+			:wq
+			]# systemctl restart mysqld
+		]#mysql -uroot -p123qqq...A
+		mysql> change master to  master_host="192.168.4.54",master_user="plj998" , master_password="123qqq...A" , master_log_file="master54.000001" , master_log_pos=198;
+		mysql> start slave;
+		mysql> show slave status \G #IO线程和SQL线程同时是yes
+
