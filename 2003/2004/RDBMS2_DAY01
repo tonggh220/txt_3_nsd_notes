@@ -131,3 +131,16 @@ master51.000002
 1
 
 [root@host52 ~]# 
+
+把从数据库还原为独立的数据库服务器，重新配置
+
+
+[root@host52 ~]# systemctl  stop mysqld
+
+[root@host52 ~]# rm -rf /var/lib/mysql/master.info 
+[root@host52 ~]# rm -rf /var/lib/mysql/relay-log.info 
+[root@host52 ~]# rm -rf /var/lib/mysql/*.index 
+[root@host52 ~]# rm -rf  /var/lib/mysql/*-relay-bin.*
+
+
+[root@host52 ~]# systemctl  start mysqld
