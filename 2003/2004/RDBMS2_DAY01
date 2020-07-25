@@ -144,3 +144,82 @@ master51.000002
 
 
 [root@host52 ~]# systemctl  start mysqld
+
+排错方法：
+Last_IO_Error:  IO线程的报错信息  
+               （通常的原因是change master to 的配置有问题 ）
+
+   解决办法
+mysql> stop slave;
+mysql> change master to  配置项 ;
+mysql> start slave;
+mysql> show slave status \G
+
+
+ Last_SQL_Error:  IO线程的报错信息  
+		（通常的原因是 执行中继日志文件里的sql命令时，命令调用的库或表 在从服务器本机没有）
+
+解决的办法
+	stop  slave;
+	 让从服务器本机，有和主服务器已有的库和表和记录
+	start slave;
+
+
+
+
+
+
+把从数据库还原为独立的数据库服务器，重新配置
+
+
+[root@host52 ~]# systemctl  stop mysqld
+
+[root@host52 ~]# rm -rf /var/lib/mysql/master.info 
+[root@host52 ~]# rm -rf /var/lib/mysql/relay-log.info 
+[root@host52 ~]# rm -rf /var/lib/mysql/*.index 
+[root@host52 ~]# rm -rf  /var/lib/mysql/*-relay-bin.*
+
+
+[root@host52 ~]# systemctl  start mysqld 
+
+	测试主从同步的配置：
+		在主服务器51添加用户给客户端连接使用
+mysql> grant select , insert , update, delete  on db3.*  to yaya99@"%" identified by "123qqq...A";
+
+		客户端连接主服务器51访问数据
+[root@host50 ~]# mysql -h192.168.4.51 -uyaya99 -p123qqq...A
+mysql> show grants;
++-----------------------------------------------------------------+
+| Grants for yaya99@%                                             |
++-----------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'yaya99'@'%'                              |
+| GRANT SELECT, INSERT, UPDATE, DELETE ON `db3`.* TO 'yaya99'@'%' |
++-----------------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> insert into  db3.user (name) values("ff");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into  db3.user (name) values("ff2");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into  db3.user (name) values("ff3");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select name from db3.user where name regexp '^f';
+
+		在从服务器本机能查看到和主服务器一样的数据
+[root@host52 ~]# mysql -uroot -p123qqq...A -e "select name from db3.user where name regexp '^f'"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| name |
++------+
+| ftp  |
+| FFF  |
+| FFFF |
+| ff   |
+| ff2  |
+| ff3  |
++------+
+[root@host52 ~]# 
