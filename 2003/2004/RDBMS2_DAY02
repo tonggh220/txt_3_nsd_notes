@@ -172,6 +172,63 @@ server2            | 192.168.4.52    |  3306 |           0 | Slave, Running
 -------------------+-----------------+-------+-------------+--------------------
 MaxScale> exit
 [root@host57 ~]# 
+#################################################
+1.4.3 测试配置
+			1.4.3.1  在主数据库服务器51 添加客户端连接使用的用户
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create database db99'
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create table db99.a(id int)'
+
+[root@host51 ~]# 
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'grant select,insert on db99.* to yaya666@"%" identified by "123qqq...A"'
+
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'desc db99.a'
+
++-------+---------+------+-----+---------+-------+
+| Field | Type    | Null | Key | Default | Extra |
++-------+---------+------+-----+---------+-------+
+| id    | int(11) | YES  |     | NULL    |       |
++-------+---------+------+-----+---------+-------+
+[root@host52 ~]# 
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'show grants for yaya666@"%"'
+
++---------------------------------------------------+
+| Grants for yaya666@%                              |
++---------------------------------------------------+
+| GRANT USAGE ON *.* TO 'yaya666'@'%'               |
+| GRANT SELECT, INSERT ON `db99`.* TO 'yaya666'@'%' |
++---------------------------------------------------+
+[root@host52 ~]# 
+
+				
+
+			1.4.3.2  客户端连接读写分离服务器 访问数据
+			命令格式 ]#  mysql -h192.168.4.57 -P4016  -u用户名 -p密码
+
+				测试连接读写分离服务器能否存（insert）取（select）数据
+[root@localhost ~]# mysql -h192.168.4.57 -P4006 -uyaya666 -p123qqq...A
+MySQL [(none)]> insert into db99.a values(111);
+MySQL [(none)]> select  * from db99.a;
++------+
+| id   |
++------+
+|  111 |
++------+
+MySQL [(none)]> exit
+Bye
+[root@localhost ~]#
+	
+
+				测试57主机maxscale服务的读写分离功能
+[root@host52 ~]# mysql -uroot -p123qqq...A -e  'insert into db99.a values(52)'
+[root@localhost ~]# mysql -h192.168.4.57 -P4006 -uyaya666 -p123qqq...A -e 'select  * from db99.a'
++------+
+| id   |
++------+
+|  111 |
+|   52 |
+
+
 
 
 
