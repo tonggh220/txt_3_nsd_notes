@@ -98,6 +98,10 @@ port=4016
 
 1.4.2.3  根据主配置文件的定义，配置2台数据库服务器（51 和 52）
 				1 添加监控用户mysqla 和 路由用户mysqlb
+
+                replication slave  获取数据库服务器主从角色
+                replication client 获取数据库服务的运行状态
+
 				grant  replication slave, replication client  on *.*  to mysqla@"%"  identified by "123qqq...A";
 				grant  select  on mysql.*  to mysqlb@"%"  identified by "123qqq...A";
 				
