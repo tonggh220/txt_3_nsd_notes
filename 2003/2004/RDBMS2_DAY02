@@ -30,7 +30,15 @@
 			]# vim /etc/maxscale.cnf 
 				[配置项分类名称]
 				配置项=值
-
+配置项分类说明
+[maxscale] 服务运行后，线程的数量
+[server1]    定义第1台数据库服务器
+[server2]    定义第2台数据库服务器
+[mysql monitor]  定义监视的数据库服务器
+[Read-Write Service]  定义读写分离服务
+[MaxAdmin Service] 定义管理服务
+[Read-Write Listener] 定义读写分离服务使用的端口号
+ [MaxAdmin Listener] 定义管理服务使用的端口号
 		
 
 			修改主配置文件
@@ -86,6 +94,37 @@ protocol=maxscaled
 socket=default
 port=4016
 
+####################################################
+
+1.4.2.3  根据主配置文件的定义，配置2台数据库服务器（51 和 52）
+				1 添加监控用户mysqla 和 路由用户mysqlb
+				grant  replication slave, replication client  on *.*  to mysqla@"%"  identified by "123qqq...A";
+				grant  select  on mysql.*  to mysqlb@"%"  identified by "123qqq...A";
+				
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'grant replication slave , replication client on *.* to mysqla@"%" identified by "123qqq...A" '
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'grant select on mysql.* to mysqlb@"%" identified by "123qqq...A" '
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'select user from mysql.user where user in ("mysqla","mysqlb")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------+
+| user   |
++--------+
+| mysqla |
+| mysqlb |
++--------+
+[root@host51 ~]# 
+
+
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'select user from mysql.user where user in ("mysqla","mysqlb")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------+
+| user   |
++--------+
+| mysqla |
+| mysqlb |
++--------+
+[root@host52 ~]# 
 
 ###################################################
 		
