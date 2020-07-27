@@ -63,6 +63,444 @@ export PATH=/usr/local/mysql/bin:$PATH   #在末尾添加一行
 		5 访问多实例服务
 			5.1 本机访问
 			5.2 客户端访问
+一  编辑主配置文件 /etc/my.cnf
+[root@host58 ~]# vim  /etc/my.cnf
+[mysqld_multi]
+mysqld = /usr/local/mysql/bin/mysqld_safe
+mysqladmin = /usr/local/mysql/bin/mysqladmin
+user = root
+		 
+[mysqld1]
+datadir = /dir1
+port = 3307
+pid-file = /dir1/mysqld1.pid
+log-error = /dir1/mysqld1.err
+socket = /dir1/mysqld1.socket
+[mysqld2]
+datadir = /dir2
+port = 3308
+pid-file = /dir2/mysqld2.pid
+log-error = /dir2/mysqld2.err
+socket = /dir2/mysqld2.socket
 
 
-周一 要使用到的机器  51  52  50  57  58
+
+[root@host58 ~]# 
+
+
+
+
+二 、启动多实例
+	2.1 启动实例1
+[root@host58 ~]# mysqld_multi  start 1
+
+
+Installing new database in /dir1
+
+2020-07-27T10:15:41.383972Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2020-07-27T10:15:42.471500Z 0 [Warning] InnoDB: New log files created, LSN=45790
+2020-07-27T10:15:42.594740Z 0 [Warning] InnoDB: Creating foreign key constraint system tables.
+2020-07-27T10:15:42.706392Z 0 [Warning] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: 20c56178-cff2-11ea-b5c7-000c29239574.
+2020-07-27T10:15:42.727843Z 0 [Warning] Gtid table is not ready to be used. Table 'mysql.gtid_executed' cannot be opened.
+2020-07-27T10:15:42.730481Z 1 [Note] A temporary password is generated for root@localhost: pcGfztJ%q1aW
+[root@host58 ~]# 
+[root@host58 ~]# ls /dir1/
+auto.cnf        ib_logfile0  mysql        mysqld1.socket       sys
+ib_buffer_pool  ib_logfile1  mysqld1.err  mysqld1.socket.lock
+ibdata1         ibtmp1       mysqld1.pid  performance_schema
+[root@host58 ~]# 
+[root@host58 ~]# netstat  -utnlp  | grep 3307
+tcp6       0      0 :::3307                 :::*                    LISTEN      1740/mysqld         
+[root@host58 ~]# mysql -uroot -p'pcGfztJ%q1aW'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 2002 (HY000): Can't connect to local MySQL server through socket '/tmp/mysql.sock' (2)
+[root@host58 ~]# 
+[root@host58 ~]# mysql -uroot -p'pcGfztJ%q1aW' -S  /dir1/mysqld1.socket
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 3
+Server version: 5.7.20
+
+Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> show databases;
+ERROR 1820 (HY000): You must reset your password using ALTER USER statement before executing this statement.
+mysql> 
+mysql> alter user root@"localhost" identified by "123456";
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql> create database gamedb;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| gamedb             |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+
+mysql> create table gamedb.t1(id int);
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> exit
+Bye
+[root@host58 ~]# mysql -uroot -p123456 -S  /dir1/mysqld1.socket
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 4
+Server version: 5.7.20 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| gamedb             |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+
+mysql> 
+
+
+	2.2 启动实例2
+[root@host58 ~]# mysqld_multi  start 2 
+
+
+Installing new database in /dir2
+
+2020-07-27T10:25:43.603596Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2020-07-27T10:25:44.471531Z 0 [Warning] InnoDB: New log files created, LSN=45790
+2020-07-27T10:25:44.544811Z 0 [Warning] InnoDB: Creating foreign key constraint system tables.
+2020-07-27T10:25:44.627871Z 0 [Warning] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: 878b5093-cff3-11ea-9062-000c29239574.
+2020-07-27T10:25:44.629003Z 0 [Warning] Gtid table is not ready to be used. Table 'mysql.gtid_executed' cannot be opened.
+2020-07-27T10:25:44.629906Z 1 [Note] A temporary password is generated for root@localhost: ?uknkPq6odl&
+[root@host58 ~]# 
+[root@host58 ~]# ls /dir2
+auto.cnf        ib_logfile0  mysql        mysqld2.socket       sys
+ib_buffer_pool  ib_logfile1  mysqld2.err  mysqld2.socket.lock
+ibdata1         ibtmp1       mysqld2.pid  performance_schema
+[root@host58 ~]# 
+[root@host58 ~]# netstat  -utnlp  | grep  3308
+tcp6       0      0 :::3308                 :::*                    LISTEN      11592/mysqld        
+[root@host58 ~]# mysql -uroot -p'?uknkPq6odl&' -S  /dir2/mysqld2.socket
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 3
+Server version: 5.7.20
+
+Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> alster user root@"localhost" identified by "654321";
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'alster user root@"localhost" identified by "654321"' at line 1
+mysql> 
+mysql> alter user user root@"localhost" identified by "654321";
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'root@"localhost" identified by "654321"' at line 1
+mysql> 
+mysql> 
+mysql> alter user root@"localhost" identified by "654321";
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> create database bbsdb;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> create table bbsdb.t2(name char(10));
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| bbsdb              |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+
+mysql> exit
+Bye
+[root@host58 ~]# mysql -uroot -p654321 -S  /dir2/mysqld2.socket
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 4
+Server version: 5.7.20 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> 
+mysql> exit
+Bye
+[root@host58 ~]# 
+[root@host58 ~]# 
+[root@host58 ~]# netstat  -utnlp  | grep mysqld
+tcp6       0      0 :::3307                 :::*                    LISTEN      1740/mysqld         
+tcp6       0      0 :::3308                 :::*                    LISTEN      11592/mysqld        
+[root@host58 ~]# 
+
+	2.3 停止实例服务    练习时间 5分钟到  10:56 
+		命令格式   mysqld_multi --user=root  --password=密码  stop  实例编号    
+ ]# mysqld_multi  --user=root  --password=123456  stop  1 
+[root@host58 ~]# 
+[root@host58 ~]# netstat  -utnlp  | grep  mysqld
+tcp6       0      0 :::3308                 :::*                    LISTEN      11592/mysqld        
+[root@host58 ~]# ls /dir1
+auto.cnf  ib_buffer_pool  ib_logfile0  mysql        performance_schema
+gamedb    ibdata1         ib_logfile1  mysqld1.err  sys
+[root@host58 ~]# 
+
+[root@host58 ~]# netstat  -utnlp  | grep  mysqld
+tcp6       0      0 :::3308                 :::*                    LISTEN      11592/mysqld        
+[root@host58 ~]# ls /dir2
+auto.cnf        ibdata1      ibtmp1       mysqld2.pid          performance_schema
+bbsdb           ib_logfile0  mysql        mysqld2.socket       sys
+ib_buffer_pool  ib_logfile1  mysqld2.err  mysqld2.socket.lock
+[root@host58 ~]# 
+[root@host58 ~]# mysqld_multi  --user=root  --password=654321  stop  2 
+[root@host58 ~]# 
+[root@host58 ~]# netstat  -utnlp  | grep  mysqld
+[root@host58 ~]# 
+[root@host58 ~]# ls /dir2
+auto.cnf  ib_buffer_pool  ib_logfile0  mysql        performance_schema
+bbsdb     ibdata1         ib_logfile1  mysqld2.err  sys
+[root@host58 ~]#
+		2.4  允许客户端连接58主机的多实例服务
+			2.4.1  多实例服务的管理root添加客户端连接账号
+[root@host58 ~]# mysql -uroot -p123456  -S /dir1/mysqld1.socket
+mysql> grant   all on  db1.*  to  yaya1@"%" identified by "123456";
+mysql> exit
+
+
+[root@host58 ~]# mysql -uroot -p654321  -S /dir2/mysqld2.socket
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| bbsdb              |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.01 sec)
+
+mysql> grant select , insert on bbsdb.*  to  yaya@"%" identified by "123456";
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> exit
+Bye
+[root@host58 ~]# 
+
+可选项 启用实例1的binlog日志 记录连接后执行的sql命令
+[root@host58 ~]# vim /etc/my.cnf
+
+[mysqld1]
+datadir = /dir1
+port = 3307
+pid-file = /dir1/mysqld1.pid
+log-error = /dir1/mysqld1.err
+socket = /dir1/mysqld1.socket
+
+server_id=1
+log_bin=mysqld1
+:wq
+
+重启实例1服务
+[root@host58 ~]# mysqld_multi  --user=root  --password=123456 stop 1
+[root@host58 ~]# mysqld_multi  start 1
+[root@host58 ~]# 
+[root@host58 ~]# netstat  -utnlp  | grep mysqld
+tcp6       0      0 :::3307                 :::*                    LISTEN      12618/mysqld        
+tcp6       0      0 :::3308                 :::*                    LISTEN      11980/mysqld        
+[root@host58 ~]# 
+
+[root@host58 ~]# mysql -uroot -p123456  -S /dir1/mysqld1.socket -e 'show master status' 查看日志
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------------+----------+--------------+------------------+-------------------+
+| File           | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++----------------+----------+--------------+------------------+-------------------+
+| mysqld1.000001 |      154 |              |                  |                   |
++----------------+----------+--------------+------------------+-------------------+
+[root@host58 ~]# 
+
+
+			2.4.2  客户端50连接58主机的实例服务
+				命令格式 ]# mysql -h192.168.4.58  -P端口 -u授权用户名  -p密码 
+
+
+[root@localhost ~]# mysql  -h192.168.4.58  -P3307  -uyaya1  -p123456
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MySQL connection id is 4
+Server version: 5.7.20-log MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2017, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MySQL [(none)]> show grants;
++------------------------------------------------+
+| Grants for yaya1@%                             |
++------------------------------------------------+
+| GRANT USAGE ON *.* TO 'yaya1'@'%'              |
+| GRANT ALL PRIVILEGES ON `db1`.* TO 'yaya1'@'%' |
++------------------------------------------------+
+2 rows in set (0.02 sec)
+
+MySQL [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
++--------------------+
+1 row in set (0.01 sec)
+
+MySQL [(none)]> create database db1;
+Query OK, 1 row affected (0.04 sec)
+
+MySQL [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| db1                |
++--------------------+
+2 rows in set (0.00 sec)
+
+MySQL [(none)]> create table db1.a(id int);
+Query OK, 0 rows affected (0.03 sec)
+
+MySQL [(none)]> insert into db1.a values(111);
+Query OK, 1 row affected (0.07 sec)
+
+MySQL [(none)]> select  * from db1.a;
++------+
+| id   |
++------+
+|  111 |
++------+
+1 row in set (0.00 sec)
+
+MySQL [(none)]> exit
+Bye
+[root@localhost ~]# 
+
+
+[root@localhost ~]# mysql  -h192.168.4.58  -P3308  -uyaya  -p123456
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MySQL connection id is 6
+Server version: 5.7.20 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2017, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MySQL [(none)]> show grants;
++-------------------------------------------------+
+| Grants for yaya@%                               |
++-------------------------------------------------+
+| GRANT USAGE ON *.* TO 'yaya'@'%'                |
+| GRANT SELECT, INSERT ON `bbsdb`.* TO 'yaya'@'%' |
++-------------------------------------------------+
+2 rows in set (0.00 sec)
+
+MySQL [bbsdb]> insert into bbsdb.t2 values("a");
+Query OK, 1 row affected (0.00 sec)
+
+MySQL [bbsdb]> select  * from bbsdb.t2;
++------+
+| name |
++------+
+| a    |
++------+
+1 row in set (0.00 sec)
+
+MySQL [bbsdb]> 
+
+host58]# mysql -uroot -p123456  -S /dir1/mysqld1.socket -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------------+----------+--------------+------------------+-------------------+
+| File           | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++----------------+----------+--------------+------------------+-------------------+
+| mysqld1.000001 |      717 |              |                  |                   |
++----------------+----------+--------------+------------------+-------------------+
+[root@host58 ~]# 
+
+
+多实例的配置步骤
+	编写配置文件
+	启动实例
+	查看数据库目录下对应文件和端口号
+	在本机连接实例服务
+	停止实例     
+                 在客户端连接58主机的多实例服务
+
+
+统一的排错方法：
+	              yum  -y  install psmisc	
+[root@host58 ~]# killall -9 mysqld
+[root@host58 ~]# killall -9 mysqld
+[root@host58 ~]# killall -9 mysqld
+mysqld: no process found
+[root@host58 ~]# 
+[root@host58 ~]# rm  -rf /dir1
+[root@host58 ~]# rm  -rf /dir2
+		
+ 检查 /etc/my.cnf文件 的配置
+
+[root@host58 ~]# setenforce 0
+
+
+
+
+
+[root@host58 ~]# systemctl stop firewalld
+
+		执行启动实例的命令
+[root@host58 ~]# mysqld_multi  start 1
+[root@host58 ~]# mysqld_multi  start 2
+
