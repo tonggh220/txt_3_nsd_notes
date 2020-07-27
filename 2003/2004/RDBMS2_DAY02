@@ -1,5 +1,65 @@
 1 MySQL数据读写分离
+	1.1 相关概念 ？
+		数据读写分离： 把客户端查询请求和存储数据的请求分别给不同的数据库服务器处理
+		如何实现数据的读写分离？
+			客户端区分：程序员编写代码实现    存储数据的php脚本 必须连接数据库服务器A
+						  查询数据的PHP脚本 必须连接数据库服务器B
 
+			服务器端区分： 搭建读写分离服务器，客户端访问数据库服务时，把连接请求发给读写分离服务器，由读写分离服务器区分请求类型。
+
+	1.2 实验拓扑
+			
+		
+
+		mysql中间件： 提供读写分离服务的软件( mycat   mysql-proxy   maxscale)
+					    
+	1.3 工作过程 ?
+
+	1.4 配置数据读写分离存储架构
+		1.4.1  配置MySQL一主一从同步结构
+			配置192.168.4.51 为主master数据库服务器
+			配置192.168.4.52 为从slave数据库服务器
+
+		休息到 15:15 
+		1.4.2 配置读写分离服务器 192.168.4.57
+			1.4.2.1 安装软件 maxscale-2.1.2-1.rhel.7.x86_64.rpm
+[root@host57 ~]# yum -y  install maxscale-2.1.2-1.rhel.7.x86_64.rpm
+
+			1.4.2.2 编辑主配置文件
+			 文件的格式	
+			]# vim /etc/maxscale.cnf 
+				[配置项分类名称]
+				配置项=值
+
+		
+
+			修改主配置文件
+
+			vim /etc/maxscal.cnf
+
+[maxscale]
+threads=auto
+
+
+[server1]
+type=server
+address=192.168.4.51
+port=3306
+protocol=MySQLBackend
+
+[server2]
+type=server
+address=192.168.4.52
+port=3306
+protocol=MySQLBackend
+
+[MySQL Monitor]
+type=monitor
+module=mysqlmon
+servers=server1,server2
+user=mysqla
+passwd=123qqq...A
+monitor_interval=10000
 		
 2 MySQL多实例 
 	环境准备
