@@ -129,6 +129,51 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | mysqlb |
 +--------+
 [root@host52 ~]# 
+###################################################
+			
+			1.4.2.4  启动读写分离服务   
+[root@host57 ~]# maxscale  -f /etc/maxscale.cnf
+[root@host57 ~]# 
+
+			1.4.2.5  查看服务状态
+[root@host57 ~]# netstat  -utnlp  | grep 4016
+tcp6       0      0 :::4016                 :::*                    LISTEN      11524/maxscale      
+[root@host57 ~]# 
+[root@host57 ~]# netstat  -utnlp  | grep 4006
+tcp6       0      0 :::4006                 :::*                    LISTEN      11524/maxscale      
+[root@host57 ~]# ps -C maxscale
+   PID TTY          TIME CMD
+ 11524 ?        00:00:00 maxscale
+[root@host57 ~]# 
+[root@host57 ~]# ls /var/log/maxscale/
+maxscale.log
+[root@host57 ~]# 
+			（ 停止服务方法）
+			 [root@host57 ~]# which killall || yum -y install psmisc
+			[root@host57 ~]# which killall 
+			/usr/bin/killall
+[root@host57 ~]# 
+[root@host57 ~]# killall -9 maxscale
+[root@host57 ~]# killall -9 maxscale
+maxscale: no process found
+[root@host57 ~]# 
+
+			
+			1.4.2.5  查看监控信息
+			访问本机的监控服务查看监控信息
+[root@host57 ~]# maxadmin -uadmin -pmariadb -P4016
+MaxScale> list  servers
+Servers.
+-------------------+-----------------+-------+-------------+--------------------
+Server             | Address         | Port  | Connections | Status              
+-------------------+-----------------+-------+-------------+--------------------
+server1            | 192.168.4.51    |  3306 |           0 | Master, Running
+server2            | 192.168.4.52    |  3306 |           0 | Slave, Running
+-------------------+-----------------+-------+-------------+--------------------
+MaxScale> exit
+[root@host57 ~]# 
+
+
 
 ###################################################
 		
