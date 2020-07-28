@@ -137,10 +137,38 @@ bin  catlet  conf  lib  logs  version.txt
 </mycat:schema>
 :wq
 
-		
-		2.3.3 配置数据库服务器（重点）
+			2.3.3 配置数据库服务器（重点）3台服务器都要配置  (3分钟 到 14:17)
+			2.3.3.1  创建存储数据的库
+[root@host53 ~]# mysql -uroot -p123qqq...A -e   'create database db1'
+[root@host54 ~]# mysql -uroot -p123qqq...A -e   'create database db2'
+[root@host55 ~]# mysql -uroot -p123qqq...A -e   'create database db3'
 
-		2.3.4 启动mycat服务
+			2.3.3.2 添加56主机连接使用的用户pljadmin
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.* to pljadmin@"%" identified by "123qqq...A"'
+
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.* to pljadmin@"%" identified by "123qqq...A"'
+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.* to pljadmin@"%" identified by "123qqq...A"'
+
+		2.3.4 启动mycat服务 192.168.4.56
+			把内存加大一些
+			测试数据库的授权用户
+[root@host56 ~]# which  mysql || yum -y install mariadb
+[root@host56 ~]# mysql -h192.168.4.53 -upljadmin -p123qqq...A
+[root@host56 ~]# mysql -h192.168.4.54 -upljadmin -p123qqq...A
+[root@host56 ~]# mysql -h192.168.4.55 -upljadmin -p123qqq...A
+			启动mycat 服务
+[root@host56 ~]# /usr/local/mycat/bin/mycat  start
+Starting Mycat-server...
+[root@host56 ~]# 
+[root@host56 ~]# ls /usr/local/mycat/logs/
+mycat.log  mycat.pid  wrapper.log
+[root@host56 ~]# 
+
+			
 		2.3.5 查看服务状态
+[root@host56 ~]# netstat  -utnlp | grep  8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      11682/java          
+[root@host56 ~]# 
 	2.4 统一排错时间
 三  测试配置
