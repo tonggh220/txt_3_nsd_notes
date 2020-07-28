@@ -224,3 +224,165 @@ mysql>
 mysql> desc company;
 ERROR 1146 (42S02): Table 'db3.company' doesn't exist
 mysql> 
+
+  3.2 建表存储数据
+	3.2.1 分片规则的使用
+		3.2.1.1 枚举法  sharding-by-intfile
+		给表中的分片字段赋值时， 值必须在 规则文件定义的 值里选择
+	根据分片规则 建表时创建分片字段，给分片规则使用的算法找分片规则对应得配置文件
+	]# vim schema.xml
+<table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+
+
+	]# vim rule.xml 
+       <tableRule name="sharding-by-intfile"> 分片规则
+                <rule>
+                        <columns>sharding_id</columns> 分片字段名
+                        <algorithm>hash-int</algorithm>  函数
+                </rule>
+        </tableRule>
+       
+      <function name="hash-int"    函数
+                class="io.mycat.route.function.PartitionByFileMap">
+                <property name="mapFile">partition-hash-int.txt</property> 配置文件
+        </function>
+
+	修改配置文件定义分片字段值列表
+[root@host56 ~]# vim /usr/local/mycat/conf/partition-hash-int.txt
+10000=0  
+10010=1  
+10020=2
+:wq
+
+[root@host56 ~]# /usr/local/mycat/bin/mycat  stop
+Stopping Mycat-server...
+Stopped Mycat-server.
+[root@host56 ~]# 
+[root@host56 ~]# /usr/local/mycat/bin/mycat  start
+Starting Mycat-server...
+[root@host56 ~]# 
+[root@host56 ~]# netstat  -utnlp  | grep 8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      12183/java          
+[root@host56 ~]# ls /usr/local/mycat/logs/*.pid
+/usr/local/mycat/logs/mycat.pid
+[root@host56 ~]# 
+		#根据分片规则创建表 
+[root@host52 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> use  TESTDB；
+ysql> create table employee (id int primary key  auto_increment, sharding_id  int , name char(10) , addr  char(10) );
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> desc employee;
++-------------+----------+------+-----+---------+----------------+
+| Field       | Type     | Null | Key | Default | Extra          |
++-------------+----------+------+-----+---------+----------------+
+| id          | int(11)  | NO   | PRI | NULL    | auto_increment |
+| sharding_id | int(11)  | YES  |     | NULL    |                |
+| name        | char(10) | YES  |     | NULL    |                |
+| addr        | char(10) | YES  |     | NULL    |                |
++-------------+----------+------+-----+---------+----------------+
+4 rows in set (0.05 sec)
+mysql> select  * from employee;
+Empty set (0.23 sec)
+
+mysql>
+mysql> 
+[root@host54 ~]#  mysql -uroot -p123qqq...A -e 'use db2;show tables'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| Tables_in_db2 |
++---------------+
+| employee      |
++---------------+
+mysql> select  * from employee;
+Empty set (0.23 sec)
+
+mysql>
+
+[root@host54 ~]# 
+[root@host55 ~]#  mysql -uroot -p123qqq...A -e 'use db3;show tables'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| Tables_in_db3 |
++---------------+
+| employee      |
++---------------+
+mysql> select  * from employee;
+Empty set (0.23 sec)
+
+mysql>
+
+[root@host55 ~]# 
+
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'use db1;show tables'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| Tables_in_db1 |
++---------------+
+| employee      |
++---------------+
+mysql> select  * from employee;
+Empty set (0.23 sec)
+
+mysql>
+[root@host53 ~]# 
+
+[root@host52 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> use TESTDB;
+mysql> insert into employee(sharding_id,name,addr)values(10000,"bob","bj");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10000,"tom","bj");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10000,"lucy","bj");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10010,"lucyA","bj");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id,name,addr)values(10020,"lucyA","bj");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from employee;
++----+-------------+-------+------+
+| id | sharding_id | name  | addr |
++----+-------------+-------+------+
+|  1 |       10000 | bob   | bj   |
+|  2 |       10000 | tom   | bj   |
+|  3 |       10000 | lucy  | bj   |
+|  1 |       10020 | lucyA | bj   |
+|  1 |       10010 | lucyA | bj   |
++----+-------------+-------+------+
+5 rows in set (0.02 sec)
+
+mysql>
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select * from  db1.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| id | sharding_id | name | addr |
++----+-------------+------+------+
+|  1 |       10000 | bob  | bj   |
+|  2 |       10000 | tom  | bj   |
+|  3 |       10000 | lucy | bj   |
++----+-------------+------+------+
+[root@host53 ~]# 
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'select * from  db2.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+-------+------+
+| id | sharding_id | name  | addr |
++----+-------------+-------+------+
+|  1 |       10010 | lucyA | bj   |
++----+-------------+-------+------+
+[root@host54 ~]# 
+
+[root@host55 ~]#  mysql -uroot -p123qqq...A -e 'select * from  db3.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+-------+------+
+| id | sharding_id | name  | addr |
++----+-------------+-------+------+
+|  1 |       10020 | lucyA | bj   |
++----+-------------+-------+------+
+[root@host55 ~]# 
+
