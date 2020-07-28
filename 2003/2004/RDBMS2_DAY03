@@ -170,5 +170,57 @@ mycat.log  mycat.pid  wrapper.log
 [root@host56 ~]# netstat  -utnlp | grep  8066
 tcp6       0      0 :::8066                 :::*                    LISTEN      11682/java          
 [root@host56 ~]# 
-	2.4 统一排错时间
+	2.4 统一排错时间  14:40 统一排错  20分钟 到15:00
+	查看错误日志  获取报错提示
+                  vim  /usr/local/mycat/logs/wrapper.log
+
+
+终极解决办法  （排错 + 休息到 15:30 讲新知识）
+	把内存加大一些
+	测试数据库的授权用户
+	rpm -e --nodeps  软件名 #删除其他版本的jdk
+	rm  -rf /usr/local/mycat/conf/schema.xml   使用笔记里的配置内容
+	重启56主机的操作系统
+	执行启动mycat服务的命令
+
+	如果还启动失败： 把软件删除重新安装软件，重新编辑schema.xml文件
+
+
 三  测试配置
+	3.1 客户端连接分片服务器访问数据
+                 命令格式 ]# mysql  -h分片服务器IP   -P端口号   -u用户名  -p密码
+[root@host52 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| TESTDB   |
++----------+
+1 row in set (0.01 sec)
+
+mysql> use TESTDB;
+
+mysql> show tables;
++------------------+
+| Tables in TESTDB |
++------------------+
+| company          |
+| customer         |
+| customer_addr    |
+| employee         |
+| goods            |
+| hotnews          |
+| orders           |
+| order_items      |
+| travelrecord     |
++------------------+
+9 rows in set (0.01 sec)
+mysql> desc company;
+ERROR 1146 (42S02): Table 'db1.company' doesn't exist
+mysql> 
+mysql> desc company;
+ERROR 1146 (42S02): Table 'db2.company' doesn't exist
+mysql> 
+mysql> desc company;
+ERROR 1146 (42S02): Table 'db3.company' doesn't exist
+mysql> 
