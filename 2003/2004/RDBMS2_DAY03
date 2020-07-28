@@ -1,0 +1,146 @@
+
+一  数据分片概述
+
+	1.1 相关概念
+	1.2 数据存储拓扑结构
+	1.3 环境准备
+	1.4 软件介绍
+	1.5 mycat服务的工作过程
+
+二  部署MyCAT服务
+	2.1 安装软件    3分钟到 10:25 
+[root@host56 ~]# yum  -y   install  java-1.8.0-openjdk.x86_64
+[root@host56 ~]# tar -zxvf  Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz		
+[root@host56 ~]# ls
+anaconda-ks.cfg  mycat  
+[root@host56 ~]# 
+[root@host56 ~]# mv mycat /usr/local/
+[root@host56 ~]# ls /usr/local/mycat/
+bin  catlet  conf  lib  logs  version.txt
+[root@host56 ~]# 
+
+	2.2 安装文件说明  （具体见ppt ）
+
+	      conf目录存放的是配置文件
+		xml  扩展标记语言   （标签 要成对出现 要有开始要有闭合） 
+		rule.xml   存放分片规则的配置文件 
+		schema.xml   定义数据分片的配置文件
+		server.xml     定义连接用户名和密码及虚拟库名的配置文件
+                                  其他的文件 是 分片规则配置文件
+
+	2.3 配置Mycat服务 192.168.4.56
+		2.3.1 定义连接mycat 服务的用户名和密码及虚拟库名 （使用默认配置）
+			vim  /usr/local/mycat/conf/server.xml 
+			<user  选项=值>
+				其他的标签
+			</user>		
+
+        <user name="root">
+                <property name="password">123456</property>
+                <property name="schemas">TESTDB</property>
+        </user>
+
+        <user name="user">
+                <property name="password">user</property>
+                <property name="schemas">TESTDB</property>
+                <property name="readOnly">true</property>
+        </user>
+	
+
+		2.3.2 配置数据分片存储的表（重点）
+		]#cp  schema.xml   /root/    备份文件
+[root@host56 conf]# wc -l schema.xml 
+77 schema.xml
+
+[root@host56 conf]# sed -i '56,77d' schema.xml   删除 无关的配置行  时间 3分钟到 11:15 
+[root@host56 conf]# sed -i '39,42d' schema.xml 
+[root@host56 conf]# sed -i '16,18d' schema.xml 
+
+[root@host56 conf]# wc -l schema.xml 
+48 schema.xml
+[root@host56 conf]#
+			
+		配置文件格式说明
+
+		<mycat:schema  选项>
+			<schema 选项>  定义虚拟库名
+				<table  选项      />            虚拟表名
+				<table  选项>  </table>
+			</schema>
+
+			<dataNode 选项   />  定义数据库服务器的主机名及存储数据的库名
+
+			<dataHost 选项>......</dataHost >  定义数据库服务器的ip地址
+			
+		</mycat:schema>
+
+根据拓扑结构修改schema.xml
+[root@host56 conf]# cat schema.xml 
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+
+	<schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
+		<table name="travelrecord" dataNode="dn1,dn2,dn3" rule="auto-sharding-long" />
+		<table name="company" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+		<table name="goods" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+		<table name="hotnews" primaryKey="ID" autoIncrement="true" dataNode="dn1,dn2,dn3"
+			   rule="mod-long" />
+		<table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+			   rule="sharding-by-intfile" />
+		<table name="customer" primaryKey="ID" dataNode="dn1,dn2,dn3"
+			   rule="sharding-by-intfile">
+			<childTable name="orders" primaryKey="ID" joinKey="customer_id"
+						parentKey="id">
+				<childTable name="order_items" joinKey="order_id"
+							parentKey="id" />
+			</childTable>
+			<childTable name="customer_addr" primaryKey="ID" joinKey="customer_id"
+						parentKey="id" />
+		</table>
+	</schema>
+
+	<dataNode name="dn1" dataHost="mysql53" database="db1" />
+	<dataNode name="dn2" dataHost="mysql54" database="db2" />
+	<dataNode name="dn3" dataHost="mysql55" database="db3" />
+
+	<dataHost name="mysql53" maxCon="1000" minCon="10" balance="0"
+			  writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+		
+                <heartbeat>select user()</heartbeat>
+
+		<writeHost host="hostM1" url="192.168.4.53:3306" user="pljadmin"
+				   password="123qqq...A">
+		</writeHost>
+
+	</dataHost>
+
+	<dataHost name="mysql54" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                    
+                <heartbeat>select user()</heartbeat>
+
+                <writeHost host="hostM2" url="192.168.4.54:3306" user="pljadmin"                                   password="123qqq...A">                
+                </writeHost>
+        </dataHost>
+		
+
+	<dataHost name="mysql55" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+
+                <heartbeat>select user()</heartbeat>
+
+                <writeHost host="hostM3" url="192.168.4.55:3306" user="pljadmin"                                   password="123qqq...A">                
+                </writeHost>
+        </dataHost>
+
+</mycat:schema>
+:wq
+
+		
+		2.3.3 配置数据库服务器（重点）
+
+		2.3.4 启动mycat服务
+		2.3.5 查看服务状态
+	2.4 统一排错时间
+三  测试配置
