@@ -473,3 +473,41 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 |    9 | ccc2  | NULL   | zzzz    |
 +------+-------+--------+---------+
 [root@host53 ~]#
+#################################################
+3.2.2 添加新库新表,在mycat服务器上做如下配置：
+		1  添加虚拟库名   
+		vim  server.xml
+        <user name="root">
+                <property name="password">123456</property>
+                <property name="schemas">TESTDB,GAMEDB</property>
+        </user>
+
+        <user name="user">
+                <property name="password">user</property>
+                <property name="schemas">TESTDB,GAMEDB</property>
+                <property name="readOnly">true</property>
+        </user>
+
+		2 定义虚拟表名 并设置使用的分片规则
+		vim schema.xml
+   <schema name="GAMEDB" checkSQLschema="false" sqlMaxLimit="100">
+                <table name="user" dataNode="dn1,dn2,dn3" rule="mod-long" />
+                <table name="vip" dataNode="dn1,dn2,dn3" type="global" />
+  </schema>
+
+		3 重启mycat 服务
+[root@host56 ~]# /usr/local/mycat/bin/mycat  stop
+Stopping Mycat-server...
+Stopped Mycat-server.
+[root@host56 ~]# /usr/local/mycat/bin/mycat  start
+Starting Mycat-server...
+[root@host56 ~]# 
+
+[root@host56 ~]# netstat  -utnlp  | grep  8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      12891/java          
+[root@host56 ~]# 
+
+
+		4 客户端连接 mycat 服务器 建表并存储数据
+
+		5 在数据库服务器本机查看数据
