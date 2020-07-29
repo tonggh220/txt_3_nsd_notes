@@ -142,3 +142,50 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@host52 ~]# 
 		2.2.2 安装mha_node 软件 （3台数据库服务器都要安装）
 ]# yum -y install mha/mha4mysql-node-0.56-0.el6.noarch.rpm
+
+
+
+	2.3 优化数据库服务器的配置(难点 重点)
+		#禁止字段删除本机的中继日志文件
+		#启用同步复制模式
+		#在备用的从服务器52 和 53 添加  repluser 和启用binlog日志
+[root@host51 ~]# vim /etc/my.cnf
+[mysqld]
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_master_enabled=1          
+rpl_semi_sync_slave_enabled=1 
+relay_log_purge=0
+:wq
+[root@host51 ~]# systemctl  restart mysqld
+
+[root@host52 ~]# vim /etc/my.cnf
+[mysqld]
+plugin-load ="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1
+relay_log_purge=0
+
+log_bin=master52
+:wq
+[root@host52 ~]#systemctl restart mysqld
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'grant replication slave on *.* to  repluser@"%" identified by "123qqq...A"'
+
+[root@host53 ~]# vim /etc/my.cnf
+[mysqld]
+plugin-load ="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1
+relay_log_purge=0
+
+log_bin=master53
+:wq
+[root@host53 ~]#systemctl restart mysqld
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'grant replication slave on *.* to  repluser@"%" identified by "123qqq...A"'
+		
+		检查一主多从 是否是正常状态
+[root@host52 ~]#  mysql -uroot -p123qqq...A -e 'show slave status \G'
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@host53 ~]#  mysql -uroot -p123qqq...A -e 'show slave status \G'
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
