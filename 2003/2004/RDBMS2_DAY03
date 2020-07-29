@@ -508,6 +508,76 @@ tcp6       0      0 :::8066                 :::*                    LISTEN      
 [root@host56 ~]# 
 
 
-		4 客户端连接 mycat 服务器 建表并存储数据
+				4 客户端连接 mycat 服务器 建表并存储数据
+[root@host52 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> 
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| GAMEDB   |
+| TESTDB   |
++----------+
+2 rows in set (0.01 sec)
+
+mysql> use GAMEDB;
+
+mysql> show tables;
++------------------+
+| Tables in GAMEDB |
++------------------+
+| user             |
+| vip              |
++------------------+
+2 rows in set (0.00 sec)
+
+mysql> desc user;
+ERROR 1146 (42S02): Table 'db1.user' doesn't exist
+mysql> desc vip;
+ERROR 1146 (42S02): Table 'db1.vip' doesn't exist
+mysql> 
+mysql> create table  vip (name char(10),class char(7));
+mysql> insert into vip values("a","nsd");
+mysql> insert into vip values("b","nsd");
+mysql> insert into vip values("c","nsd");
+mysql> select  * from vip;
++------+-------+
+| name | class |
++------+-------+
+| a    | nsd   |
+| b    | nsd   |
+| c    | nsd   |
++------+-------+
+3 rows in set (0.09 sec)
+
+mysql> 
+
 
 		5 在数据库服务器本机查看数据
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select * from  db1.vip'
++------+-------+
+| name | class |
++------+-------+
+| a    | nsd   |
+| b    | nsd   |
+| c    | nsd   |
++------+-------+
+[root@host53 ~]# 
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'select * from  db2.vip'
+
++------+-------+
+| name | class |
++------+-------+
+| a    | nsd   |
+| b    | nsd   |
+| c    | nsd   |
++------+-------+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select * from  db3.vip'
+
++------+-------+
+| name | class |
++------+-------+
+| a    | nsd   |
+| b    | nsd   |
+| c    | nsd   |
++------+-------+
