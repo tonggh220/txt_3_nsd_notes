@@ -189,3 +189,36 @@ log_bin=master53
 [root@host53 ~]#  mysql -uroot -p123qqq...A -e 'show slave status \G'
             Slave_IO_Running: Yes
             Slave_SQL_Running: Yes
+
+            三 测试配置
+	3.1 测试ssh免密登录配置
+[root@host57 mha]# masterha_check_ssh --conf=/etc/mha/app1.cnf
+Thu Jul 30 01:34:51 2020 - [info] All SSH connection tests passed successfully.
+
+	3.3 测试主从同步配置
+[root@host57 mha]# masterha_check_repl --conf=/etc/mha/app1.cnf
+MySQL Replication Health is OK.
+
+	3.4 启动管理服务
+[root@host57 mha]# masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf --ignore_last_failover  
+Thu Jul 30 01:51:29 2020 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Thu Jul 30 01:51:29 2020 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Thu Jul 30 01:51:29 2020 - [info] Reading server configuration from /etc/mha/app1.cnf..
+
+开终端查看服务状态
+[root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf 
+app1 (pid:2087) is running(0:PING_OK), master:192.168.4.51
+[root@host57 ~]# 
+[root@host57 ~]# ls /etc/mha/
+app1.cnf  app1.master_status.health  manager.log  master_ip_failover
+[root@host57 ~]# 
+
+
+停止管理服务的命令
+[root@host57 ~]# masterha_stop  --conf=/etc/mha/app1.cnf 
+Stopped app1 successfully.
+[root@host57 ~]# 
+
+四 测试集群 周五讲
+	4.1 测试高可用功能
+	4.2 宕机的数据库服务器再添加到集群里
