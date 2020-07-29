@@ -126,3 +126,19 @@ ens33:1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         ether 00:0c:29:1a:05:3d  txqueuelen 1000  (Ethernet)
 
 [root@host51 ~]#
+
+	2.2 配置数据库服务器 192.168.4.51/52/53
+		2.2.1 添加监控连接用户root 密码123qqq...A
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'grant all on  *.* to root@"%" identified by "123qqq...A"'  #在主服务器51主机添加
+
+#在2台从服务器查看
+]# mysql -uroot -p123qqq...A -e 'show grants for root@"%"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------------------------------------------+
+| Grants for root@%                         |
++-------------------------------------------+
+| GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' |
++-------------------------------------------+
+[root@host52 ~]# 
+		2.2.2 安装mha_node 软件 （3台数据库服务器都要安装）
+]# yum -y install mha/mha4mysql-node-0.56-0.el6.noarch.rpm
