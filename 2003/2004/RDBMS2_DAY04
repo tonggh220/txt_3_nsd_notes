@@ -55,3 +55,13 @@
 		配置主服务器51  
 		配置从服务器52
 		配置从服务器53
+        二 创建集群
+	2.1 配置管理主机192.168.4.57
+		安装软件   5分钟到 15:18 
+]# yum -y install  mha/mha4mysql-node-0.56-0.el6.noarch.rpm
+]# yum -y install perl-ExtUtils-*   perl-CPAN*
+   53  tar -zxvf  mha/mha4mysql-manager-0.56.tar.gz 
+   55  cd mha4mysql-manager-0.56/
+   64  perl Makefile.PL 
+   65  make
+   66  make install
