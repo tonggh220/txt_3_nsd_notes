@@ -1,0 +1,6 @@
+机器  50  51
+复习 lnmp的搭建
+软件包  redis-4.0.8.tar.gz   php-redis-2.2.4.tar.gz   nginx-1.12.2.tar.gz
+
+1  搭建redis数据库服务器
+2 lnmp+Redis （配置网站可以使用redis数据库服务器存储数据）
