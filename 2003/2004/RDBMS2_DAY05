@@ -75,7 +75,7 @@ mysql> exit
 [root@pxc71 ~]# mysql -uroot -p123456
 mysql> grant reload, lock tables,replication client,process on *.* to sstuser@"localhost"  identified by "123qqq...A";
 
-
+reload(加载数据)lock tables（锁表）replication client（检查数据库服务状态）process（可以在登录状态mysql>下使用命令管理mysql服务）
 
 		5 在剩下2台数据库服务器上，启动mysql服务
 [root@pxc72 ~]# ls /var/lib/mysql
