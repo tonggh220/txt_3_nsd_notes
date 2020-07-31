@@ -137,3 +137,86 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 		6 在3台数据库服务器本机分别查看集群状态
 [root@pxc73 ~]# mysql -uroot -p123456
 mysql> show  status like "%wsrep%"；
+
+      	测试集群
+		1 在任意1台数据库服务器添加客户端连接用户
+[root@pxc73 ~]# mysql -uroot -p123456 -e 'grant all  on bbsdb.* to admin@"%" identified by "123456"'
+[root@pxc71 ~]#  mysql  -uroot -p123456  -e 'select user from mysql.user where user="admin"'
+[root@pxc72 ~]#  mysql  -uroot -p123456  -e 'select user from mysql.user where user="admin"'
+
+
+		2 在客户端连接任意1台数据库服务器存取数据
+[root@host53 ~]# mysql -h192.168.4.72 -uadmin -p123456
+mysql> create database bbsdb;
+mysql> create table bbsdb.t1(id int primary key auto_increment, name char(10));
+mysql> insert into bbsdb.t1(name)values("bob"),("tom");
+mysql> select  * from bbsdb.t1;
+mysql> select  * from bbsdb.t1;
++----+------+
+| id | name |
++----+------+
+|  3 | bob  |
+|  6 | tom  |
++----+------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> exit;
+
+[root@host53 ~]# mysql -h192.168.4.71 -uadmin -p123456
+mysql> select  * from bbsdb.t1;
++----+------+
+| id | name |
++----+------+
+|  3 | bob  |
+|  6 | tom  |
++----+------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> insert into bbsdb.t1(name)values("a"),("b"),("c");
+mysql> select  * from bbsdb.t1;
++----+------+
+| id | name |
++----+------+
+|  3 | bob  |
+|  6 | tom  |
+|  7 | a    |
+| 10 | b    |
+| 13 | c    |
++----+------+
+5 rows in set (0.01 sec)
+
+mysql> exit
+[root@host53 ~]# mysql -h192.168.4.73 -uadmin -p123456
+mysql> insert into bbsdb.t1(name)values("A"),("B"),("C");
+mysql> select  * from bbsdb.t1;
++----+------+
+| id | name |
++----+------+
+|  3 | bob  |
+|  6 | tom  |
+|  7 | a    |
+| 10 | b    |
+| 13 | c    |
+| 14 | A    |
+| 17 | B    |
+| 20 | C    |
++----+------+
+8 rows in set (0.00 sec)
+
+mysql> 
+
+		3 停止任意1台数据库服务器。另外2台照常提供服务
+[root@pxc71 ~]#  systemctl  stop mysql@bootstrap.service 
+[root@host53 ~]# mysql -h192.168.4.73 -uadmin -p123456
+mysql> insert into  bbsdb.t1(name) values("ff");
+
+[root@host53 ~]# mysql -h192.168.4.72 -uadmin -p123456	
+mysql> insert into  bbsdb.t1(name) values("zz");	
+  
+		4 启动停止主机的mysql服务，登录后查看集群状态和数据
+
+[root@pxc71 ~]# mysql -uroot -p123456 -e 'show status like "%wsrep%"'
+[root@pxc71 ~]# mysql -uroot -p123456 -e 'select * from bbsdb.t1'
