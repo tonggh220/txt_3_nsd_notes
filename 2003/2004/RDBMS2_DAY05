@@ -35,7 +35,105 @@ wsrep_sst_auth="sstuser:123qqq...A"
 修改73 的wsrep.cnf文件
 [root@pxc73 pxc]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf
 wsrep_cluster_address=gcomm://192.168.4.71,192.168.4.72,192.168.4.73
-wsrep_node_address=192.168.4.723
+wsrep_node_address=192.168.4.73
 wsrep_cluster_name=pxc-cluster
 wsrep_node_name=pxc-cluster-node-73
 wsrep_sst_auth="sstuser:123qqq...A"
+:wq
+
+	
+		关闭3台数据库服务器的selinux 和 firewalld
+		4 初始化集群（在任意1台数据库服务器上执行都可以，只需要执行1遍）
+[root@pxc71 ~]# ls /var/lib/mysql
+[root@pxc71 ~]# 
+[root@pxc71 ~]# systemctl  start mysql@bootstrap.service  
+[root@pxc71 ~]# 
+[root@pxc71 ~]# ls /var/lib/mysql
+auto.cnf         gvwstate.dat    mysqld_safe.pid     pxc71-bin.000002
+ca-key.pem       ib_buffer_pool  mysql.sock          pxc71-bin.index
+ca.pem           ibdata1         mysql.sock.lock     server-cert.pem
+client-cert.pem  ib_logfile0     performance_schema  server-key.pem
+client-key.pem   ib_logfile1     private_key.pem     sys
+galera.cache     ibtmp1          public_key.pem      xb_doublewrite
+grastate.dat     mysql           pxc71-bin.000001
+[root@pxc71 ~]# 
+[root@pxc71 ~]# vim /etc/percona-xtradb-cluster.conf.d/mysqld.cnf 
+[root@pxc71 ~]# 
+[root@pxc71 ~]# netstat  -utnlp  | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      88919/mysqld        
+[root@pxc71 ~]# netstat  -utnlp  | grep  4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      88919/mysqld        
+[root@pxc71 ~]# ls /var/log/mysqld.log 
+/var/log/mysqld.log
+[root@pxc71 ~]# 
+[root@pxc71 ~]# grep  password /var/log/mysqld.log 
+2020-07-31T15:05:19.539324Z 1 [Note] A temporary password is generated for root@localhost: R7,%wiOsrwki
+[root@pxc71 ~]# 
+[root@pxc71 ~]# mysql -uroot -p'R7,%wiOsrwki'
+mysql> alter user root@"localhost" identified by "123456";
+mysql> exit
+[root@pxc71 ~]# mysql -uroot -p123456
+mysql> grant reload, lock tables,replication client,process on *.* to sstuser@"localhost"  identified by "123qqq...A";
+
+
+
+		5 在剩下2台数据库服务器上，启动mysql服务
+[root@pxc72 ~]# ls /var/lib/mysql
+[root@pxc72 ~]# systemctl  start mysql  启动数据库服务
+[root@pxc72 ~]# 
+[root@pxc72 ~]# ls /var/lib/mysql
+auto.cnf         ib_logfile1             pxc72-bin.index
+ca-key.pem       ibtmp1                  server-cert.pem
+ca.pem           innobackup.move.log     server-key.pem
+client-cert.pem  innobackup.prepare.log  sys
+client-key.pem   mysql                   xb_doublewrite
+galera.cache     mysql.sock              xtrabackup_binlog_pos_innodb
+grastate.dat     mysql.sock.lock         xtrabackup_galera_info
+gvwstate.dat     performance_schema      xtrabackup_info
+ib_buffer_pool   private_key.pem         xtrabackup_master_key_id
+ibdata1          public_key.pem
+ib_logfile0      pxc72-bin.000001
+[root@pxc72 ~]# 
+[root@pxc72 ~]# netstat  -utnlp  | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      99627/mysqld        
+[root@pxc72 ~]# netstat  -utnlp  | grep  4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      99627/mysqld        
+[root@pxc72 ~]# mysql -uroot -p123456
+mysql> select user  from  mysql.user where  user="sstuser";
+
+[root@pxc73 ~]# ls /var/lib/mysql
+[root@pxc73 ~]# 
+[root@pxc73 ~]# systemctl  start mysql    # 启动数据库服务
+[root@pxc73 ~]# 
+[root@pxc73 ~]# ls /var/lib/mysql
+auto.cnf         ib_logfile1             pxc73-bin.index
+ca-key.pem       ibtmp1                  server-cert.pem
+ca.pem           innobackup.move.log     server-key.pem
+client-cert.pem  innobackup.prepare.log  sys
+client-key.pem   mysql                   xb_doublewrite
+galera.cache     mysql.sock              xtrabackup_binlog_pos_innodb
+grastate.dat     mysql.sock.lock         xtrabackup_galera_info
+gvwstate.dat     performance_schema      xtrabackup_info
+ib_buffer_pool   private_key.pem         xtrabackup_master_key_id
+ibdata1          public_key.pem
+ib_logfile0      pxc73-bin.000001
+[root@pxc73 ~]# 
+[root@pxc73 ~]# netstat  -utnlp | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      98793/mysqld        
+[root@pxc73 ~]# netstat  -utnlp | grep  4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      98793/mysqld        
+[root@pxc73 ~]# mysql -uroot -p123456 -e  'select user from  mysql.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+
+| user          |
++---------------+
+| mysql.session |
+| mysql.sys     |
+| root          |
+| sstuser       |
++---------------+
+[root@pxc73 ~]# 
+
+		6 在3台数据库服务器本机分别查看集群状态
+[root@pxc73 ~]# mysql -uroot -p123456
+mysql> show  status like "%wsrep%"；
