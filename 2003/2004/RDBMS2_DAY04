@@ -219,6 +219,59 @@ app1.cnf  app1.master_status.health  manager.log  master_ip_failover
 Stopped app1 successfully.
 [root@host57 ~]# 
 
-四 测试集群 周五讲
+四 测试集群
 	4.1 测试高可用功能
-	4.2 宕机的数据库服务器再添加到集群里
+		在主服务添加客户端连接时使用的用户pljone
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create database db10'
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create table db10.t1(id int)'
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'grant select , insert on  db10.* to  pljone@"%" identified by "123qqq...A"'
+
+在备用的从服务查看
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'show grants for pljone@"%"'
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'desc db10.t1'
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'show grants for pljone@"%"'
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'desc db10.t1'
+
+
+		1 客户端连接vip地址192.168.4.100 访问数据库服务
+]#mysql  -h192.168.4.100 -u用户名  -p密码
+]#mysql  -h192.168.4.100 -upljone  -p123qqq...A  
+mysql> show  grants;
+mysql> insert into  db10.t1 values(666);
+mysql> select  * from db10.t1;
++------+
+| id   |
++------+
+|  666 |
++------+
+1 row in set (0.00 sec)
+
+mysql> 
+		2 模拟51主机宕机：  停止数据库服务 或 关机
+		 host51]#  systemctl  stop  mysqld	        
+				
+
+		3 客户端依然可以连接vip地址192.168.4.100 访问数据库服务
+		]# ping  192.168.4.100
+		]#mysql  -h192.168.4.100 -upljone -p123qqq...A
+		MySQL> select * from db10.t1;
+		mysql> insert into db10.t1 values(888);
+
+		4 查看vip地址在剩下52 和 53 那台机器上
+		]# ip addr show  | grep 192.168.4.100
+
+		5 查看另一台数据库服务器的slave状态
+		  ]# mysql -uroot -p密码 -e 'show slave status \G' | grep -i  yes
+
+		6 查看管理服务的状态（发现主数据库服务器宕机，管理服务会自动停止，并并删除主服务在app1.cnf文件里设置）
+		   ]#masterha_check_status  --conf=/etc/mha/app1.cnf
+		
+		7 启动管理服务监视当前的主服务
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf --ignore_last_failover
+
+		8 查看服务状态 （监视52 说明 52 新的主数据库服务器）
+[root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf 
+app1 (pid:5977) is running(0:PING_OK), master:192.168.4.52
+[root@host57 ~]#	
+
+	练习+休息到 10:05 
