@@ -274,4 +274,60 @@ mysql>
 app1 (pid:5977) is running(0:PING_OK), master:192.168.4.52
 [root@host57 ~]#	
 
-	练习+休息到 10:05 
+	4.2 把宕机的数据库服务器再添加到集群里
+		4.2.1 配置宕机的数据库服务器
+			启动数据库服务
+[root@host51 ~]# systemctl  stop mysqld 
+
+			与当前的主服务器数据一致
+[root@host52 ~]# mysqldump -uroot -p123qqq...A  db10 > /root/db10.sql
+[root@host52 ~]# scp /root/db10.sql   root@192.168.4.51:/opt/
+[root@host51 ~]# mysql -uroot -p123qqq...A db10 < /opt/db10.sql 
+
+			配置为当前主服务器从
+[root@host52 ~]# mysql -uroot -p123qqq...A   -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master52.000001 |      690 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@host52 ~]# 
+
+[root@host51 ~]# mysql -uroot -p123qqq...A
+mysql> change master to  master_host="192.168.4.52" , master_user="repluser" , master_password="123qqq...A",master_log_file="master52.000001", master_log_pos=690;
+
+
+			查看slave状态
+mysql> show slave status \G
+           Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+		4.2.2 配置管理主机
+			在app1.cnf文件里添加数据库服务器
+[root@host57 ~]# vim /etc/mha/app1.cnf
+[server1]
+candidate_master=1
+hostname=192.168.4.51
+port=3306
+:wq
+		4.2.3 测试配置
+			]# master_check_repl  --conf=/etc/mha/app1.cnf
+MySQL Replication Health is OK.
+[root@host57 ~]# 
+
+		4.2.4 重启管理服务
+[root@host57 ~]# masterha_stop  --conf=/etc/mha/app1.cnf 
+Stopped app1 successfully.
+[root@host57 ~]# 
+
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf --ignore_last_failover
+
+Fri Jul 31 10:35:30 2020 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Fri Jul 31 10:35:30 2020 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Fri Jul 31 10:35:30 2020 - [info] Reading server configuration from /etc/mha/app1.cnf..
+		
+		4.2.5 查看管理服务的运行状态
+[root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf 
+app1 (pid:7322) is running(0:PING_OK), master:192.168.4.52
+[root@host57 ~]# 
