@@ -220,3 +220,35 @@ mysql> insert into  bbsdb.t1(name) values("zz");
 
 [root@pxc71 ~]# mysql -uroot -p123456 -e 'show status like "%wsrep%"'
 [root@pxc71 ~]# mysql -uroot -p123456 -e 'select * from bbsdb.t1'
+
+
+2 MySQL存储引擎（理论比较多  难点 ）
+	2.1  什么是存储引擎：是mysql服务的功能组件。存储引擎有不同功能和数据存储方式。表的处理器。
+
+	2.2 MySQL服务体系结构
+	2.3MySQL服务处理查询访问的工作过程
+
+	2.4 查看数据库服务支持和默认使用的存储引擎
+	show engines;
+
+	2.5 查看服务器已有的表使用的存储引擎
+		show create table 库.表名;
+
+	2.6 修改数据库服务默认使用的存储引擎
+]# vim /etc/my.cn 
+[mysqld]
+default-storage-engine=myisam
+:wq
+
+[root@host53 ~]# systemctl restart mysqld
+[root@host53 ~]# mysql -uroot -p123qqq...A  -e 'show engines'
+	
+	2.7 建表时指定表使用的存储引擎和修改表使用的存储引擎
+		create table db10.tea( name char(10),age int)engine=memory;
+
+                                 mysql> alter table  db10.tea engine=myisam;
+ 
+
+	2.8 常用存储引擎特点介绍
+	2.9 事的特点及 演示
+	2.10 建表时，如何觉得表使用哪种存储引擎？
