@@ -14,6 +14,16 @@
     9  make install
 
 		1.2.2 对服务做初始化配置
+
+[root@host50 redis-4.0.8]# ./utils/install_server.sh   一路按回车使用默认配置
+–端口  6379
+–主配置文件  /etc/redis/6379.conf
+–日志文件          /var/log/redis_6379.log
+–数据库目录  /var/lib/redis/6379
+–服务启动程序  /usr/local/bin/redis-server     
+–命令行连接命令  /usr/local/bin/redis-cli
+
+
 		1.2.3 查看服务状态
 [root@host50 redis-4.0.8]# netstat  -utnlp  | grep  6379
 tcp        0      0 127.0.0.1:6379          0.0.0.0:*               LISTEN      22806/redis-server  
