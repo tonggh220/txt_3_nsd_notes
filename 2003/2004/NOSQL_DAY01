@@ -51,3 +51,76 @@ OK
 
 使用脚本管理服务
 [root@host50 redis-4.0.8]# /etc/init.d/redis_6379  status|start|stop 
+
+	1.3 常用命令的使用
+127.0.0.1:6379> mset    y 33     z  44    i 99
+127.0.0.1:6379> mget y  z  i
+
+127.0.0.1:6379> select  15
+OK
+127.0.0.1:6379[15]> select 0
+OK
+127.0.0.1:6379> 
+127.0.0.1:6379> keys ?
+1) "x"
+2) "y"
+3) "z"
+4) "i"
+127.0.0.1:6379> keys ???
+1) "age"
+127.0.0.1:6379> keys x??
+(empty list or set)
+127.0.0.1:6379> 
+
+127.0.0.1:6379> exists school 
+(integer) 1
+127.0.0.1:6379> exists school2 
+(integer) 0
+
+127.0.0.1:6379> EXPIRE  y 20 
+127.0.0.1:6379> ttl  y
+ 
+127.0.0.1:6379> ttl y
+(integer) -2
+		
+127.0.0.1:6379> set k 98
+OK
+127.0.0.1:6379> type k
+string
+127.0.0.1:6379>
+
+127.0.0.1:6379> lpush tea  a  b c d
+127.0.0.1:6379> type tea
+list
+
+127.0.0.1:6379> move school 1
+(integer) 1
+127.0.0.1:6379> select 1
+OK
+127.0.0.1:6379[1]> keys *
+1) "school"
+127.0.0.1:6379[1]> 
+127.0.0.1:6379> del j
+(integer) 1
+127.0.0.1:6379> del x k  z
+(integer) 3
+127.0.0.1:6379> keys *
+127.0.0.1:6379> flushdb
+OK
+127.0.0.1:6379> keys *
+(empty list or set)
+127.0.0.1:6379> 
+127.0.0.1:6379> flushall  清空内存数据
+OK
+127.0.0.1:6379> 
+127.0.0.1:6379> mset x 1 y 2 z 3 k 4
+OK
+127.0.0.1:6379> keys *
+1) "y"
+2) "x"
+3) "k"
+4) "z"
+127.0.0.1:6379> save
+OK
+127.0.0.1:6379>
+127.0.0.1:6379> shutdown
