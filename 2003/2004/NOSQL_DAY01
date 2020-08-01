@@ -124,3 +124,63 @@ OK
 OK
 127.0.0.1:6379>
 127.0.0.1:6379> shutdown
+
+
+	1.4 配置文件解析  下次课讲
+
+2  lnmp+Redis （配置网站可以使用redis数据库服务器存储数据）
+	2.1  部署网站运行环境LNMP （192.168.4.51）
+		安装源码nginx软件
+   53  rpm -q gcc
+   54  rpm -q pcre-devel 
+   56  rpm -q zlib-devel
+   57  yum -y install  gcc  pcre-devel zlib-devel
+   58  tar -zxvf upload/nginx-1.12.2.tar.gz 
+   59  cd nginx-1.12.2/
+   60  ./configure 
+   61  make
+   62  make install
+
+[root@host51 nginx-1.12.2]# ls /usr/local/nginx/
+conf  html  logs  sbin
+[root@host51 nginx-1.12.2]# 
+		安装php
+[root@host51 ~]# yum -y install php
+
+		安装php-fpm
+[root@host51 ~]# yum -y install  php-fpm
+
+		安装MySQL软件 （已经安装和配置过）
+
+		启动nginx服务
+[root@host51 ~]# vim +65 /usr/local/nginx/conf/nginx.conf
+        location ~ \.php$ {
+            root           html;
+            fastcgi_pass   127.0.0.1:9000;
+            fastcgi_index  index.php;
+            include        fastcgi.conf;
+        }   
+:wq
+[root@host51 ~]# /usr/local/nginx/sbin/nginx  -t
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+
+[root@host51 ~]# /usr/local/nginx/sbin/nginx
+[root@host51 ~]# netstat  -utnlp  | grep  80
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      29904/nginx: master 
+[root@host51 ~]# 
+
+		启动php-fpm服务
+[root@host51 ~]# systemctl  start php-fpm
+[root@host51 ~]# netstat  -utnlp  | grep  9000
+tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      30548/php-fpm: mast 
+[root@host51 ~]# 
+		测试配置
+[root@host51 ~]# vim /usr/local/nginx/html/test.php
+<?php
+$x =  99 ;
+echo $x ;
+?>
+:wq
+[root@host51 ~]# curl  http://localhost/test.php
+99
