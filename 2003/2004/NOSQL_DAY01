@@ -184,3 +184,31 @@ echo $x ;
 :wq
 [root@host51 ~]# curl  http://localhost/test.php
 99
+
+
+	2.2  配置PHP支持redis服务
+		2.2.1  安装支持Redis服务软件
+yum -y install php-devel
+tar -zxvf upload/php-redis-2.2.4.tar.gz
+cd phpredis-2.2.4/
+phpize
+./configure --with-php-config=/usr/bin/php-config
+[root@host51 phpredis-2.2.4]# make
+[root@host51 phpredis-2.2.4]# make install 
+Installing shared extensions:     /usr/lib64/php/modules/
+[root@host51 phpredis-2.2.4]# 
+[root@host51 phpredis-2.2.4]# ls /usr/lib64/php/modules/
+curl.so  fileinfo.so  json.so  phar.so  redis.so  zip.so
+
+		2.2.2 修改配置文件加载模块
+]# vim  /etc/php.ini
+728 extension_dir = "/usr/lib64/php/modules/"
+730 extension = "redis.so"
+:wq
+
+		2.2.3 重启php-fpm服务
+[root@host51 phpredis-2.2.4]# systemctl  restart php-fpm
+
+		2.2.4 查看模块
+[root@host51 phpredis-2.2.4]# php -m  | grep redis
+redis
