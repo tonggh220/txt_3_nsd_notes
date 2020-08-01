@@ -1,6 +1,43 @@
-机器  50  51
-复习 lnmp的搭建
-软件包  redis-4.0.8.tar.gz   php-redis-2.2.4.tar.gz   nginx-1.12.2.tar.gz
-
 1  搭建redis数据库服务器
-2 lnmp+Redis （配置网站可以使用redis数据库服务器存储数据）
+	1.1  相关概念
+		1.1.1  数据库服务的类型
+			关系型数据库服务软件 RDBMS
+			非关系型数据库服务软件NoSQL
+
+		1.1.2 redis软件介绍 
+	1.2  搭建redis服务器 192.168.4.50
+		1.2.1 安装软件
+    3  rpm -q gcc || yum -y install gcc
+    4  tar -zxvf   redis-4.0.8.tar.gz 
+    6  cd redis-4.0.8/
+    8  make 
+    9  make install
+
+		1.2.2 对服务做初始化配置
+		1.2.3 查看服务状态
+[root@host50 redis-4.0.8]# netstat  -utnlp  | grep  6379
+tcp        0      0 127.0.0.1:6379          0.0.0.0:*               LISTEN      22806/redis-server  
+[root@host50 redis-4.0.8]# 
+
+		1.2.4 连接服务存取数据
+[root@host50 redis-4.0.8]# redis-cli 
+127.0.0.1:6379> ping
+PONG
+127.0.0.1:6379> keys *
+(empty list or set)
+127.0.0.1:6379> 
+127.0.0.1:6379> 
+127.0.0.1:6379> set school tarena
+OK
+127.0.0.1:6379> keys *
+1) "school"
+127.0.0.1:6379> get school
+"tarena"
+127.0.0.1:6379> 
+
+		1.2.5 断开连接
+127.0.0.1:6379> exit
+[root@host50 redis-4.0.8]# 
+
+使用脚本管理服务
+[root@host50 redis-4.0.8]# /etc/init.d/redis_6379  status|start|stop 
