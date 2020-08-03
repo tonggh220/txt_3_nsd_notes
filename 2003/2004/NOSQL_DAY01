@@ -299,3 +299,20 @@ tcp        0      0 192.168.4.50:6350       0.0.0.0:*               LISTEN      
 192.168.4.50:6350> ping
 PONG
 192.168.4.50:6350> keys *
+
+停止服务的命令
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350 -a 123456  shutdown
+
+修改脚本源代码 ， 才可以使用脚本停止服务
+]# vim /etc/init.d/redis_6379
+ 43             $CLIEXEC -h 192.168.4.50 -p 6350 -a 123456 shutdown
+:wq
+
+[root@host50 ~]# netstat  -utnlp  | grep  6350
+tcp        0      0 192.168.4.50:6350       0.0.0.0:*               LISTEN      101027/redis-server 
+[root@host50 ~]# 
+[root@host50 ~]# /etc/init.d/redis_6379  stop
+Stopping ...
+Redis stopped
+[root@host50 ~]# netstat  -utnlp  | grep  6350
+[root@host50 ~]# 
