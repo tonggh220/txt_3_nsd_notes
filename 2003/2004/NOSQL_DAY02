@@ -25,3 +25,14 @@ src/redis-trib.rb
 [root@host57 redis-4.0.8]# cp src/redis-trib.rb  /root/bin
 [root@host57 redis-4.0.8]# chmod +x /root/bin/redis-trib.rb 
 [root@host57 ~]# redis-trib.rb help # 能查看命令的帮助新成功
+
+1.3 配置redis服务
+		1 确保6台redis服务器 都没有存储数据、不要设置连接密码
+		
+		2 分别启动6台redis服务的集群功能
+		    （修改配置文件后重启服务）
+]# vim  /etc/redis/6379.conf
+    cluster-enabled  yes        	             		//启用集群功能  
+    cluster-config-file  nodes-6379.conf 		//存储集群信息文件
+    cluster-node-timeout  5000 			//超时时间(单位毫秒)
+:wq
