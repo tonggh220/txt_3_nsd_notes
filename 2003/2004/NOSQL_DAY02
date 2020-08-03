@@ -109,3 +109,47 @@ cluster_size:3
 192.168.4.51:6351> cluster nodes
 
 [root@host51 ~]# cat /var/lib/redis/6379/nodes-6379.conf 
+
+
+创建集群失败的终极解决办法（6台服务器都要做如下配置）
+	1 关闭 selinux   、 firewalld
+	2 检查集群功能是否启用
+	3 停止redis服务
+	4 删除数据库目录下的所有文件  rm  -rf /var/lib/redis/6379/*
+	5 启动redis服务
+	6 在管理主机执行创建集群的命令
+
+	1.5 访问集群
+		1.5.1 链接集群中任意1台redis服务都可以存储和取数据
+[root@host50 ~]# redis-cli   -c  -h 192.168.4.56 -p 6356
+192.168.4.56:6356> set a 99
+-> Redirected to slot [15495] located at 192.168.4.53:6353
+OK
+192.168.4.53:6353> keys *
+1) "a"
+192.168.4.53:6353> set b 101
+-> Redirected to slot [3300] located at 192.168.4.51:6351
+OK
+192.168.4.51:6351> keys *
+1) "b"
+192.168.4.51:6351> set c 88
+-> Redirected to slot [7365] located at 192.168.4.52:6352
+OK
+192.168.4.52:6352> keys *
+1) "c"
+192.168.4.52:6352> exit
+[root@host50 ~]# redis-cli   -c  -h 192.168.4.51 -p 6351
+192.168.4.51:6351> keys *
+1) "b"
+192.168.4.51:6351> get b
+"101"
+192.168.4.51:6351> get c
+-> Redirected to slot [7365] located at 192.168.4.52:6352
+"88"
+192.168.4.52:6352> keys *
+1) "c"
+192.168.4.52:6352> get a
+-> Redirected to slot [15495] located at 192.168.4.53:6353
+"99"
+192.168.4.53:6353> exit
+[root@host50 ~]# 
