@@ -1,0 +1,27 @@
+	配置集群的目的： 实现数据的分布式存储和 服务的高可用 及数据的自动备份
+1 创建集群
+	1.1 相关概念
+		拓扑结构
+		角色规划
+	   	工作原理（存储数据 和  读取数据）
+		准备集群主机要求见ppt 
+	1.2 配置管理主机 192.168.4.57
+		准备脚本运行环境
+ 132  rpm -q ruby
+  133  rpm -q rubygems
+  134  yum -y  install ruby  rubygems
+  137  which gem
+  138  gem install  upload/redis-3.2.1.gem 
+		
+		创建管理集群的ruby脚本
+[root@host57 ~]# tar -zxvf upload/redis-4.0.8.tar.gz 
+[root@host57 ~]# cd redis-4.0.8/
+[root@host57 redis-4.0.8]# ls src/*.rb
+src/redis-trib.rb
+[root@host57 redis-4.0.8]# echo  $PATH
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
+[root@host57 redis-4.0.8]# 
+[root@host57 redis-4.0.8]# mkdir /root/bin
+[root@host57 redis-4.0.8]# cp src/redis-trib.rb  /root/bin
+[root@host57 redis-4.0.8]# chmod +x /root/bin/redis-trib.rb 
+[root@host57 ~]# redis-trib.rb help # 能查看命令的帮助新为成功
