@@ -251,8 +251,51 @@ redhatnsd2004
 2) "redhat"
 192.168.4.50:6379> 
 
-集群使用的环境准备
-6台Redis服务器
-51~56 做集群 
-测试集群 58 ~59
-管理集群主机 57
+	1.4 配置文件解析 /etc/redis/6379.conf
+	       	1 单位进制的规定
+		2 常用参数配置项
+			指定服务的IP地址   bind  192.168.4.50
+			port 6350
+
+守护进程 ：服务启动后， 服务的进程一直在内存里活着 等待客户端访问
+非守护进程：服务启动后，如果在一段时间内，都没有客户访问，服务就休眠，等有客户端访问时在启动。
+ 
+ 疫情  印度         边防部队  常驻军队 
+		      机动军队
+
+
+			
+内存管理  休息 10分钟 到   09:54
+	内存清除策略(存储数据时，没有空间存储了，才使用存储删除已经存储的数据)
+		LRU 最近最少使用（ allkeys / ttl时间 ）
+		LFU 使用频率最少的 (allkeys / ttl时间 ）
+		random 随机删除
+		ttl          在设置了过期的变量里删除
+		noeviction  不删除
+	优化配置
+	maxmemory  1G   (1000*1000*1000)
+	maxmemory  1GB (1024*1024*1024)
+	maxmemory-policy noeviction
+	maxmemory-samples  5
+
+	安全设置  设置连接密码
+		requirepass 密码
+
+	例子
+]# vim /etc/redis/6379.conf
+requirepass 123456
+bind  192.168.4.50
+port  6350
+:wq
+[root@host50 ~]# redis-cli  -h 192.168.4.50  shutdown
+[root@host50 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host50 ~]# 
+[root@host50 ~]# netstat  -utnlp  | grep  redis-server
+tcp        0      0 192.168.4.50:6350       0.0.0.0:*               LISTEN      76728/redis-server  
+[root@host50 ~]#
+
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350  -a 123456
+192.168.4.50:6350> ping
+PONG
+192.168.4.50:6350> keys *
