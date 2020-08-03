@@ -36,3 +36,76 @@ src/redis-trib.rb
     cluster-config-file  nodes-6379.conf 		//存储集群信息文件
     cluster-node-timeout  5000 			//超时时间(单位毫秒)
 :wq
+
+1.4 创建集群 192.168.4.57
+[root@host57 ~]# redis-trib.rb  create  --replicas 1  192.168.4.51:6351  192.168.4.52:6352  192.168.4.53:6353  192.168.4.54:6354  192.168.4.55:6355 192.168.4.56:6356
+>>> Creating cluster
+>>> Performing hash slots allocation on 6 nodes...
+Using 3 masters:
+192.168.4.51:6351
+192.168.4.52:6352
+192.168.4.53:6353
+Adding replica 192.168.4.55:6355 to 192.168.4.51:6351
+Adding replica 192.168.4.56:6356 to 192.168.4.52:6352
+Adding replica 192.168.4.54:6354 to 192.168.4.53:6353
+M: 3f206e30a0743582900f13f91b8299c8a5b2b9f6 192.168.4.51:6351
+   slots:0-5460 (5461 slots) master
+M: bab02ec29fc10de304bcd41e5a522b3708bd1389 192.168.4.52:6352
+   slots:5461-10922 (5462 slots) master
+M: 97f79f1c22bd0064e18bacc1d50182de68006231 192.168.4.53:6353
+   slots:10923-16383 (5461 slots) master
+S: f4907e6ef98a527269f71c7a5b2a22c258183f6b 192.168.4.54:6354
+   replicates 97f79f1c22bd0064e18bacc1d50182de68006231
+S: 24d3f6d65ca4fd1376a57e27eec2ba5538e7411d 192.168.4.55:6355
+   replicates 3f206e30a0743582900f13f91b8299c8a5b2b9f6
+S: 066f91db13abedb35d4cfb2ba17d83106b8745ba 192.168.4.56:6356
+   replicates bab02ec29fc10de304bcd41e5a522b3708bd1389
+Can I set the above configuration? (type 'yes' to accept): yes   同意配置
+>>> Nodes configuration updated
+>>> Assign a different config epoch to each node
+>>> Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join...
+>>> Performing Cluster Check (using node 192.168.4.51:6351)
+M: 3f206e30a0743582900f13f91b8299c8a5b2b9f6 192.168.4.51:6351
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+M: 97f79f1c22bd0064e18bacc1d50182de68006231 192.168.4.53:6353
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+S: f4907e6ef98a527269f71c7a5b2a22c258183f6b 192.168.4.54:6354
+   slots: (0 slots) slave
+   replicates 97f79f1c22bd0064e18bacc1d50182de68006231
+S: 066f91db13abedb35d4cfb2ba17d83106b8745ba 192.168.4.56:6356
+   slots: (0 slots) slave
+   replicates bab02ec29fc10de304bcd41e5a522b3708bd1389
+S: 24d3f6d65ca4fd1376a57e27eec2ba5538e7411d 192.168.4.55:6355
+   slots: (0 slots) slave
+   replicates 3f206e30a0743582900f13f91b8299c8a5b2b9f6
+M: bab02ec29fc10de304bcd41e5a522b3708bd1389 192.168.4.52:6352
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.  提示16384个槽分配完毕 这就成功了 
+[root@host57 ~]# 
+
+[root@host57 ~]# redis-trib.rb  info  192.168.4.53:6353  #查看集群统计信息
+192.168.4.53:6353 (97f79f1c...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.4.51:6351 (3f206e30...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.4.52:6352 (bab02ec2...) -> 0 keys | 5462 slots | 1 slaves.
+[OK] 0 keys in 3 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+[root@host57 ~]# redis-trib.rb  check  192.168.4.55:6355  #查看集群详细信息
+
+在任意1台 redis服务器本机查看机器信息以 51主机为例查看
+[root@host51 ~]# redis-cli  -h  192.168.4.51 -p 6351
+192.168.4.51:6351> cluster info
+cluster_state:ok
+cluster_known_nodes:6
+cluster_size:3
+
+192.168.4.51:6351> cluster nodes
+
+[root@host51 ~]# cat /var/lib/redis/6379/nodes-6379.conf 
