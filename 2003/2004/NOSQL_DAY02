@@ -24,4 +24,4 @@ src/redis-trib.rb
 [root@host57 redis-4.0.8]# mkdir /root/bin
 [root@host57 redis-4.0.8]# cp src/redis-trib.rb  /root/bin
 [root@host57 redis-4.0.8]# chmod +x /root/bin/redis-trib.rb 
-[root@host57 ~]# redis-trib.rb help # 能查看命令的帮助新为成功
+[root@host57 ~]# redis-trib.rb help # 能查看命令的帮助新成功
