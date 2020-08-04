@@ -348,3 +348,28 @@ M: e73bef0a4703b4213796c7b80146617aa4127f43 192.168.4.59:6359
 [OK] 3 keys in 3 masters.
 0.00 keys per slot on average.
 [root@host57 ~]# 
+
+	2.3 把移除redis服务器再添加到集群里   练习到 14:19
+		1 启动Redis服务
+		2 登录后 重置集群信息  > cluster   reset  #还原本机的集群信息
+				  > cluster  info
+		3 在管理主机 添加Redis服务器（添加时做master/slave由管理者决定）
+		4 查看集群信息
+		5 假如添加的是master,要重新分配hash槽，如果是slave就不需要了
+
+                    192.168.4.51~56恢复为独立的数据库服务器
+              2.4 在集群中的主机恢复为独立数据库服务器   时间12分钟14:41
+		停止redis服务
+		清空数据库目录
+		禁用集群功能
+		启动服务
+		查看集群状态
+[root@localhost ~]# redis-cli -h 192.168.4.51 -p 6351
+192.168.4.51:6351> cluster info
+ERR This instance has cluster support disabled
+192.168.4.51:6351> keys *
+(empty list or set)
+192.168.4.51:6351> 
+192.168.4.51:6351> info replication
+# Replication
+role:master
