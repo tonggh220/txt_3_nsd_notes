@@ -166,13 +166,64 @@ OK
 		
 2 管理集群	
 	2.1 向集群添加新的redis服务器
-		2.1.1 添加新的master服务器 ，具体步骤如下：192.168.4.58
+		2.1.1 添加新的master服务器 ，具体步骤如下：192.168.4.59
 			1 运行redis服务并启用的集群功能
 
 			2 在管理主机添加新主机到集群里
-			3 重新分片 （分配hash slot 给的主服务器）
-			4 查看集群信息
-			5 访问新的主服务器存取数据
+redis-trib.rb  add-node 新redis服务器的ip:端口  集群中已有机器的IP:端口
 
-		2.1.2 添加新的slave服务器具体步骤如下：192.168.4.59
-			1 运行redis服务并启用的集群功能 
+]# redis-trib.rb  add-node 192.168.4.59:6359  192.168.4.51:6351
+[OK] New node added correctly.
+[root@host57 ~]# 
+
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6351
+192.168.4.51:6351 (855bdc24...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.4.59:6359 (e73bef0a...) -> 0 keys | 0 slots | 0 slaves.
+192.168.4.52:6352 (3ec51fea...) -> 0 keys | 5462 slots | 1 slaves.
+192.168.4.53:6353 (1bb0ce48...) -> 0 keys | 5461 slots | 1 slaves.
+[OK] 0 keys in 4 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+
+			3 重新分片 （分配hash slot 给的主服务器）
+[root@host57 ~]# redis-trib.rb reshard 192.168.4.51:6351
+
+移出hash槽个数
+How many slots do you want to move (from 1 to 16384)? 4096
+
+接收hash槽主机ID  (59主机的id)
+What is the receiving node ID? e73bef0a4703b4213796c7b80146617aa4127f43
+
+移出hash槽主机ID
+Source node #1:all (从当前所有master角色主机里一起拿出4096)
+
+同意配置
+Do you want to proceed with the proposed reshard plan (yes/no)? yes
+			4 查看集群信息
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6351
+192.168.4.51:6351 (855bdc24...) -> 0 keys | 4096 slots | 1 slaves.
+192.168.4.59:6359 (e73bef0a...) -> 0 keys | 4096 slots | 0 slaves.
+192.168.4.52:6352 (3ec51fea...) -> 0 keys | 4096 slots | 1 slaves.
+192.168.4.53:6353 (1bb0ce48...) -> 0 keys | 4096 slots | 1 slaves.
+[OK] 0 keys in 4 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+
+[root@host57 ~]# redis-trib.rb check 192.168.4.51:6351
+M: e73bef0a4703b4213796c7b80146617aa4127f43 192.168.4.59:6359
+   slots:0-1364,5461-6826,10923-12287 (4096 slots) master
+   0 additional replica(s)
+			5 访问新的主服务器存取数据
+[root@host55 redis-4.0.8]# redis-cli  -c  -h 192.168.4.59 -p 6359
+192.168.4.59:6359> keys *
+(empty list or set)
+192.168.4.59:6359> set x  99
+-> Redirected to slot [16287] located at 192.168.4.53:6353
+OK
+192.168.4.53:6353> set y  98
+-> Redirected to slot [12222] located at 192.168.4.59:6359
+OK
+192.168.4.59:6359> set z  99
+-> Redirected to slot [8157] located at 192.168.4.52:6352
+OK
+192.168.4.52:6352> 
