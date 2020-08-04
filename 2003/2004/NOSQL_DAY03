@@ -111,3 +111,20 @@ sentinel auth-pass  redisserver 123456
 [root@host57 redis-4.0.8]#
 		启动哨兵服务
 [root@host57 ~]# redis-sentinel  /etc/sentinel.conf 
+
+
+测试配置
+			停止主服务器51的redis服务
+[root@localhost ~]# redis-cli -h 192.168.4.51 -p 6351  -a 123456 shutdown
+
+
+			查看52的复制信息 ，52会成为主服务器
+192.168.4.52:6352> info replication
+# Replication
+role:master
+connected_slaves:1
+		查看哨兵服务的配置文件，会自动修改监视新的主机数据库52
+		cat  /etc/sentinel.conf
+
+			把51主机的Redis服务启动后， 会自动配置为52的从服务器
+			需要自己手动设置连接52的密码
