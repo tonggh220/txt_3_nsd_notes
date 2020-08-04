@@ -94,7 +94,7 @@ master_link_status:up
 	配置哨兵服务器192.168.4.57
 		安装Redis软件
   167  rpm -q gcc  || yum -y install gcc
-rm  -rf  redis-4.0.8.tar.gz 
+rm  -rf  redis-4.0.8
   170  tar -zxvf upload/redis-4.0.8.tar.gz 
   171  cd redis-4.0.8/
   172  make && make install 
