@@ -58,3 +58,35 @@ Starting Redis server...
 [root@host52 ~]# /etc/init.d/redis_6379 start
 Starting Redis server...
 [root@host52 ~]# 
+
+2 哨兵服务：
+	监视主从同步结构中的主服务器，发现主服务器的redis服务无法连接后，把对应的从服务器升级主服务器
+
+例子   
+	设置从服务器的52连接密码
+[root@host52 ~]# vim +501 /etc/redis/6379.conf 
+
+requirepass 123456
+:wq
+[root@host52 ~]# redis-cli  -h 192.168.4.52 -p  6352  shutdown
+[root@host52 ~]# /etc/init.d/redis_6379 start
+
+
+	设置从服务器54 连接52的密码
+[root@localhost ~]# vim /etc/redis/6379.conf
+slaveof 192.168.4.52 6352
+masterauth 123456
+:wq
+[root@localhost ~]# 
+[root@localhost ~]# 
+[root@localhost ~]# redis-cli  -h 192.168.4.54 -p 6354  shutdown
+[root@localhost ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@localhost ~]# 
+[root@localhost ~]# redis-cli  -h 192.168.4.54 -p 6354 
+192.168.4.54:6354> info replication
+# Replication
+role:slave
+master_host:192.168.4.52
+master_port:6352
+master_link_status:up
