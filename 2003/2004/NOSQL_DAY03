@@ -25,3 +25,36 @@
 
 		配置主从从
 例子 把数据库服务器54  也配置为 52的从数据库服务器   练习5分钟 到  15:42
+
+
+
+把从服务恢复为 主服务器  （把53恢复为独立的数据库服务器）到15:55
+			命令行 （临时恢复） slaveof  no one
+
+			修改配置 （永久恢复）
+			vim /etc/redis/6379.con
+			   #slaveof   主服务器IP   端口
+		                 :wq
+		                 重启服务
+
+ 配置带验证的主从复制（主数据库服务器有连接密码）
+			1 在设置连接密码  （在51主机设置连接密码）
+			修改配置文件并重启服务
+[root@localhost ~]# vim +501  /etc/redis/6379.conf 
+requirepass 123456
+:wq
+
+[root@localhost ~]# redis-cli -h 192.168.4.51 -p 6351 shutdown
+[root@localhost ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@localhost ~]#
+
+			2 在从指定主服务器的密码
+[root@host52 ~]# vim /etc/redis/6379.conf
+282 slaveof 192.168.4.51 6351
+289 masterauth  123456  # 指定主服务器的连接密码
+:wq
+[root@host52 ~]# redis-cli  -h 192.168.4.52 -p  6352 shutdown
+[root@host52 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host52 ~]# 
