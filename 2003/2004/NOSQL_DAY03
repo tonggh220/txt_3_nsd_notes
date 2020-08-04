@@ -90,3 +90,24 @@ role:slave
 master_host:192.168.4.52
 master_port:6352
 master_link_status:up
+
+	配置哨兵服务器192.168.4.57
+		安装Redis软件
+  167  rpm -q gcc  || yum -y install gcc
+rm  -rf  redis-4.0.8.tar.gz 
+  170  tar -zxvf upload/redis-4.0.8.tar.gz 
+  171  cd redis-4.0.8/
+  172  make && make install 
+
+		创建主配置文件并编辑
+[root@host57 redis-4.0.8]# vim  /etc/sentinel.conf
+[root@host57 redis-4.0.8]# cat  /etc/sentinel.conf
+bind  192.168.4.57
+port 26379
+sentinel monitor  redisserver 192.168.4.51 6351  1
+sentinel auth-pass  redisserver 123456
+:wq
+
+[root@host57 redis-4.0.8]#
+		启动哨兵服务
+[root@host57 ~]# redis-sentinel  /etc/sentinel.conf 
