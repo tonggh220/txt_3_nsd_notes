@@ -291,3 +291,60 @@ S: 2ea25c57f32c4066a2cceaaaf8ef33435e25b4e1 192.168.4.58:6358
 [OK] 3 keys in 4 masters.
 0.00 keys per slot on average.
 [root@host57 ~]# 
+
+
+	      	移除master角色服务器  192.168.4.59
+命令格式：redis-trib.rb  del-node 集群已有主机的IP:端口  被移除主机的ID
+		 具体步骤如下：
+			1 释放hash槽 （执行重新分片命令）
+
+				移出槽的个数  
+How many slots do you want to move (from 1 to 16384)?  4096
+				接收槽的主服务器的id
+What is the receiving node ID? 855bdc241d1aa912c1af8aa3f781acc54695bb3d
+				指定移除槽的主机的id
+Source node #1:e73bef0a4703b4213796c7b80146617aa4127f43
+Source node #2:done  #结束id的填写
+
+				是否同意配置
+ Do you want to proceed with the proposed reshard plan (yes/no)? yes
+			#查看集群信息
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6351
+192.168.4.51:6351 (855bdc24...) -> 1 keys | 8192 slots | 1 slaves.
+192.168.4.59:6359 (e73bef0a...) -> 0 keys | 0 slots | 0 slaves.
+192.168.4.52:6352 (3ec51fea...) -> 1 keys | 4096 slots | 1 slaves.
+192.168.4.53:6353 (1bb0ce48...) -> 1 keys | 4096 slots | 1 slaves.
+[OK] 3 keys in 4 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+			2 删除主机
+[root@host57 ~]# redis-trib.rb check 192.168.4.51:6351
+M: e73bef0a4703b4213796c7b80146617aa4127f43 192.168.4.59:6359
+   slots: (0 slots) master
+   0 additional replica(s)
+[root@host57 ~]# redis-trib.rb del-node 192.168.4.51:6351 e73bef0a4703b4213796c7b80146617aa4127f43
+>>> Removing node e73bef0a4703b4213796c7b80146617aa4127f43 from cluster 192.168.4.51:6351
+>>> Sending CLUSTER FORGET messages to the cluster...
+>>> SHUTDOWN the node.
+[root@host57 ~]#
+[root@host59 redis-4.0.8]# netstat  -utnlp  | grep redis-server
+[root@host59 redis-4.0.8]# 
+
+			3 查看集群信息
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6351
+192.168.4.51:6351 (855bdc24...) -> 1 keys | 8192 slots | 1 slaves.
+192.168.4.52:6352 (3ec51fea...) -> 1 keys | 4096 slots | 1 slaves.
+192.168.4.53:6353 (1bb0ce48...) -> 1 keys | 4096 slots | 1 slaves.
+[OK] 3 keys in 3 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+
+			#在管理服务器平均分片主服务器占用的hash槽
+[root@host57 ~]# redis-trib.rb rebalance 192.168.4.51:6351			
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6351
+192.168.4.51:6351 (855bdc24...) -> 1 keys | 5461 slots | 1 slaves.
+192.168.4.52:6352 (3ec51fea...) -> 1 keys | 5462 slots | 1 slaves.
+192.168.4.53:6353 (1bb0ce48...) -> 1 keys | 5461 slots | 1 slaves.
+[OK] 3 keys in 3 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
