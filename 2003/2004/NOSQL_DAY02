@@ -227,3 +227,36 @@ OK
 -> Redirected to slot [8157] located at 192.168.4.52:6352
 OK
 192.168.4.52:6352> 
+
+
+		2.1.2 添加新的slave服务器具体步骤如下：192.168.4.58
+			1 运行redis服务并启用的集群功能 
+			2 在管理主机添加从服务器到集群里
+[root@host57 ~]# redis-trib.rb add-node --slave [--master-id  id值]  新服务器的IP:端口   已有服务器的IP:端口 
+
+[root@host57 ~]# redis-trib.rb add-node --slave 192.168.4.58:6358 192.168.4.51:6351
+[OK] New node added correctly.
+[root@host57 ~]# 
+
+			查看集群信息
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6351
+192.168.4.51:6351 (855bdc24...) -> 0 keys | 4096 slots | 1 slaves.
+192.168.4.59:6359 (e73bef0a...) -> 1 keys | 4096 slots | 1 slaves.
+192.168.4.52:6352 (3ec51fea...) -> 1 keys | 4096 slots | 1 slaves.
+192.168.4.53:6353 (1bb0ce48...) -> 1 keys | 4096 slots | 1 slaves.
+[OK] 3 keys in 4 masters.
+0.00 keys per slot on average.
+[root@host57 ~]#
+[root@host57 ~]# redis-trib.rb check 192.168.4.51:6351
+M: e73bef0a4703b4213796c7b80146617aa4127f43 192.168.4.59:6359
+   slots:0-1364,5461-6826,10923-12287 (4096 slots) master
+   1 additional replica(s)
+S: 2ea25c57f32c4066a2cceaaaf8ef33435e25b4e1 192.168.4.58:6358
+   slots: (0 slots) slave
+   replicates e73bef0a4703b4213796c7b80146617aa4127f43
+
+			4 连接从服务器58 查看是否同步主服务器的数据
+[root@host59 ~]# redis-cli  -c -h 192.168.4.58 -p 6358
+192.168.4.58:6358> keys *
+1) "y"
+192.168.4.58:6358>
