@@ -173,3 +173,55 @@ Starting Redis server...
 192.168.4.59:6359> keys *
 
 	RDB的优缺点?
+
+3.2 AOF
+	AOF介绍？具体见ppt
+
+	相关配置
+appendonly yes
+appendfilename "appendonly.aof"
+
+
+例子  练习5分钟
+[root@host58 ~]# redis-cli  -h 192.168.4.58 -p 6358 
+192.168.4.58:6358> config set  appendonly yes
+OK
+192.168.4.58:6358> config get appendonly
+1) "appendonly"
+2) "yes"
+192.168.4.58:6358> config  rewrite
+OK
+192.168.4.58:6358> exit
+[root@host58 ~]# ls /var/lib/redis/6379/
+appendonly.aof  dump.rdb
+[root@host58 ~]# wc -l /var/lib/redis/6379/appendonly.aof 
+89 /var/lib/redis/6379/appendonly.aof
+[root@host58 ~]# 
+[root@host58 ~]# redis-cli  -h 192.168.4.58 -p 6358 
+192.168.4.58:6358> keys *
+
+	
+	通过AOF 实现数据的备份与恢复
+		备份 ： 拷贝aof文件
+		恢复： 把备份的文件 拷贝到数据库目录下，具体步骤如下
+		停止redis服务
+		清空数据库目录
+		启用aof文件
+		拷贝备份的aof文件到数据库目录下
+		启动服务
+		查看数据
+例子
+[root@host58 ~]# cp /var/lib/redis/6379/appendonly.aof   /root/
+[root@host58 ~]# scp /root/appendonly.aof  root@192.168.4.59:/opt/
+[root@host59 ~]# vim /etc/redis/6379.conf
+appendonly yes
+appendfilename "appendonly.aof"
+:wq
+[root@host59 ~]# cp /opt/appendonly.aof  /var/lib/redis/6379/
+[root@host59 ~]# ls /var/lib/redis/6379/
+appendonly.aof
+[root@host59 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host59 ~]#
+[root@host59 ~]# redis-cli  -h 192.168.4.59  -p 6359  
+192.168.4.59:6359> keys *
