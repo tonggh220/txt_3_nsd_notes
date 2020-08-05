@@ -225,3 +225,11 @@ Starting Redis server...
 [root@host59 ~]#
 [root@host59 ~]# redis-cli  -h 192.168.4.59  -p 6359  
 192.168.4.59:6359> keys *
+
+修复有问题的aof文件
+	echo  "aaaaaaaafafaf"  >> /var/lib/redis/6379/appendonly.aof
+
+	[root@redis53 6379]# redis-check-aof  --fix  appendonly.aof 
+
+Continue? [y/N]: y
+Successfully truncated AOF
