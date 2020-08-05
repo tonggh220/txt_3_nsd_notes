@@ -128,3 +128,48 @@ connected_slaves:1
 
 			把51主机的Redis服务启动后， 会自动配置为52的从服务器
 			需要自己手动设置连接52的密码
+
+        
+3 数据持久化 （理论较多）
+     实现的方式有2种 ： RDB(默认)   、AOF(默认没有开启)
+
+     3.1 RDB
+	RDB介绍：   指定是数据库目录下的  dump.rdb文件
+	 redis服务是先把数据存储在内存里，然后在服务运行过程中，会定期把内存里的数据保存到硬盘。	
+	相关配置
+	dbfilename  "dump.rdb"
+	save  900  1
+	save 300   10
+	save 60     10000
+
+	通过RDB 实现数据的备份与恢复
+		备份  拷贝rdb文件
+> save
+[root@host58 ~]# cp /var/lib/redis/6379/dump.rdb /root/
+[root@host58 ~]# ls /root/*.rdb
+/root/dump.rdb
+[root@host58 ~]#
+[root@host58 ~]# scp /root/dump.rdb  root@192.168.4.59:/opt/
+
+		恢复  把备份的rdb文件拷贝到数据库目录下:
+		具体步骤如下：
+			停止redis服务 ， 并删除本机的rdb文件
+			拷贝到备份文件到数据库目录下
+			启动redis服务
+			登录查看数据
+例子
+[root@host59 ~]# redis-cli  -h 192.168.4.59  -p 6359  shutdown
+[root@host59 ~]# ls /var/lib/redis/6379/
+dump.rdb
+[root@host59 ~]# 
+[root@host59 ~]# rm -rf  /var/lib/redis/6379/dump.rdb
+[root@host59 ~]# 
+[root@host59 ~]# cp  /opt/dump.rdb  /var/lib/redis/6379/
+[root@host59 ~]# ls /var/lib/redis/6379/
+dump.rdb
+[root@host59 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host59 ~]# redis-cli  -h 192.168.4.59  -p 6359 
+192.168.4.59:6359> keys *
+
+	RDB的优缺点?
