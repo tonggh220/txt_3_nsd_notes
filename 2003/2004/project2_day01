@@ -154,3 +154,41 @@ test.html
 			3 客户端连接网站访问
 curl  http://192.168.4.44/test.html
 curl  http://192.168.4.33/test.html
+
+		测试 数据库读写分离服务的配置，步骤如下
+			1 在主数据库服务器添加客户端连接用户
+mysql> create database gamed;
+mysql> create table  gamedb.user(name char(10),password char(6));
+mysql> grant select,insert,update,delete on gamedb.* to yaya88@"%" identified by "123qqq...A";
+	
+			2 客户端连接读写分离服务器77 访问数据
+[root@web33 ~]# which  mysql || yum -y install mariadb
+
+			3 存储数和查询数据
+MySQL [(none)]> insert into   gamedb.user values("taobaoplj","123456");
+MySQL [(none)]> select  * from gamedb.user;
+
+			4 测试读写分离
+mysql22 ~]# mysql -uroot -p123qqq...A -e 'insert into gamedb.user values ("tom","654321")'
+
+
+[root@web33 ~]# mysql -h192.168.4.77 -P4006 -uyaya88 -p123qqq...A -e 'select * from gamedb.user'
++-----------+----------+
+| name      | password |
++-----------+----------+
+| taobaoplj | 123456   |
+| tom       | 654321   |
++-----------+----------+
+[root@web33 ~]# 
+
+[root@web33 ~]# mysql -h192.168.4.77 -P4006 -uyaya88 -p123qqq...A -e 'insert into gamedb.user values ("A","A")'
+[root@web33 ~]# 
+[root@web33 ~]# mysql -h192.168.4.77 -P4006 -uyaya88 -p123qqq...A -e 'select * from gamedb.user'
++-----------+----------+
+| name      | password |
++-----------+----------+
+| taobaoplj | 123456   |
+| tom       | 654321   |
+| A         | A        |
++-----------+----------+
+[root@web33 ~]# 
