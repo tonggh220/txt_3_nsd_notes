@@ -61,3 +61,93 @@ echo $name ;
 客户端访问
 [root@maxscale77 ~]# curl  http://192.168.4.33/test3.php
 nsd2004
+
+
+网站服务可以把数据存储在redis集群里，在网站服务器上做如下配置：
+			1 安装连接集群的软件包
+ 71  yum -y install php-devel
+ 66  tar -zxvf upload/redis-cluster-4.3.0.tgz 
+   68  cd redis-4.3.0/
+   70  phpize 
+   74  ./configure --with-php-config=/usr/bin/php-config
+   75  make 
+   76  make install
+[root@web33 redis-4.3.0]# make install
+Installing shared extensions:     /usr/lib64/php/modules/
+
+[root@web33 redis-4.3.0]# ls /usr/lib64/php/modules/
+curl.so      json.so    mysql.so      pdo.so         phar.so   sqlite3.so
+fileinfo.so  mysqli.so  pdo_mysql.so  pdo_sqlite.so  redis.so  zip.so
+[root@web33 redis-4.3.0]# 
+
+			2 调用连接集群的模块
+[root@web33 redis-4.3.0]# vim /etc/php.ini 
+728 extension_dir = "/usr/lib64/php/modules/"
+730 extension = "redis.so"
+:wq
+
+			重启php-fpm服务
+[root@web33 redis-4.3.0]# systemctl  restart php-fpm
+[root@web33 redis-4.3.0]# 
+	
+			测试配置
+			       查看是否支持Redis
+[root@web33 redis-4.3.0]# php -m  | grep  -i redis
+redis
+[root@web33 redis-4.3.0]# 
+
+			
+			       在nfs服务编写存取数据的PHP脚本
+#存储数据的脚本
+[root@nfs30 ~]# cat /sitedir/set.php
+<?php
+$redis_list = ['192.168.4.51:6379','192.168.4.52:6379','192.168.4.53:6379','192.168.4.54:6379','192.168.4.56:6379','192.168.4.57:6379'];
+
+$client = new RedisCluster(NUll,$redis_list);
+
+$client->set("i","tarenaA");
+$client->set("j","tarenaB");
+$client->set("k","tarenaC");
+
+echo "data save ok";
+
+?>
+[root@nfs30 ~]# 
+
+#获取数据的脚本
+[root@nfs30 ~]# cat /sitedir/get.php
+<?php
+$redis_list = ['192.168.4.51:6379','192.168.4.52:6379','192.168.4.53:6379','192.168.4.54:6379','192.168.4.56:6379','192.168.4.57:6379'];
+
+$client = new RedisCluster(NUll,$redis_list);
+
+echo  $client->get("i");
+echo  $client->get("j");
+echo  $client->get("k");
+
+?>
+[root@nfs30 ~]# 
+
+			       连接网站访问脚本存取数据
+		
+[root@mysql11 ~]# curl  http://192.168.4.33/set.php
+data save ok[root@mysql11 ~]# 
+[root@mysql11 ~]# 
+[root@mysql11 ~]# curl  http://192.168.4.33/get.php
+tarenaAtarenaBtarenaC[root@mysql11 ~]# 
+			 
+			         在集群中的服务器本机查看数据
+
+[root@hosta ~]# redis-cli  -h 192.168.4.51 
+192.168.4.51:6379> keys *
+1) "j"
+192.168.4.51:6379> exit
+[root@hosta ~]# redis-cli  -h 192.168.4.52
+192.168.4.52:6379> keys *
+1) "k"
+2) "name"
+192.168.4.52:6379> exit
+[root@hosta ~]# redis-cli  -h 192.168.4.53
+192.168.4.53:6379> keys *
+1) "i"
+192.168.4.53:6379>
