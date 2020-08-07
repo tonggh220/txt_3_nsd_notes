@@ -1,0 +1,63 @@
+1 升级网站平台 到  LNMP
+	1.1 清除httpd服务的配置
+	1.2 部署LNMP环境
+		安装源码NGINX 
+		安装软件 php-fpm  php  php-mysql
+		修改nginx的主配置文件
+		启动nginx服务
+		启动php-fpm服务
+		编写共享目录编写测试脚本
+		客户端连接网站访问脚本
+30  systemctl disable httpd
+   31  umount /var/www/html/
+   32  vim /etc/fstab  （注释挂载）
+   33  yum -y  install gcc pcre-devel zlib-devel 安装依赖包
+   34  tar -zxvf upload/nginx-1.12.2.tar.gz  
+   35  cd nginx-1.12.2/
+   36  ./configure  
+   37  make && make install
+   38  ls /usr/local/nginx/
+
+   40  yum -y  install  php-fpm  php  php-mysql
+   41  vim  +65 /usr/local/nginx/conf/nginx.conf
+        location ~ \.php$ {
+            root           html;
+            fastcgi_pass   127.0.0.1:9000;
+            fastcgi_index  index.php;
+            include        fastcgi.conf;
+        }
+:wq
+
+   42  /usr/local/nginx/sbin/nginx  -t
+   43  /usr/local/nginx/sbin/nginx
+   44  netstat  -utnlp  | grep  80
+
+   46  echo  "/usr/local/nginx/sbin/nginx" >> /etc/rc.local  设置开机运行
+   47  chmod +x  /etc/rc.local 
+
+   48  systemctl  start php-fpm
+   49  netstat  -utnlp  | grep  9000
+   50  systemctl  enable php-fpm
+
+   52  vim /etc/fstab 
+  192.168.4.30:/sitedir   /usr/local/nginx/html   nfs     defaults 0 0
+
+
+   55  rm  -rf /usr/local/nginx/html/*  清空网页目录
+
+   57  mount -a   
+
+   58  mount  | grep  "/usr/local/nginx/html"
+
+	
+编写网页脚本nfs30
+[root@nfs30 ~]# cat /sitedir/test3.php
+<?php
+$name = "nsd2004";
+echo $name ;
+?>
+[root@nfs30 ~]#
+
+客户端访问
+[root@maxscale77 ~]# curl  http://192.168.4.33/test3.php
+nsd2004
