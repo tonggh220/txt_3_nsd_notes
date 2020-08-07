@@ -114,3 +114,43 @@ project2_day02   升级数据存储结构
    
    43  systemctl   restart rpcbind
    44  showmount  -e  localhost  查看共享
+
+   配置网站服务器（web33/web44）
+	安装 httpd
+	挂载nfs共享到 网页目录下
+	启动网站服务
+	查看挂载
+	]# yum -y install  nfs-utils 
+	]# showmount  -e  192.168.4.30
+
+	远程挂载服务 ]# systemctl  enable remote-fs.target 
+
+
+]#rpm  -e  --nodeps   nfs-utils
+]#yum -y  install  nfs-utils
+]# systemctl  restart  nfs
+11:25	
+	测试配置：
+		
+ 
+		测试nfs共享服务的配置：步骤如下：
+			1  在30主机共享目录下添加网页文件
+[root@nfs30 ~]# vim /sitedir/test.html
+[root@nfs30 ~]# cat /sitedir/test.html 
+test web page
+[root@nfs30 ~]# ls /sitedir/ 
+test.html
+[root@nfs30 ~]# 
+			2  在网站服务器本机查看网页
+			
+[root@web33 ~]# ls /var/www/html/
+test.html
+[root@localhost ~]# 
+
+[root@web44 ~]# ls /var/www/html/
+test.html
+[root@localhost ~]# 
+
+			3 客户端连接网站访问
+curl  http://192.168.4.44/test.html
+curl  http://192.168.4.33/test.html
