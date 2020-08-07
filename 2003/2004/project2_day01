@@ -69,3 +69,48 @@ project2_day02   升级数据存储结构
    42  grep password /var/log/mysqld.log 
    43  mysql -uroot -p';Q&fV7wfsd<d'
    44  ls /var/lib/mysql
+
+   配置mysql一主一从 同步结构
+	配置主数据库服务器 192.168.4.11 
+		启用binlog日志  用户授权  查看日志信息
+
+	配置从数据库服务器 192.168.4.22
+		指定server_id   指定主服务器信息  启动slave 进程 查看状态
+
+配置数据读写分离服务器77，具有步骤如下：
+	安装软件
+	修改主配置文件
+	配置数据库服务器（添加监控用户mysqla和路由用户mysqlb）
+
+	启动服务并查看服务状态
+	访问管理服务，查看监控信息
+	
+配置nfs服务：
+	分区格式化添加的硬盘
+	把硬盘挂在到系统目录下 /sitedir 目录
+	安装nfs服务软件
+	共享挂载目录/sitedir 
+	启动服务
+	查看共享
+   18  fdisk  /dev/sdb  磁盘分区 分一个区就可以
+   19  fdisk -l /dev/sdb  查看分区信息
+   20  mkfs.xfs /dev/sdb1 格式化
+   21  blkid /dev/sdb1   查看格式化信息
+   
+   23  mkdir /sitedir  创建挂载目录
+   24  chmod o+w /sitedir    让其他用户对目录有写权限
+   25  vim /etc/fstab 设置开机挂载 
+   26  mount -a  挂载设备
+   27  mount | grep  "/sitedir" 查看挂载
+   28  df -h /sitedir/  查看目录大小
+   3   35  yum  -y  install nfs-utils   rpcbind
+
+   38  vim /etc/exports  编辑主配置文件
+   42  exportfs  -r  重载配置文件
+
+   39  systemctl   restart rpcbind
+   40  systemctl   restart nfs-server
+   41  showmount  -e  localhost
+   
+   43  systemctl   restart rpcbind
+   44  showmount  -e  localhost  查看共享
