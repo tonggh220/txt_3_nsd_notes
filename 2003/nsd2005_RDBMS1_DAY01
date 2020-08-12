@@ -247,7 +247,8 @@ mysql> insert into db1.t7 values ("john", curtime() , year(now()), now());
 
 datetime 和 timestamp 日期时间类型的比较 (下次可讲)
 
-
+周四额外练习题
+在db1库下创建前任信息表 （表结构自定义）合理的使用学过的数据类型 把前任信息存放到表里。
 
 二 rdbms2    数据库进阶   5天
 
