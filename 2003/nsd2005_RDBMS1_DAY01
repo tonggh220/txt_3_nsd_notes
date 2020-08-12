@@ -1,0 +1,262 @@
+庞丽静  数据库
+
+QQ  240398019 
+中心名_班级名_姓名
+北京天坛_nsd2005_大熊
+
+工作岗位        数据库管理员   DBA
+课程量   大   （讲课   练习时间   排错时间）
+笔   记   随堂文档  
+
+一 rdbms1    数据库基础    5天
+
+rdbms1_day01
+学习任务如下：
+1 相关概念
+	什么是数据库？  提供数据存储的服务 功能（存储数据）
+		        存储数据的仓库
+	数据是啥样的？  各种应用软件的上历史信息 都是数据
+
+	
+	数据库服务软件有哪些？提供服务和 对数据做管理的软件
+	软件名  商业软件    开源软件  到哪里去下载  
+                 是否跨平台（Linux  windows   unix）
+ 
+	专业术语： DB?     DBMS?     DBS?
+
+	mysql介绍 ？    特点  应用场景
+
+	
+2 搭建MySQL数据库服务器
+	2.1 环境准备
+	虚拟机  克隆新虚拟机  192.168.4.50   关闭selinux  firewalld  配置yum
+	软件   mysql-5.7.17.tar
+	2.2 具体步骤如下：
+		1  清除mariadb软件
+		     systemctl  stop mariadb
+		     rpm -e  --nodeps   mariadb-server   mariadb
+		     rm  -rf /etc/my.cnf
+		     rm  -rf  /var/lib/mysql
+		 2 安装MySQL服务软件
+]# tar -xvf mysql-5.7.17.tar
+]# yum -y  install mysql-community-*.rpm
+]# rpm  -qa  |  grep  -i  mysql
+
+		 3 启动mysqld服务
+]# systemctl  start  mysqld
+]# systemctl  enable mysqld
+
+		 4 查看服务状态（进程  端口号   ）
+]# systemctl  status mysqld
+]# ps  -C  mysqld
+]# netstat   -utnlp  | grep  3306
+
+		5 了解与服务相关的信息
+进程名	mysqld	 
+数据传输协议  TCP
+进程的所有者名和所属组名  mysql  /  mysql
+		       grep  mysql  /etc/passwd
+		       grep  mysql  /etc/group
+		       ps aux | grep  mysqld
+默认端口号 3306
+
+默认主配置文件  /etc/my.cnf
+	       cat  /etc/my.cnf
+默认数据库目录  /var/lib/mysql/
+	       ls  /var/lib/mysql/
+
+默认错误日志文件  /var/log/mysqld.log
+	       cat  /var/log/mysqld.log
+
+
+		 6  查看初始密码(启动数据库服务器随机创建)
+]# grep  password  /var/log/mysqld.log
+root@"localhost"  xdf<af&!j$dfaf)
+
+		 7  使用初始密码登录
+]# mysql  -hlocalhost  -uroot   -p'xdf<af&!j$dfaf)'
+MySQL>	show  databases;  报错
+ 
+
+                                   8 修改登录密码(密码要符合密码策略的要求)， 断开连接  
+mysql>   alter   user   root@"localhost"    identified  by    "123qqq...A" ；
+mysql>   exit
+
+		 9 使用修改的密码登录， 查看数据
+ ]# mysql  -hlocalhost  -uroot   -p123qqq...A
+mysql> show  databases; 会显示默认的4个数据库
+
+		10 修改密码策略       练习 10分钟到  11:36
+mysql> show variables like "%password%";
+
+mysql> set global validate_password_policy=0;
+mysql> set global validate_password_length=6;
+
+mysql> show variables like "%password%";
+		11 修改新密码
+mysql> alter user root@"localhost" identified by "tarena";
+
+		12 使用新密码登录
+mysql> exit
+Bye
+[root@host50 ~]# mysql -hlocalhost -uroot -ptarena
+		
+		13 把密码策略写进配置文件，会永久有效
+
+[mysqld]
+validate_password_policy=0
+validate_password_length=6
+:wq
+[root@host50 ~]# systemctl  restart mysqld
+[root@host50 ~]# mysql -hlocalhost -uroot -ptarena
+mysql> show variables like "validate_password_policy";
++--------------------------+-------+
+| Variable_name            | Value |
++--------------------------+-------+
+| validate_password_policy | LOW   |
++--------------------------+-------+
+1 row in set (0.00 sec)
+
+mysql>  show variables like "validate_password_length";
++--------------------------+-------+
+| Variable_name            | Value |
++--------------------------+-------+
+| validate_password_length | 6     |
++--------------------------+-------+
+1 row in set (0.00 sec)
+
+mysql> 
+		 
+
+3 数据库服务的基本管理
+	3.1 连接数据库服务的连接方式？0
+	3.2 把数据存储到数据库服务器的步骤？
+	3.3  SQL命令使用规则？  (SQL 结构化查询语言)
+	3.4 SQL命令分类
+	3.5 基本管理命令
+		库的常用命令
+			库名的命名规则
+		表的常用命令  练习到14:50
+			创建新表
+			create  table   库名.表名(列名  类型 ，列名  类型  )  ;
+mysql> create database  db1;
+mysql> create table db1.stu(name  char(5) , age  int  , class  char(10) );
+mysql> desc  db1.stu;
+
+		记录常用命令
+insert into库名.表名 values(值 ，  值);  	
+mysql> insert into  db1.stu values("bob" , 19  , "nsd2005");
+mysql> select  *  from   db1.stu;
+mysql> update  db1.stu set name="jerry" where age=19 ;
+mysql> update  db1.stu set name="jerrya";
+mysql> delete from  db1.stu;
+
+		向表里添加行时可以写中文   （字符集utf8） 
+					
+create table db1.t1(姓名  char(10) ,  地址   char(20) , 性别   char(4)  ) DEFAULT CHARSET=utf8;
+
+mysql> show create table db1.t1 \G
+		
+mysql> insert  into  db1.t1 values ("张三","北京","男"),("小红","天津","女") ;
+
+mysql> select  * from db1.t1;
+
+			
+4 MySQL数据类型 （重点  难点）
+	4.1 字符类型  （存储字符的类型） 姓名  
+		char   varchar    blob   text
+
+	4.2  数值类型
+		整数类型:根据存储数据的范围分为以下几种类型
+				有负数的范围        全都是正整数
+				有符号	         无符号     unsigned
+			微小整形
+			小整形
+			中整形
+			大整形
+			极大整形
+		
+
+			
+一位数的范围   0 - 9 
+二位数的范围   10 - 99
+三位数的范围   100-999
+			浮点类型（有小数点的数） float     double  
+	小数的组成    整数.小数
+		   118.22  
+		练习+休息到 17：15
+mysql> create table  db1.t4(name char(5) , age tinyint  unsigned , money float(7,2),pai double);
+
+mysql> insert into  db1.t4 values ("bob" , 21 , 99923.88 , 3.1415926);
+
+mysql> insert into  db1.t4 values ("john" , 28.5 , 23000 , 3.1415926);
+
+mysql> insert into  db1.t4 values ("tom" , 28.4 , 23000 , 3.1415926);
+
+mysql> insert into  db1.t4 values ("tomA" , 28.4 , 28.4 , 3.1415926);
+	4.3 枚举类型 给表头赋值时 ，值必须在定义的范围选择
+	 字段名	enum(值列表)    单选
+	 字段名	set(值列表)     多选项
+	练习5分钟 到 17：31 
+mysql> create  table  db1.t6 ( name  char(10) , sex  enum("boy" , "girl" , "no" ) , love set("eat","sleep","game","money"));
+
+mysql> insert into db1.t6 values ("bob","man","it,football");
+ERROR 1265 (01000): Data truncated for column 'sex' at row 1
+mysql> 
+mysql> insert into db1.t6 values ("bob","boy","it,football");
+ERROR 1265 (01000): Data truncated for column 'love' at row 1
+mysql> 
+mysql> insert into db1.t6 values ("bob","boy","eat,sleep,money");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from db1.t6;
+
+		
+	4.4 日期时间类型  
+		年      year    YYYY    2020
+		日期    date   YYYYMMDD    20200812
+		时间    time   HHMMSS         052528
+		日期时间   datetime或 timestamp    YYYYMMDDHHMMSS 
+					      20200812173758
+
+mysql> create table db1.t7( name  char(10) , up_class  time  , start  year  , party datetime);  
+
+mysql> insert into  db1.t7  values ("bob",090000 , 1990 , 20200913183000);
+mysql> select  * from db1.t7 ;
+
+year 类型 要求使用4位数赋值 当使用2位数赋值时：
+			01~69视为2001~2069
+			70~99视为1970~1999
+
+mysql> insert into db1.t7 values ("tom",190000, 58 , 20200813100000 );
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into db1.t7 values ("tomA",190000, 88 , 20200813100000 );
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from db1.t7;
+		
+时间函数的使用 （MySQL服务自带获取时间的命令）
+mysql >   select  curtime();
+mysql >   select  curdate();
+mysql >   select  now();
+mysql >   select  year(now());
+
+可以使用时间函数获取的数据 给日期时间类型的表头赋值
+mysql> insert into db1.t7 values ("john", curtime() , year(now()), now());
+
+datetime 和 timestamp 日期时间类型的比较 (下次可讲)
+
+
+
+二 rdbms2    数据库进阶   5天
+
+三 NoSQL     redis数据库服务   3天
+
+四 project2   数据库项目           2天
+
+
+
+
+
+ 
