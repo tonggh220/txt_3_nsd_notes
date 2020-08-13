@@ -1,0 +1,368 @@
+
+
+1  给主服务器192.168.4.11 配置1台新从数据库服务器 192.168.4.66
+    66主机的具体配置如下：
+	 1 安装MySQL软件并启动服务，修改登录密码为123qqq...A
+	 
+	 2  配置从数据库服务器 
+		指定server_id 并重启服务
+		指定主服务器信息
+		启动slave进程
+		查看状态
+		测试： 在主服务器11 上建库表插入记录
+		       在从服务器 22 和 66 上都能看的到
+2 配置PXC 集群，具体步骤如下：
+	2.1 配置192.168.4.66 主机
+		停止mysqld服务  
+[root@pxc66 ~]# systemctl  stop mysqld
+		卸载mysqld服务软件
+[root@pxc66 ~]# rpm -e --nodeps mysql-community-common mysql-community-devel mysql-community-test mysql-community-minimal-debuginfo mysql-community-libs mysql-community-server mysql-community-embedded mysql-community-embedded-devel mysql-community-embedded-compat mysql-community-client mysql-community-libs-compat
+warning: /etc/my.cnf saved as /etc/my.cnf.rpmsave
+[root@pxc66 ~]# 
+		安装PXC集群软件
+]#yum -y install pxc/libev-4.15-1.el6.rf.x86_64.rpm 
+]#yum -y install pxc/percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm 
+]#yum -y install pxc/qpress-1.1-14.11.x86_64.rpm 
+]#tar -xvf  pxc/Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar 
+]# yum -y install Percona-XtraDB-Cluster-*.rpm
+时间 到  14:58 
+		修改集群配置文件  练习+休息到15:36
+[root@pxc66 ~]# vim /etc/percona-xtradb-cluster.conf.d/mysqld.cnf 
+[mysqld]
+server-id=66
+:wq
+
+[root@pxc66 ~]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf
+wsrep_cluster_address=gcomm://
+wsrep_node_address=192.168.4.66
+wsrep_cluster_name=pxc-cluster
+wsrep_node_name=pxc-cluster-node-66
+wsrep_sst_auth="sstuser:123qqq...A"
+:wq
+
+		启动集群中的mysql服务
+[root@pxc66 ~]# systemctl  start mysql
+[root@pxc66 ~]# netstat  -utnlp  | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      12448/mysqld        
+[root@pxc66 ~]# netstat  -utnlp  | grep  4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      12448/mysqld        
+[root@pxc66 ~]#
+
+		连接mysql服务添加用户sstuser  查看集群状态
+[root@pxc66 ~]# mysql -uroot -p123qqq...A
+mysql> grant all on *.* to sstuser@"localhost" identified by "123qqq...A";
+mysql> show status like "%wsrep%";
+
+
+		查看本机slave的状态（依然是11的slave 服务器）
+
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes    
+		
+	        在11主机 插入新数据  ，
+ mysql> insert into gamedb.user values ("a2","a2");
+
+		 在 66主机也看到统一数据
+mysql> select  * from gamedb.user;
++------+----------+
+| name | password |
++------+----------+
+| a    | a        |
+| a2   | a2       |
++------+----------+
+2 rows in set (0.00 sec)
+
+mysql> 
+	 分别把主机192.168.4.10 和  192.168.4.88 加PXC集群
+		配置192.168.4.10步骤如下
+	        安装PXC软件
+1  yum -y install upload/pxc/libev-4.15-1.el6.rf.x86_64.rpm 
+    2  yum -y install upload/pxc/percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm 
+    3  yum -y install upload/pxc/qpress-1.1-14.11.x86_64.rpm 
+    4  tar -xvf  upload/pxc/Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar
+
+ ]# yum  -y  install percona-XtraDB-Cluster-*.rpm
+
+		修改配置文件
+[root@pxc10 ~]# vim /etc/percona-xtradb-cluster.conf.d/mysqld.cnf 
+[mysqld]
+server-id=10
+:wq
+
+wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.10
+wsrep_node_address=192.168.4.10
+wsrep_cluster_name=pxc-cluster
+wsrep_node_name=pxc-cluster-node-66
+wsrep_sst_auth="sstuser:123qqq...A"
+:wq
+
+		启动mysql服务（会自动同步集群中其他主机的数据到本机）
+[root@pxc10 ~]# systemctl  start mysql
+[root@pxc10 ~]# netstat  -utnlp  | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      12945/mysqld        
+[root@pxc10 ~]# netstat  -utnlp  | grep 4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      12945/mysqld
+ 
+		数据库管理员登录
+[root@pxc10 ~]# mysql -uroot -p123qqq...A
+		查看集群状态信息
+mysql> show status like "%wsrep%";
+
+		查看数据  
+mysql> select  * from  gamedb.user;
+				
+		
+		配置192.168.4.88步骤如下  10分钟到 16:40
+	        安装PXC软件
+1  yum -y install upload/pxc/libev-4.15-1.el6.rf.x86_64.rpm 
+    2  yum -y install upload/pxc/percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm 
+    3  yum -y install upload/pxc/qpress-1.1-14.11.x86_64.rpm 
+    4  tar -xvf  upload/pxc/Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar
+
+ ]# yum  -y  install percona-XtraDB-Cluster-*.rpm
+		修改配置文件
+[root@pxc88 ~]# vim /etc/percona-xtradb-cluster.conf.d/mysqld.cnf 
+[mysqld]
+server-id=88
+:wq
+wsrep_cluster_address=gcomm://192.168.4.10
+wsrep_node_address=192.168.4.88
+wsrep_cluster_name=pxc-cluster
+wsrep_node_name=pxc-cluster-node-88
+wsrep_sst_auth="sstuser:123qqq...A"
+:wq
+		启动mysql服务（会自动同步集群中其他主机的数据到本机）
+[root@pxc10 ~]# systemctl  start mysql
+[root@pxc10 ~]# netstat  -utnlp  | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      12945/mysqld        
+[root@pxc10 ~]# netstat  -utnlp  | grep 4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      12945/mysqld
+ 
+		数据库管理员登录
+[root@pxc10 ~]# mysql -uroot -p123qqq...A
+		查看集群状态信息
+mysql> show status like "%wsrep%";
+
+		查看数据  
+mysql> select  * from  gamedb.user;
+
+
+		在主数据库服务器11 给表添加主键字段
+mysql> alter table gamedb.user add  id int primary key auto_increment first;
+
+mysql> insert into gamedb.user(name,password)values("a3","a3");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into gamedb.user(name,password)values("a4","a4");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from gamedb.user;
+
+		在集群中的主机查看数据
+[root@pxc66 ~]# mysql -uroot -p123qqq...A -e 'select  * from gamedb.user'
+
+
+		公共配置
+]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf  	//pxcnode88主机
+wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.10,192.168.4.88
+
+]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf  	//pxcnode10主机
+wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.88,192.168.4.10
+
+]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf 	//pxcnode66主机
+wsrep_cluster_address=gcomm://192.168.4.10,192.168.4.88,192.168.4.66
+
+		把网站访问数据库服务器的请求平均的分发3台数据库服务器 10  /  66  /88  在ip地址是 192.168.4.99的主机配置haproxy服务，具体如下：
+		 1 安装haproxy软件
+yum -y install haproxy
+
+
+		 2 修改主配置文件
+保留global和default配置其他的全都删除   练习到 17:35
+自己添加如下行。
+[root@haproxy99 ~]# vim  /etc/haproxy/haproxy.cfg 
+listen status
+        mode http
+        bind *:80
+        stats enable
+        stats uri /admin
+        stats auth admin:admin
+
+listen mysqlLB  *:3306
+    mode    tcp
+    option  tcpka
+    balance roundrobin
+    server  mysqla 192.168.4.66:3306 check
+    server  mysqlb 192.168.4.10:3306 check
+    server  mysqlc 192.168.4.88:3306 check
+:wq
+		 3 启动服务 
+		 4 查看服务状态
+
+		 5 连接haproxy主机访问数据库服务
+[root@pxc66 ~]# mysql -uroot -p123qqq...A
+mysql> grant all on gamedb.*  to yaya88@"%" identified by "123qqq...A";
+
+[root@mysql11 ~]# mysql -h192.168.4.99 -uyaya88 -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxc88      |
++------------+
+[root@mysql11 ~]# mysql -h192.168.4.99 -uyaya88 -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxc66      |
++------------+
+[root@mysql11 ~]# mysql -h192.168.4.99 -uyaya88 -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxc10      |
++------------+
+[root@mysql11 ~]#
+
+		访问web页面查看健康检查信息
+打开真机的浏览器输入网址http://192.168.4.99/admin
+		用户  admin
+		密码  admin
+
+	配置备用调度器192.168.4.98，步骤如下
+		1 安装haproxy软件 ，修改配置文件，启动服务 客户连接
+[root@haproxy98 ~]# rpm -qa  | grep haproxy
+haproxy-1.5.18-7.el7.x86_64
+[root@haproxy98 ~]#
+
+[root@haproxy98 ~]# rm -rf /etc/haproxy/haproxy.cfg 
+[root@haproxy98 ~]# scp root@192.168.4.99:/etc/haproxy/haproxy.cfg /etc/haproxy/
+[root@haproxy98 ~]# systemctl  start haproxy
+[root@haproxy98 ~]# netstat  -utnlp  | grep  haproxy
+tcp        0      0 0.0.0.0:3306            0.0.0.0:*               LISTEN      11511/haproxy       
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      11511/haproxy       
+udp        0      0 0.0.0.0:36826           0.0.0.0:*                           11510/haproxy       
+[root@haproxy98 ~]# 			
+
+[root@mysql11 ~]# mysql -h192.168.4.98 -uyaya88 -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxc66      |
++------------+
+[root@mysql11 ~]# mysql -h192.168.4.98 -uyaya88 -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxc10      |
++------------+
+[root@mysql11 ~]# mysql -h192.168.4.98 -uyaya88 -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxc88      |
++------------+
+[root@mysql11 ~]# 
+
+		在主机192.168.4.99 和 192.168.4.98 上分别安装keepalived 软件
+
+[root@haproxy98 ~]# rpm -q keepalived || yum -y install keepalived
+[root@haproxy99 ~]# rpm -q keepalived || yum -y install keepalived
+
+		修改192.168.4.99主机的keepalived文件
+35行以下全删除
+[root@haproxy99 ~]# vim /etc/keepalived/keepalived.conf
+global_defs {
+   notification_email {
+     acassen@firewall.loc
+     failover@firewall.loc
+     sysadmin@firewall.loc
+    
+   }
+   notification_email_from Alexandre.Cassen@firewall.loc
+   smtp_server 192.168.200.1
+   smtp_connect_timeout 30
+   router_id LVS_DEVEL
+   vrrp_skip_check_adv_addr
+   vrrp_strict
+   vrrp_garp_interval 0
+   vrrp_gna_interval 0
+    vrrp_iptables
+}
+
+vrrp_instance VI_1 {
+    state MASTER
+    interface ens33
+    virtual_router_id 51
+    priority 150
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }
+    virtual_ipaddress {
+        192.168.4.100
+    }
+}
+
+:wq
+[root@haproxy99 ~]# scp /etc/keepalived/keepalived.conf  root@192.168.4.99:/etc/keepalived/
+
+
+
+		修改192.168.4.98主机的keepalived文件
+[root@haproxy99 ~]# vim /etc/keepalived/keepalived.conf
+state BACKUP
+priority 100
+:wq
+
+		启动 192.168.4.99的keepalived服务
+[root@haproxy99 ~]# systemctl  start keepalived
+
+		启动 192.168.4.98的keepalived服务
+[root@haproxy99 ~]# systemctl  start keepalived
+
+		在192.168.4.99查看vip地址
+[root@haproxy99 ~]# ip addr show  | grep  192.168.4.100
+    inet 192.168.4.100/32 scope global ens33
+[root@haproxy99 ~]# 
+
+		测试vip地址的切换
+[root@haproxy99 ~]# systemctl  stop keepalived
+[root@haproxy99 ~]# 
+[root@haproxy99 ~]# ip addr show  | grep  192.168.4.100
+[root@haproxy99 ~]# 
+
+		
+[root@haproxy98 ~]# ip addr show  | grep  192.168.4.100
+    inet 192.168.4.100/32 scope global ens33
+[root@haproxy98 ~]# 
+
+		客户端连接vip地址访问数据
+[root@mysql11 ~]# mysql -h192.168.4.100 -uyaya88 -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxc66      |
++------------+
+[root@mysql11 ~]# mysql -h192.168.4.100 -uyaya88 -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxc10      |
++------------+
+[root@mysql11 ~]# mysql -h192.168.4.100 -uyaya88 -p123qqq...A -e 'select @@hostname'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+
+| @@hostname |
++------------+
+| pxc88      |
++------------+
+[root@mysql11 ~]#
