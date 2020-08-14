@@ -77,3 +77,37 @@ mysql> desc db1.t2;
 mysql> use db1;
 mysql> alter table   t2  rename 学生信息表;
 mysql> show  tables;
+
+2 MySQL键值(key)  给字段加标志 ，有各自的功能和赋值的限制方式
+	支持如下键值 ：
+		普通索引 index
+		唯一索引  unique
+		主键         primary key
+		外键       foreign key
+		全文索引  fulltext
+		14:00 上课
+	2.1 普通索引 index 的使用
+		索引介绍？
+		作用： 给字段的值排序
+		使用规则？ (限制的方式)
+			
+		创建 给字段加 index
+			建表时创建索引  index(字段名)；
+create table db1.t9(name char(10), class char(7),age int , sex  enum("m","w") , index(name),index(class));
+
+			在已有表里添加索引	
+mysql> create index 索引名 on  库名.表名(字段名);
+mysql> create index xxx on  db1.t4(name);
+			
+	
+		查看索引
+			查看标志  desc  表名；
+				desc  db1.t4
+			查看具体信息 show index from 库.表；
+mysql> show index  from db1.t4;
+
+
+		删除 删除字段的标志
+mysql> drop  index  索引名 on  库.表;
+
+mysql> drop  index  xxx on  db1.t4;
