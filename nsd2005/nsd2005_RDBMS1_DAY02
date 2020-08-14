@@ -142,3 +142,36 @@ mysql>
 mysql> insert into db1.t11 values (null, "b" , "07");
 ERROR 1048 (23000): Column 'stu_num' cannot be null
 mysql> 
+
+		复合主键（多列一起做主键）
+		插入表记录时，符合主键字段的值不同时重复即可
+
+
+create table   db1.t13(   ipaddr  char(15) ,  serport  smallint  , stat   enum("allow","deny") ,  primary key(ipaddr,serport) );
+
+ desc  db1.t13;
+
+insert into db1.t13 values ("1.1.1.1",22,"allow");
+mysql> insert into db1.t13 values ("1.1.1.1",22,"deny");
+ERROR 1062 (23000): Duplicate entry '1.1.1.1-22' for key 'PRIMARY'
+mysql> 
+mysql> insert into db1.t13 values ("1.1.1.1",80,"deny");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into db1.t13 values ("1.1.1.1",80,"allow");
+ERROR 1062 (23000): Duplicate entry '1.1.1.1-80' for key 'PRIMARY'
+mysql> 
+mysql> insert into db1.t13 values ("2.1.1.1",80,"allow");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from db1.t13;
++---------+---------+-------+
+| ipaddr  | serport | stat  |
++---------+---------+-------+
+| 1.1.1.1 |      22 | allow |
+| 1.1.1.1 |      80 | deny  |
+| 2.1.1.1 |      80 | allow |
++---------+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> 
