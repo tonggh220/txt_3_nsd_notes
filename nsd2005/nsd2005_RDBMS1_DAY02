@@ -193,3 +193,15 @@ mysql> insert into db1.t14  values(7,"jim",23,"05","110");
 mysql> insert into db1.t14(name,age,class,tel) values("alices",21,"05","110");
 
 select  * from db1.t14;
+
+
+	2.3 外键foreign key 的使用 （难点）
+		外键：给外键字段赋值时，字段的值在另一个表字段值的范围内选择
+		使用规则？
+		创建外键的命令格式：
+create table  库.表（字段名列表 ，foreign key(字段名)   references  表名（字段名） on update cascade   on delete cascade ）engine=innodb;
+
+下次课讲
+	创建 外键
+		验证 外键
+		删除 外键
