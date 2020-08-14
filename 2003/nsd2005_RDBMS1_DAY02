@@ -1,0 +1,79 @@
+1 表结构
+	1.1 字段约束条件
+		作用：限制给字段赋值
+		限制如下：
+			NULL   字段是否允许赋空null值    not null
+			key       键值（mysql服务有多种键 功能个不相同）
+			Default   默认值，不给字段赋值时 使用默认值赋值
+			Extra   额外设置
+				练习10分钟到 10：33 
+create  table db1.t9 ( 
+class  char(7) not null  default  "nsd2005" , 
+name  char(10)  not null, sex   enum("boy","girl") default "boy");
+
+desc  db1.t9;
+mysql> insert into  db1.t9(name)values("jerry");
+mysql> insert into  db1.t9  values("nsd2006","tom","girl");
+mysql> select  * from db1.t9;
+
+mysql> insert into  db1.t9  values(null,"lucy",null);
+ERROR 1048 (23000): Column 'class' cannot be null
+mysql> 
+mysql> insert into  db1.t9  values("nsd2004","lucy",null);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t9;
+
+mysql> insert into  db1.t9  values(null,null,null);
+ERROR 1048 (23000): Column 'class' cannot be null
+mysql> 
+mysql> insert into  db1.t9  values("",null,null);
+ERROR 1048 (23000): Column 'name' cannot be null
+mysql> 
+mysql> insert into  db1.t9  values("","null",null);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t9;
+
+姓名  xxx
+性别  男
+年龄   29
+职业   it工程师
+房子  无
+车子
+存款0.00 无
+	1.2 修改表结构
+	命令格式：
+	mysql> alter table  库.表  执行动作；
+	动作包括：
+		添加新字段   add  字段名  类型 [约束条件]  first;
+			   add  字段名  类型 [约束条件]  after 列名；
+			   add  字段名  类型 [约束条件]；
+mysql> alter table db1.t2  add  class  char(7) default "nsd2005";
+mysql> alter table  db1.t2  add  stu_num  int  first;
+mysql> alter table db1.t2 add  sex  enum("boy","girl") not null default "boy" after name;
+mysql> alter table  db1.t2  add  qq  varchar(11)  ,  add   tel   char(11) ;
+mysql> select  * from db1.t2;
+		删除已有字段  drop  列表名
+			     drop  列表，drop  列名;
+mysql> alter table   db1.t2 drop tel;
+mysql> alter table   db1.t2 drop stu_num , drop qq ;
+mysql> select  * from db1.t2;
+				练习+订餐+休息  到11：15 上课
+
+		修改字段类型  modify  字段名   类型   约束条件；
+mysql> alter table db1.t2  modify  sex enum("man","woman","no") not null  default "no";
+ERROR 1265 (01000): Data truncated for column 'sex' at row 1
+mysql> alter table db1.t2  modify  sex enum("boy","woman","no") not null  default "no";
+mysql> alter table   db1.t2  modify class char(7)  default "nsd2005" after name;
+mysql> select  * from db1.t2;
+		修改字段名     change  原字段名 新字段名  类型   约束条件；
+只修改字段名，字段类型和约束条件原样不变
+                             mysql> alter table  db1 .t2  change  email mail char(30);
+即改名又该字段类型，指定新的字段名和类型
+mysql> alter table  db1.t2 change  name  user varchar(15) not null ;
+mysql> desc db1.t2;
+		修改表名         alter table   原表名  rename 新表名；
+mysql> use db1;
+mysql> alter table   t2  rename 学生信息表;
+mysql> show  tables;
