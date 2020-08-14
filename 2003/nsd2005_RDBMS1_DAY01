@@ -250,11 +250,15 @@ datetime 和 timestamp 日期时间类型的比较 (下次可讲)
 周四额外练习题
 在db1库下创建前任信息表 （表结构自定义）合理的使用学过的数据类型 把前任信息存放到表里。
 
-二 rdbms2    数据库进阶   5天
 
-三 NoSQL     redis数据库服务   3天
+datetime 和 timestamp 日期时间类型的比较 (下次可讲)
+当未给timestamp字段赋值时，自动以当前系统时间赋值，而datetime 值为 NULL (空)
 
-四 project2   数据库项目           2天
+mysql> create table db1.t8(meetting  datetime  ,  party  timestamp);
+mysql> insert into db1.t8 values (20200813091525,20210728223000);
+mysql> insert into db1.t8(meetting)  values(20191120223000);
+mysql> insert into db1.t8(party)  values(20191120223000);
+mysql> select  * from db1.t8;
 
 
 
