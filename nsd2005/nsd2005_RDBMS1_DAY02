@@ -175,3 +175,21 @@ mysql> select  * from db1.t13;
 3 rows in set (0.00 sec)
 
 mysql> 
+
+	主键通常与auto_increment 连用
+		 自增长 （通过自己+1的方式赋值）
+create table db1.t14(
+id  int  primary key   auto_increment,
+name  char(10),
+age  int,
+class  char(7),
+tel   char(11)
+);
+desc  db1.t14;
+mysql> insert into db1.t14(name,age,class,tel) values("bob",19,"05","110");
+mysql> insert into db1.t14(name,age,class,tel) values("jery",19,"05","110");
+mysql> insert into db1.t14(name,age,class,tel) values("lucuy",19,"05","120");
+mysql> insert into db1.t14  values(7,"jim",23,"05","110");
+mysql> insert into db1.t14(name,age,class,tel) values("alices",21,"05","110");
+
+select  * from db1.t14;
