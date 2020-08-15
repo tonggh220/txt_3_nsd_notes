@@ -172,3 +172,78 @@ mysql> select name ,uid  from db3.user where  uid = 1  or uid=6  or  uid = 9;
 		     逻辑非   not      !       取反
 	mysql> select id , name  from  db3.user  where shell is not  null ;
 	select  name , shell  from  db3.user  where  shell  !=  "/bin/bash" ;
+
+
+
+    		匹配范围内的任意一个值即可
+	 	in       not in    between...and...
+		
+mysql> select name  from db3.user where name  in  ("mysql","httpd","sync","bin");
+
+mysql> select name ,uid  from db3.user where uid  in  (1,6,3,9,12);
+
+mysql> select name , shell  from  db3.user where shell not in ("/bin/bash","/sbin/nologin");
+	3.2 高级匹配条件
+		like 模糊查询
+mysql> select name from  db3.user where  name  like  '_ _ _ _';  必须是 4个字母
+mysql> select name from  db3.user where  name  like  '_ _ _'; 必须是 3个字母
+mysql> select name from  db3.user where  name  like  '%a%'; 有字母a 就可以
+mysql> select name from  db3.user where  name  like  '_ _%_ _'; 名字至少是4个字母
+		正则匹配 regexp
+		where 字段名  regexp   ‘正则表达式’
+			正则元字符：^   $   .   [ ]   *    | 
+select  name from db3.user where  name regexp '^a';
+select  name from db3.user where  name regexp 't$';
+select  name from db3.user where  name regexp '^a|t$';
+select  name from db3.user where  name regexp '^a.*t$';
+select  name from db3.user where  name regexp '^r.*t$';
+select  name ,uid  from db3.user where  uid  regexp '^..$';
+select  name ,uid  from db3.user where  name  regexp '^[abc]';
+
+	四则计算 + - *  /  %     (select  update   delete)
+
+mysql> select  * from  db3.user where   id % 2  =  0  ;
+
+mysql> update  db3.user set  uid=uid+1 where  id <= 5 ;
+
+mysql> update  db3.user set  uid=uid-1 where  id <= 5 ;
+
+mysql> select  name , uid , gid , uid + gid  zcj , (uid + gid ) / 2  pjz  from db3.user where name="lp";
+
+		
+
+	3.3 操作查询结果（数据查出来后  对查询的数据 再做处理）
+		聚集函数(MySQL服务内置的对数据做统计的命令）
+		avg(字段名)   sum(字段名)  min(字段名) max(字段名)  count(字段名)
+mysql> select  min(uid)  from  db3.user;
+mysql> select  max(uid)  from  db3.user;
+mysql> select  avg(uid)  from  db3.user;
+mysql> select  sum(uid)  from  db3.user;
+
+mysql> select count(name) from  db3.user where  shell =  "/sbin/nologin" ;
+
+mysql> select  count(*) from  db3.user;
+
+mysql> select  count(*) from  db3.user where uid <= 10;
+  
+
+		查询结果排序 order by 字段名   asc|desc
+mysql> select name , uid  from db3.user where uid   between  10 and 100；
+
+mysql> select name , uid  from db3.user where uid   between  10 and 100  order by  uid  ;
+
+mysql> select name , uid  from db3.user where uid   between  10 and 100  order by  uid  desc;
+
+		不显示查询结果的重复值    distinct 字段名
+
+mysql> select  gid  from  db3.user ;
+mysql> select  distinct   gid  from  db3.user ;
+
+
+		查询结果分组  group  by  字段名
+mysql> select  shell from  db3.user where uid <= 500 ;
+
+mysql> select  shell from  db3.user where uid <= 500 group by shell;
+
+
+select  部门  from 员工表 where   性别="女” and  年龄 <= 28  and  婚姻="否" group  by 部门 ；
