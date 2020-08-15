@@ -93,5 +93,40 @@ root#/root#/bin/bash!!!bin#/bin#/sbin/nologin!!!daemon#/sbin#/sbin/nologin!!!mys
 
 
 2管理表记录
-3匹配条件
-4MySQL管理工具
+	2.1 插入表记录（添加新行）insert into
+mysql> insert into  db3.user values (21,"a","x",3000,3000,"test user" , "/bin/bash", "/bin/bash");
+
+mysql> insert into  db3.user values 
+(22,"b","x",3000,3000,"test user" , "/bin/bash", "/bin/bash"),(25,"C","y",3001,3001,"test user","/home/c","/sbin/nologin");
+
+mysql> insert into  db3.user (name,uid) values ("bob2",2009)；
+			
+mysql> insert into  db3.user (name,uid) values ("bob",2009),("jerry",3008),("lilei",2020);
+
+	
+	2.2 查询表记录 select
+		select  字段名列表   from  库名.表名；
+		select  字段名列表   from  库名.表名 where  条件；
+
+		字段名列表 控制显示的列
+		条件控制显示的行。
+
+		select  * from  db3.user;  查看所有行所有列
+		select  name , shell , homedir   from  db3.user;
+		select  name , shell , homedir   from  db3.user where  id <= 5;
+
+	2.3 更新表记录（修改行中列的值） update
+		update  库.表   set 列名=值，列名=值  ； 修改所有行列的值
+		update  库.表   set 列名=值，列名=值   where  条件；只修改与条件匹配行  列的值
+
+
+mysql>  update  db3.user set password="A";
+mysql> update  db3.user set  password="x" , comment="admin" where name = "root" ;
+
+	2.4 删除表记录 delete
+		delete  from   库.表； 删除所有行
+		delete  from   库.表  where  条件； 只删除与条件匹配的行
+
+mysql> delete from  db1.gz_tab;
+mysql> delete from db3.user where id > 19;
+mysql> select  * from db3.user;
