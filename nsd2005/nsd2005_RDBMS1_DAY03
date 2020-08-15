@@ -130,3 +130,45 @@ mysql> update  db3.user set  password="x" , comment="admin" where name = "root" 
 mysql> delete from  db1.gz_tab;
 mysql> delete from db3.user where id > 19;
 mysql> select  * from db3.user;
+
+
+3匹配条件 重点
+	3.1 基本匹配条件 （select  update   delete   ）
+		数值比较  > >=  < <=  =   !=
+
+select  *  from  db3.user where  id = 3; 
+
+select  name , uid  from  db3.user where uid >= 500 ;
+
+select  name ,uid , gid  from  db3.user where   uid  = gid ;
+
+mysql> select  name ,uid , gid  from  db3.user where   uid  != gid ;
+
+ 		字符比较  =   !=
+select name from db3.user where  name = "sync" ;
+
+select  name , shell  from  db3.user  where  shell  !=  "/bin/bash" ;
+		
+
+		is        null    空
+		is not  null   非空
+
+mysql> update  db3.user  set  shell=NULL  where id=19;
+
+select name  from  db3.user  where shell is null ;
+mysql> select id , name , shell  from  db3.user  where shell is null ;
+mysql> select id , name  from  db3.user  where shell is not  null ;
+
+		逻辑比较 （多个判断条件）
+		     逻辑与  and      &&   多个条件必须都成立
+		     逻辑或   or        ||      多个条件某个条件成立即可
+	
+ select name ,shell , uid   from db3.user where  shell="/bin/bash"  and  uid<=10;
+ mysql> select  * from db3.user where  id >= 5  and id <= 10
+mysql> select name , shell from db3.user where  shell != "/bin/bash"  and   shell != "/sbin/nologin" ;
+		
+mysql> select name ,uid  from db3.user where  uid = 1  or uid=6  or  uid = 9;
+
+		     逻辑非   not      !       取反
+	mysql> select id , name  from  db3.user  where shell is not  null ;
+	select  name , shell  from  db3.user  where  shell  !=  "/bin/bash" ;
