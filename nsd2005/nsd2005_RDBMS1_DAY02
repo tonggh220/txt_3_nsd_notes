@@ -217,6 +217,31 @@ mysql> show  create table  db1.gz_tab \G    #查看建表的命令
 
 
 		验证 外键
+			赋值约束
+mysql> insert into gz_tab values (4,50000);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`db1`.`gz_tab`, CONSTRAINT `gz_tab_ibfk_1` FOREIGN KEY (`gz_id`) REFERENCES `yg_tab` (`yg_id`) ON DELETE CASCADE ON UPDATE CASCADE)
+mysql> 
+mysql> insert into gz_tab values (1,50000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into gz_tab values (2,40000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into gz_tab values (3,20000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from gz_tab;
+
+			同步更新
+mysql> update  yg_tab  set  yg_id=8 where yg_id=2 ;
+mysql> select  * from gz_tab;
+
+			同步删除
+mysql> delete from yg_tab where yg_id=3;
+mysql> select  * from gz_tab;
+
+
+
 		弥补外键的不足
 
 		删除 外键
