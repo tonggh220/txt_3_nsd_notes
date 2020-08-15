@@ -243,6 +243,30 @@ mysql> select  * from gz_tab;
 
 
 		弥补外键的不足
+弥补外键的不足（考考各位对外键的理解）
+		mysql> delete from gz_tab;
+		mysql> alter table gz_tab add primary key(gz_id);
+		MySQL> desc gz_tab;
+		mysql> select  * from  gz_tab;
+mysql> insert into gz_tab values(1, 50000);
+mysql> insert into gz_tab values(8, 50000);
+mysql> insert into gz_tab values(8, 50000);
+mysql> insert into gz_tab values(5, 50000);
+mysql> insert into gz_tab values(1, 50000);
+mysql> insert into gz_tab values(null, 60000);
+mysql> select  * from gz_tab;  只能给已有的员工发1次工资   练习到 10：33
++-------+----------+
+| gz_id | gz       |
++-------+----------+
+|     1 | 50000.00 |
+|     8 | 50000.00 |
++-------+----------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+
+
 
 		删除 外键
 mysql> alter table  db1.gz_tab  drop  foreign key  gz_tab_ibfk_1 ;
