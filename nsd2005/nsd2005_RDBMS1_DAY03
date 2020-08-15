@@ -33,6 +33,34 @@ mysql> show variables like  "secure_file_priv" ;
 +------------------+----------+
 
 	1.2 数据导入：把系统文件的内容存储到表里
+		命令格式？
+		mysql>  load  data  infile "/目录名/文件名"  into   table  库名.表名
+fields  terminated by "符号"   lines  terminated  by  "\n" ;
+		注意事项？
+		数据导入的操作步骤：
+			1  根据导入文件的内容创建符合存储数据的表结构
+			2  把系统文件拷贝到检索目录下
+			3  执行导入数据的命令
+			4  查看数据
+
+例子： 把/etc/passwd文件的尼尔存储到 db3库下user表里
+mysql> create database db3;
+mysql> create table db3.user(name char(30) , password  char(1) , uid  int  , gid  int , comment  varchar(200) , homedir  char(60) , shell  char(50) );
+mysql> select  * from  db3.user;
+mysql> system  cp  /etc/passwd  /myload/
+
+mysql> system ls /myload
+passwd
+
+mysql> load data  infile  "/myload/passwd"  into table  db3.user 
+    -> fields  terminated by ":"  lines terminated by "\n" ;
+
+mysql> select  * from  db3.user;
+
+mysql> alter table db3.user add  id  int  primary key  auto_increment first;
+			
+mysql>  select  * from  db3.user;
+mysql>  select  * from  db3.user where id=12;
 
 	1.3 数据导出： 把表里数据存放到系统文件里
 
