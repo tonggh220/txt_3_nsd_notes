@@ -201,7 +201,27 @@ select  * from db1.t14;
 		创建外键的命令格式：
 create table  库.表（字段名列表 ，foreign key(字段名)   references  表名（字段名） on update cascade   on delete cascade ）engine=innodb;
 
-下次课讲
-	创建 外键
+		创建 外键
+首先创建被参考的表 yg_tab
+create table db1.yg_tab( yg_id   int  primary key  auto_increment , name char(10) )engine=innodb;
+
+insert into db1.yg_tab(name)values("bob");
+insert into db1.yg_tab(name)values("tom");
+insert into db1.yg_tab(name)values("jim");
+select  * from  db1.yg_tab;
+
+创建有外键的工资表gz_tab
+create table db1.gz_tab(  gz_id   int  ,  gz  float(7,2) ,  foreign key(gz_id)  references   yg_tab(yg_id)  on update cascade   on  delete cascade  )engine=innodb;
+
+mysql> show  create table  db1.gz_tab \G    #查看建表的命令
+
+
 		验证 外键
+		弥补外键的不足
+
 		删除 外键
+mysql> alter table  db1.gz_tab  drop  foreign key  gz_tab_ibfk_1 ;
+
+		在已有表里添加外键
+mysql> alter table   db1.gz_tab  add foreign key(gz_id)  references   yg_tab(yg_id)  on update cascade   on  delete cascade ;
+	
