@@ -43,3 +43,28 @@ mysql> 对数据做管理时执行 select  insert  update delete  之外的sql�
 [root@host51 ~]# 	mysql  -h192.168.4.50 -uroot  -p123qqq...A
 mysql> grant all on db1.* to admin3@"%" identified by "123qqq...A";
 mysql> grant  select  on  *.* to  yaya88@"localhost" identified by "123qqq...A";
+
+
+相关命令  
+		mysql> select  @@hostname; 查看主机名
+
+		mysql> select  host , user  from mysql.user;怎么看已有授权用户
+
+
+show grants  for  admin3@"%" ; 数据库管理员 怎么看已有授权用户的权限？
+		
+		
+		连接数据库服务器的用户怎么查看自己的访问权限 show grants;
+		
+数据管理员已有授权用户的连接密码
+mysql> select  password("654321")；
+
+mysql> set password for admin3@"%"=password("654321");
+	
+[root@host51 ~]# mysql -h192.168.4.50 -uadmin3  -p654321
+mysql> select  user();
+mysql> show grants;
+mysql> set password=password("123qqq...A");    客户端可以修改连接密码？
+MySQL> exit;
+
+[root@host51 ~]# mysql -h192.168.4.50 -uadmin3  -p123qqq...A
