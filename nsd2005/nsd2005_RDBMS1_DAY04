@@ -101,3 +101,25 @@ mysql> update  mysql.tables_priv set  Table_priv="insert,delete,select" where Ta
 mysql> flush privileges;
 
 show grants  for admin@"192.168.4.%" ;
+
+
+		columns_priv表  存储授权用户对表里 字段的访问权限
+desc  mysql.columns_priv;
+mysql> select * from   mysql.columns_priv;
+Empty set (0.00 sec)
+
+mysql> grant select , update(name,password) on  db3.user to admin4@"%" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> select * from   mysql.columns_priv;
++------+-----+--------+------------+-------------+---------------------+-------------+
+| Host | Db  | User   | Table_name | Column_name | Timestamp           | Column_priv |
++------+-----+--------+------------+-------------+---------------------+-------------+
+| %    | db3 | admin4 | user       | name        | 0000-00-00 00:00:00 | Update      |
+| %    | db3 | admin4 | user       | password    | 0000-00-00 00:00:00 | Update      |
++------+-----+--------+------------+-------------+---------------------+-------------+
+2 rows in set (0.01 sec)
+
+mysql> 
+
+	目的：查看表记录可以获取用户权限；也可以通过更新记录，修改用户权限
