@@ -123,3 +123,30 @@ mysql> select * from   mysql.columns_priv;
 mysql> 
 
 	目的：查看表记录可以获取用户权限；也可以通过更新记录，修改用户权限
+
+
+
+    撤销权限(删除已有用户的访问权限）
+	MySQL> revoke  权限列表  on  库名.表   from    用户名@"客户端地址";
+
+查看授权用户权限
+mysql> select host , user from  mysql.user;
+mysql> show grants for  mydba@"%";
+
+mysql> revoke  grant option on *.*  from mydba@"%";
+
+mysql> revoke  delete , drop  on  *.* from  mydba@"%";
+
+mysql> revoke all  on  *.* from  mydba@"%";
+
+mysql> show grants for  mydba@"%";
++-----------------------------------+
+| Grants for mydba@%                |
++-----------------------------------+
+| GRANT USAGE ON *.* TO 'mydba'@'%' |
++-----------------------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+[root@host51 ~]# mysql -h192.168.4.50 -uyaya99 -p123456
+mysql> show grants;
