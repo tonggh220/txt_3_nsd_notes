@@ -68,3 +68,6 @@ mysql> set password=password("123qqq...A");    客户端可以修改连接密码
 MySQL> exit;
 
 [root@host51 ~]# mysql -h192.168.4.50 -uadmin3  -p123qqq...A
+
+[root@host50 ~]# mysql -uroot  -ptarena
+mysql> drop user  admin3@"localhost";  删除用户
