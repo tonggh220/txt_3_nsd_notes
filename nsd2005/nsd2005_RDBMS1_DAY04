@@ -71,3 +71,20 @@ MySQL> exit;
 
 [root@host50 ~]# mysql -uroot  -ptarena
 mysql> drop user  admin3@"localhost";  删除用户
+
+
+		授权库mysql （存储的时grant命令的执行结果）
+		user表  存储用户名 、客户端地址  全局权限 ( all     *.* )
+desc  mysql.user;
+select   host , user from mysql.user;
+select   *  from  mysql.user \G
+show  grants  for  admin3@"%";
+
+		db表    存储授权用户对服务器上已有 库的访问
+desc  mysql.db;
+select  host , user , db  from  mysql.db;
+mysql> select  *  from  mysql.db where db="db1" \G
+mysql> show grants for admin3@"%";
+
+mysql> update  mysql.db  set  Delete_priv="N" where  user="admin3";
+mysql> flush privileges;
