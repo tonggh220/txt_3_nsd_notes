@@ -88,3 +88,16 @@ mysql> show grants for admin3@"%";
 
 mysql> update  mysql.db  set  Delete_priv="N" where  user="admin3";
 mysql> flush privileges;
+
+		tables_priv表   存储授权用户对服务器上已有 表的访问
+MySQL> desc  mysql.tables_priv;
+
+mysql>  select  host , user ,  db  , table_name from   mysql.tables_priv;
+
+mysql> select  * from  mysql.tables_priv where  Table_name="user" \G
+
+mysql> update  mysql.tables_priv set  Table_priv="insert,delete,select" where Table_name="user";
+
+mysql> flush privileges;
+
+show grants  for admin@"192.168.4.%" ;
