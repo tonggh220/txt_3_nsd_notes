@@ -247,3 +247,32 @@ mysql> select  shell from  db3.user where uid <= 500 group by shell;
 
 
 select  部门  from 员工表 where   性别="女” and  年龄 <= 28  and  婚姻="否" group  by 部门 ；
+
+
+在查询结果      过滤数据 having  条件
+		命令格式  select查询命令  having   条件；
+	
+
+nsd2005    全国有300人
+     面试招聘    300个人 我自己逐一面试  找优秀的
+     中心助教 在班里挑选10个优秀的人    10*10  = 100 
+
+mysql> select name  from db3.user where  shell != "/bin/bash"；
+
+mysql> select name  from db3.user where  shell != "/bin/bash"  having  name="mysql";
+
+mysql> select name  from db3.user where  shell != "/bin/bash"   name="mysql" or name="sync";
+
+		限制查询结果   显示的行数  limit  	
+		不限制的话，默认会把所有查询结果输出到电脑屏幕。
+		命令格式  select查询名   limit  数字； #显示查询结果的头几行
+mysql> select  name , uid,shell  from  db3.user where  uid <= 100 limit 2;
+
+		命令格式2 select查询名   limit  数字1，数字2   #显示查询结果指定范围的行
+		数字1  起始行 （第1行 用 零 表示）
+		数字2  总行数
+
+mysql> select  name , uid,shell  from  db3.user  limit  0 ，3 ;
+mysql> select  name , uid,shell  from  db3.user  limit  2,6 ;
+mysql> select  name , uid,shell  from  db3.user  limit  3,3 ;
+mysql> select * from  db3.user  limit  3,4;
