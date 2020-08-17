@@ -11,6 +11,8 @@
                 1.4 客户端使用授权用户连接数据库服务器
 	 ]# mysql -h数据库服务器ip   -u授权用户   -p密码
 	 ]# mysql -h192.168.4.50  -uyaya   -p123456
+
+
 例子 
 50 添加用户
 mysql> grant all on *.*  to mydba@"%" identified by "123qqq...A"  with grant option;
@@ -18,8 +20,26 @@ mysql> grant all on *.*  to mydba@"%" identified by "123qqq...A"  with grant opt
 mysql> grant select on  db3.user  to admin@"192.168.4.%"  identified by "123qqq...A";
 
 
+mysql> grant  select , insert  , update , delete  on db3.*  to  admin2@"localhost" identified by "123qqq...A" ;
+
+
+mysql> grant all on  *.*  to  root@"192.168.4.51" identified by "123qqq...A" with grant option;
+
 51测试用户
 [root@host51 ~]# mysql -h192.168.4.50 -umydba -p123qqq...A
 mysql> 对数据做管理的命令都可以执行
 
 [root@host51 ~]# mysql -h192.168.4.50 -uadmin  -p123qqq...A
+mysql> 对数据做管理                                   
+
+[root@host51 ~]# mysql -h192.168.4.50 -uadmin2  -p123qqq...A
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 1045 (28000): Access denied for user 'admin2'@'192.168.4.51' (using password: YES)
+[root@host51 ~]# 	
+
+[root@host50 ~]# mysql -hlocalhost -uadmin2  -p123qqq...A
+mysql> 对数据做管理时执行 select  insert  update delete  之外的sql命令会报错
+
+[root@host51 ~]# 	mysql  -h192.168.4.50 -uroot  -p123qqq...A
+mysql> grant all on db1.* to admin3@"%" identified by "123qqq...A";
+mysql> grant  select  on  *.* to  yaya88@"localhost" identified by "123qqq...A";
