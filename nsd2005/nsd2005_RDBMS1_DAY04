@@ -15,6 +15,11 @@
 50 添加用户
 mysql> grant all on *.*  to mydba@"%" identified by "123qqq...A"  with grant option;
 
+mysql> grant select on  db3.user  to admin@"192.168.4.%"  identified by "123qqq...A";
+
+
 51测试用户
 [root@host51 ~]# mysql -h192.168.4.50 -umydba -p123qqq...A
 mysql> 对数据做管理的命令都可以执行
+
+[root@host51 ~]# mysql -h192.168.4.50 -uadmin  -p123qqq...A
