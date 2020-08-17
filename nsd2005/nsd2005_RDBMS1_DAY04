@@ -150,3 +150,39 @@ mysql> show grants for  mydba@"%";
 mysql> 
 [root@host51 ~]# mysql -h192.168.4.50 -uyaya99 -p123456
 mysql> show grants;
+
+
+root密码管理（操作系统的管理员root用户）
+	修改数据库管理员root用户本机登录密码
+命令格式[root@host50 ~]# mysqladmin  -uroot  -p旧密码   password  "新密码"
+例子
+[root@host50 ~]# mysqladmin  -uroot  -ptarena   password  "666888"
+[root@host50 ~]# mysql -uroot -p666888 #使用新密码登录
+
+
+	恢复数据库管理员root用户本机登录密码（忘记密码）
+
+[root@host50 ~]# systemctl  stop mysqld
+
+[root@host50 ~]# vim /etc/my.cnf
+[mysqld]
+skip-grant-tables
+#validate_password_policy=0
+#validate_password_length=6
+:wq
+[root@host50 ~]# systemctl  start mysqld
+[root@host50 ~]# mysql
+mysql> select  user , host ,  authentication_string  from  mysql.user;
+mysql> update mysql.user set  authentication_string=password("123qqq...A") 
+  where user="root" and  host="localhost" ;
+mysql> flush privileges;
+mysql> exit
+
+[root@host50 ~]# vim /etc/my.cnf
+[mysqld]
+#skip-grant-tables
+validate_password_policy=0
+validate_password_length=6
+:wq
+[root@host50 ~]# systemctl  restart mysqld
+[root@host50 ~]# mysql -uroot -p123qqq...A
