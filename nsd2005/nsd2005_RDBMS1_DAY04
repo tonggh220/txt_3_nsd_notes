@@ -290,3 +290,46 @@ mysql> insert into db3.user(name,uid) values("bob",3);
 mysql> show master status;
 mysql> select  * from db3.user;
 mysql> show master status;
+
+
+		修改日志文件存放的目录和文件命令
+[root@host50 ~]# mkdir /mylog
+[root@host50 ~]# chown  mysql /mylog
+[root@host50 ~]# ls -ld /mylog
+drwxr-xr-x. 2 mysql root 6 8月  18 14:44 /mylog
+[root@host50 ~]# 
+[root@host50 ~]# setenforce  0
+
+]# vim /etc/my.cnf
+[mysqld]
+server_id=50
+#log_bin
+log_bin=/mylog/plj
+:wq
+
+[root@host50 ~]# systemctl  restart mysqld
+[root@host50 ~]# ls /mylog
+plj.000001  plj.index
+[root@host50 ~]# 
+
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000001 |      154 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 ~]# 
+[root@host50 ~]# mysql -uroot -p123qqq...A  -e 'insert into db3.user(name) values("aaa")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# 
+[root@host50 ~]# mysql -uroot -p123qqq...A  -e 'insert into db3.user(name) values("bbb")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# 
+[root@host50 ~]# mysql -uroot -p123qqq...A  -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000001 |      696 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 ~]#
