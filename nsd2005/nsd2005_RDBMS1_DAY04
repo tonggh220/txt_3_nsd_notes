@@ -269,3 +269,24 @@ mysql>exit
 
 删除已有库 只有不重启数据库服务器 就可以使用备份文件恢复数据
 [root@host51 ~]# mysql -uroot -p123qqq...A  < /root/allbak.sql 
+
+3 数据的增量备份与恢复   
+	3.1  启用binlog日志实现数据的时时备份
+		3.1.1 	binlog日志介绍 ？
+
+		3.1.2 	启用binlog日志
+]# vim /etc/my.cnf
+[mysqld]
+server_id=50
+log_bin
+:wq
+]# systemctl restart  mysqld
+
+]# mysql -uroot -p密码
+mysql> show master status;
+mysql> system  ls /var/lib/mysql/
+
+mysql> insert into db3.user(name,uid) values("bob",3);
+mysql> show master status;
+mysql> select  * from db3.user;
+mysql> show master status;
