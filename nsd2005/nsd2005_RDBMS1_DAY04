@@ -355,3 +355,66 @@ mysql> purge  master  logs  to   "plj.000004";  删除指定编号之前的binlo
 mysql> reset master ;   重建新日志
 
 ]# rm  -rf   *.0000*   *.index	使用系统命令2种全删除
+
+
+3.2 使用日志恢复数据
+		使用日志恢复所有数据，命令格式
+]#mysqlbinlog  /目录名/日志名  |  mysql -uroot  -p密码
+
+[root@host50 ~]#mysql> select  count(*) from db3.user;
+[root@host50 ~]# mysqldump -uroot -p123qqq...A --flush-logs db3 user > /root/user.sql
+mysqldump: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# scp /root/user.sql  root@192.168.4.51:/root/
+root@192.168.4.51's password: 
+user.sql                                                      100% 3543   184.2KB/s   00:00    
+[root@host50 ~]# 
+[root@host50 ~]# mysql -uroot -p123qqq...A -e ' show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000002 |      154 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 ~]# 
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'insert into db3.user(name,uid) values("a1",33)'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'insert into db3.user(name,uid) values("a2",33)'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'insert into db3.user(name,uid) values("a3",33)'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'insert into db3.user(name,uid) values("a4",33)'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host50 ~]# 
+[root@host50 ~]# mysql -uroot -p123qqq...A -e ' show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000002 |     1250 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 ~]# scp /mylog/plj.000002 root@192.168.4.51:/opt/
+
+
+[root@host51 ~]# mysql -uroot -p123qqq...A db3 < /root/user.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host51 ~]# 
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'select  count(*) from db3.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| count(*) |
++----------+
+|       29 |
++----------+
+[root@host51 ~]# ls /opt/plj.000002 
+/opt/plj.000002
+[root@host51 ~]# mysqlbinlog /opt/plj.000002 | mysql -uroot -p123qqq...A
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host51 ~]# 
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'select  count(*) from db3.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| count(*) |
++----------+
+|       33 |
++----------+
+[root@host51 ~]# 
