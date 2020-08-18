@@ -418,3 +418,75 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 |       33 |
 +----------+
 [root@host51 ~]# 
+
+
+使用日志恢复部分数据   , 命令格式
+        日志记录sql命令的方式?
+	记录命令执行的时间
+	记录命令执行的偏移量
+	
+]# mysqlbinlog  选项   /目录名/文件名  |  mysql -uroot -p密码
+	读偏移量范围内记录的sql命令
+	--start-position=数字   --stop-position=数字
+
+	都时间范围内记录的sql命令
+	--start-datetime="yyyy/mm/dd  hh:mm:ss"    --stop-datetime="yyyy/mm/dd  hh:mm:ss" 
+
+		修改日志文件的记录格式查看
+[root@host50 mylog]# mysql -uroot -p123qqq...A  -e 'show variables like "binlog_format"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| binlog_format | ROW   |
++---------------+-------+
+[root@host50 mylog]# 
+
+		修改日志格式
+]# vim /etc/my.cnf		
+[mysqld]
+binlog_format="mixed"
+:wq
+		
+[root@host50 mylog]# systemctl restart mysqld
+[root@host50 mylog]# mysql -uroot -p123qqq...A  -e 'show variables like "binlog_format"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| binlog_format | MIXED |
++---------------+-------+
+[root@host50 mylog]# mysql -uroot -p123qqq...A  -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000003 |      154 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 mylog]# 
+
+[root@host50 mylog]# mysql -uroot -p123qqq...A  -e 'insert into db3.user(name,uid) values("c1",5)'
+[root@host50 mylog]# mysql -uroot -p123qqq...A  -e 'insert into db3.user(name,uid) values("c2",5)'
+[root@host50 mylog]# mysql -uroot -p123qqq...A  -e 'insert into db3.user(name,uid) values("c3",5)'
+
+[root@host50 mylog]# mysql -uroot -p123qqq...A  -e "delete from db3.user where name like 'a%'"
+		
+[root@host50 mylog]# mysql -uroot -p123qqq...A  -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000003 |     1382 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 mylog]# 
+
+[root@host50 mylog]# mysqlbinlog  /mylog/plj.000003  | grep insert
+insert into db3.user(name,uid) values("c1",5)
+insert into db3.user(name,uid) values("c2",5)
+insert into db3.user(name,uid) values("c3",5)
+[root@host50 mylog]# 
+[root@host50 mylog]# mysqlbinlog  /mylog/plj.000003  | grep delete
+delete from db3.user where name like 'a%'
+[root@host50 mylog]# 
+
+[root@host50 mylog]#scp /mylog/plj.000003  root@192.168.4.51:/root/
