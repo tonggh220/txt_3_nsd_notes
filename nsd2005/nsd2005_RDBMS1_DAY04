@@ -186,3 +186,29 @@ validate_password_length=6
 :wq
 [root@host50 ~]# systemctl  restart mysqld
 [root@host50 ~]# mysql -uroot -p123qqq...A
+
+
+数据备份的相关概念？
+	备份？ 备份的是数据   备份的目的：恢复数据
+	备份方式： 
+		物理备份  把数据库目录 拷贝 一份 存放到其他的 存储设备上
+		物理恢复  把备份的文件拷贝回数据库目录，具体步骤如下：
+			停止数据库服务
+			清空数据库目录下数据
+			拷贝备份目录下的文件 到 数据库目录下
+			递归修改数据库目录的所有者和用户组 为mysql用户
+			启动数据库服务
+			管理员登录查看数据
+演示
+[root@host50 ~]# cp  -r /var/lib/mysql   /mysql.bak
+[root@host50 ~]# scp -r  /mysql.bak    root@192.168.4.51:/opt/
+  
+[root@host51 ~]# rm -rf /var/lib/mysql/*
+[root@host51 ~]# 
+[root@host51 ~]# ls /var/lib/mysql
+[root@host51 ~]# 
+[root@host51 ~]# ls /opt/mysql.bak/
+[root@host51 ~]# cp  -r  /opt/mysql.bak/*    /var/lib/mysql/
+[root@host51 ~]# chown  -R mysql:mysql /var/lib/mysql
+[root@host51 ~]# systemctl  start mysqld
+[root@host51 ~]# mysql -uroot -p密码
