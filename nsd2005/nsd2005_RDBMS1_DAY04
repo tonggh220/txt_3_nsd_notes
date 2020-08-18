@@ -213,3 +213,45 @@ validate_password_length=6
 [root@host51 ~]# chown  -R mysql:mysql /var/lib/mysql
 [root@host51 ~]# systemctl  start mysqld
 [root@host51 ~]# mysql -uroot -p密码
+
+
+		逻辑备份：使用mysql软件提供备份命令做备份，在执行备份命令时，根据已有的库表记录生成对应的sql命令  保存定义的文件里。
+
+		数据备份策略：
+			完全备份：备份所有数据
+				只 备份  1张表的所有数据
+				只 备份   1个库的所有数据
+				备份1台数据库服务器的所有数据
+			只备份新产生的数据：
+			                差异备份：备份完全备份后，所有新产生的数据
+			                增量备份：备份上次备份后，所有新产生的数据
+
+
+工作中的备份策略
+完全备份+差异备份 （用当前的所有数据减去第1天的数据 剩下的就是 要备份的新数据）
+完全备份+增量备份 （判断新数据，只和前一天比较）
+
+			休息+订餐  到  11：05 
+2 完全备份 （数据备份与恢复）
+	数据完全备份命令 mysqldump 
+		]# mysqldump  -uroot -p密码  数据库名  > 文件名.sql
+		数据库名的表示方式？
+			--all-databases 或  -A      		//所有库
+			数据库名			//单个库
+			数据库名  表名          	//单张表
+			-B  数据库1  数据库2 		//多个库
+
+
+例子：
+[root@host50 ~]# mkdir /bakdir
+[root@host50 ~]# mysqldump -uroot -p123qqq...A  --all-databases >  /bakdir/allbak.sql
+
+[root@host50 ~]# mysqldump -uroot -p123qqq...A  db1  >  /bakdir/db1.sql
+
+[root@host50 ~]# mysqldump -uroot -p123qqq...A  db3 user  >  /bakdir/db3_user.sql
+
+[root@host50 ~]# mysqldump -uroot -p123qqq...A  -B db1 db3  >  /bakdir/twodb.sql
+
+[root@host50 ~]# ls /bakdir/
+allbak.sql  db1.sql  db3_user.sql  twodb.sql
+[root@host50 ~]# 
