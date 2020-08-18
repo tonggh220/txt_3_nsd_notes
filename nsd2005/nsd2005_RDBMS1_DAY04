@@ -333,3 +333,25 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | plj.000001 |      696 |              |                  |                   |
 +------------+----------+--------------+------------------+-------------------+
 [root@host50 ~]#
+
+
+		3.1.3  	查看日志文件内容
+	         ]# mysqlbinlog  目录名/日志文件名
+[root@host50 ~]# mysqlbinlog  /mylog/plj.000001
+
+		3.1.4 	手动创建新的日志文件
+]# systemctl  restart mysqld
+
+[root@host50 ~]# mysql -uroot -p123qqq...A  -e 'flush logs'
+
+mysql> flush logs;
+
+[root@host50 ~]# mysqldump -uroot -p123qqq...A  --flush-logs  db3 user > /opt/user2.sql
+
+
+		3.1.5 	删除已有的日志文件
+mysql> purge  master  logs  to   "plj.000004";  删除指定编号之前的binlog日志文件
+
+mysql> reset master ;   重建新日志
+
+]# rm  -rf   *.0000*   *.index	使用系统命令2种全删除
