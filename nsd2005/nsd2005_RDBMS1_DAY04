@@ -292,7 +292,7 @@ mysql> select  * from db3.user;
 mysql> show master status;
 
 
-		修改日志文件存放的目录和文件命令
+		修改日志文件存放的目录和文件名
 [root@host50 ~]# mkdir /mylog
 [root@host50 ~]# chown  mysql /mylog
 [root@host50 ~]# ls -ld /mylog
