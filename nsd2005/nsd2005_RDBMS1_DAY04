@@ -203,6 +203,7 @@ validate_password_length=6
 [root@host50 ~]# cp  -r /var/lib/mysql   /mysql.bak
 [root@host50 ~]# scp -r  /mysql.bak    root@192.168.4.51:/opt/
   
+[root@host51 ~]# systemctl  stop  mysqld
 [root@host51 ~]# rm -rf /var/lib/mysql/*
 [root@host51 ~]# 
 [root@host51 ~]# ls /var/lib/mysql
