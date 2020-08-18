@@ -255,3 +255,17 @@ validate_password_length=6
 [root@host50 ~]# ls /bakdir/
 allbak.sql  db1.sql  db3_user.sql  twodb.sql
 [root@host50 ~]# 
+
+
+数据完全恢复命令 mysql
+		]# mysql  -uroot  -p密码  库名     <  文件名.sql
+
+例子
+mysql> create database db3;
+mysql>exit
+[root@host51 ~]# mysql -uroot -p123qqq...A db3  < /root/db3_user.sql 
+[root@host51 ~]# mysql -uroot -p123qqq...A -e ' select * from db3.user '
+[root@host51 ~]# mysql -uroot -p123qqq...A -e ' select  count(*) from db3.user '
+
+删除已有库 只有不重启数据库服务器 就可以使用备份文件恢复数据
+[root@host51 ~]# mysql -uroot -p123qqq...A  < /root/allbak.sql 
