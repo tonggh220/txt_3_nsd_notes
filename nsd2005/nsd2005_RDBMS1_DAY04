@@ -490,3 +490,11 @@ delete from db3.user where name like 'a%'
 [root@host50 mylog]# 
 
 [root@host50 mylog]#scp /mylog/plj.000003  root@192.168.4.51:/root/
+
+             
+[root@host51 ~]# mysqlbinlog  --start-position=325   --stop-position=470  /root/plj.000003  | mysql -uroot  -p123qqq...A
+
+
+[root@host51 ~]# mysqlbinlog  --start-datetime="2020/08/18 16:56:36"   --stop-datetime="2020/08/18 16:59:29"   /root/plj.000003  | mysql -uroot  -p123qqq...A
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e "select * from db3.user WHERE name like 'c%'"
