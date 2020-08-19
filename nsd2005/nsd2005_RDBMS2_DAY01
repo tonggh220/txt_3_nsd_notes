@@ -111,3 +111,17 @@ mysql> select name,uid from db3.user where name like 'x%';
 
 mysql> 
 
+1.3 排错
+查看报错信息 show slave status \G
+Last_IO_Error:  io线程的报错信息
+Last_SQL_Error:  sql线程的报错信息
+	
+
+		把从数据库服务器还原，重新配置。
+		  把相关的配置文件删除
+		  重启数据库服务	
+[root@host52 mysql]# rm  -rf master.info  relay-log.info  host52-relay-bin.00000* host52-relay-bin.index 
+[root@host52 mysql]# systemctl  restart mysqld
+[root@host52 mysql]# mysql -uroot -p123qqq...A 
+mysql> show slave status \G
+Empty set (0.00 sec)
