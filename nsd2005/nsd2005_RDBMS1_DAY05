@@ -2,7 +2,7 @@
 ]# rpm -ivh libev-4.15-1.el6.rf.x86_64.rpm 
 ]# yum -y  install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm
 
-###############RDBMS1_DAY05   inonbackupex 命令的使用
+###############RDBMS1_DAY05   innobackupex 命令的使用
 1 percona软件介绍
 2 安装软件
        ]#yum -y  install /var/ftp/pub/libev-4.15-1.el6.rf.x86_64.rpm 
