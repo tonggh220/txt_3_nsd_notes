@@ -104,3 +104,34 @@ mysql> alter  table db3.user   import  tablespace;
 [root@host51 ~]# rm -rf /var/lib/mysql/db3/user.exp
 
 	         7 查看表记录  select  * from db3.user;
+
+
+
+数据的增量备份与恢复
+	增量备份命令格式
+]# innobackupex   --user  root   --password  密码   --incremental   /目录名   --incremental-basedir=上次备份数据存储目录   --no-timestamp
+
+
+	增量恢复命令格式
+]# innobackupex  --apply-log  --redo-only   首次备份目录名     #准备恢复数据
+]# innobackupex  --apply-log  --redo-only   首次备份目录名  --incremental-dir=备份目录名    #合并数据
+]# innobackupex  --copy-back   首次备份目录名   #把数据拷贝到数据库目录下
+
+例子：
+周一  首次备份  备份服务器上的所有数据（完全备份）
+[root@host50 ~]# innobackupex --user root  --password 123qqq...A   /fullbak  --no-timestamp
+[root@host50 ~]# ls   /fullbak
+
+[root@host50 ~]#  mysql> insert into db3.user(name)values("bob"); 多写几条
+
+
+周二 增量备份
+[root@host50 ~]# innobackupex --user root  --password 123qqq...A   --incremental  /new1dir  --incremental-basedir=/fullbak  --no-timestamp
+
+[root@host50 ~]# ls /new1dir/
+[root@host50 ~]#  mysql> insert into db3.user(name)values("tom"); 多写几条
+
+周三 增量备份
+[root@host50 ~]# innobackupex --user root  --password 123qqq...A   --incremental  /new2dir  --incremental-basedir=/new1dir  --no-timestamp
+
+[root@host50 ~]# ls /new2dir/
