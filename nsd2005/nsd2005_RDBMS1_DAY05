@@ -20,7 +20,7 @@
 
 	完全恢复的命令格式
 ]# innobackupex   --apply-log   目录名     #准备恢复数据
-]# innobackupex   --capy-back  目录名     #拷贝数据
+]# innobackupex   --copy-back  目录名     #拷贝数据
 
 例子
 [root@host50 ~]# innobackupex --user root --password 123qqq...A  /allbak  --no-timestamp
