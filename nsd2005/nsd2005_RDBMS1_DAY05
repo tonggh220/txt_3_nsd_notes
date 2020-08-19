@@ -138,6 +138,20 @@ mysql> alter  table db3.user   import  tablespace;
 
                 ***数据增量备份的工作过程（难点）
 [root@host50 ~]# cat /备份目录名/xtrabackup_checkpoints 
+	怎么知道在所有数据里， 那些数据新产生的？
+[root@host50 ~]# cat /备份目录名/xtrabackup_checkpoints  #记录当前目录下数据的备份信息，备份数据的范围
+
+from_lsn = 备份数据的起始范围  
+to_lsn = 备份数据的结束范围
+last_lsn = 当前备份数据的位置标记 （书签）
+
+事务日志文件： 对表操作时执行的sql命令
+ib_logfile0  ib_logfile1  ibtmp1  
+
+LSN 日志序列号
+
+
+
 
 
 增量恢复数据	
