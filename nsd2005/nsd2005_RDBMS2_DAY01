@@ -76,3 +76,38 @@ mysql> start  slave;
 			Slave_IO_Running:Yes
 			Slave_SQL_Running: Yes
 
+
+3 测试主从同步配置
+				3.1 在主服务添加客户端连接使用的用户
+mysql> grant select , insert , update ,delete on db3.* to yaya@"%"  identified by "123qqq...A";
+mysql> grant select , insert , update ,delete on db1.* to yaya@"%";
+
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'select user from mysql.user'
+
+				3.2  在客户端50连接连接主服务器，存储数据
+[root@host50 ~]# mysql -h192.168.4.51 -uyaya -p123qqq...A
+mysql> show grants;
+mysql> insert into db3.user(name,uid)values("xxx",999);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into db3.user(name,uid)values("xxx2",999);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into db3.user(name,uid)values("xxx3",999);
+Query OK, 1 row affected (0.02 sec)
+
+mysql> exit
+
+				3.3  客户端50 连接从服务器也可以看到同样的数据。
+mysql> select name,uid from db3.user where name like 'x%';
++------+------+
+| name | uid  |
++------+------+
+| xxx  |  999 |
+| xxx2 |  999 |
+| xxx3 |  999 |
++------+------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
