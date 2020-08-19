@@ -61,3 +61,18 @@ server_id=52
 [root@host52 ~]# grep  host51  /root/bak.sql 
 CHANGE MASTER TO MASTER_LOG_FILE='host51-bin.000001', MASTER_LOG_POS=441;
 [root@host52 ~]# 
+
+
+					3  数据库管理员登录服务，指定主服务器信息
+			mysql> change master to  master_host="192.168.4.51" , master_user="repluser" , master_password="123qqq...A" , 
+            master_log_file="host51-bin.000001" , master_log_pos=441 ;
+
+
+					 4  启动slave进程
+mysql> start  slave;
+					 5  查看进程状态
+					  MySQL>  show slave status \G
+			Master_Host: 192.168.4.51
+			Slave_IO_Running:Yes
+			Slave_SQL_Running: Yes
+
