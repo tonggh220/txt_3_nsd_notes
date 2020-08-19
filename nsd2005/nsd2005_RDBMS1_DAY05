@@ -135,3 +135,6 @@ mysql> alter  table db3.user   import  tablespace;
 [root@host50 ~]# innobackupex --user root  --password 123qqq...A   --incremental  /new2dir  --incremental-basedir=/new1dir  --no-timestamp
 
 [root@host50 ~]# ls /new2dir/
+
+                ***数据增量备份的工作过程（难点）
+[root@host50 ~]# cat /备份目录名/xtrabackup_checkpoints 
