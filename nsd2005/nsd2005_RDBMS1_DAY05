@@ -1,0 +1,72 @@
+在50 和 51 主机分别安装percona软件
+]# rpm -ivh libev-4.15-1.el6.rf.x86_64.rpm 
+]# yum -y  install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm
+
+###############RDBMS1_DAY05   inonbackupex 命令的使用
+1 percona软件介绍
+2 安装软件
+       ]#yum -y  install /var/ftp/pub/libev-4.15-1.el6.rf.x86_64.rpm 
+       ]#yum -y install  /var/ftp/pub/percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+3innobackupex命令格式
+	]# innobackupex   选项
+[root@host50 ~]# man innobackupex
+[root@host50 ~]# innobackupex  --help
+
+	常用选项介绍？ 
+
+数据的完全备份与恢复
+	完全备份的命令格式
+]# innobackupex  --user root  --password 密码   目录名   [--no-timestamp]
+
+	完全恢复的命令格式
+]# innobackupex   --apply-log   目录名     #准备恢复数据
+]# innobackupex   --capy-back  目录名     #拷贝数据
+
+例子
+[root@host50 ~]# innobackupex --user root --password 123qqq...A  /allbak  --no-timestamp
+
+[root@host50 ~]# ls   /allbak/
+backup-my.cnf  db3             mysql               xtrabackup_binlog_info  xtrabackup_logfile
+bbsdb          ib_buffer_pool  performance_schema  xtrabackup_checkpoints
+db1            ibdata1         sys                 xtrabackup_info
+[root@host50 ~]# 
+
+[root@host50 ~]# scp -r /allbak    root@192.168.4.51:/opt/
+
+	在51主机恢复数据步骤如下：
+		停止数据库服务
+		清空数据库目录
+		准备恢复数据
+		拷贝数据
+		修改所有者和组用户为mysql
+		启动服务 查看数据
+
+[root@host51 ~]# systemctl  stop mysqld
+[root@host51 ~]# rm -rf /var/lib/mysql/*
+
+[root@host51 ~]# cat /opt/allbak/xtrabackup_checkpoints 
+backup_type = full-backuped
+from_lsn = 0
+to_lsn = 3039191
+last_lsn = 3039200
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+
+[root@host51 ~]# innobackupex  --apply-log  /opt/allbak/
+
+[root@host51 ~]# cat /opt/allbak/xtrabackup_checkpoints 
+backup_type = full-prepared
+from_lsn = 0
+to_lsn = 3039191
+last_lsn = 3039200
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]#
+
+[root@host51 ~]# innobackupex --copy-back  /opt/allbak/
+
+[root@host51 ~]# chown -R mysql:mysql /var/lib/mysql
+[root@host51 ~]# systemctl  start mysqld
+[root@host51 ~]# mysql -uroot -p123qqq...A
+mysql> show databases;
