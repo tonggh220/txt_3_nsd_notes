@@ -1,0 +1,40 @@
+	1 mysql主从同步
+		1.1 相关概念：
+			1 主从同步介绍（什么是主从同步） 存储数据的服务结构
+			分为2中角色：
+				主数据库服务器：接收客户端连接的服务器
+				从数据库服务器：自动同步主数据库服务器的数据到本机
+
+			2 主从同步工作过程？
+				主服务器必须启用binlog日志
+				从服务器会有IO线程和SQL线程
+		IO线程的工作任务：复制master主机 binlog日志文件里的SQL命令到本机的relay-log文件里。
+
+		SQL线程的工作任务：执行本机relay-log文件里的SQL语句，实现与Master数据一致。
+		
+		1.2 配置 mysql主从同步
+			1 拓扑结构
+			2 配置mysql主从同步
+				2.1 配置主服务器（master）具体配置如下：192.168.4.51
+				启用binlog日志
+]# vim /etc/my.cnf
+server_id=51
+log_bin
+:wq
+[root@host51 ~]# systemctl  restart mysqld
+
+				用户授权(给从服务器拷贝sql命令时连接使用的用户)
+[root@host51 ~]# mysql -uroot -p123qqq...A
+mysql> grant  replication  slave on *.*  to  repluser@"%"  identified by "123qqq...A";
+
+
+				查看日志信息				
+mysql> show master status;
++-------------------+----------+--------------+------------------+-------------------+
+| File              | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-------------------+----------+--------------+------------------+-------------------+
+| host51-bin.000001 |      441 |              |                  |                   |
++-------------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql>
