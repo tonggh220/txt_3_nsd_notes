@@ -70,3 +70,37 @@ recover_binlog_info = 0
 [root@host51 ~]# systemctl  start mysqld
 [root@host51 ~]# mysql -uroot -p123qqq...A
 mysql> show databases;
+
+
+恢复单张表的所有数据   192.168.4.51
+[root@host51 ~]# mysql -uroot -p123qqq...A
+mysql> select  * from  db3.user;
+mysql> delete from  db3.user;    误删除数据  
+mysql> select  * from  db3.user;
+
+	具体步骤如下：	                user.idb
+		表空间？存储表记录的  表.ibd  文件
+
+	         1 删除表空间文件 (把没有数据的.ibd文件删除）
+alter  table  db3.user  discard  tablespace;  
+
+	         2 导出表信息（把表的信息在备份文件里导出来）
+]#innobackupex   --apply-log  --export     /opt/allbak
+[root@host51 ~]# ls /opt/allbak/db3/
+db.opt  user.cfg  user.exp  user.frm  user.ibd
+[root@host51 ~]# 
+
+	         3 拷贝表信息文件到数据库目录下
+]#cp /opt/allbak/db3/user.{cfg,exp,ibd}  /var/lib/mysql/db3/
+[root@host51 ~]# ls -l /var/lib/mysql/db3/user.*
+
+	         4 修改表信息文件的所有者及组用户为mysql
+[root@host51 ~]# chown  -R mysql:mysql /var/lib/mysql/db3/*
+
+	         5 导入表空间（把导出的表信息存储到数据库目录下的配置文件里）
+mysql> alter  table db3.user   import  tablespace;	         
+	        6 删除数据库目录下的表信息文件
+[root@host51 ~]# rm -rf /var/lib/mysql/db3/user.cfg
+[root@host51 ~]# rm -rf /var/lib/mysql/db3/user.exp
+
+	         7 查看表记录  select  * from db3.user;
