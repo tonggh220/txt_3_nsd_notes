@@ -191,3 +191,26 @@ recover_binlog_info = 0
 		管理员登录查看数据量
 122  systemctl  start mysqld
   123  mysql -uroot -p123qqq...A -e 'select name from  db3.user'
+
+
+
+  数据的差异备份与恢复
+周1 完全备份
+]#  innobackupex  --user root  --password  123qqq....A   /dir1  --no-timestamp
+insert into   db3.user values();  10
+
+周二 差异备份
+]#  innobackupex  --user root  --password  123qqq....A  --incremental  /dir2  --incremental-basedir=/dir1  --no-timestamp  
+
+insert into   db3.user values(); 
+
+周三  差异备份
+]#  innobackupex  --user root  --password  123qqq....A  --incremental  /dir3  --incremental-basedir=/dir1  --no-timestamp  
+
+insert into   db3.user values(); 
+
+周四  差异备份
+]#  innobackupex  --user root  --password  123qqq....A  --incremental  /dir4  --incremental-basedir=/dir1  --no-timestamp  
+
+
+
