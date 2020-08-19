@@ -138,3 +138,42 @@ mysql> alter  table db3.user   import  tablespace;
 
                 ***数据增量备份的工作过程（难点）
 [root@host50 ~]# cat /备份目录名/xtrabackup_checkpoints 
+
+
+增量恢复数据	
+	[root@host50 ~]# scp -r /fullbak  root@192.168.4.51:/root/
+	[root@host50 ~]# scp -r /new1dir  root@192.168.4.51:/root/
+                 [root@host50 ~]# scp -r /new2dir  root@192.168.4.51:/root/
+51主机恢复步骤如下：
+		停止数据库服务
+		清空数据库目录
+[root@host51 ~]# systemctl  stop mysqld
+[root@host51 ~]# rm -rf /var/lib/mysql/*
+
+		准备恢复恢复数据
+[root@host51 ~]# innobackupex  --apply-log  --redo-only /root/fullbak/
+[root@host51 ~]# cat /root/fullbak/xtrabackup_checkpoints 
+backup_type = log-applied
+from_lsn = 0
+to_lsn = 3039191
+last_lsn = 3039200
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+
+		合并数据
+
+]# innobackupex  --apply-log --redo-only  /root/fullbak/  --incremental-dir=/root/new1dir
+
+]#innobackupex  --apply-log --redo-only  /root/fullbak/  --incremental-dir=/root/new2dir
+
+		拷贝数据
+[root@host51 ~]# innobackupex  --copy-back  /root/fullbak/
+
+		修改所有者和组用户为MySQL
+[root@host51 ~]# chown -R mysql:mysql  /var/lib/mysql
+
+		启动数据库服务
+		管理员登录查看数据量
+122  systemctl  start mysqld
+  123  mysql -uroot -p123qqq...A -e 'select name from  db3.user'
