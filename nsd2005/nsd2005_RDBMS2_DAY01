@@ -38,3 +38,26 @@ mysql> show master status;
 1 row in set (0.00 sec)
 
 mysql>
+
+2.2 配置从服务器（slave）192.168.4.52 具体步骤如下:
+					1  指定server_id  并重启数据库服务
+]# vim /etc/my.cnf
+[mysqld]
+server_id=52
+:wq
+[root@host52 ~]# systemctl  restart mysqld
+[root@host52 ~]# setenforce 0
+[root@host52 ~]# systemctl  stop firewalld
+
+					2  确保与主数据库服务器数据一致
+在主服务器51 做数据的完全备份
+[root@host51 ~]# mysqldump -uroot -p123qqq...A --master-data  -B bbsdb db1  db3  > /root/bak.sql
+
+[root@host51 ~]# scp /root/bak.sql  root@192.168.4.52:/root/
+
+在从服务器52 使用备份文件恢复数据
+[root@host52 ~]# mysql -uroot -p123qqq...A   < /root/bak.sql
+[root@host52 ~]# mysql -uroot -p123qqq...A   -e 'show databases'
+[root@host52 ~]# grep  host51  /root/bak.sql 
+CHANGE MASTER TO MASTER_LOG_FILE='host51-bin.000001', MASTER_LOG_POS=441;
+[root@host52 ~]# 
