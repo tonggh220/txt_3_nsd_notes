@@ -303,3 +303,27 @@ mysql> show  master status;
 1 row in set (0.00 sec)
 
 mysql> 
+
+
+配置数据库服务器192.168.4.55 做主机192.168.4.54的从服务器
+			指定server_id 并重启服务
+			测试54的授权用户repluser3
+			管理登录 指定主服务器信息
+			启动slave 进程
+			查看状态
+]# vim /etc/my.cnf
+     [mysqld]
+	server_id=55
+:wq
+]# systemctl restart mysqld
+
+~]# mysql -h192.168.4.54 -urepluser3 -p123qqq...A
+mysql> exit;
+
+]# mysql  -uroot -p密码
+mysql> change master to master_host="192.168.4.54" , master_user="repluser3" , master_password="123qqq...A" , master_log_file="master54.000001" ,master_log_pos=442;
+
+mysql> start slave;
+mysql> show slave status \G
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
