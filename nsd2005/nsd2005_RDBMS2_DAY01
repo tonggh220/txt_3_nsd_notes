@@ -253,3 +253,24 @@ mysql> insert into  db1.t3 values ("yyy","yyy@163.com");
 		55主机   netstat  -utnlp  | grep  3306
 *****关闭所有服务器的 selinux  和  firewalld
 
+具体配置如下：
+			配置主服务器192.168.4.53
+[root@host53 mysql]# vi /etc/my.cnf
+[mysqld]
+server_id=53
+log_bin=master53
+:wq
+[root@host53 mysql]# systemctl  restart mysqld
+[root@localhost mysql]# mysql -uroot -p123qqq...A
+mysql> grant  replication slave on *.* to repluser2@"%" identified by "123qqq...A";
+
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master53.000001 |      442 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
