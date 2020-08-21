@@ -186,3 +186,51 @@ SLAVE_IO_Running:Connecting
 51  HE  52  firewalld  都要关闭
 
 
+        2 mysql主从同步模式
+	2.1  mysql主从同步结构类型
+		一主一从     51  52
+		一主多从    
+		主从从结构 
+	2.2 配置mysql一主多从同步结构：  把数据库服务器53也配置为51的从数据库服务器
+		51的配置  数据库服务要运行着  binlog日志是启用的   有授权用户repluser
+
+		从服务器53的配置
+			安装MySQL服务软件并运行服务
+			1  指定server_id  并重启数据库服务
+			2 确保与主服务器数据一致
+[root@host51 ~]# mysqldump -uroot -p123qqq...A --master-data -B bbsdb db1 db3 mysql > /root/four.sql
+
+[root@host51 ~]# scp /root/four.sql  root@192.168.4.53:/opt/
+
+[root@host53 ~]# mysql -uroot -p123qqq...A  < /opt/four.sql 
+[root@host53 ~]# systemctl  restart mysqld
+
+			3 测试主服务器的授权用户
+[root@host53 ~]# mysql -h192.168.4.51 -urepluser -p123qqq...A
+
+			4  管理员root登录 指定主服务器信息
+[root@host53 ~]# grep  -i  "host51-bin" /opt/four.sql 
+CHANGE MASTER TO MASTER_LOG_FILE='host51-bin.000001', MASTER_LOG_POS=3119;
+[root@localhost ~]# 
+mysql> change master to   master_host="192.168.4.51" ,  master_user="repluser" , master_password="123qqq...A" , master_log_file="host51-bin.000001" , master_log_pos=3119;
+Query OK, 0 rows affected, 2 warnings (0.01 sec)
+
+			5 启动slave 进程
+mysql> start slave ;
+			6 查看状态
+mysql> show slave status \G
+             Master_Host: 192.168.4.51
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+		测试：50 连接51 存储数据
+		          在52 和 53 服务器上也能看到同样的数据
+[root@host50 ~]# mysql -h192.168.4.51 -uyaya -p123qqq...A
+mysql> insert into  db1.t3 
+mysql> insert into  db1.t3 values ("yyy","yyy@163.com");
+mysql> insert into  db1.t3 values ("yyy","yyy@163.com");
+mysql> insert into  db1.t3 values ("yyy","yyy@163.com");
+
+[root@host50 ~]# mysql -h192.168.4.52 -uyaya -p123qqq...A -e 'select * from db1.t3'
+[root@host50 ~]# mysql -h192.168.4.53 -uyaya -p123qqq...A -e 'select * from db1.t3'
+
