@@ -274,3 +274,32 @@ mysql> show master status;
 
 mysql> 
 
+		配置数据库服务器192.168.4.54
+			把其配置为192.168.4.53 的从服务器
+			同时做192.168.4.55的主服务器
+			
+]# vim  /etc/my.cnf
+[mysqld]
+server_id=54
+log_bin=master54
+log_slave_updates   启用级联复制功能
+:wq
+]# systemctl restart mysqld
+]# mysql -uroot -p密码
+mysql> change master to master_host="192.168.4.53" , master_user="repluser2" , master_password="123qqq...A" ,  master_log_file="master53.000001" , master_log_pos=442;
+
+mysql> start slave ;
+mysql> show slave status \G
+
+mysql> grant replication slave on  *.* to repluser3@"%" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+mysql> show  master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master54.000001 |      442 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
