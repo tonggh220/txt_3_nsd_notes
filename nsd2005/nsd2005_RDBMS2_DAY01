@@ -327,3 +327,13 @@ mysql> start slave;
 mysql> show slave status \G
             Slave_IO_Running: Yes
             Slave_SQL_Running: Yes
+
+测试主从从同步结构的配置
+			在主服务器53存储数据
+  mysql -uroot -p123qqq...A -e 'create database bbsdb'
+  mysql -uroot -p123qqq...A -e 'create table bbsdb.t1(id int)'
+  mysql -uroot -p123qqq...A -e 'insert into bbsdb.t1 values(119)'
+  mysql -uroot -p123qqq...A -e 'select * from bbsdb.t1'
+
+			在服务器54 和 55 上能看到同样的数据
+ ]# mysql -uroot -p123qqq...A -e 'select  * from bbsdb.t1'
