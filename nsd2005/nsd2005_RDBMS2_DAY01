@@ -234,3 +234,22 @@ mysql> insert into  db1.t3 values ("yyy","yyy@163.com");
 [root@host50 ~]# mysql -h192.168.4.52 -uyaya -p123qqq...A -e 'select * from db1.t3'
 [root@host50 ~]# mysql -h192.168.4.53 -uyaya -p123qqq...A -e 'select * from db1.t3'
 
+
+配置mysql 主从从同步结构 环境准备
+    		     把53 恢复为独立的数据库服务器
+   20  cd /var/lib/mysql
+   21  rm -rf master.info  relay-log.info  *-bin.*
+   22  systemctl  restart mysqld
+   23  mysql -uroot -p123qqq...A  -e 'show slave status \G'
+   24  mysql -uroot -p123qqq...A  -e 'show databases'  只保留默认的4个库
+
+   29  mysql -uroot -p123qqq...A  -e 'select user,host from mysql.user'  删除自己添加的授权用户
+
+   30* mysql -uroot -p123qqq...A  -e 'delete from mysql.user where user not in ("root","mysql.sys")'
+
+   32  mysql -uroot -p123qqq...A  -e 'flush privileges'
+			
+		54主机   netstat  -utnlp  | grep  3306
+		55主机   netstat  -utnlp  | grep  3306
+*****关闭所有服务器的 selinux  和  firewalld
+
