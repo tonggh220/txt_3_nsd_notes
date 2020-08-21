@@ -337,3 +337,61 @@ mysql> show slave status \G
 
 			在服务器54 和 55 上能看到同样的数据
  ]# mysql -uroot -p123qqq...A -e 'select  * from bbsdb.t1'
+
+
+
+ 2.4 配置mysql主主同步结构（也被称为互为主从）（课后练习）
+		把数据库服务器56 和 57 配置为主主结构
+		验证方式 2台服务器的IO线程的SQL线程都是Yes状态
+		
+	2.5 MySQL主从同步数据复制模式
+		2.5.1  数据复制模式
+			异步复制模式（默认）
+			半同步复制模式
+			休息一下 到 16：52上课  
+		2.5.2  配置半同步数据复制模式
+			查看是否允许加载模块
+mysql> show  variables  like  'have_dynamic_loading';
++----------------------+-------+
+| Variable_name        | Value |
++----------------------+-------+
+| have_dynamic_loading | YES   |   允许
++----------------------+-------+
+1 row in set (0.02 sec)
+
+mysql> 
+
+
+			主服务器要启用半同步复制模式
+			 	     加载master模块
+			                      启用master模块
+
+		命令行加载与启用
+mysql> install  plugin  rpl_semi_sync_master   SONAME   "semisync_master.so";  
+
+mysql> select  plugin_name, plugin_status  from  information_schema.plugins  where plugin_name like '%semi%';  查看模块是否安装成功
++----------------------+---------------+
+| plugin_name          | plugin_status |
++----------------------+---------------+
+| rpl_semi_sync_master | ACTIVE        |
++----------------------+---------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+mysql> set  global rpl_semi_sync_master_enabled=1; 
+
+mysql> show  variables  like  "rpl_semi_sync_%_enabled"; 模块是否启用成功
++------------------------------+-------+
+| Variable_name                | Value |
++------------------------------+-------+
+| rpl_semi_sync_master_enabled | ON    |
++------------------------------+-------+
+1 row in set (0.00 sec)
+
+
+		永久配置/etc/my.cnf
+		[mysqld]
+plugin-load=rpl_semi_sync_master=semisync_master.so
+rpl_semi_sync_master_enabled=1
+:wq
