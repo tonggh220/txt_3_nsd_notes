@@ -111,7 +111,22 @@ mysql> select name,uid from db3.user where name like 'x%';
 
 mysql> 
 
+
+
+
+
+
 1.3 排错
+3从服务器数据库目录下会自动创建相关的配置文件
+相关的配置文件（里存储的是什么信息）
+		 ]# cd /var/lib/mysql/
+			master.info   记录主服务器服务器信息
+			主机名-relay-bin.编号    中继日志文件  （存放io线程拷贝的sql命令）
+			主机名-relay-bin.index  中继日志所有文件 （保存当前已有中继日志文件）
+			relay-log.info  日志文件  （记录中继日志信息的文件）
+		
+
+		1.3 排错
 查看报错信息 show slave status \G
 Last_IO_Error:  io线程的报错信息
 Last_SQL_Error:  sql线程的报错信息
@@ -123,5 +138,51 @@ Last_SQL_Error:  sql线程的报错信息
 [root@host52 mysql]# rm  -rf master.info  relay-log.info  host52-relay-bin.00000* host52-relay-bin.index 
 [root@host52 mysql]# systemctl  restart mysqld
 [root@host52 mysql]# mysql -uroot -p123qqq...A 
-mysql> show slave status \G
-Empty set (0.00 sec)
+
+
+Fatal error: The slave I/O thread stops because master and slave have equal MySQL server UUIDs; these UUIDs must be different for replication to work.
+	                                                                 
+		
+
+Last_IO_Error: Fatal error: The slave I/O thread stops because master and slave have equal MySQL server UUIDs; these UUIDs must be different for replication to work.
+
+52 ]# vim /var/lib/mysql/auto.cnf   
+52 ]#  systemctl  restart mysqld
+
+
+ Last_IO_Error: Got fatal error 1236 from master when reading data from binary log: 'Client requested master to start replication from position > file size'
+
+51  show master status ;
+
+52   stop  slave;
+             change master to  master_log_file="日志名" , master_log_pos=偏移量；
+       start slave;
+       show  slave status \G
+
+ Last_SQL_Error: Could not execute Write_rows event on table db3.user; Duplicate entry '52' for key 'PRIMARY', Error_code: 1062; handler error HA_ERR_FOUND_DUPP_KEY; the event's master log localhost-bin.000001, end_log_pos 1206   老师我这么也有问题
+
+52    drop  database db3.user;
+51    mysqldump   -uroot -p密码  db3 user  > /root/user.sql
+        scp  /root/user.sql   root@192.168.4.52:/root/
+52   stop slave;
+       use db3;
+       source  /root/user.sql
+       start slave;
+       show slave status \G
+
+
+mysql> start slave;
+ERROR 1200 (HY000): The server is not configured as slave; fix in config file or with CHANGE MASTER TO
+ 
+检查  /etc/my.cnf  文件  指定 server_id=52  吗  ？  
+指定server_id  后 重启 mysqld服务  再执行 change master to      然后再执行start slave;
+
+SLAVE_IO_Running:Connecting
+   
+52    cat  /var/lib/mysql/master.info
+
+[root@host52 ~]# mysql -h192.168.4.51 -urepluser  -p123qqq...A
+
+51  HE  52  firewalld  都要关闭
+
+
