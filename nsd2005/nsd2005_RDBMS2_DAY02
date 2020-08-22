@@ -182,4 +182,40 @@ export  PATH=/usr/local/mysql/bin:$PATH      #在文件的末尾添加
 ]# source /etc/bashrc
 ]# which  mysql
 /usr/local/mysql/bin/mysql
-		练习+休息到 17:05
+	3 创建并编辑主配置文件（重点）
+		]# rm -rf /etc/my.cnf (如果有的话要删除)
+		
+                                 ]# vim  /etc/my.cnf
+		     [mysqld_multi]#多实例服务的运行配置
+	      mysqld=/usr/local/mysql/bin/mysqld_safe	 #服务启动调用哪个命令
+	      mysqladmin=/usr/local/mysql/bin/mysqladmin	 #修改管理员本机密码使用的命令
+	      user=root  #启动多实例服务的用户是系统的管理员root用户     
+
+		      [mysqld数字]  #定义实例
+			datadir=数据库目录
+			port=端口
+			log-error=错误日志文件
+			pid-file=pid号文件
+			socket=socket文件(数据库服务自己访问自己的时候建立连接使用的文件)
+
+	例子： 在运行2个mysqld服务
+]# vim /etc/my.cnf
+[mysqld_multi]  
+mysqld=/usr/local/mysql/bin/mysqld_safe
+mysqladmin=/usr/local/mysql/bin/mysqladmin
+user=root       
+
+[mysqld1]
+datadir=/dir1
+port=3307
+log-error=/dir1/mysqld1.err
+pid-file=/dir1/mysqld1.pid
+socket=/dir1/mysqld1.sock
+
+[mysqld2]
+datadir=/dir2
+port=3308
+log-error=/dir2/mysqld2.err
+pid-file=/dir2/mysqld2.pid
+socket=/dir2/mysqld2.sock
+:wq
