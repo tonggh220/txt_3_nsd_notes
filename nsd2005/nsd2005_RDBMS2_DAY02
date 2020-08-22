@@ -100,3 +100,55 @@ tcp6       0      0 :::4016                 :::*                    LISTEN      
 [root@host57 ~]# 
 
 [root@host57 ~]# kill -9  13604   # 通过杀进程的方式停止服务
+
+
+访问管理服务查看监控信息
+[root@host57 ~]# maxadmin -uadmin -pmariadb  -P4016 
+MaxScale> list servers
+Servers.
+-------------------+-----------------+-------+-------------+--------------------
+Server             | Address         | Port  | Connections | Status              
+-------------------+-----------------+-------+-------------+--------------------
+server1            | 192.168.4.51    |  3306 |           0 | Master, Running
+server2            | 192.168.4.52    |  3306 |           0 | Slave, Running
+-------------------+-----------------+-------+-------------+--------------------
+MaxScale> exit    
+
+
+			6 测试配置
+连接读写分离服务器的命令格式：
+host50]# mysql  -h192.168.4.57  -P4006  -u用户  -p密码
+				6.1 在主数据库服务器添加客户端连接用户
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'grant select,insert on  db3.* to jyaya@"%" identified by "123qqq...A"'
+
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'show grants for jyaya@"%"'
+
+				6.2 客户端连接服务器57 存储和查询数据
+mysql> insert into db3.user(name,uid) values("jyaya",888);
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into db3.user(name,uid) values("jyayaA",888);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into db3.user(name,uid) values("jyayaC",888);
+Query OK, 1 row affected (0.03 sec)
+
+mysql> select name,uid from  db3.user where name like 'jyaya%';
++--------+------+
+| name   | uid  |
++--------+------+
+| jyaya  |  888 |
+| jyayaA |  888 |
+| jyayaC |  888 |
++--------+------+
+3 rows in set (0.01 sec)
+
+mysql> 
+
+				6.3 测试读写分离功能
+				在从服务器本机向表里添加1条记录，主服务器不会同步写入的数据
+host52]# mysql -uroot -p123qqq...A -e 'insert into db3.user(name） values("x")'
+
+host51]#mysql -uroot -p123qqq...A -e 'select name from  db3.user where name="x"' 没有名字x的记录
+
+host50]# mysql  -h192.168.4.57 -P4006  -ujyaya -p123qqq...A -e  'select name from  db3.user where name="x"'  可以查看到名字x 的记录 
