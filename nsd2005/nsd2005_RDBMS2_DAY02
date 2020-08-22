@@ -155,3 +155,31 @@ host52]# mysql -uroot -p123qqq...A -e 'insert into db3.user(name） values("x")'
 host51]#mysql -uroot -p123qqq...A -e 'select name from  db3.user where name="x"' 没有名字x的记录
 
 host50]# mysql  -h192.168.4.57 -P4006  -ujyaya -p123qqq...A -e  'select name from  db3.user where name="x"'  可以查看到名字x 的记录 
+
+
+
+2 MYSQL多实例
+	环境准备创建新虚拟机 IP  192.168.4.58 （没安装过mysql服务软件）
+	软件mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz
+
+ 	2.1 MYSQL多实例介绍（什么是MySQL多实例）
+		在1台物理服务上，运行多个数据库服务
+
+	2.2 为什么要使用多实例？
+	2.3 配置MYSQL多实例，具体步骤如下
+		1 安装软件
+[root@host58 ~]# rpm -q  libaio || yum -y install libaio
+[root@host58 ~]# grep mysql /etc/passwd || useradd mysql
+]# tar  -zxvf  mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz
+]# mv  mysql-5.7.20-linux-glibc2.12-x86_64  /usr/local/mysql
+]# ls /usr/local/mysql  #安装文件列表
+bin
+		2 环境配置
+]# echo  $PATH
+]# vim /etc/bashrc 
+export  PATH=/usr/local/mysql/bin:$PATH      #在文件的末尾添加
+:wq
+]# source /etc/bashrc
+]# which  mysql
+/usr/local/mysql/bin/mysql
+		练习+休息到 17:05
