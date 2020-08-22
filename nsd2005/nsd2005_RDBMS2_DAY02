@@ -247,3 +247,39 @@ mysql> exit
 			停止实例服务的命令
 [root@host58 ~]# mysqld_multi  --user=root --password=123456 stop 1
 [root@host58 ~]# netstat  -utnlp  | grep 3307
+
+[root@host58 ~]# mysqld_multi  start  1    启动实例1 
+			
+
+				4.1 启动实例2
+[root@host58 ~]# ls /dir2
+auto.cnf        ibdata1      ib_logfile1  mysql        mysqld2.pid   mysqld2.sock.lock   sys
+ib_buffer_pool  ib_logfile0  ibtmp1       mysqld2.err  mysqld2.sock  performance_schema
+[root@host58 ~]# 
+[root@host58 ~]# netstat  -utnlp  | grep 3308
+tcp6       0      0 :::3308                 :::*                    LISTEN      28180/mysqld        
+[root@host58 ~]# 
+[root@host58 ~]# mysql -uroot -p'MWkQsNw*b3US' -S /dir2/mysqld2.sock
+mysql> alter user root@"localhost" identified by "123456";
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> create database gamedb;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> exit
+Bye
+[root@host58 ~]# ls /dir2
+[root@host58 ~]# netstat  -utnlp  | grep mysqld
+tcp6       0      0 :::3307                 :::*                    LISTEN      25854/mysqld        
+tcp6       0      0 :::3308                 :::*                    LISTEN      28180/mysqld        
+[root@host58 ~]#
+
+			5.2 在客户端连接多实例服务（下节课讲）
+
+
+排错解决办法：
+	]# yum -y install  psmisc
+	]# killall  -9 mysqld  (多执行几次)
+	]# rm -rf  /数据库目录名
+	]# 请认真检查您的/etc/my.cnf
+	]# mysqld_multi  start  编号
