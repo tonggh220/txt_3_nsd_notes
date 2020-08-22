@@ -70,3 +70,33 @@ service=MaxAdmin Service
 protocol=maxscaled
 socket=default
 port=4016  #端口号
+
+			3  配置数据库服务器（51和52）
+添加监视用户mysqla
+grant  replication slave , replication client on *.*  to mysqla@"%"  identified by "123qqq...A";
+
+添加监视用户mysqlb
+grant  select  on  mysql.* to  mysqlb@"%"  identified by "123qqq...A";
+
+
+			4 启动57 读写分离服务
+				4.1 测试授权用户
+[root@host57 ~]# which  mysql  || yum -y install mariadb
+[root@host57 ~]# mysql -h192.168.4.51 -umysqlb -p123qqq...A
+[root@host57 ~]# mysql -h192.168.4.52 -umysqlb -p123qqq...A
+[root@host57 ~]# mysql -h192.168.4.51 -umysqla -p123qqq...A
+[root@host57 ~]# mysql -h192.168.4.52 -umysqla -p123qqq...A
+				4.2 启动服务
+[root@host57 ~]# maxscale -f /etc/maxscale.cnf
+[root@host57 ~]# ls /var/log/maxscale/   日志文件
+maxscale.log
+[root@host57 ~]# 
+
+				5 查看服务状态
+[root@host57 ~]# netstat  -untlp  | grep  4006
+tcp6       0      0 :::4006                 :::*                    LISTEN      13604/maxscale      
+[root@host57 ~]# netstat  -untlp  | grep  4016
+tcp6       0      0 :::4016                 :::*                    LISTEN      13604/maxscale      
+[root@host57 ~]# 
+
+[root@host57 ~]# kill -9  13604   # 通过杀进程的方式停止服务
