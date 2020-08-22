@@ -219,3 +219,31 @@ log-error=/dir2/mysqld2.err
 pid-file=/dir2/mysqld2.pid
 socket=/dir2/mysqld2.sock
 :wq
+
+		4 启动多实例服务
+[root@host58 ~]# setenforce 0
+[root@host58 ~]# systemctl  stop firewalld
+			4.1 启动实例1
+]# yum  -y install  perl*
+]# mysqld_multi  start  1       创建初始文件 和 管理员本机登录密码
+
+[root@host58 ~]# ls /dir1/
+auto.cnf        ibdata1      ib_logfile1  mysql        mysqld1.pid   mysqld1.sock.lock   sys
+ib_buffer_pool  ib_logfile0  ibtmp1       mysqld1.err  mysqld1.sock  performance_schema
+[root@host58 ~]# 
+[root@host58 ~]# netstat  -utnlp  | grep  3307
+tcp6       0      0 :::3307                 :::*                    LISTEN      6394/mysqld         
+[root@host58 ~]#
+
+NW<NMu:n:09d
+		5 访问多实例服务
+			5.1 本机连接多实例服务（使用初始密码自己连接自己）
+[root@host58 ~]# mysql -uroot -p'NW<NMu:n:09d' -S  /dir1/mysqld1.sock
+mysql> alter user root@"localhost" identified by "123456";
+mysql> create database  bbsdb;
+mysql> show database;
+mysql> exit
+]# ls /dir1
+			停止实例服务的命令
+[root@host58 ~]# mysqld_multi  --user=root --password=123456 stop 1
+[root@host58 ~]# netstat  -utnlp  | grep 3307
