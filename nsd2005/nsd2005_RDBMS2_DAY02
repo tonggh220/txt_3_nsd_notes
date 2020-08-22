@@ -16,3 +16,57 @@
 	            1.6 配置数据读写分离存储结构
 		1.6.1  配置MySQL一主一从主从同步结构（51 主  52 从）
 		1.6.2  配置读写分离服务器 192.168.4.57
+		1.6.1  配置MySQL一主一从主从同步结构（51 主  52 从）
+		1.6.2  配置读写分离服务器 192.168.4.57
+			1 安装软件maxscale-2.1.2-1.rhel.7.x86_64.rpm
+]# yum -y  install  maxscale-2.1.2-1.rhel.7.x86_64.rpm
+
+			2 修改服务的主配置文件（重点）
+]# vim /etc/maxscale.cnf
+[maxscale]    #定义服务启动线程的数量
+threads=auto
+
+[server1]    #定义第1台数据服务器的ip地址
+type=server
+address=192.168.4.51
+port=3306
+protocol=MySQLBackend
+
+[server2]    #定义第2台数据服务器的ip地址
+type=server
+address=192.168.4.52
+port=3306
+protocol=MySQLBackend
+
+[MySQL Monitor]   #指定监视数据库服务器server1 和 server2
+type=monitor
+module=mysqlmon
+servers=server1,server2
+user=mysqla         #连接server1 和 server2 数据库服务器的用户
+passwd=123qqq...A   #连接密码
+monitor_interval=10000
+
+[Read-Write Service]     #定义读写分离服务
+type=service
+router=readwritesplit 
+servers=server1,server2  #在主机server1 和 server1 之间做读写分离
+user=mysqlb   #路由用户
+passwd=123qqq...A #密码
+max_slave_connections=100%
+
+[MaxAdmin Service]  #定义管理管理服务
+type=service
+router=cli
+
+[Read-Write Listener]   #定义读写分离服务使用的端口
+type=listener
+service=Read-Write Service
+protocol=MySQLClient
+port=4006   #端口号
+
+[MaxAdmin Listener]  #定义管理服务使用的端口
+type=listener
+service=MaxAdmin Service
+protocol=maxscaled
+socket=default
+port=4016  #端口号
