@@ -26,3 +26,64 @@ xml  扩展标记语言  标签要成对出现
 注释符号 <!--     -->
 			
 		.properties    和   .txt    #分片规则配置文件
+
+
+
+		2.3.2  定义要分片存储数据的表(重点)
+[root@host56 ~]# vim /usr/local/mycat/conf/schema.xml
+<mycat:schema 选项>
+	<schema 选项>   #指定分片存储数据的表名
+		<table  选项>   </table>#指定表名 和调用的分片规则及存储数据的数据库服务器 
+		<table  选项     /> 
+	</schema> 
+
+	<datanode 选项/> #指定数据库服务器的主机名
+
+	<datahost  选项>   #指定数据库服务器的Ip地址
+	</datahost>	
+</mycat:schema>
+
+例子：
+[root@host56 ~]# sed -i '56,77d' /usr/local/mycat/conf/schema.xml
+[root@host56 ~]# sed -i '39,42d' /usr/local/mycat/conf/schema.xml
+[root@host56 ~]# vim /usr/local/mycat/conf/schema.xml
+
+<table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+
+
+<table name="goods" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+
+
+<table name="customer" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile">
+
+<dataNode name="dn1" dataHost="mysql51" database="db1" />
+<dataNode name="dn2" dataHost="mysql52" database="db2" />
+<dataNode name="dn3" dataHost="mysql53" database="db3" />
+
+       <dataHost name="mysql51" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM1" url="192.168.4.51:3306" user="pljadmin"
+                                   password="123qqq...A">
+                </writeHost>
+        </dataHost>
+
+
+<dataHost name="mysql52" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM2" url="192.168.4.52:3306" user="pljadmin"
+                                   password="123qqq...A">
+                </writeHost>
+        </dataHost>
+
+<dataHost name="mysql53" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM3" url="192.168.4.53:3306" user="pljadmin"
+                                   password="123qqq...A">
+                </writeHost>
+        </dataHost>
+:wq
