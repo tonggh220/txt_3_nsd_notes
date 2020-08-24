@@ -172,3 +172,73 @@ tcp6       0      0 :::8066                 :::*                    LISTEN      
 [root@host56 ~]# /usr/local/mycat/bin/mycat stop
 [root@host56 ~]# /usr/local/mycat/bin/mycat start
 [root@host56 ~]# netstat  -utnlp  | grep 8066
+
+客户端连接56主机创建表
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> use TESTDB;
+mysql> create table employee(id int primary key  auto_increment ,
+    -> sharding_id  int , name char(10) , home char(15) );
+mysql>
+
+在3台数据库服务器本机查看表结构
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'desc db1.employee'
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'desc db2.employee'
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'desc db3.employee'
+
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> use TESTDB;
+mysql> insert into employee(sharding_id , name , home ) values (10030,"tom","usa");
+ERROR 1064 (HY000): can't find any valid datanode :EMPLOYEE -> SHARDING_ID -> 10030
+mysql>
+
+
+
+
+
+mysql> insert into employee(sharding_id , name , home ) values (10000,"tom","usa");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id , name , home ) values (10000,"tom","usa");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(sharding_id , name , home ) values (10010,"lucy","usa");
+Query OK, 1 row affected (0.04 sec)
+
+mysql> insert into employee(sharding_id , name , home ) values (10010,"jerry","usa");
+Query OK, 1 row affected (0.02 sec)
+
+mysql> insert into employee(sharding_id , name , home ) values (10010,"jerryA","usa");
+Query OK, 1 row affected (0.01 sec)
+
+
+mysql> insert into employee(sharding_id , name , home ) values (10020,"johnA","usa");
+Query OK, 1 row affected (0.06 sec)
+
+mysql> insert into employee(sharding_id , name , home ) values (10020,"johnAa","usa");
+Query OK, 1 row affected (0.04 sec)
+
+mysql> insert into employee(sharding_id , name , home ) values (10020,"johnAaB","usa");
+
+mysql> select  * from employee;  查看数据 
++----+-------------+---------+------+
+| id | sharding_id | name    | home |
++----+-------------+---------+------+
+|  1 |       10000 | tom     | usa  |
+|  2 |       10000 | tom     | usa  |
+|  1 |       10020 | johnA   | usa  |
+|  2 |       10020 | johnAa  | usa  |
+|  3 |       10020 | johnAaB | usa  |
+|  1 |       10010 | lucy    | usa  |
+|  2 |       10010 | jerry   | usa  |
+|  3 |       10010 | jerryA  | usa  |
++----+-------------+---------+------+
+8 rows in set (0.03 sec)
+
+在数据库服务器本机查看数据
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'select  * from  db1.employee'
+
+[root@host52 ~]#  mysql -uroot -p123qqq...A -e 'select  * from db2.employee'
+
+[root@host52 ~]#  mysql -uroot -p123qqq...A -e 'select  * from db2.employee'
+
