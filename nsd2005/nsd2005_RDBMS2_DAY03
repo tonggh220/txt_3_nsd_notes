@@ -242,3 +242,12 @@ mysql> select  * from employee;  查看数据
 
 [root@host52 ~]#  mysql -uroot -p123qqq...A -e 'select  * from db2.employee'
 
+
+	3.2 分片规则  求模规则 mod-long
+	
+	3.3 添加新表
+	
++++++RDBMS2_DAY04  MySQL集群 
+51 52 53  57  ]# yum  -y  install perl-* 
+mha软件
+
