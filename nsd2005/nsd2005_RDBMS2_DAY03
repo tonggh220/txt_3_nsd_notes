@@ -87,3 +87,45 @@ xml  扩展标记语言  标签要成对出现
                 </writeHost>
         </dataHost>
 :wq
+
+
+2.4 配置数据库服务器（51/52/53）
+		2.4.1 创建存储数据的库
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create database db1'
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'create database db2'
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'create database db3'
+
+		2.4.2 添加给mycat连接使用的用户
+[root@host53 ~]#  mysql -uroot -p123qqq...A -e 'grant all on *.* to pljadmin@"%" identified by "123qqq...A"'
+[root@host52 ~]#  mysql -uroot -p123qqq...A -e 'grant all on *.* to pljadmin@"%" identified by "123qqq...A"'
+[root@host51 ~]#  mysql -uroot -p123qqq...A -e 'grant all on *.* to pljadmin@"%" identified by "123qqq...A"'
+
+	2.5 启动mycat服务 并查看服务状态
+		注意 关闭(51 52 53  56  的  selinux   和 firewalld)
+		2.5.1 测试数据库服务的授权用户
+[root@host56 ~]# which  mysql || yum -y install mariadb
+[root@host56 ~]# mysql -h192.168.4.53 -upljadmin -p123qqq...A
+[root@host56 ~]# mysql -h192.168.4.52 -upljadmin -p123qqq...A
+[root@host56 ~]# mysql -h192.168.4.51 -upljadmin -p123qqq...A
+		2.5.2 启动mycat服务
+[root@host56 ~]# ls /usr/local/mycat/logs/
+[root@host56 ~]# 
+[root@host56 ~]# /usr/local/mycat/bin/mycat start
+Starting Mycat-server...
+[root@host56 ~]# 
+[root@host56 ~]# ls /usr/local/mycat/logs/
+mycat.log  mycat.pid  wrapper.log
+[root@host56 ~]# 
+[root@host56 ~]# cat /usr/local/mycat/logs/mycat.pid 
+10203
+[root@host56 ~]#			
+[root@host56 ~]# netstat  -utnlp  | grep 8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      10211/java          
+[root@host56 ~]# 	
+		
+	2.6 客户端连接mycat服务，查看数据
+命令格式  ]#  mysql -h192.168.4.56  -P3306 -u用户  -p密码
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+> show  databases;
+> use TESTDB;
+> show tables；
