@@ -275,6 +275,63 @@ tcp6       0      0 :::3308                 :::*                    LISTEN      
 [root@host58 ~]#
 
 			5.2 在客户端连接多实例服务（下节课讲）
+			需求：允许网络中的所有主机使用admin用户密码123456 连接58主机实例1  且58主机记录用户连接后执行的命令保存的本机的binlog日志
+				允许网络中的所有主机使用admin2用户密码123456 连接58主机实例2  且58主机记录用户连接后执行的命令保存的本机的binlog日志
+			   具体配置如下：       
+			          启用binlog日志
+[root@host58 ~]# vim /etc/my.cnf
+[mysqld1]
+.....
+server_id=1
+log_bin=mysqld1
+
+[mysqld2]
+.....
+server_id=2
+log_bin=mysqld2
+:wq
+
+   71  mysqld_multi  --user=root --password=123456 stop 1
+   72  mysqld_multi  --user=root --password=123456 stop 2
+   73  netstat  -utnlp  | grep mysqld
+
+   74  mysqld_multi  start 2
+   75  mysqld_multi  start 1
+   76  netstat  -utnlp  | grep mysqld
+
+管理员root 登录查看日志信息并添加用户
+
+[root@host58 ~]# mysql -uroot -p123456  -S /dir1/mysqld1.sock
+mysql> show master status;
++----------------+----------+--------------+------------------+-------------------+
+| File           | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++----------------+----------+--------------+------------------+-------------------+
+| mysqld1.000001 |      154 |              |                  |                   |
++----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> grant all on  webdb.* to admin@"%" identified by "123456"; 添加授权用户
+mysql> exit
+
+[root@host58 ~]# mysql -uroot -p123456  -S /dir2/mysqld2.sock
+mysql> grant all  on gamedb.*  to  admin2@"%" identified by  "123456";
+mysql> 
+mysql> show master status;
++----------------+----------+--------------+------------------+-------------------+
+| File           | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++----------------+----------+--------------+------------------+-------------------+
+| mysqld2.000001 |      450 |              |                  |                   |
++----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> exit
+			客户端连接58主机的实例服务
+命令格式： mysql -h192.168.4.58  -u用户名  -p密码  -P端口
+[root@host50 ~]# mysql -h192.168.4.58 -uadmin -p123456 -P3307	#连接实例1
+[root@host50 ~]# mysql -h192.168.4.58 -uadmin2 -p123456 -P3308 #连接实例2
+
+
+
 
 
 排错解决办法：
