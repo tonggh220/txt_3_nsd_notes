@@ -124,7 +124,7 @@ tcp6       0      0 :::8066                 :::*                    LISTEN      
 [root@host56 ~]# 	
 		
 	2.6 客户端连接mycat服务，查看数据
-命令格式  ]#  mysql -h192.168.4.56  -P3306 -u用户  -p密码
+命令格式  ]#  mysql -h192.168.4.56  -P8066 -u用户  -p密码
 [root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
 > show  databases;
 > use TESTDB;
