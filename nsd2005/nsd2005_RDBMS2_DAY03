@@ -129,3 +129,46 @@ tcp6       0      0 :::8066                 :::*                    LISTEN      
 > show  databases;
 > use TESTDB;
 > show tables；
+
+
+3 测试配置
+	存储数据的过程：
+		根据表使用的分片规则建表
+			查看表使用的分片规则
+			查看要求表中必须要有的字段名(分片字段)
+			根据分片规则建表
+		                 存储数据
+			查看数据是否分布式存储
+
+	3.1 分片规则  枚举规则sharding-by-intfile
+		    具体的方法：分片字段值 必须在 规则文件 定义的 值里 选择
+
+
+	     cat schema.xml   得知  employee 表使用 sharding-by-intfile
+ <table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+
+	     cat  rule.xml        得知  分片字段名
+[root@host56 ~]# vim /usr/local/mycat/conf/rule.xml
+       <tableRule name="sharding-by-intfile"> 规则命令
+                <rule>
+                        <columns>sharding_id</columns>字段名
+                        <algorithm>hash-int</algorithm> 算法
+                </rule>
+        </tableRule>
+
+       <function name="hash-int"
+                class="io.mycat.route.function.PartitionByFileMap"> 算法名
+                <property name="mapFile">partition-hash-int.txt</property> 对应的配置文件
+        </function>
+ :wq
+		编辑分片规则配置文件，定义分片字段的值
+[root@host56 ~]# vim /usr/local/mycat/conf/partition-hash-int.txt 
+10000=0  
+10010=1  
+10020=2
+:wq
+		重启mycat服务
+[root@host56 ~]# /usr/local/mycat/bin/mycat stop
+[root@host56 ~]# /usr/local/mycat/bin/mycat start
+[root@host56 ~]# netstat  -utnlp  | grep 8066
