@@ -1,0 +1,28 @@
+1 数据分片概述（相关概念）
+	分库分表
+	水平分割
+	垂直分割
+	mycat软件介绍
+	10种分片规则
+	拓扑结构
+	mycat服务的工作工程？
+	
+2 部署MyCAT服务192.168.4.56，具体操作如下
+	2.1 安装mycat软件
+]# yum  -y   install  java-1.8.0-openjdk.x86_64
+]# tar -zxvf Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz 
+]# mv mycat  /usr/local/
+
+	2.2 文件列表 （听 和 记）
+[root@host56 ~]# ls /usr/local/mycat/
+bin   catlet  conf  lib  logs  version.txt
+
+		conf目录存储的是配置文件
+			.xml	    #mycat服务配置文件
+			server.xml     		//设置连接账号及逻辑库
+			schema.xml   	//配置数据分片存储的表
+			rule.xml         		//分片规则
+xml  扩展标记语言  标签要成对出现
+注释符号 <!--     -->
+			
+		.properties    和   .txt    #分片规则配置文件
