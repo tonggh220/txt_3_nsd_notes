@@ -302,3 +302,12 @@ mysql> select  * from bbsdb.t1;
 1 row in set (0.00 sec)
 
 mysql> 
+
+排错思路：
+      查看检查的输出信息
+	ssh免密登录 没成功
+	主从结构不正常 （52 和 53 的io 线程 和 sql线程要是是yes状态）
+	MySQL数据库服务器的优化配置是否配置正确
+	请认真检查 app1.cnf文件的编写
+	所有主机防火墙 要关闭。
+	软件包没有安装完全
