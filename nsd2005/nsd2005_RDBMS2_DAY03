@@ -243,7 +243,33 @@ mysql> select  * from employee;  查看数据
 [root@host52 ~]#  mysql -uroot -p123qqq...A -e 'select  * from db2.employee'
 
 
-	3.2 分片规则  求模规则 mod-long
+		3.2 分片规则  求模规则 mod-long
+	存储数据的方式：使用分片字段的值 与指定数字做取余计算 根据计算结果存储记录。
+	查看表使用的分片规则
+[root@host56 ~]# vim   /usr/local/mycat/conf/schema.xml 
+
+	 <table name="hotnews" dataNode="dn1,dn2,dn3"  rule="mod-long" />
+
+
+			查看要求表中必须要有的字段名(分片字段)
+[root@host56 ~]# vim /usr/local/mycat/conf/rule.xml
+ <tableRule name="mod-long"> 规则名称
+                <rule>
+                        <columns>id</columns> 分片字段 
+                        <algorithm>mod-long</algorithm> 算法
+                </rule>
+  </tableRule>
+
+  <function name="mod-long" class="io.mycat.route.function.PartitionByMod"> 算法
+                <!-- how many data nodes -->
+                <property name="count">3</property>定义做取余计算的数字
+        </function>
+:wq
+	
+[root@host56 ~]# /usr/local/mycat/bin/mycat  stop
+[root@host56 ~]# /usr/local/mycat/bin/mycat  start
+
+
 	
 	3.3 添加新表
 	
