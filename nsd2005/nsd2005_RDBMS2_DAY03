@@ -330,8 +330,8 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@host56 ~]# vim /usr/local/mycat/conf/schema.xml
 <mycat:schema >
 	 <schema name="GAMEDB" checkSQLschema="false" sqlMaxLimit="100">
-                <table name="user"  datanode="dn1,dn2,dn3"  rule="mod-long"  />
-                <table name="reg"   datanode="dn1,dn2,dn3" type="global" />
+                <table name="user"  dataNode="dn1,dn2,dn3"  rule="mod-long"  />
+                <table name="reg"   dataNode="dn1,dn2,dn3" type="global" />
         </schema>
 ......
 </mycat:schema>
