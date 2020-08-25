@@ -177,3 +177,63 @@ my $ssh_stop_vip = "/sbin/ifconfig ens33:$key down";
 [root@host52 ~]# mysql -uroot -p123qqq...A -e 'show grants for root@"%"'
 
 [root@host53 ~]# mysql -uroot -p123qqq...A -e 'show grants for root@"%"'
+
+
+    优化数据库服务器的配置，如下
+		1 修改3台数据库服务器的/etc/my.cnf 文件 ，安装master模块和slave模块 并启用。 和  禁止删除本机的中继日志文件
+
+		2 在 52 和 53 主机启用binlog日志
+
+		3 在 52 和 53 主机添加从服务器同步数据时的连接用repluser
+
+[root@host51 mysql]# vim /etc/my.cnf
+[mysqld]
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1           
+relay_log_purge=0  
+:wq
+
+[root@host51 mysql]# systemctl  restart mysqld
+
+
+[root@host52 mysql]# vim /etc/my.cnf
+[mysqld]
+server_id=52
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1           
+relay_log_purge=0  
+log_bin=master52
+:wq
+
+[root@host53 mysql]# systemctl  restart mysqld
+[root@host53 mysql]# mysql -uroot -p123qqq...A -e 'grant replication slave on *.* to repluser@"%" identified by "123qqq...A"'
+
+[root@host52 mysql]# mysql -uroot -p123qqq...A -e 'show slave status \G' | grep -i yes
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+
+
+
+[root@host53 mysql]# vim /etc/my.cnf
+[mysqld]
+server_id=53
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1           
+relay_log_purge=0  
+log_bin=master53
+:wq
+
+[root@host53 mysql]# systemctl  restart mysqld
+[root@host53 mysql]# mysql -uroot -p123qqq...A -e 'grant replication slave on *.* to repluser@"%" identified by "123qqq...A"'
+
+[root@host53 mysql]# mysql -uroot -p123qqq...A -e 'show slave status \G' | grep -i yes
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@host53 mysql]# 
+
