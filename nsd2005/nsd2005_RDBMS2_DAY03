@@ -308,10 +308,57 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 |   11 | x2    | y       | z      |
 +------+-------+---------+--------+
 [root@host53 ~]# 
+
+3.3 添加新库、新表
+		3.3.1 添加新库
+[root@host56 ~]# /usr/local/mycat/conf/server.xml 
+<user name="root">
+                <property name="password">123456</property>
+                <property name="schemas">TESTDB,GAMEDB</property>
+        </user>
+
+        <user name="user">
+                <property name="password">user</property>
+                <property name="schemas">TESTDB,GAMEDB</property>
+                <property name="readOnly">true</property>
+        </user>
+:wq	
+
+
+
+			3.3.2 添加新表（新表不能与已经存储的表同名）
+[root@host56 ~]# vim /usr/local/mycat/conf/schema.xml
+<mycat:schema >
+	 <schema name="GAMEDB" checkSQLschema="false" sqlMaxLimit="100">
+                <table name="user"  datanode="dn1,dn2,dn3"  rule="mod-long"  />
+                <table name="reg"   datanode="dn1,dn2,dn3" type="global" />
+        </schema>
+......
+</mycat:schema>
+:wq
+
+		3.3.3 重启mycat服务
+[root@host56 ~]# netstat  -utnlp  | grep  8066
+
+		3.3.4 客户端连接mycat服务 ， 查看新库  新表
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| GAMEDB   |
+| TESTDB   |
++----------+
+mysql> use GAMEDB;
+mysql> show tables;
++------------------+
+| Tables in GAMEDB |
++------------------+
+| reg              |
+| user             |
++------------------+
+2 rows in set (0.01 sec)
+
+mysql> 
 	
-	3.3 添加新表
-	
-+++++RDBMS2_DAY04  MySQL集群 
-51 52 53  57  ]# yum  -y  install perl-* 
-mha软件
 
