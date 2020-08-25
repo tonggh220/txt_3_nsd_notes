@@ -235,5 +235,13 @@ log_bin=master53
 mysql: [Warning] Using a password on the command line interface can be insecure.
              Slave_IO_Running: Yes
             Slave_SQL_Running: Yes
-[root@host53 mysql]# 
+[root@host53 mysql]#
+
+
+   测试配置
+[root@host57 ~]# masterha_check_ssh --conf=/etc/mha/app1.cnf
+Tue Aug 25 17:19:11 2020 - [info] All SSH connection tests passed successfully.
+		
+[root@host57 ~]# masterha_check_repl --conf=/etc/mha/app1.cnf
+MySQL Replication Health is OK. 
 
