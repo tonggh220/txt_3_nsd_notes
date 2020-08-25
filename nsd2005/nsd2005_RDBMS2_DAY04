@@ -102,3 +102,19 @@ mysql> start slave;
 mysql> show slaver status \G
             Slave_IO_Running: Yes
             Slave_SQL_Running: Yes
+
+
+      配置管理主机192.168.4.57（重点） 具体如下：
+	1 安装MHA软件
+[root@host57 ~]# cd mha
+[root@host57 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm 
+
+]#tar -zxvf mha4mysql-manager-0.56.tar.gz 
+]#cd mha4mysql-manager-0.56
+]#perl Makefile.PL 
+]# make 
+]# make install
+	 2  创建并编辑管理服务的主配置文件
+[root@host57 mha4mysql-manager-0.56]# mkdir /etc/mha
+[root@host57 mha4mysql-manager-0.56]# cp samples/conf/app1.cnf /etc/mha/
+[root@host57 mha4mysql-manager-0.56]# vim /etc/mha/app1.cnf 
