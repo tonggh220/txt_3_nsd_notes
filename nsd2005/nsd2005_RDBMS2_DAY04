@@ -9,10 +9,96 @@
              集群拓扑结构		 
              MHA的工作过程
              集群环境准备
+             集群环境准备
 	  1、配置三台数据库服务器  51 、 52 、53 
 	       彼此之间可以使用对方的系统root用户ssh免密登录。
-	  2、配置 57 主机 可以免密ssh连接3台数据库服务器 51 、 52 、53 
+  202  ssh-keygen 
+  203  ssh-copy-id  root@192.168.4.52
+  204  ssh-copy-id  root@192.168.4.53
+  205  history 
+  206  ssh  root@192.168.4.52
+  207  ssh  root@192.168.4.53
+
+   86  ssh-keygen 
+   87  ssh-copy-id  root@192.168.4.51
+   88  ssh-copy-id  root@192.168.4.53
+   89  ssh root@192.168.4.51
+   90  ssh root@192.168.4.53
+
+   65  ssh-keygen 
+   66  ssh-copy-id  root@192.168.4.51
+   67  ssh-copy-id  root@192.168.4.52
+   68  ssh root@192.168.4.51
+   69  ssh root@192.168.4.52
+	  2、配置 57 主机 可以免密ssh连接3台数据库服务器 51 、 52 、53
+   47  ssh-keygen 
+   48  ssh-copy-id  root@192.168.4.51
+   49  ssh-copy-id  root@192.168.4.52
+   50  ssh-copy-id  root@192.168.4.53
+   51  ssh root@192.168.4.51
+   52  ssh root@192.168.4.52
+   53  ssh root@192.168.4.53
+
 
 	  3、分别在 51 、 52 、53 、 57 主机 安装mha目录下的所有 perl 软件
-	   
-	  4、配置 MySQL一主多从结构 
+	   	cd mha
+		yum -y install perl-*.rpm
+
+	  4、配置 MySQL一主多从结构 ,具体步骤如下：
+		 提示 确保3台服务器的数据是一致的 。
+		 配置主数据库服务器 192.168.4.51
+			启用binlog日志
+			用户授权
+			查看日志信息
+[root@host51 mha]# vim /etc/my.cnf
+[mysqld]
+server_id=51
+log_bin=master51
+:wq
+[root@host51 mha]# systemctl restart mysqld
+
+[root@host51 mha]# mysql -uroot -p密码
+mysql> grant replication slave on  *.*  to  repluser@"%" identified by "123qqq...A";
+
+
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master51.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.01 sec)
+
+mysql> 
+
+		 配置从数据库服务器 192.168.4.52 
+[root@host52 mha]# vim /etc/my.cnf
+[mysqld]
+server_id=52
+:wq
+[root@host52 mha]# systemctl restart mysqld
+
+[root@host52 mha]# mysql -uroot -p密码
+mysql> change master to  master_host="192.168.4.51" , master_user="repluser" , master_password="123qqq...A" , master_log_file="master51.000001" , master_log_pos=441;
+Query OK, 0 rows affected, 2 warnings (0.04 sec)
+
+mysql> start slave;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> show slave status \G
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+		 配置从数据库服务器 192.168.4.53 
+[root@host53 mha]# vim /etc/my.cnf
+[mysqld]
+server_id=53
+:wq
+[root@host53 mha]# systemctl restart mysqld
+
+[root@host53 mha]# mysql -uroot -p密码
+mysql> change master to  master_host="192.168.4.51" , master_user="repluser" , master_password="123qqq...A" , master_log_file="master51.000001" , master_log_pos=441;
+mysql> start slave;
+mysql> show slaver status \G
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
