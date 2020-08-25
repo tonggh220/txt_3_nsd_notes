@@ -245,3 +245,60 @@ Tue Aug 25 17:19:11 2020 - [info] All SSH connection tests passed successfully.
 [root@host57 ~]# masterha_check_repl --conf=/etc/mha/app1.cnf
 MySQL Replication Health is OK. 
 
+
+
+            启动管理服务（启动信息会占终端显示）
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf  --remove_dead_master_conf --ignore_last_failover  
+Tue Aug 25 17:36:46 2020 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Tue Aug 25 17:36:46 2020 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Tue Aug 25 17:36:46 2020 - [info] Reading server configuration from /etc/mha/app1.cnf..
+   
+	查看管理服务的运行状态（开一个新终端查看）
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+app1 (pid:10355) is running(0:PING_OK), master:192.168.4.51
+[root@host57 ~]# 
+	
+	在当前主服务器51 查看vip地址
+[root@host51 ~]# ifconfig  ens33:1
+ens33:1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.4.100  netmask 255.255.255.0  broadcast 192.168.4.255
+        ether 00:0c:29:1a:05:3d  txqueuelen 1000  (Ethernet)
+        device interrupt 19  base 0x2000  
+
+	
+	客户端50主机连接vip 地址访问数据库服务，存取数据
+	命令格式 mysql -h192.168.4.100 -u用户  -p密码
+		1 在主服务器51 添加客户端连接服务使用的用户名和密码
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create database bbsdb'mysql: 
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create table bbsdb.t1(id int)'
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'grant select,insert on bbsdb.* to plj@"%" identified by "123qqq...A"'
+		
+		2 从数据库服务器52 和 53 会自动同步添加的用户
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'show grants for plj@"%"' 
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'show grants for plj@"%"' 
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'use bbsdb;show tables' 
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'use bbsdb;show tables' 
+		
+		3 客户端连接vip 地址访问数据库服务，存取数据
+[root@host50 ~]# ping -c 2  192.168.4.100
+[root@host50 ~]# mysql -h192.168.4.100 -uplj -p123qqq...A
+ysql> select @@hostname;
++------------+
+| @@hostname |
++------------+
+| host51     |
++------------+
+1 row in set (0.01 sec)
+
+mysql> insert into  bbsdb.t1 values(1);
+Query OK, 1 row affected (0.09 sec)
+
+mysql> select  * from bbsdb.t1;
++------+
+| id   |
++------+
+|    1 |
++------+
+1 row in set (0.00 sec)
+
+mysql> 
