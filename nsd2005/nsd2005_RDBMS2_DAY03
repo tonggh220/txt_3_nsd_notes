@@ -269,7 +269,45 @@ mysql> select  * from employee;  查看数据
 [root@host56 ~]# /usr/local/mycat/bin/mycat  stop
 [root@host56 ~]# /usr/local/mycat/bin/mycat  start
 
+                    			根据分片规则建表
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> use TESTDB;
+mysql> create table hotnews(id  int  ,  title  char(20) , comment  varchar(200) , worker char(10));
 
+		                 存储数据
+mysql> insert into hotnews(id,title,comment,worker)  values (7,"x","y","z");
+mysql> insert into hotnews(id,title,comment,worker)  values (11,"x","y","z");
+mysql> insert into hotnews(id,title,comment,worker)  values (11,"x1","y","z");
+mysql> insert into hotnews(id,title,comment,worker)  values (9,"x2","y","z");
+mysql> select  * from hotnews;
+		           	
+
+			查看数据是否分布式存储
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'select * from db1.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+---------+--------+
+| id   | title | comment | worker |
++------+-------+---------+--------+
+|    9 | x2    | y       | z      |
++------+-------+---------+--------+
+[root@host51 ~]# 
+[root@host52 ~]#  mysql -uroot -p123qqq...A -e 'select * from  db2.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+---------+--------+
+| id   | title | comment | worker |
++------+-------+---------+--------+
+|    7 | x     | y       | z      |
++------+-------+---------+--------+
+[root@host52 ~]# 
+[root@host53 ~]#  mysql -uroot -p123qqq...A -e 'select  * from db3.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+---------+--------+
+| id   | title | comment | worker |
++------+-------+---------+--------+
+|   11 | x     | y       | z      |
+|   11 | x2    | y       | z      |
++------+-------+---------+--------+
+[root@host53 ~]# 
 	
 	3.3 添加新表
 	
