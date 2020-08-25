@@ -158,3 +158,22 @@ my $ssh_stop_vip = "/sbin/ifconfig ens33:$key down";
 	4	把vip地址  配置在当前的主数据库服务器192.168.4.51上
 [root@host51 mha]# ifconfig  ens33:1 192.168.4.100
 [root@host51 mha]# ifconfig  ens33:1
+
+
+配置3台数据库服务器，具体配置如下
+	   1 安装软件
+[root@host51 ~]# cd mha/
+[root@host51 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+
+[root@host52 ~]# cd mha/
+[root@host52 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm 
+
+[root@host53 ~]# cd mha/
+[root@host53 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm 
+	
+	2 添加授权用户 (监控用户root)
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.* to root@"%" identified by "123qqq...A"'
+
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'show grants for root@"%"'
+
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'show grants for root@"%"'
