@@ -118,3 +118,43 @@ mysql> show slaver status \G
 [root@host57 mha4mysql-manager-0.56]# mkdir /etc/mha
 [root@host57 mha4mysql-manager-0.56]# cp samples/conf/app1.cnf /etc/mha/
 [root@host57 mha4mysql-manager-0.56]# vim /etc/mha/app1.cnf 
+[root@host57 mha4mysql-manager-0.56]# vim /etc/mha/app1.cnf 	     	
+     [server default]     					//管理服务默认配置
+                manager_workdir=/etc/mha   			 //工作目录
+                manager_log=/etc/mha/manager.log   		//日志文件
+                master_ip_failover_script=/etc/mha/master_ip_failover	//故障切换脚本
+                 ssh_user=root 				 //访问ssh服务用户
+                 ssh_port=22    				//ssh服务端口
+                 repl_user=repluser   	          			//数据同步授权用户
+                 repl_password=123qqq…A    			//密码
+                 user=root 		          			//监控用户
+                 password=123qqq…A 	          			//密码
+
+[server1]                                     		//指定第1台数据库服务器
+hostname=192.168.4.51		//服务器ip地址
+port=3306				//服务端口
+candidate_master=1   			//竞选主服务器
+
+[server2]                                     		//指定第2台数据库服务器
+hostname=192.168.4.52
+port=3306
+candidate_master=1  
+			
+[server3]                                      		//指定第3台数据库服务器
+hostname=192.168.4.53
+port=3306
+candidate_master=1  	
+:wq
+    3 创建故障切换脚本，并指定vip地址
+		[root@host57 ~]# cp mha/master_ip_failover  /etc/mha/
+[root@host57 ~]# vim  +35 /etc/mha/master_ip_failover  		
+my $vip = '192.168.4.100/24';  # Virtual IP
+my $key = "1";
+my $ssh_start_vip = "/sbin/ifconfig ens33:$key $vip";
+my $ssh_stop_vip = "/sbin/ifconfig ens33:$key down";
+:wq
+[root@host57 ~]# chmod +x  /etc/mha/master_ip_failover
+		
+	4	把vip地址  配置在当前的主数据库服务器192.168.4.51上
+[root@host51 mha]# ifconfig  ens33:1 192.168.4.100
+[root@host51 mha]# ifconfig  ens33:1
