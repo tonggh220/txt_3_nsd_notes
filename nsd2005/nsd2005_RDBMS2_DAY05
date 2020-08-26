@@ -158,3 +158,17 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 
 [root@host50 ~]# 
 [root@host50 ~]# mysql -h192.168.4.71 -uyaya -p123456 -e 'select  * from bbsdb.b'
+
+
+			4.8 测试集群的高可用
+停止集群中任意1台主机的数据库服务，都不会影响到另外2台主机
+[root@pxcnode71 ~]#  systemctl  stop mysql@bootstrap.service
+[root@pxcnode72 ~]#  systemctl  stop mysql
+[root@host50 ~]# mysql -h192.168.4.73 -uyaya -p123456 -e 'select  * from bbsdb.b'
+[root@host50 ~]# mysql -h192.168.4.73 -uyaya -p123456 -e 'insert into  bbsdb.b(name)values("aaaa")'
+
+			4.9 测试服务器自动恢复 
+[root@pxcnode71 ~]#  systemctl  start mysql
+[root@pxcnode72 ~]#  systemctl  start mysql
+[root@host50 ~]# mysql -h192.168.4.71 -uyaya -p123456 -e 'select  * from bbsdb.b'
+[root@host50 ~]# mysql -h192.168.4.72 -uyaya -p123456 -e 'select  * from bbsdb.b'
