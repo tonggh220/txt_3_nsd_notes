@@ -119,3 +119,9 @@ mysql> select user  from mysql.user  where  user="sstuser";
 启动mysql服务
 ]#rm  -rf  /var/lib/mysql/*
 ]#systemctl  start mysql
+
+71 初始化失败 解决 办法
+71]#
+rm  -rf /var/lib/mysql/*
+rm -rf /etc/percona-xtradb-cluster.conf.d/mysqld_safe.cnf
+systemctl  start mysql@bootstrap.service 
