@@ -78,11 +78,14 @@ mysql> show databases;
 +--------------------+
 4 rows in set (0.00 sec)
 
-mysql> grant reload, lock tables,replication client,process on *.* to sstuser@"localhost"  identified by  "123qqq…A"; 
+mysql> grant reload,lock tables,replication client,process on *.* to sstuser@"localhost"  identified by  "123qqq...A"; 
 mysql> exit
 Bye
 [root@pxcnode71 ~]# mysql -uroot -p123456
 mysql> show  databases;
+mysql> exit
+[root@pxcnode71 ~]# mysql  -usstuser  -p123qqq...A   #测试授权用户sstuser
+
 
 			4.4 启动另外2台主机的数据库服务
 [root@pxcnode72 ~]#systemctl  start mysql
@@ -125,6 +128,11 @@ mysql> select user  from mysql.user  where  user="sstuser";
 rm  -rf /var/lib/mysql/*
 rm -rf /etc/percona-xtradb-cluster.conf.d/mysqld_safe.cnf
 systemctl  start mysql@bootstrap.service 
+
+或者
+
+先把mysql的进程杀了，然后把/var/lib/mysql下面又清了一遍，删了一下mysqld_safe.cnf  再执行 初始化 
+
 
 
  
