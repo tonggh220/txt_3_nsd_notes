@@ -125,3 +125,36 @@ mysql> select user  from mysql.user  where  user="sstuser";
 rm  -rf /var/lib/mysql/*
 rm -rf /etc/percona-xtradb-cluster.conf.d/mysqld_safe.cnf
 systemctl  start mysql@bootstrap.service 
+
+
+ 
+			4.7 客户端连接集群中的任意主机存取数据
+				4.7.1 在任意1台数据库服务器添加用户给客户端连接使用，另外2台会自动同步添加的用户到本机
+[root@pxcnode73 ~]# mysql -uroot -p123456 -e 'grant all on  bbsdb.* to yaya@"%" identified by "123456"'
+[root@pxcnode71 ~]# mysql -uroot -p123456 -e 'show grants for yaya@"%"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------------------------------------------------+
+| Grants for yaya@%                               |
++-------------------------------------------------+
+| GRANT USAGE ON *.* TO 'yaya'@'%'                |
+| GRANT ALL PRIVILEGES ON `bbsdb`.* TO 'yaya'@'%' |
++-------------------------------------------------+
+[root@pxcnode71 ~]# 
+[root@pxcnode72 ~]# mysql -uroot -p123456 -e 'show grants for yaya@"%"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------------------------------------------------+
+| Grants for yaya@%                               |
++-------------------------------------------------+
+| GRANT USAGE ON *.* TO 'yaya'@'%'                |
+| GRANT ALL PRIVILEGES ON `bbsdb`.* TO 'yaya'@'%' |
++-------------------------------------------------+
+[root@pxcnode71 ~]# 
+
+[root@host50 ~]# mysql -h192.168.4.71 -uyaya -p123456 -e 'create database bbsdb'
+[root@host50 ~]# mysql -h192.168.4.71 -uyaya -p123456 -e 'create table bbsdb.b(id int primary key  auto_increment , name char(10))'
+
+[root@host50 ~]# mysql -h192.168.4.72 -uyaya -p123456 -e 'insert into bbsdb.b(name)values("bob")'
+[root@host50 ~]# mysql -h192.168.4.73 -uyaya -p123456 -e 'insert into bbsdb.b(name)values("tom")'
+
+[root@host50 ~]# 
+[root@host50 ~]# mysql -h192.168.4.71 -uyaya -p123456 -e 'select  * from bbsdb.b'
