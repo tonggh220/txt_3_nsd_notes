@@ -50,3 +50,55 @@ server-id=73
 30 wsrep_node_name=pxc-cluster-node-73
 39 wsrep_sst_auth="sstuser:123qqq...A"
 :wq
+
+
+4.3 在任意1台数据库服务器初始化集群
+                                               注意：关闭3台数据库服务器的 selinux  和  firewalld
+[root@pxcnode71 ~]#systemctl  start mysql@bootstrap.service  
+[root@pxcnode71 ~]# netstat  -utnlp  | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      8502/mysqld         
+[root@pxcnode71 ~]# netstat  -utnlp  | grep  4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      8502/mysqld         
+[root@pxcnode71 ~]# ls /var/log/mysqld.log 
+/var/log/mysqld.log
+[root@pxcnode71 ~]# grep  password /var/log/mysqld.log 
+2020-08-26T14:22:55.211844Z 1 [Note] A temporary password is generated for root@localhost: qkJwa%qAb0N=
+[root@pxcnode71 ~]# mysql -uroot -p'qkJwa%qAb0N='
+mysql> alter user  root@"localhost" identified by "123456";
+Query OK, 0 rows affected (0.08 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql> grant reload, lock tables,replication client,process on *.* to sstuser@"localhost"  identified by  "123qqq…A"; 
+mysql> exit
+Bye
+[root@pxcnode71 ~]# mysql -uroot -p123456
+mysql> show  databases;
+
+			4.4 启动另外2台主机的数据库服务
+[root@pxcnode72 ~]#systemctl  start mysql
+
+			4.5 查看数据库服务器状态
+[root@pxcnode72 ~]# yum  -y  install net-tools
+[root@pxcnode72 ~]#netstat -utnlp  | grep 3306
+[root@pxcnode72 ~]#netstat -utnlp  | grep 4567
+[root@pxcnode72 ~]#mysql -uroot -p123456
+mysql> select user  from mysql.user  where  user="sstuser";
+
+[root@pxcnode73 ~]# yum  -y  install net-tools
+[root@pxcnode73 ~]#netstat -utnlp  | grep 3306
+[root@pxcnode73~]#netstat -utnlp  | grep 4567
+[root@pxcnode73 ~]#mysql -uroot -p123456
+mysql> select user  from mysql.user  where  user="sstuser";	
+		
+			4.6 查看主机的集群状态
+> show status like "%wsrep%";
