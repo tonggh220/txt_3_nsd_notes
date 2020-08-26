@@ -102,3 +102,20 @@ mysql> select user  from mysql.user  where  user="sstuser";
 		
 			4.6 查看主机的集群状态
 > show status like "%wsrep%";
+
+
+
+排错方法：
+	查看日志报错信息   grep  -i  "error"  /var/log/mysqld.log  
+
+启动失败的原因：
+	检查修改的配置文件  mysqld.conf    和   wsrep.conf
+	没有关闭所有数据库服务器的 selinux  和  firewalld
+
+重新初始化集群
+]#rm  -rf  /var/lib/mysql/*
+]#systemctl  start mysql@bootstrap.service 
+
+启动mysql服务
+]#rm  -rf  /var/lib/mysql/*
+]#systemctl  start mysql
