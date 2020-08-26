@@ -311,3 +311,31 @@ mysql>
 	请认真检查 app1.cnf文件的编写
 	所有主机防火墙 要关闭。
 	软件包没有安装完全
+
+             测试mha集群高可用功能：
+		1 当51 主机宕机时 ，客户端依然可以连接地址100访问数据库服务存取数据
+	host51]# systemctl  stop  mysqld
+host50]#  mysql  -h192.168.4.100  -uplj  -p123qqq...A
+
+		2 在2台备用的数据库服务器查看vip地址（谁获取到了vip地址，谁就是新的主数据库服务器）
+		host52]#  ip addr show  | grep  "192.168.4.100"
+                                  host53]#  ip addr show  | grep  "192.168.4.100"
+
+		3 在另数据库服务器查slave进程进程的状态，会自动到新的主数据库服务器同步数据
+		]# mysql  -uroot -p123qqq...A -e  ' show slave status \G' | grep  -i "master_host" 
+		]# mysql  -uroot -p123qqq...A -e  ' show slave status \G' | grep  -i  yes
+		 
+		4 查看app1.cnf文件 会发现 数据服务器192.168.4.51 的配置自动被删除
+		host57]# cat /etc/mha/app1.cnf  
+
+		5 查看管理服务的状态，发现管理服务自动停止了 
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+		
+		6 检查主从同步配置，启动管理服务，使其可以监视新的主数据库服务器
+[root@host57 ~]# masterha_check_ssh --conf=/etc/mha/app1.cnf
+[root@host57 ~]# masterha_check_repl --conf=/etc/mha/app1.cnf
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf  --remove_dead_master_conf --ignore_last_failover
+
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+app1 (pid:4719) is running(0:PING_OK), master:192.168.4.52
+[root@host57 ~]# 
