@@ -180,3 +180,34 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@pxcnode72 ~]#  systemctl  start mysql
 [root@host50 ~]# mysql -h192.168.4.71 -uyaya -p123456 -e 'select  * from bbsdb.b'
 [root@host50 ~]# mysql -h192.168.4.72 -uyaya -p123456 -e 'select  * from bbsdb.b'
+
+
+2 MySQL存储引擎（难点）理解
+	2.1 什么是存储引擎（存储引擎介绍） 功能组件之一，访问表是希望使用MySQL的什么功能对表做处理，就调用对应的存储引擎就可以了。
+
+innodb
+	2 2 MySQL服务的体系结构
+	2.3 MySQL服务处理查询访问的过程
+	2.4 存储引擎管理
+		查看数据库服务默认使用的存储引擎
+mysql> show  engines;
+
+		查看已有表使用的存储引擎
+mysql> show  create table  库.表 \G
+mysql> show  create table  db1.t10 \G
+
+		修改数据库服务默认使用的存储引擎
+]# vim /etc/my.cnf		
+[mysqld]
+default-storage-engine="myisam"
+:wq
+[root@host50 ~]# systemctl  restart mysqld
+[root@host50 ~]# mysql -uroot -p123qqq...A -e ' create table db1.a2(id int)'
+
+[root@host50 ~]# mysql -uroot -p123qqq...A -e 'show  create table db1.a2 \G'
+*************************** 1. row ***************************
+       Table: a2
+Create Table: CREATE TABLE `a2` (
+  `id` int(11) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1
+[root@host50 ~]# 
