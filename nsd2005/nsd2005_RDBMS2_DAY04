@@ -339,3 +339,38 @@ host50]#  mysql  -h192.168.4.100  -uplj  -p123qqq...A
 [root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
 app1 (pid:4719) is running(0:PING_OK), master:192.168.4.52
 [root@host57 ~]# 
+
+
+             把故障的服务器51，再添加到集群里
+		1 配置数据库服务器51
+			启动MySQL服务
+[root@host51 ~]# systemctl  start  mysqld
+
+			确保与当前master 服务器数据一致
+[root@host52 ~]# mysqldump -uroot -p123qqq...A bbsdb > /root/bbsdb.sql
+[root@host52 ~]# scp /root/bbsdb.sql  root@192.168.4.51:/opt/
+[root@host51 ~]# mysql -uroot -p123qqq...A bbsdb < /opt/bbsdb.sql
+
+查看日志信息
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master52.000001 |      941 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@host52 ~]# 
+
+			指定主服务器信息
+[root@host51 ~]# mysql -uroot -p123qqq...A -e ' change master to  master_host="192.168.4.52" , master_user="repluser", master_password="123qqq...A",master_log_file="master52.000001",master_log_pos=941'
+[root@host51 ~]#  mysql -uroot -p123qqq...A -e ' start slave'
+
+[root@host51 ~]#  mysql -uroot -p123qqq...A -e ' show slave status \G' | grep -i yes
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@host51 ~]# 
+[root@host51 ~]#  mysql -uroot -p123qqq...A -e ' show slave status \G' | grep -i "master_host"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.52
+[root@host51 ~]# 
