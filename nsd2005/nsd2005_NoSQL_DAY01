@@ -45,3 +45,18 @@ OK
 2) "x"
 127.0.0.1:6379> exit
 [root@host50 redis-4.0.8]# 
+
+停止redis服务 
+ [root@host50 redis-4.0.8]# /etc/init.d/redis_6379  stop
+Stopping ...
+Redis stopped
+[root@host50 redis-4.0.8]# netstat  -utnlp  | grep 6379
+[root@host50 redis-4.0.8]# 
+
+启动Redis服务
+[root@host50 redis-4.0.8]# /etc/init.d/redis_6379  start
+Starting Redis server...
+[root@host50 redis-4.0.8]# 
+[root@host50 redis-4.0.8]# netstat  -utnlp  | grep 6379
+tcp        0      0 127.0.0.1:6379          0.0.0.0:*               LISTEN      5604/redis-server 1 
+[root@host50 redis-4.0.8]# 
