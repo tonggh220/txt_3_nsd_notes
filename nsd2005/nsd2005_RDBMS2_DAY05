@@ -342,5 +342,9 @@ select  * from  db3.user2; 看不到
 select  * from  db3.user2;看不到	
 
 
+   2.6 建表时，如何决定表使用哪种存储引擎？
+		接受查询select访问多的表，适合使用myisam存储引擎，节省系统的硬件资源
+		接受写(insert update delete)访问多的表，适合使用innodb存储引擎,并发访问量大。
+
 
 
