@@ -1,0 +1,47 @@
+Nosql_day01
+1 搭建Redis服务器 （192.168.4.50）
+	1.1 相关概念 
+		关系型数据库系统 RDBMS        服务软件mysql  Oracle SQL SERVER
+		        必须事先创建表结构，根据表结构存储数据。数据按照固定格式存储。
+		        银行开户信息：     姓名  性别 年龄 身份证
+		        公安局的户籍信息：姓名  性别 年龄 身份证 身份 家庭地址
+
+		非关系型数据库系统 NoSQL  服务软件 memcached  redis  MongoDB
+		       存储数据的格式不固定，比较随机，也不需要创建表结构，存储数据通常格式  变量key/values值   通常数据都存储的内存了 。
+		     
+		redis软件介绍？
+		搭建redis服务器192.168.4.50 ，步骤如下
+			1 安装软件
+# rpm -q   gcc  ||  yum  -y  install  gcc
+# tar -zxvf redis-4.0.8.tar.gz
+# cd redis-4.0.8
+# make 
+# make install
+
+			2 初始配置
+]# ./utils/install_server.sh 
+			3 查看服务状态
+]# netstat  -utnlp  | grep  6379
+tcp        0      0 127.0.0.1:6379          0.0.0.0:*               LISTEN      14869/redis-server  
+[root@host50 redis-4.0.8]# 
+			4 连接Redis服务
+[root@host50 ~]# redis-cli 
+127.0.0.1:6379> exit  断开连接
+[root@host50 ~]# 
+
+			5 存取数据
+[root@host50 redis-4.0.8]# redis-cli 
+127.0.0.1:6379> set x 9
+OK
+127.0.0.1:6379> set school tarena
+OK
+127.0.0.1:6379> get x
+"9"
+127.0.0.1:6379> get school
+"tarena"
+127.0.0.1:6379> 
+127.0.0.1:6379> keys *
+1) "school"
+2) "x"
+127.0.0.1:6379> exit
+[root@host50 redis-4.0.8]# 
