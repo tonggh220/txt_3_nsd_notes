@@ -174,3 +174,47 @@ vim   /etc/redis/6379.conf
 或者
 执行停止命令
 [root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350  -a 123456 shutdown
+
+
+
+2 部署LNMP+redis 
+	2.1 部署LNMP环境 192.168.4.51
+  249  yum -y  install gcc  pcre-devel zlib-devel
+
+  251  tar -zxvf nginx-1.12.2.tar.gz 
+  253  cd nginx-1.12.2
+  254  ./configure 
+  255  make && make install
+ 261  yum -y install php php-devel  php-fpm
+
+[root@localhost nginx-1.12.2]# systemctl  start php-fpm
+[root@localhost nginx-1.12.2]# netstat  -utnlp  | grep  9000
+tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      10355/php-fpm: mast 
+[root@localhost nginx-1.12.2]# 
+[root@localhost nginx-1.12.2]# vim +65 /usr/local/nginx/conf/nginx.conf
+        location ~ \.php$ {
+            root           html;
+            fastcgi_pass   127.0.0.1:9000;
+            fastcgi_index  index.php;
+            include        fastcgi.conf;
+        }
+:wq
+[root@localhost nginx-1.12.2]# /usr/local/nginx/sbin/nginx -t
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+[root@localhost nginx-1.12.2]# 
+[root@localhost nginx-1.12.2]# /usr/local/nginx/sbin/nginx
+[root@localhost nginx-1.12.2]# 
+[root@localhost nginx-1.12.2]# netstat  -utnlp  | grep  80
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      12334/nginx: master 
+[root@localhost nginx-1.12.2]# 
+
+[root@localhost nginx-1.12.2]# vim /usr/local/nginx/html/test.php
+<?php
+$i  = 99 ;
+echo  $i ;
+?>
+:wq
+[root@localhost nginx-1.12.2]# setenforce 0
+[root@localhost nginx-1.12.2]# systemctl  stop firewalld
+[root@localhost nginx-1.12.2]# curl  http://localhost/test.php
