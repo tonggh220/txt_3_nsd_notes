@@ -187,7 +187,32 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 
 innodb
 	2 2 MySQL服务的体系结构
+
+2 2 MySQL服务的体系结构（由8部分组成）
+		组件的名称和功能介绍
+		1 连接池  检查硬件资源 和 用户访问权限
+
+		2 管理工具  安装mysql服务软件后自带的安装命令  mysql   mysqladmin    mysqldump   mysqlbinlog  
+  
+		3  sql接口  把执行的SQL命令 发送给mysql服务的进程处理
+		4  分析器    分析执行的SQL命令的语法格式和访问的数据是否有权限
+		5  优化器    对执行的SQL命令优化处理
+
+		6  缓存空间  查询缓存，存储曾经查找过的数据，存储空间从物理划分的
+默认 MySQL服务查询缓存没有开启。
+
+		7 存储引擎，访问表中的数据时，会根据表使用的存储引擎，对数据做听不的处理，每种存储引擎都有各自的功能和数据存储方式。建表时可以根据需要指定表使用的存储引擎。（存储引擎，就是MySQL服务提供的各自功能）
+
+		8 文件系统  数据库服务器的硬盘（文件系统类型 ext2/3/4 、   xfs ）
+
+
+
 	2.3 MySQL服务处理查询访问的过程
+        1  客户端 ------> 数据库服务器
+		2  执行select 命令
+		3  MySQL服务 先访问 查询缓存 如果有数据 直接在查询缓存提前数据回复客户端，反之， 到硬盘里查找数据，把找到的数据 先 保存到查询缓存 再回复给客户端.
+
+
 	2.4 存储引擎管理
 		查看数据库服务默认使用的存储引擎
 mysql> show  engines;
@@ -211,3 +236,28 @@ Create Table: CREATE TABLE `a2` (
   `id` int(11) DEFAULT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1
 [root@host50 ~]# 
+
+
+        修改已有表使用的存储引擎
+		alter  table  table  库.表  engine=新存储引擎名;	
+
+		建表时，设置表使用的存储引擎
+		create  table  库.表（字段列表）engine=存储引擎名;
+		mysql> create table db1.c1 (id  int )engine=innodb;
+
+
+	执行查询select数据和存储insert数据的命令时都会对表做访问，根据表使用的存储引擎做不同的处理，每种存储引擎有各自的功能和数据存储方式。
+
+	
+	2.5 常用存储引擎特点介绍  (理论)
+		2.5.1 myisam特点
+			每张对应3个表文件
+			.frm                 .MYI      	 .MYD
+			表结构              index      	  数据
+			desc 库.表    createt index             select  * from 库.表
+
+		2.5.2 innodb特点
+			每张对应2个表文件
+			.frm	      .ibd
+			表结构            index+数据
+			desc 库.表
