@@ -119,3 +119,35 @@ tcp        0      0 127.0.0.1:6379          0.0.0.0:*               LISTEN      
 127.0.0.1:6379> select 1
 OK
 127.0.0.1:6379[1]> 
+
+
+配置文件解析  /etc/redis/6379.conf  
+		vim   /etc/redis/6379.conf 
+		配置项 值
+
+		：wq
+
+		重启redis服务
+		]# /etc/init.d/redis_6379 stop
+		]# /etc/init.d/redis_6379 start
+
+守护进程
+非守护进程
+			常驻部队（无论有没有敌人入侵部队都驻扎在边境不动）
+		驻守部队 
+			机动部队（发现敌人入侵时，才派兵抵御）
+
+修改服务使用的地址 端口 和 连接密码
+vim   /etc/redis/6379.conf 
+		bind  192.168.4.50
+		port   6350 
+		requirepass 123456
+		：wq
+
+		重启redis服务
+		]# /etc/init.d/redis_6379 stop
+		]# /etc/init.d/redis_6379 start
+]# redis-cli  -h 192.168.4.50  -p 6350 -a 123456
+> ping
+> keys *
+> exit
