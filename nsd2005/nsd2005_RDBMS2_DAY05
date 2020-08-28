@@ -249,15 +249,98 @@ Create Table: CREATE TABLE `a2` (
 	执行查询select数据和存储insert数据的命令时都会对表做访问，根据表使用的存储引擎做不同的处理，每种存储引擎有各自的功能和数据存储方式。
 
 	
-	2.5 常用存储引擎特点介绍  (理论)
+2.5 常用存储引擎特点介绍  (理论)
 		2.5.1 myisam特点
+			支持表级锁
+			不支持外键  事务 事务回滚
 			每张对应3个表文件
-			.frm                 .MYI      	 .MYD
-			表结构              index      	  数据
-			desc 库.表    createt index             select  * from 库.表
+			   .frm                 .MYI      	 .MYD
+			  表结构              index      	  数据
+			  desc 库.表    createt index             select  * from 库.表
 
 		2.5.2 innodb特点
+			支持外键  支持事务 支持事务回滚  支持行级锁
 			每张对应2个表文件
-			.frm	      .ibd
-			表结构            index+数据
-			desc 库.表
+			    .frm	      .ibd
+			    表结构            index+数据
+			   desc 库.表
+	       专业术语？
+	      锁        : 加锁的目的 是为了解决 数据并发访问的冲突问题。
+	       锁粒度：表级锁  行级锁
+		表级锁：只要是对表做select 或insert 访问 会把整张表锁上，锁了之后不允许其他的任何访问，只有锁被释放后才会允许其他的访问
+
+		行级锁：对表做select 或insert 访问，仅仅对被访问的行分别加锁，没有被访问的行，不会加所有，允许其他的连接访问。
+	    锁类型：读锁  和 写锁
+		读锁：对表执行select 访问 时加读锁，又叫共享锁，如果在加读锁期间有其他客户端也对表执行select 访问，是允许的，但insert 不允许。
+
+		写锁： 对表做insert 访问时加写锁。又叫排它锁 ，如果在加写锁期间不允许任何连接对表做select 或insert。
+
+pc1   update  db1.user  set name="xxx" where id=1;
+pc2   update  db1.user  set name="yyy" where id=1;
+
+ 
+		事务？ 连接数据库服务成功     各种执行各种操作命令   断开连接
+					     库.表(innodb)						0  1 2 3 4
+		使用事务日志文件记录对innodb存储引擎的表执行的sql操作。
+		cd  /var/lib/mysql/
+		ib_logfile0   ib_logfile1   ibdata1
+		
+		事务回滚: 在执行的各种操作命令时，任意一步操作失败，把数据恢复到失败之前的状态。
+
+		事务的特点(ACID)
+			原子性   一致性   隔离性    持久性
+		事务特点演示？ 
+连接1
+create table  db3.user2(id int)engine=innodb;
+set  autocommit=off;
+insert into  db3.user2 values(111);
+select  * from  db3.user2; 自己能看到
+
+连接2
+select  * from  db3.user2; 看不到
+
+连接3
+select  * from  db3.user2;看不到		 
+
+连接1  commit; 提交
+
+连接2
+select  * from  db3.user2; 看到
+
+连接3
+select  * from  db3.user2;看到	
+
+连接1 
+delete  from   db3.user2;
+
+连接2
+select  * from  db3.user2; 看到
+
+连接3
+select  * from  db3.user2;看到	
+
+连接1 
+insert into    db3.user2 values(8888);
+
+连接2
+select  * from  db3.user2; 看不到
+
+连接3
+select  * from  db3.user2;看不到	
+
+连接1 select  * from  db3.user2; 看到
+          rollback； 
+         select  * from  db3.user2;  看到 插入和删除 之前的数据
+
+
+连接1  delete from  db3.user2;
+          commit;
+连接2
+select  * from  db3.user2; 看不到
+
+连接3
+select  * from  db3.user2;看不到	
+
+
+
+
