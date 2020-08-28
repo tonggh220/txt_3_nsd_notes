@@ -151,3 +151,26 @@ vim   /etc/redis/6379.conf
 > ping
 > keys *
 > exit
+
+修改服务使用的地址 端口 和 连接密码   练习到 16:52 
+vim   /etc/redis/6379.conf 
+		bind  192.168.4.50
+		port   6350 
+		requirepass 123456
+		：wq
+
+		重启redis服务
+		]# /etc/init.d/redis_6379 stop
+		]# /etc/init.d/redis_6379 start
+]# redis-cli  -h 192.168.4.50  -p 6350 -a 123456
+> ping
+> keys *
+> exit
+	修改ip 端口 密码之后停止服务方法
+[root@host50 ~]# vim +43 /etc/init.d/redis_6379 
+43             $CLIEXEC -h 192.168.4.50 -p 6350 -a 123456 shutdown
+:wq
+
+或者
+执行停止命令
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350  -a 123456 shutdown
