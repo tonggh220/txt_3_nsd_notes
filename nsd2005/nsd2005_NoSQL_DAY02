@@ -129,6 +129,9 @@ S: 492fab7c991c72028956b3e9e8dbad48375c7e5a 192.168.4.56:6356
    replicates 32d38c4dfae2f5a0eb5192386ac5d3282dbca134
 
 执行删除命令
+
+[root@host57  ~]# redis-trib.rb  del-node 192.168.4.55:6355  492fab7c991c72028956b3e9e8dbad48375c7e5a
+
 >>> Removing node 492fab7c991c72028956b3e9e8dbad48375c7e5a from cluster 192.168.4.55:6355
 >>> Sending CLUSTER FORGET messages to the cluster...
 >>> SHUTDOWN the node.
