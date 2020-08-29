@@ -274,4 +274,13 @@ echo $redis->get("class");
 
 
 		客户端访问网站服务器的php脚本存取数据
+
+        curl http"//localhost/set.php
+        data  save  ok 
+
 		验证：在Redis服务器本机查看数据  192.168.4.50
+        [root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350 -a 123456
+192.168.4.50:6350> keys *
+class
+school
+
