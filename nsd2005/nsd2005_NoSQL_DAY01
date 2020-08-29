@@ -270,17 +270,23 @@ echo $redis->get("school");
 echo $redis->get("class");
 ?>
 
+                    [root@localhost ~]# curl  http://localhost/set.php
+data save ok[root@localhost ~]# 
 
-
-
-		客户端访问网站服务器的php脚本存取数据
-
-        curl http"//localhost/set.php
-        data  save  ok 
-
-		验证：在Redis服务器本机查看数据  192.168.4.50
-        [root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350 -a 123456
+	
+  	                 验证：在Redis服务器本机查看数据  192.168.4.50
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350 -a 123456
 192.168.4.50:6350> keys *
-class
-school
+1) "class"
+2) "school"
+192.168.4.50:6350> get class
+"nsd2005"
+192.168.4.50:6350> get school
+"tarena"
+192.168.4.50:6350> 
+		
+		客户端访问网站服务器的php脚本取数据
+[root@localhost ~]# curl  http://localhost/get.php
+tarena nsd2005[root@localhost ~]# 
+
 
