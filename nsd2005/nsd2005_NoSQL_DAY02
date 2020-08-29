@@ -121,4 +121,24 @@ OK
 [root@host50 ~]# redis-cli  -c  -h 192.168.4.58 -p 6358
 192.168.4.58:6358> keys *
 
+		移除slave 角色服务器（因为slave 角色的服务占用hash槽，可以直接在管理主机执行删除操作即可）
+            把从服务器56 移除集群
+		~]# redis-trib.rb  check 192.168.4.52:6352  查看要删除主机的id 
+S: 492fab7c991c72028956b3e9e8dbad48375c7e5a 192.168.4.56:6356
+   slots: (0 slots) slave
+   replicates 32d38c4dfae2f5a0eb5192386ac5d3282dbca134
+
+执行删除命令
+>>> Removing node 492fab7c991c72028956b3e9e8dbad48375c7e5a from cluster 192.168.4.55:6355
+>>> Sending CLUSTER FORGET messages to the cluster...
+>>> SHUTDOWN the node.
+[root@localhost ~]# 
+
+[root@localhost ~]# redis-trib.rb  info 192.168.4.52:6352192.168.4.52:6352 (32d38c4d...) -> 2 keys | 5462 slots | 0 slaves.
+192.168.4.55:6355 (9af0204e...) -> 2 keys | 5461 slots | 1 slaves.
+192.168.4.53:6353 (a84f1b55...) -> 2 keys | 5461 slots | 1 slaves.
+[OK] 6 keys in 3 masters.
+0.00 keys per slot on average.
+[root@localhost ~]# 
+
 
