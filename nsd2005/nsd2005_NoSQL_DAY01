@@ -137,6 +137,21 @@ OK
 		驻守部队 
 			机动部队（发现敌人入侵时，才派兵抵御）
 
+
+配置文件解析之内存清除策略  (30分钟 存理论) 休息10分钟到 10:20 
+LRU  删除最近最少使用的（allkeys-lru   volatile-lru）  
+LFU  删除最少使用的(volatile-lfu  allkeys-lfu)
+random   随机删除 (volatile-random  allkeys-random)
+volatile-ttl    删除快要过期     900M   1000变量   400个设置了ttl时间
+noeviction  不删除
+
+相关的配置项
+maxmemory  		//最大内存
+maxmemory-policy 	//定义使用策略
+maxmemory-samples 	//选取key模板的个数 (针对lru LFU和 ttl 策略）
+
+
+
 修改服务使用的地址 端口 和 连接密码
 vim   /etc/redis/6379.conf 
 		bind  192.168.4.50
