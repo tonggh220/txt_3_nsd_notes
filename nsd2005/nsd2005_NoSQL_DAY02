@@ -14,9 +14,35 @@
   155  chmod  +x /root/bin/redis-trib.rb 
 [root@host57 etc]# redis-trib.rb help
 	
-	准备创建集群的6台redis服务器
-51 主机停止 nginx 
-51 主机停止  php-fpm
-拷贝redis-4.0.8.tar.gz 给主机51
-在主机51到56 安装redis-4.0.8.tar.gz软件并做初始化配置（其他的不需要做）
-修改51-56 redis 使用的端口号和ip (不需要设置密码，具体要求看ppt）
+		准备创建集群的6台redis服务器
+
+	在主机51到56 安装redis-4.0.8.tar.gz软件并做初始化配置
+	修改51-56 redis 使用的端口号和ip (不需要设置密码，具体要求看ppt）		
+  
+	注意创建集群的主机 不能有数据。
+
+	启用每台redis服务的 集群功能
+
+[root@localhost ~]# vi +815 /etc/redis/6379.conf 
+    cluster-enabled  yes        	             		//启用集群功能  
+    cluster-config-file  nodes-6379.conf 		//存储集群信息文件
+    cluster-node-timeout  5000 			//超时时间(单位毫秒)
+:wq
+
+[root@localhost ~]# redis-cli  -h 192.168.4.56 -p 6356 shutdown
+[root@localhost ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@localhost ~]# 
+[root@localhost ~]# netstat  -utnlp  | grep  redis-server
+tcp        0      0 192.168.4.56:16356      0.0.0.0:*               LISTEN      16204/redis-server  
+tcp        0      0 192.168.4.56:6356       0.0.0.0:*               LISTEN      16204/redis-server  
+[root@localhost ~]# redis-cli  -h 192.168.4.56 -p 6356 
+> cluster info
+> cluster nodes	
+
+[root@localhost ~]# ls /var/lib/redis/6379/
+dump.rdb  nodes-6379.conf
+[root@localhost ~]# cat /var/lib/redis/6379/nodes-6379.conf 
+492fab7c991c72028956b3e9e8dbad48375c7e5a :0@0 myself,master - 0 0 0 connected
+vars currentEpoch 0 lastVoteEpoch 0
+[root@localhost ~]# 
