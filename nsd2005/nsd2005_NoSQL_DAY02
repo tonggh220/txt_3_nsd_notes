@@ -1,0 +1,22 @@
+1 部署redis集群 
+	2.1 配置管理主机192.168.4.57
+	         部署脚本运行环境 （使用ruby脚本管理集群）
+		rpm -q ruby || yum -y  install ruby
+		gem install redis-3.2.1.gem
+	         创建ruby脚本
+  148  tar -zxvf redis-4.0.8.tar.gz 
+  149  cd redis-4.0.8
+  151  ls src/*.rb
+  152  echo $PATH
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
+  153  mkdir /root/bin
+  154  cp src/redis-trib.rb /root/bin/
+  155  chmod  +x /root/bin/redis-trib.rb 
+[root@host57 etc]# redis-trib.rb help
+	
+	准备创建集群的6台redis服务器
+51 主机停止 nginx 
+51 主机停止  php-fpm
+拷贝redis-4.0.8.tar.gz 给主机51
+在主机51到56 安装redis-4.0.8.tar.gz软件并做初始化配置（其他的不需要做）
+修改51-56 redis 使用的端口号和ip (不需要设置密码，具体要求看ppt）
