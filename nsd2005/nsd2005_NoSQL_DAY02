@@ -145,3 +145,24 @@ S: 492fab7c991c72028956b3e9e8dbad48375c7e5a 192.168.4.56:6356
 [root@localhost ~]# 
 
 
+
+添加master角色服务器 
+		把数据库服务器192.168.4.58 添加到集群里做master服务器
+			步骤如下： 
+			1 运行Redis服务并启用的集群功能，且内存里没有数据
+[root@localhost redis-4.0.8]# netstat -utnlp  | grep redis-server
+[root@localhost redis-4.0.8]# rm -rf /var/lib/redis/6379/*
+[root@localhost redis-4.0.8]# /etc/init.d/redis_6379 start
+
+			2 在管理主机添加58 到集群 里做主数据库服务器
+[root@host57 ~]# redis-trib.rb  add-node 192.168.4.58:6358 192.168.4.52:6352
+[root@localhost ~]# redis-trib.rb  info 192.168.4.52:6352
+192.168.4.52:6352 (32d38c4d...) -> 2 keys | 5462 slots | 0 slaves.
+192.168.4.58:6358 (b93c36f6...) -> 0 keys | 0 slots | 0 slaves.
+192.168.4.55:6355 (9af0204e...) -> 2 keys | 5461 slots | 0 slaves.
+192.168.4.53:6353 (a84f1b55...) -> 2 keys | 5461 slots | 1 slaves.
+[OK] 6 keys in 4 masters.
+0.00 keys per slot on average.
+[root@localhost ~]# 
+
+
