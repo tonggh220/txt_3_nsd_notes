@@ -56,3 +56,34 @@ vars currentEpoch 0 lastVoteEpoch 0
 >>> Check slots coverage...
 [OK] All 16384 slots covered.
 [root@localhost ~]#  
+
+在管理主机查看集群的统计信息
+[root@host57 ~]# redis-trib.rb  info 192.168.4.52:6352
+192.168.4.52:6352 (32d38c4d...) -> 0 keys | 5462 slots | 1 slaves.
+192.168.4.51:6351 (ea7f699d...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.4.53:6353 (a84f1b55...) -> 0 keys | 5461 slots | 1 slaves.
+[OK] 0 keys in 3 masters.
+0.00 keys per slot on average.
+[root@localhost ~]# 
+
+	在管理主机查看集群的详细信息
+[root@host57 ~]# redis-trib.rb  check 192.168.4.52:6352
+
+                客户端访问集群中的任意1台redis服务存取数据。
+[root@host50 ~]# redis-cli  -c  -h 192.168.4.53 -p 6353
+192.168.4.53:6353> keys *
+(empty list or set)
+192.168.4.53:6353> set name bob
+-> Redirected to slot [5798] located at 192.168.4.52:6352
+OK
+192.168.4.52:6352> keys *
+1) "name"
+192.168.4.52:6352> set age 19
+-> Redirected to slot [741] located at 192.168.4.51:6351
+OK
+192.168.4.51:6351> keys *
+1) "age"
+192.168.4.51:6351> get name
+-> Redirected to slot [5798] located at 192.168.4.52:6352
+"bob"
+192.168.4.52:6352>
