@@ -45,4 +45,14 @@ dump.rdb  nodes-6379.conf
 [root@localhost ~]# cat /var/lib/redis/6379/nodes-6379.conf 
 492fab7c991c72028956b3e9e8dbad48375c7e5a :0@0 myself,master - 0 0 0 connected
 vars currentEpoch 0 lastVoteEpoch 0
-[root@localhost ~]# 
+[root@localhost ~]#
+
+	在管理主机创建集群（保证  6台Redis服务器没有数据，且都启用了集群功能、关闭selinux 和 firewalld   服务没有连接密码）
+	
+	[root@host57 ~]# redis-trib.rb   create --replicas 1   192.168.4.51:6351  192.168.4.52:6352 192.168.4.53:6353  192.168.4.54:6354 192.168.4.55:6355 192.168.4.56:6356
+	输入 yes
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+[root@localhost ~]#  
