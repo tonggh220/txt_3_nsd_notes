@@ -238,8 +238,40 @@ Installing shared extensions:     /usr/lib64/php/modules/
 curl.so  fileinfo.so  json.so  phar.so  redis.so  zip.so
 [root@localhost phpredis-2.2.4]# 
 		调用模块
+]# vim /etc/php.ini 
+728 extension_dir = "/usr/lib64/php/modules/"
+730 extension = "redis.so"
+:wq
+]# systemctl restart php-fpm
+
 		查看模块
+[root@localhost ~]# php -m | grep -i redis
+redis
+[root@localhost ~]# 
+
 		编写存储数据的PHP脚本
+vim /usr/local/nginx/html/set.php
+<?php
+$redis = new redis();  定义连接命令
+$redis->connect("192.168.4.50","6350");
+$redis->auth("123456");
+$redis->set("school","tarena"); 		//存数据
+$redis->set("class","nsd2005"); 
+echo "data save ok ";
+?>
+:wq
 		编写获取数据的PHP脚本
+vim /usr/local/nginx/html/get.php
+<?php
+$redis = new redis(); 
+$redis->connect("192.168.4.50","6350");
+$redis->auth("123456");
+echo $redis->get("school");
+echo $redis->get("class");
+?>
+
+
+
+
 		客户端访问网站服务器的php脚本存取数据
 		验证：在Redis服务器本机查看数据  192.168.4.50
