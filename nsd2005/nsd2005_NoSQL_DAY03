@@ -170,3 +170,28 @@ save 60 10000
 
 [root@host50 ~]#  /etc/init.d/redis_6379 start
 测试 连接服务 在120秒内 存储10或10以上的变量 ，查看数据库目录下是否有dump.rdb文件
+
+
+             2.2 AOF: （Append  Only  File）
+                               追加方式记录，在服务器上执行的写命令的 文件 （默认没有启用）
+	               默认每隔1秒记录一次
+
+	启用aof
+	[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350 -a 123456 
+192.168.4.50:6350> config set  appendonly yes
+OK
+192.168.4.50:6350> config  rewrite
+OK
+192.168.4.50:6350> exit
+
+[root@host50 ~]# grep -n 'appendonly'  /etc/redis/6379.conf 
+673:appendonly yes
+675:# The name of the append only file (default: "appendonly.aof")
+677:appendfilename "appendonly.aof"
+[root@host50 ~]# 
+[root@host50 ~]# ls /var/lib/redis/6379/
+appendonly.aof  dump.rdb
+[root@host50 ~]# 
+[root@host50 ~]# wc -l /var/lib/redis/6379/appendonly.aof 
+82 /var/lib/redis/6379/appendonly.aof
+[root@host50 ~]# 
