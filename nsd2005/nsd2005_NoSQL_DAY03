@@ -124,3 +124,31 @@ Starting Redis server...
 			     在 52主机 查看复制信息（发现52的角色自动变为master）
 
 			     查57的哨兵配置文件，自动监视当前的主服务器52
+
+
+2 持久化（理论  大于 操作）
+            （redis服务 先把客户端的数据存储在内存里， 在把数据保存到硬盘）
+              2.1 RDB 指定的就是 数据库库目录下的dump.rdb文件
+	
+	#使用dump.rdb文件恢复数据
+	50主机备份文件
+[root@host50 ~]# cp /var/lib/redis/6379/dump.rdb  /root/
+[root@host50 ~]# ls /root/*.rdb
+/root/dump.rdb
+[root@host50 ~]# scp /root/dump.rdb  root@192.168.4.55:/opt/
+
+
+	55 主机恢复数据，步骤如下：
+		停止redis服务  ]# redis-cli  -h 192.168.4.55 -p 6355  shutdown
+
+		移动备份文件到数据库目录下
+[root@localhost ~]# ls /var/lib/redis/6379/
+dump.rdb
+[root@localhost ~]# mv /opt/dump.rdb /var/lib/redis/6379/
+mv：是否覆盖"/var/lib/redis/6379/dump.rdb"？ y
+[root@localhost ~]# 
+
+		启动服务 /etc/init.d/redis_6379 start
+
+		查看数据redis-cli  -h 192.168.4.55 -p 6355 
+		             > keys *
