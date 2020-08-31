@@ -166,3 +166,27 @@ S: 492fab7c991c72028956b3e9e8dbad48375c7e5a 192.168.4.56:6356
 [root@localhost ~]# 
 
 
+			给58主机分配hash槽，步骤如下
+				重新分片（给新的主服务器分片hash槽）
+[root@host57 ~]# redis-trib.rb  reshard 192.168.4.51:6351  			
+How many slots do you want to move (from 1 to 16384)? 4096  分片槽的个数
+What is the receiving node ID? e081313ec843655d9bc5a17f3bed3de1dccb1d2b 新的主服务器的id
+Please enter all the source node IDs.
+Source node #1:all   				//从所有主服务器移除slots
+Do you want to proceed with the proposed reshard plan (yes/no)? yes  同意
+
+[root@localhost ~]# redis-trib.rb  info 192.168.4.55:6355
+192.168.4.55:6355 (9af0204e...) -> 1 keys | 4096 slots | 0 slaves.
+192.168.4.58:6358 (b93c36f6...) -> 3 keys | 4096 slots | 0 slaves.
+192.168.4.52:6352 (32d38c4d...) -> 2 keys | 4096 slots | 0 slaves.
+192.168.4.53:6353 (a84f1b55...) -> 1 keys | 4096 slots | 1 slaves.
+[OK] 7 keys in 4 masters.
+0.00 keys per slot on average.
+[root@localhost ~]# 
+
+[root@localhost ~]# redis-trib.rb  check 192.168.4.55:6355
+M: b93c36f6b5e51121eb6fef9adc33383a35706bac 192.168.4.58:6358
+   slots:0-1364,5461-6826,10923-12287 (4096 slots) master
+   0 additional replica(s)
+			
+
