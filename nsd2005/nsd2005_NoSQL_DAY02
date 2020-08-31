@@ -209,8 +209,9 @@ Do you want to proceed with the proposed reshard plan (yes/no)? yes 同意配置
 [OK] 7 keys in 4 masters.
 0.00 keys per slot on average.
 [root@localhost ~]# 
-			2 移除集群
+			2 把master主机移除集群
 [root@localhost ~]# redis-trib.rb  del-node 192.168.4.55:6355 b93c36f6b5e51121eb6fef9adc33383a35706bac
+
 >>> Removing node b93c36f6b5e51121eb6fef9adc33383a35706bac from cluster 192.168.4.55:6355
 >>> Sending CLUSTER FORGET messages to the cluster...
 >>> SHUTDOWN the node.
