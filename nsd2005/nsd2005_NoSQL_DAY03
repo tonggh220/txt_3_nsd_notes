@@ -1,0 +1,10 @@
+环境准备
+	58和59 的Redis服务停止
+	把redis集群中的主机恢复为独立数据库服务器：
+		51 - 56 做如下操作
+		停止redis服务
+		注释配置文件里的集群功能配置项
+		清空数据库目录
+		启动redis服务
+		查看进程 netstat  -utnlp  | grep redis-server  只有redis服务端口
+		查看数据  keys *  没有数据
