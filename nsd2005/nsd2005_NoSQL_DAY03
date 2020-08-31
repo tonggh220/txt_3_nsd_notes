@@ -8,3 +8,34 @@
 		启动redis服务
 		查看进程 netstat  -utnlp  | grep redis-server  只有redis服务端口
 		查看数据  keys *  没有数据
+
+
+1 主从复制
+	分为主master数据库服务器 和 从slave数据库服务器
+		master数据库服务器:客户端存取数据时连接的服务器
+		slave数据库服务器：连接主服务器 同步主服务器的数据到本机
+	
+
+	配置redis主从结构，涉及到的命令
+		注意 : redis服务启动后，默认就是master角色
+		命令行配置（立即生效，但重启redis服务或操作系统会还原）
+		 > slaveof   主服务器ip    主服务器端口
+		 > info  replication # 查看复制信息
+		 > slaveof  no one  #临时恢复为主服务器
+
+		永久配置 vim /etc/redis/6379.conf
+		slaveof  主服务器ip    主服务器端口
+
+	主从复制结构： 一主一从    一主多从    主从从
+
+
+		配置一主一从   
+		要求：把52配置为51的从服务器
+		52的配置如下 
+		redis-cli  -h 192.168.4.52 -p 6352
+		> slaveon  192.168.4.51  6351
+		> info replication
+		> exit
+		vim /etc/redis/6379.conf
+		282  slaveof    192.168.4.51  6351
+		:wq
