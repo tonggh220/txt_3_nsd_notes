@@ -93,3 +93,34 @@ Starting Redis server...
   ]#  /etc/init.d/redis_6379 start
   ]#  redis-cli  -h 192.168.4.52 -p 6352 
   >info  replication
+
+
+  哨兵服务：监视主从复制结构中的主服务器，把对应的从升级为master 服务器。
+		在主机57 配置哨兵服务 监视主数据库服务器51 会自动把对应的从升级为主服务器。
+														时间到15:20
+		51 和  52 为一主一从结构  （让53不做51的 slave服务器）
+		在主机57 配置哨兵服务 步骤如下
+			安装Redis软件（不需要做初始配置） 时间3分钟到 15:33
+		yum  -y  install gcc	
+		tar -zxvf redis-4.0.8.tar.gz 
+		cd redis-4.0.8
+		make && make install
+
+			创建并编辑哨兵服务的主配置文件
+			vim  /etc/sentinel.conf
+			bind  192.168.4.57
+			sentinel monitor   redisser   192.168.4.51  6351   1
+			sentinel auth-pass redisser  654321
+			:wq
+
+			启动配置文件运行哨兵服务
+			
+			~]# redis-sentinel  /etc/sentinel.conf
+
+			测试 ：
+			     停止51主机的redis服务
+
+
+			     在 52主机 查看复制信息（发现52的角色自动变为master）
+
+			     查57的哨兵配置文件，自动监视当前的主服务器52
