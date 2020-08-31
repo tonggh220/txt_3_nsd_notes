@@ -39,3 +39,57 @@
 		vim /etc/redis/6379.conf
 		282  slaveof    192.168.4.51  6351
 		:wq
+
+配置一主多从    
+		要求;把53主机 也配置为51 的从服务器
+		
+	   53主机的配置，如下   时间3分钟到14:17
+		vim /etc/redis/6379.conf
+		282  slaveof    192.168.4.51  6351
+		:wq
+		]#redis-cli  -h 192.168.4.53 -p 6353 shutdown
+                                  ]# /etc/init.d/redis_6379 start
+                                  ]# redis-cli  -h 192.168.4.53 -p 6353   查看到 和 51一样的数据
+	51 主机查看复制信息
+192.168.4.51:6351> INFO replication
+# Replication
+role:master
+connected_slaves:2
+slave0:ip=192.168.4.52,port=6352,state=online,offset=11645,lag=0
+slave1:ip=192.168.4.53,port=6353,state=online,offset=11645,lag=1
+
+
+
+
+	配置主从从  练习3分钟 到  14:31 
+	要求 把主机54 配置为53的slave服务器
+	54主机的配置如下：
+	192.168.4.54:6354> slaveof 192.168.4.53 6353
+                 192.168.4.54:6354> config rewrite   #把配置保存的/etc/redis/6379.conf文件
+	
+	在53主机查看复制信息
+	192.168.4.53:6353> info replication   #是51的slave   又是54的master
+
+	在51主机 存储新数据  52 53 54   三台主机都会有数据
+
+
+	配置带验证的主从复制（主服务器有连接密码）
+	  51主机  设置连接密码
+[root@localhost ~]# vim +501 /etc/redis/6379.conf	
+	       requirepass 654321
+:wq
+[root@localhost ~]# redis-cli  -h 192.168.4.51 -p 6351 shutdown
+[root@localhost ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@localhost ~]# redis-cli  -h 192.168.4.51 -p 6351 -a 654321
+192.168.4.51:6351> keys *
+
+	53 he 52 主机 指定连接密码
+	]# vim /etc/redis/6379.com	
+           289 masterauth 654321
+	:wq
+
+     ]# redis-cli  -h 192.168.4.52 -p 6352 shutdown
+  ]#  /etc/init.d/redis_6379 start
+  ]#  redis-cli  -h 192.168.4.52 -p 6352 
+  >info  replication
