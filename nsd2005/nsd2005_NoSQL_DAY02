@@ -192,6 +192,7 @@ M: b93c36f6b5e51121eb6fef9adc33383a35706bac 192.168.4.58:6358
 
    		移除master角色服务器，步骤如下：
 			1 释放hash槽
+[root@host57 ~]# redis-trib.rb  reshard 192.168.4.55:6355
 How many slots do you want to move (from 1 to 16384)? 4096  释放槽的个数
 What is the receiving node ID? a84f1b5557acdeaa8b959f56d0d1160b175f8d56
 Please enter all the source node IDs.  接收槽的主服务器的id
