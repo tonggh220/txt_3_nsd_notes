@@ -188,5 +188,38 @@ Do you want to proceed with the proposed reshard plan (yes/no)? yes  同意
 M: b93c36f6b5e51121eb6fef9adc33383a35706bac 192.168.4.58:6358
    slots:0-1364,5461-6826,10923-12287 (4096 slots) master
    0 additional replica(s)
+
+
+   		移除master角色服务器，步骤如下：
+			1 释放hash槽
+How many slots do you want to move (from 1 to 16384)? 4096  释放槽的个数
+What is the receiving node ID? a84f1b5557acdeaa8b959f56d0d1160b175f8d56
+Please enter all the source node IDs.  接收槽的主服务器的id
+  Type 'all' to use all the nodes as source nodes for the hash slots.
+  Type 'done' once you entered all the source nodes IDs.
+Source node #1:b93c36f6b5e51121eb6fef9adc33383a35706bac  移除槽的主服务器的id 
+Source node #2:done  #接收id 的填写
+Do you want to proceed with the proposed reshard plan (yes/no)? yes 同意配置
+
+[root@localhost ~]# redis-trib.rb  info 192.168.4.55:6355
+192.168.4.55:6355 (9af0204e...) -> 1 keys | 4096 slots | 0 slaves.
+192.168.4.58:6358 (b93c36f6...) -> 0 keys | 0 slots | 0 slaves.
+192.168.4.52:6352 (32d38c4d...) -> 2 keys | 4096 slots | 0 slaves.
+192.168.4.53:6353 (a84f1b55...) -> 4 keys | 8192 slots | 1 slaves.
+[OK] 7 keys in 4 masters.
+0.00 keys per slot on average.
+[root@localhost ~]# 
+			2 移除集群
+[root@localhost ~]# redis-trib.rb  del-node 192.168.4.55:6355 b93c36f6b5e51121eb6fef9adc33383a35706bac
+>>> Removing node b93c36f6b5e51121eb6fef9adc33383a35706bac from cluster 192.168.4.55:6355
+>>> Sending CLUSTER FORGET messages to the cluster...
+>>> SHUTDOWN the node.
+[root@localhost ~]# 
+[root@localhost ~]# redis-trib.rb  info 192.168.4.55:6355192.168.4.55:6355 (9af0204e...) -> 1 keys | 4096 slots | 0 slaves.
+192.168.4.52:6352 (32d38c4d...) -> 2 keys | 4096 slots | 0 slaves.
+192.168.4.53:6353 (a84f1b55...) -> 4 keys | 8192 slots | 1 slaves.
+[OK] 7 keys in 3 masters.
+0.00 keys per slot on average.
+[root@localhost ~]# 
 			
 
