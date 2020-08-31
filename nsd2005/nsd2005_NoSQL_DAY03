@@ -33,7 +33,7 @@
 		要求：把52配置为51的从服务器
 		52的配置如下 
 		redis-cli  -h 192.168.4.52 -p 6352
-		> slaveon  192.168.4.51  6351
+		> slaveof  192.168.4.51  6351
 		> info replication
 		> exit
 		vim /etc/redis/6379.conf
