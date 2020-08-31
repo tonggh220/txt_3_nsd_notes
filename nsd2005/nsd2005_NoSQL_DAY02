@@ -223,5 +223,13 @@ Do you want to proceed with the proposed reshard plan (yes/no)? yes 同意配置
 [OK] 7 keys in 3 masters.
 0.00 keys per slot on average.
 [root@localhost ~]# 
-			
+
+
+		平均分配 hash槽 （所有master主机占用的hash槽）
+		[root@host57 ~]# redis-trib.rb  rebalance 192.168.4.55:6355
+
+		把移除的 slave角色主机或master主机， 再添加到集群里
+		    1 启动Redis服务， 登录后 执行cluster  reset
+		    2 再 在 管理主机执行添加主机的命令，（如果添加的是master角色的主机要执行分片hash槽的操作）
+            
 
