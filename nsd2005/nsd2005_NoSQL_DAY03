@@ -152,3 +152,21 @@ mv：是否覆盖"/var/lib/redis/6379/dump.rdb"？ y
 
 		查看数据redis-cli  -h 192.168.4.55 -p 6355 
 		             > keys *
+
+
+验证存盘频率
+
+192.168.4.50:6350> exit
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350 -a 123456 shutdown
+[root@host50 ~]# ls /var/lib/redis/6379/
+dump.rdb
+[root@host50 ~]# rm -rf  /var/lib/redis/6379/dump.rdb 
+[root@host50 ~]# vim /etc/redis/6379.conf
+save 900 1
+#save 300 10
+save 120 10
+save 60 10000
+:wq
+
+[root@host50 ~]#  /etc/init.d/redis_6379 start
+测试 连接服务 在120秒内 存储10或10以上的变量 ，查看数据库目录下是否有dump.rdb文件
