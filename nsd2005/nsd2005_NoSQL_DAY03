@@ -218,3 +218,38 @@ mv /opt/appendonly.aof   /var/lib/redis/6379/
 
 	5 启动服务
 	6 连接服务查看数据
+
+
+
+3 数据类型 
+    3.1 字符类型   set   mset   get  mget     setrange  strlen   append  
+	         setbit   bitcount  decr   decrby  incr   incrby    incrbyfloat
+
+	        setbit  使用二进制数给变量赋值 0 或 1    使用二进数存储数据的目的是为节省内存存储空间
+	        bitcount  统计二进制数中1的个数
+
+有1G的内存存储空间 可以存储下多少个0 或 1 
+
+1G=1024M
+1M=1024K                1M   1024*1024*8
+1K=1024bytes           1k    1024*8
+1bytes=8bit
+1bit=0或1
+		
+	setbit  nb   1  1
+	setbit  nb   2  0
+	setbit nb    3  1
+	setbit nb    4  1
+		 5    0
+  		 6    0
+		 7    1
+	setbit nb    8  0
+	
+nb  10110010       365bit /8 =  45bytes  * 150  = 6750bytes  / 1024  = 6k 
+
+    3.2 列表类型 list  把多个值存储到一个变量里，
+	 lpush   llen      lrange   lpop   lindex  lset   rpush     rpop
+
+   3.3 hash类型 也叫做hash表
+	一个变量可以存储多列，每列都各自的值  节省存储空间
+	hset   hmset   hget   hmget   hkeys   hvals   hgetall  hdel 
