@@ -195,3 +195,26 @@ appendonly.aof  dump.rdb
 [root@host50 ~]# wc -l /var/lib/redis/6379/appendonly.aof 
 82 /var/lib/redis/6379/appendonly.aof
 [root@host50 ~]# 
+
+
+		使用备份的AOF文件恢复数据
+在50主机备份
+[root@host50 ~]# cp /var/lib/redis/6379/appendonly.aof /root/
+[root@host50 ~]# ls /root/appendonly.aof 
+/root/appendonly.aof
+[root@host50 ~]# scp  /root/appendonly.aof  root@192.168.4.55:/opt/
+
+在55 主机恢复 ，步骤如下
+	1 停止Redis服务  
+	2 清空数据库目录
+
+	3 修改主配置文件启用AOF
+vim  /etc/redis/6379.conf
+appendonly  yes
+:wq
+
+	4 把备份的aof文件移动到数据库目录下
+mv /opt/appendonly.aof   /var/lib/redis/6379/ 
+
+	5 启动服务
+	6 连接服务查看数据
