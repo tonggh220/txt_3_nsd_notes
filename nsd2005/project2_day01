@@ -1,0 +1,93 @@
+project02_day01 
+	配置11 和 22 主机的 逻辑卷 lv0
+    1  fdisk  -l /dev/sdb
+    2  fdisk  -l /dev/sdc
+    3  fdisk  /dev/sdc
+    5  fdisk  /dev/sdb
+    7  pvcreate /dev/sdb1  /dev/sdc1
+    8  vgcreate  vg0  /dev/sdb1 /dev/sdc1
+    9  vgdisplay vg0
+   10  lvcreate  -n lv0  -L +9.99G vg0
+   11  lvscan 
+   13  mkfs.xfs /dev/vg0/lv0
+   14  blkid /dev/vg0/lv0 
+	
+	在11 和 22 主机的安装MySQL服务软件（不需要启动服务）
+		如果启动，做如下操作：
+		systemctl  stop  mysqld
+		rm  -rf /var/lib/mysql/*
+
+
+              在11 和 22 主机设置开机挂载lv0磁盘  练习到 15:36 
+[root@localhost ~]# vi /etc/fstab 
+/dev/vg0/lv0  /var/lib/mysql                    xfs    defaults        0 0
+:wq
+
+[root@localhost ~]# mount -a
+
+[root@localhost ~]# mount | grep  "/var/lib/mysql"
+
+[root@localhost ~]# df -h /var/lib/mysql
+
+	在11 和 22 主机分别启动mysql服务，并重置管理员登录密码123qqq...A
+
+	配置MySQL一主一从同步结构，具体操作如下   练习+休息到 16:10 
+		*** 防火墙 和 selinux 关闭
+
+		配置主数据库服务器MySQL11
+			启用binlog日志  用户授权 查看日志信息
+
+		配置主数据库服务器MySQL22
+			指定server_id  重启数据库服务  指定主数据库服务器信息
+			启动slave进程  查看状态
+
+
+               配置读写分离服务192.168.4.77 （关闭selinux 和 firewalld）
+		安装软件
+		修改主配置文件
+	配置数据库服务器:MySQL11  he  mysql22 主机都要有mysqla用户和 mysqlb用户
+时间10分钟到 16:56 
+		启动读写分离服务
+		查看服务状态
+		查看监控信息
+
+
+             配置NFS服务 192.168.4.30 ，具体配置如下：
+		挂载额外添加的/dev/vdb磁盘到本机/site目录
+		配置nfs服务，步骤如下：
+			安装服务软件包
+			修改配置文件 共享挂载目录
+			启动  rpcbind服务  和 nfs服务
+			查看共享信息
+			关闭selinux和 firewalld 
+        配置网站服务器 web33 和 web44 ，步骤如下：
+		1 安装提供网站服务的软件httpd (不启动服务)
+		2 查看共享
+		3 设置开机挂载nfs共享目录
+		4 查看挂载信息
+		5 启动网站服务
+
+    测试配置：
+	测试nfs配置
+[root@nfs30 ~]# echo  "i love boy" > /sitedir/test.html 
+[root@nfs30 ~]# ls /sitedir/
+test.html
+[root@nfs30 ~]# 
+
+[root@web33 ~]# ls /var/www/html/
+test.html
+[root@web33 ~]# 
+
+[root@web44 ~]# ls /var/www/html/
+test.html
+[root@localhost ~]# 
+
+[root@localhost ~]# curl  http://192.168.4.33/test.html
+i love boy
+[root@localhost ~]# 
+[root@localhost ~]# curl  http://192.168.4.44/test.html
+i love boy
+[root@localhost ~]# 
+
+		
+	测试读写分离配置 (明天测试)
