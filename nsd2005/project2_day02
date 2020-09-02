@@ -1,0 +1,39 @@
+
+升级网站运行平台到LNMP 步骤如下：
+	1 清除当前配置 
+        停止服务  卸载挂载
+        
+	2 安装LNMP软件
+		安装源码Nginx软件
+		安装php-fpm软件
+		安装php及php-mysql软件 
+		安装mariadb-server及 mariadb、mariadb-devel软件(可选安装，因为数据不存储在nginx服务器本机的数据库里)
+
+	3 修改配置文件
+	
+	4 启动服务
+	       4.1  挂载nfs30主机的共享目录到nginx的网页目录下
+	       4.2 启动 nginx服务 php-fpm服务
+
+	5测试配置
+	
+案例2 ：部署缓存服务
+            目的：提供内存空间存储数据，把网站的热点数据放到内存里，加快访问速度
+	2.1 部署redis集群 ，步骤如下 练习到 12:00
+		搭建redis服务器(6台)，具体操作如下：
+		 	安装软件
+			初始化配置
+			停止服务
+			修改配置文件，启用集群配置
+			启动服务
+			查看服务信息
+			配置管理主机
+			创建集群
+			查看集群信息  
+[root@localhost ~]# redis-trib.rb  info  192.168.4.51:6351
+192.168.4.51:6351 (c3e25c31...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.4.53:6353 (9a3fab93...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.4.52:6352 (051b66a1...) -> 0 keys | 5462 slots | 1 slaves.
+[OK] 0 keys in 3 masters.
+0.00 keys per slot on average.
+[root@localhost ~]#
