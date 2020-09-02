@@ -106,3 +106,54 @@ slave0:ip=192.168.4.54,port=6354,state=online,offset=15135,lag=1
 		客户端连接网站服务器访问取数据的脚本
 [root@host50 ~]# curl http://192.168.4.33/y.php
 tarenaA tarenaB tarenaC 
+
+
+统一排错步骤：
+	检查存取数据的php脚本代码写对了吗？
+	查看是否 支持 php  -m  | grep  -i  redis
+	检查提供模块的软件是 redis-cluster-4.3.0.tgz
+	所有主机的防火墙和selinux 关一遍
+	查看nginx服务日志文件  查看访问报错信息
+	查看Redis服务日志文件  查看访问报错信息
+
+数据迁移：把存储在读写分离结构里的数据在线迁移到PXC集群
+	具体步骤如下：
+	1  把66主机配置为11的从数数据库服务器
+		运行运行MySQL数据库服务器（装包 起服务 管理员登陆 修改密码）
+		确保与主数据库服务器数据一致
+			1  11主机 ，不锁表 备份网站存储数据的库 buydb 并记录备份完成后是要的binlog日志名和偏移量位置  把备份文件拷贝给 66 数据库服务器
+   11  yum -y install libev-4.15-1.el6.rf.x86_64.rpm  ; yum  -y install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+  
+   13  innobackupex --user root --password 123qqq...A  /allbak --no-timestamp
+
+   15  scp -r /allbak   root@192.168.4.66:/root/
+
+			        66主机主机执行恢复：停止服务 准备恢复数据 拷贝数据 修改所有者和组用户为mysql  启动服务  管理员登陆查看数据
+ 12  yum -y install libev-4.15-1.el6.rf.x86_64.rpm ; yum -y install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+   13  systemctl  stop mysqld
+   14  rm -rf /var/lib/mysql/*
+   15  innobackupex --apply-log /root/allbak
+   16  innobackupex --copy-back /root/allbak
+   19  chown -R mysql:mysql  /var/lib/mysql
+   20  systemctl  start mysqld
+   21  mysql -uroot -p123qqq...A
+
+		指定server_id 并重启mysqld服务
+
+		查看备份文件里记录的日志名和偏移量
+[root@pxc66 ~]# grep  master11  /root/allbak/xtrabackup_info 
+binlog_pos = filename 'master11.000003', position '1340'
+[root@pxc66 ~]# 
+
+		指定主数据库服务器信息
+mysql> change master to master_host="192.168.4.11" ,  master_user="repluser",master_password="123qqq...A" , master_log_file="master11.000003",master_log_pos=1340;
+Query OK, 0 rows affected, 2 warnings (0.01 sec)
+
+mysql> start slave;
+
+			
+		启动slave进程  mysql> start slave;
+		查看状态
+mysql> show slave status \G
+  	Slave_IO_Running: Yes
+                Slave_SQL_Running: Yes
