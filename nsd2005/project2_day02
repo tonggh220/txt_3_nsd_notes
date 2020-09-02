@@ -157,3 +157,73 @@ mysql> start slave;
 mysql> show slave status \G
   	Slave_IO_Running: Yes
                 Slave_SQL_Running: Yes
+
+启动slave进程  mysql> start slave;
+		查看状态
+mysql> show slave status \G
+  	Slave_IO_Running: Yes
+                Slave_SQL_Running: Yes
+
+             
+		创建PXC集群 ，步骤如下：
+			1. 在pxcnode66主机,做如下配置：
+停止mysqld服务、卸载mysqld服务软件  安装PXC软件、
+
+修改配置文件 、启动mysql服务
+数据库管理员登录、用户授权
+查看集群状态信息show status like "%wsrep%";
+查看slave进程的状态 show slave status \G
+
+			2、配置另外2台PXC服务器
+				2.1    主机10做如下配置
+安装PXC软件、修改配置文件、启动mysql服务
+数据库管理员登录、查看集群状态信息、查看数据
+
+				2.2    主机88做如下配置
+安装PXC软件、修改配置文件、启动mysql服务
+数据库管理员登录、查看集群状态信息、查看数据
+
+			3 三台服务器的功能配置
+wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.10,192.168.4.88
+
+			4 测试配置
+在网站服务器web33直接连接pxc集群主机访问数据库服务
+web33]# mysql -h192.168.4.10 -uplj -p123qqq...A
+web33]# mysql -h192.168.4.66 -uplj -p123qqq...A
+web33]# mysql -h192.168.4.88 -uplj -p123qqq...A
+
+[root@MySQL11 ~]# mysql -uroot -p123qqq...A
+mysql> alter table buydb.user add id int primary key auto_increment first;
+mysql> mysql> select  * from buydb.user;
+
+[root@web33 ~]# mysql -h192.168.4.77 -P4006 -uplj -p123qqq...A
+MySQL [(none)]> insert buydb.user(username,password)values("y","y");
+
+
+[root@pxc66 ~]# mysql -uroot -p123qqq...A  -e 'select  * from buydb.user'
+[root@pxc88 ~]#  mysql -uroot -p123qqq...A  -e 'select  * from buydb.user'
+[root@pxc10 ~]#  mysql -uroot -p123qqq...A  -e 'select  * from buydb.user'
+
+		案例4 集群配置
+配置LB 集群
+	在98 主机配置haproxy调度器，步骤如下
+		安装软件
+		修改配置文件
+		启动服务
+		测试网站服务器连接数据库服务的时候范围haproxy主机98
+124  mysql -h192.168.4.98  -uplj -p123qqq...A -e 'select @@hostname' //多次连接访问显示不同的主机名
+
+配置HA集群 ，配置备用调度器，步骤如下：
+	配置备用调度 77
+		安装haproxy软件
+		修改配置文件（配置与haproxy99主机相同）
+		启动服务
+		测试配置
+	配置高可集群步骤如下：
+		1 分别在主调度器和备用调度器安装keepalived 软件
+		2 修改2台服务的配置文件
+		3 分别启动keepalived 服务
+		测试配置：
+		4 客户端连接vip地址访问数据库服务器
+		5 把主调度器的服务停止备用调度器获取vip地址
+
