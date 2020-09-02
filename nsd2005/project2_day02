@@ -37,3 +37,72 @@
 [OK] 0 keys in 3 masters.
 0.00 keys per slot on average.
 [root@localhost ~]#
+
+
+
+	2.2 配置网站服务可以连接集群存取数据
+		安装提供模块的软件redis-cluster-4.3.0.tgz
+		调用模块
+		重启php-fpm服务
+		查看redis模块
+		
+			 时间10分钟 到 14:26
+
+	2.3 测试配置：编写php脚本连接redis集群中任意主机存取数据
+		编写存储数据php脚本
+nfs30]# vim /sitedir/x.php
+<?php
+$redis_list = ['192.168.4.51:6351','192.168.4.52:6352','192.168.4.53:6353','192.168.4.54:6354','192.168.4.56:6356','192.168.4.57:6379'];
+
+$client = new RedisCluster(NUll,$redis_list);
+$client->set("i","tarenaA ");
+$client->set("j","tarenaB ");
+$client->set("k","tarenaC ");
+echo  "data ok";
+?>
+:wq
+
+
+
+		编写取数据的php脚本
+nfs30]# vim /sitedir/y.php
+<?php
+$redis_list = ['192.168.4.51:6351','192.168.4.52:6352','192.168.4.53:6353','192.168.4.54:6354','192.168.4.56:6356','192.168.4.57:6379'];
+
+$client = new RedisCluster(NUll,$redis_list);
+
+echo $client->get("i");
+echo $client->get("j");
+echo  $client->get("k");
+?>
+:wq
+	
+                   	客户端连接网站服务器访问存储数据的脚本
+[root@host50 ~]# curl http://192.168.4.33/x.php
+data ok
+
+		在Redis服务器 本机命令连接，查看php脚本里的数据是否存储成功
+[root@host50 ~]# redis-cli -c -h 192.168.4.51 -p 6351
+192.168.4.51:6351> keys *
+1) "j"
+192.168.4.51:6351> exit
+[root@host50 ~]# 
+[root@host50 ~]# redis-cli -c -h 192.168.4.52 -p 6352
+192.168.4.52:6352> keys *
+1) "k"
+192.168.4.52:6352> exit
+[root@host50 ~]# redis-cli -c -h 192.168.4.53 -p 6353
+192.168.4.53:6353> keys *
+1) "i"
+192.168.4.53:6353> get   i
+"tarenaA "
+192.168.4.53:6353> info replication
+# Replication
+role:master
+connected_slaves:1
+slave0:ip=192.168.4.54,port=6354,state=online,offset=15135,lag=1
+
+
+		客户端连接网站服务器访问取数据的脚本
+[root@host50 ~]# curl http://192.168.4.33/y.php
+tarenaA tarenaB tarenaC 
