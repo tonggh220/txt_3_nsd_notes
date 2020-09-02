@@ -90,4 +90,37 @@ i love boy
 [root@localhost ~]# 
 
 		
-	测试读写分离配置 (明天测试)
+		测试NFS目录客户端写文件权限
+[root@web33 ~]#  echo  "aaaa"  >  /var/www/html/a.html
+[root@web44 ~]# ls  /var/www/html/a.html
+
+[root@web44 ~]#  echo  "bbbb"  >  /var/www/html/b.html
+[root@web33 ~]# ls  /var/www/html/b.html
+
+curl http://192.168.4.44/a.html	
+curl http://192.168.4.33/b.html	
+
+	测试读写分离配置
+		1  在主数据库服务器创建存储数据库的库和表
+mysql11]# mysql  -uroot  -p123qqq...A
+>create database  buydb;
+>create table buydb.user(username char(10) , password  char(6));
+
+ 
+		2  在主数据库服务器添加用户给网站服务连接使用
+>grant   select , insert , update , delete on  buydb.*   to   plj@"%"  identified by "123qqq...A";
+
+		3  在网站服务器连接读写分离服务器存取数据
+]#yum  -y  install  mariadb
+]# mysql -h192.168.4.77  -P4006  -uplj  -p123qqq...A
+> insert  into  buydb.user  values("a","123");
+> select  * from  buydb.user;
+			
+		4  测试数据的读写分离
+mysql22]#  mysql  -uroot  -p123qqq...A
+> insert into  buydb.user  values ("x","x");   #此条件记录只在从服务器有，主服务器没有
+
+web33]#  mysql -h192.168.4.77  -P4006  -uplj  -p123qqq...A
+>select  * from buydb.user;  可以查x记录说明数据是在从服务器上执行查找到
+> insert  into  buydb.user  values("b","321");  
+>>select  * from buydb.user; 即可以查到记录x 又可以查到记录b ，如果记录b 没有写主服务器上 ，从服务器是无法同步的
