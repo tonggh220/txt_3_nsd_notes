@@ -86,7 +86,7 @@ mysql> alter table  t10  rename  学生信息表;
 			        索引使用规则？
 					查看索引  desc  库.表;   key    MUL
 					创建索引列表：
-								在已有表添加索引
+								
                                 建表时创建索引   index(字段名)
 
                                 mysql> create table db1.tea4(
@@ -113,4 +113,21 @@ mysql>
 
 
 
-					删除索引
+					在已有表添加索引    create   index
+								create   index    索引名   on  库.表(字段名);
+								
+	mysql> create index  xxx  on  db1.t1(name);
+	mysql> create index  yyy  on  db1.t1(age);
+										
+											
+					 查看索引的详细信息  show  index 
+							    show   index  from  库.表名  \G
+mysql> show  index  from  db1.t1  \G
+Table: t1
+Key_name: yyy
+Column_name: age
+Index_type: BTREE
+					  
+					删除索引    drop  index
+								drop  index  索引名   on  表名;
+								drop   index yyy   on    db1.t1;
