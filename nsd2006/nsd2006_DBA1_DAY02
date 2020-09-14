@@ -1,0 +1,116 @@
+dba1_day02		
+		1 修改表结构
+				1.1  字段约束条件
+							作用： 限制字段赋值
+							包括的限制如下：
+														是否可以给字段赋空null值
+															在 类型后 加  not  null 
+															
+									                       name   char (10)  not   null  
+															
+														键值
+														
+														默认值
+																不给表头赋值时，使用默认值赋值
+																在 类型后 加  default  值
+																
+																age  int   default   21 
+																
+														额外设置
+																	通常是让字段的值自增长(必须
+																	是主键才能加自增长)
+																    auto_increment
+																	
+create table  db1.t8(name  char(10) not null  ,  age  int  default  21,
+likes  set("a”,"b","c","d") not null  default  "a,c" ,  stu_num  char(7) );
+
+desc  db1.t8;
+use  db1;
+mysql> insert into t8(name,stu_num)values("bob","nsd0601");
+mysql> insert into t8   values(null,31,null,"nsd0607");																
+mysql> insert into t8   values("null",31,null,"nsd0607");						
+mysql> insert into t8   values("null",31,"a,c","nsd0607");
+mysql> select  *  from   db1.t8;
+
+休息到  10：20 
+						
+							查看表记录字段的约束 desc  库.表；
+	
+
+							
+				
+				1.2   修改表结构 
+						命令格式
+						alter  table  库.表   执行动作；
+						
+						添加新字段  add    练习5分钟到 10:42 
+						
+									        add   列名    字段类型；
+mysql> alter table  db1.t10  add  qq varchar(11);
+											
+											add   列名    字段类型  约束条件；
+											
+mysql> alter table  db1.t10  add  home  char(20) not null default "bj";
+											
+											add   列名    字段类型  约束条件  first ；
+mysql> alter table   t10 add mail varchar(30) default "stu@tedu.cn" first;
+
+											add   列名    字段类型  约束条件 after  列名；
+mysql> alter table   t10 add  class  char(7) default "nsd2006" after name ;
+											
+											
+					    删除已有字段 drop   休息到11：00 上课
+											 drop  列名；
+mysql> alter table  t10 drop qq ;
+											 
+											 drop   列名,  drop  列名 ;
+mysql> alter table t10 drop mail , drop age ;
+											 
+					     修改列名  change 
+										 change  原列名  新列名  字段类型  约束条件; 
+mysql> alter table  t10  change class 班级 char(7) default "nsd2006" ;
+										 
+						  修改字段类型 modify
+										  modify   列名    新字段类型  新约束条件；
+mysql> alter table  t10 modify home varchar(30) default "shanghai" ;
+										  
+						   修改表名  rename
+											 alter  table  原表名   rename   新表名 ；
+											 
+mysql> alter table  t10  rename  学生信息表;
+											 
+		2 mysql键 值 
+			键值的种类： 普通索引   主键  外键   唯一索引  全文索引
+		
+		   普通索引的使用  index
+			        索引使用规则？
+					查看索引  desc  库.表;   key    MUL
+					创建索引列表：
+								在已有表添加索引
+                                建表时创建索引   index(字段名)
+
+                                mysql> create table db1.tea4(
+    -> id  char(6) not null,
+    -> name varchar(4) not null ,
+    -> age int not null,
+    -> gender enum("boy","girl") default "boy",
+    -> index(id) , index(name)
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> desc db1.tea4;
++--------+--------------------+------+-----+---------+-------+
+| Field  | Type               | Null | Key | Default | Extra |
++--------+--------------------+------+-----+---------+-------+
+| id     | char(6)            | NO   | MUL | NULL    |       |
+| name   | varchar(4)         | NO   | MUL | NULL    |       |
+| age    | int(11)            | NO   |     | NULL    |       |
+| gender | enum('boy','girl') | YES  |     | boy     |       |
++--------+--------------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> 
+
+
+
+					删除索引
