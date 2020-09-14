@@ -326,3 +326,113 @@ mysql>select  * from  db1.t12;
 mysql> delete  from  db1.t12;
 mysql> insert into db1.t12(name,age,class) values("a2",17,"nsd2008");
 mysql>select  * from  db1.t12;
+
+                			外键的使用规则？
+			
+			创建外键的命令格式？
+				create table  库.表（字段名列表，foreign key(字段名)   
+				references  表名(字段名)   on  update cascade  on  delete  
+				cascade  ）engine = innodb ;
+			 
+			 
+   员工表               工资表			
+		   表1            表2
+		   姓名            姓名
+		 char (10)             char(10)   
+		   user           name  外键  参考的是 表1  user 字段名
+		                    lucy  
+			jim            
+			
+	
+mysql> create  table  db1.yg_tab(
+    -> yg_id int  primary key auto_increment,
+    -> name char(10))engine=innodb;
+
+
+
+mysql> insert into db1.yg_tab(name) values("tom");
+mysql> insert into db1.yg_tab(name) values("lucy");
+mysql> select  * from db1.yg_tab;
+
+mysql> create table  db1.gz_tab(
+    -> gz_id  int ,  gz  float(7,2),
+    -> foreign key(gz_id) references yg_tab(yg_id)
+    -> on update cascade  on  delete cascade
+    -> )engine=innodb;
+	
+
+mysql> show  create table db1.gz_tab \G   查看外键
+*************************** 1. row ***************************
+       Table: gz_tab
+Create Table: CREATE TABLE `gz_tab` (
+  `gz_id` int(11) DEFAULT NULL,
+  `gz` float(7,2) DEFAULT NULL,
+  KEY `gz_id` (`gz_id`),
+  CONSTRAINT `gz_tab_ibfk_1` FOREIGN KEY (`gz_id`) REFERENCES `yg_tab` (`yg_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+1 row in set (0.08 sec)
+
+
+mysql> alter table  db1.gz_tab drop foreign key gz_tab_ibfk_1 ;  删除外键
+Query OK, 0 rows affected (0.01 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> show  create table db1.gz_tab \G
+*************************** 1. row ***************************
+       Table: gz_tab
+Create Table: CREATE TABLE `gz_tab` (
+  `gz_id` int(11) DEFAULT NULL,
+  `gz` float(7,2) DEFAULT NULL,
+  KEY `gz_id` (`gz_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+给表添加外键
+		alter  table  db1.gz_tab  add  foreign key (gz_id )  references 
+		yg_tab(yg_id )  on   update cascade on  delete cascade ;
+		
+        show   create  table  db1.gz_tab;
+		
+mysql> select  * from db1.yg_tab;
++-------+------+
+| yg_id | name |
++-------+------+
+|     1 | tom  |
+|     2 | lucy |
++-------+------+
+2 rows in set (0.00 sec)
+
+mysql> desc db1.gz_tab;
++-------+------------+------+-----+---------+-------+
+| Field | Type       | Null | Key | Default | Extra |
++-------+------------+------+-----+---------+-------+
+| gz_id | int(11)    | YES  | MUL | NULL    |       |
+| gz    | float(7,2) | YES  |     | NULL    |       |
++-------+------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> insert into db1.gz_tab values(3,50000);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`db1`.`gz_tab`, CONSTRAINT `gz_tab_ibfk_1` FOREIGN KEY (`gz_id`) REFERENCES `yg_tab` (`yg_id`) ON DELETE CASCADE ON UPDATE CASCADE)
+mysql> 
+mysql> insert into db1.gz_tab values(1,50000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into db1.gz_tab values(2,40000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.gz_tab;
++-------+----------+
+| gz_id | gz       |
++-------+----------+
+|     1 | 50000.00 |
+|     2 | 40000.00 |
++-------+----------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+
+                        
