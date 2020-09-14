@@ -131,3 +131,198 @@ Index_type: BTREE
 					删除索引    drop  index
 								drop  index  索引名   on  表名;
 								drop   index yyy   on    db1.t1;
+
+
+                                		   主键的使用 primary   key
+				1  primary   key 使用规则？
+				
+				2  创建主键
+							2.1  建表时 创建主键  primary key(列名)；
+mysql> create table  db1.t18(name char(10) primary key , num int , age int);
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> desc db1.t18;
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| name  | char(10) | NO   | PRI | NULL    |       |
+| num   | int(11)  | YES  |     | NULL    |       |
+| age   | int(11)  | YES  |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> insert into db1.t18 values (null , 1, 19);
+ERROR 1048 (23000): Column 'name' cannot be null
+mysql> 
+mysql> insert into db1.t18 values ("a" , 1, 19);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into db1.t18 values ("a" , 2, 69);
+ERROR 1062 (23000): Duplicate entry 'a' for key 'PRIMARY'
+mysql> insert into db1.t18 values ("b" , 2, 69);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from  db1.t18;
++------+------+------+
+| name | num  | age  |
++------+------+------+
+| a    |    1 |   19 |
+| b    |    2 |   69 |
++------+------+------+
+2 rows in set (0.00 sec)
+
+mysql> 
+                        2.2   在已有表里添加主键
+							alter  table  库.表   add   primary  key(字段名)；
+
+mysql> select  * from  t4;
++------+------+
+| name | age  |
++------+------+
+| bob  |    0 |
+| bob  |  255 |
+| bob  |   25 |
+| jim  |   27 |
+| tom  |   26 |
++------+------+
+5 rows in set (0.00 sec)
+
+mysql> desc t4;
++-------+---------------------+------+-----+---------+-------+
+| Field | Type                | Null | Key | Default | Extra |
++-------+---------------------+------+-----+---------+-------+
+| name  | char(3)             | YES  |     | NULL    |       |
+| age   | tinyint(3) unsigned | YES  |     | NULL    |       |
++-------+---------------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> alter table  db1.t4  add primary key(name);
+ERROR 1062 (23000): Duplicate entry 'bob' for key 'PRIMARY'
+mysql> 
+mysql> delete from  db1.t4;
+Query OK, 5 rows affected (0.01 sec)
+
+mysql> select  * from  t4;
+Empty set (0.00 sec)
+
+mysql> alter table  db1.t4  add primary key(name);
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> select  * from  t4;
+Empty set (0.00 sec)
+
+mysql> desc t4;
++-------+---------------------+------+-----+---------+-------+
+| Field | Type                | Null | Key | Default | Extra |
++-------+---------------------+------+-----+---------+-------+
+| name  | char(3)             | NO   | PRI | NULL    |       |
+| age   | tinyint(3) unsigned | YES  |     | NULL    |       |
++-------+---------------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+
+
+                        							2.3   创建复合主键: 表中的多列一起做主键
+													只要做主键的多列的值不同时相同即可
+													必须一起创建
+															
+primariy 							
+客户端地址     服务端口号     访问状态
+cip			      port                status
+1.1.1.1            22                  yes
+1.1.1.1            9000              deny
+
+create table  db1.t11(
+cip  varchar(15) , port   smallint  , status  enum("yes","deny") ,
+primary key(cip ,  port  )
+ );
+ 
+ 
+mysql> desc db1.t11;
++--------+--------------------+------+-----+---------+-------+
+| Field  | Type               | Null | Key | Default | Extra |
++--------+--------------------+------+-----+---------+-------+
+| cip    | varchar(15)        | NO   | PRI | NULL    |       |
+| port   | smallint(6)        | NO   | PRI | NULL    |       |
+| status | enum('yes','deny') | YES  |     | NULL    |       |
++--------+--------------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> 
+				
+							
+							2.4  主键与auto_increment连接
+									让字段通过自己+1的方式赋值
+	create  table   db1.t12 ( num   int    primary key   auto_increment, 
+	name  char(10) , age   int  ,  class  char(7)
+	);								
+				
+	mysql> create  table   db1.t12 ( num   int    primary key   auto_increment, 
+    -> name  char(10) , age   int  ,  class  char(7)
+    -> );
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> desc db1.t12;
++-------+----------+------+-----+---------+----------------+
+| Field | Type     | Null | Key | Default | Extra          |
++-------+----------+------+-----+---------+----------------+
+| num   | int(11)  | NO   | PRI | NULL    | auto_increment |
+| name  | char(10) | YES  |     | NULL    |                |
+| age   | int(11)  | YES  |     | NULL    |                |
+| class | char(7)  | YES  |     | NULL    |                |
++-------+----------+------+-----+---------+----------------+
+4 rows in set (0.00 sec)
+
+mysql> select  * from db1.t12;
+Empty set (0.00 sec)
+
+mysql> insert into  db1.t12(name,age,class) values("bob",19,"nsd2006");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t12;
++-----+------+------+---------+
+| num | name | age  | class   |
++-----+------+------+---------+
+|   1 | bob  |   19 | nsd2006 |
++-----+------+------+---------+
+1 row in set (0.00 sec)
+
+mysql> insert into  db1.t12(name,age,class) values("tom",39,"nsd2006");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t12;
++-----+------+------+---------+
+| num | name | age  | class   |
++-----+------+------+---------+
+|   1 | bob  |   19 | nsd2006 |
+|   2 | tom  |   39 | nsd2006 |
++-----+------+------+---------+
+2 rows in set (0.00 sec)
+
+mysql> insert into  db1.t12(name,age,class) values("jim",17,"nsd2006");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t12;
++-----+------+------+---------+
+| num | name | age  | class   |
++-----+------+------+---------+
+|   1 | bob  |   19 | nsd2006 |
+|   2 | tom  |   39 | nsd2006 |
+|   3 | jim  |   17 | nsd2006 |
++-----+------+------+---------+
+3 rows in set (0.00 sec)
+
+mysql> 
+mysql> insert into db1.t12 values(6,"a",17,"nsd2008");
+	
+mysql> insert into db1.t12 values(2,"a",17,"nsd2008");
+
+mysql> insert into db1.t12 values(null ,"a",17,"nsd2008");
+mysql>select  * from  db1.t12;
+
+mysql> delete  from  db1.t12;
+mysql> insert into db1.t12(name,age,class) values("a2",17,"nsd2008");
+mysql>select  * from  db1.t12;
