@@ -201,3 +201,28 @@ mysql> select name from db3.user  where  name like '_ _ _ _';
 mysql> select name from db3.user  where  name like '%a%';
 mysql> select name from db3.user  where  name like '_ _%_ _';
 mysql> select name from db3.user  where  name like 'r%';
+
+
+
+mysql> select name from  db3.user  where name regexp '^j|y$' ;
+mysql> select name from  db3.user  where name regexp '^j.*y$' ;
+mysql> select name from  db3.user  where name regexp '[a-c]$' ;
+mysql> select name,uid from  db3.user  where uid regexp '..' ;
+mysql> select name,uid from  db3.user  where uid regexp '^..$' ;
+mysql> insert into db3.user(name)values("yay6a"),("ya8ya"),("9yaya");
+mysql> select name from db3.user where name regexp '[0-9]';
+    
+			
+select  * from db3.user where   id  %  2   =  0 ;			
+select  * from db3.user where   id  %  2   !=  0 ;
+
+mysql> update db3.user set uid=uid+1 where id <= 5; 
+mysql> update db3.user set uid=uid-1 where id <= 5;
+
+mysql> alter table db3.user add age int default 30 after name ;
+
+mysql> select name , 2020 - age  x  from db3.user 
+where name="root" ;
+
+mysql> select name ,uid , gid ,  (uid + gid) / 2  y  from  db3.user  
+where name="sync";
