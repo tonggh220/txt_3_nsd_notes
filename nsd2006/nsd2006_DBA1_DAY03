@@ -226,3 +226,62 @@ where name="root" ;
 
 mysql> select name ,uid , gid ,  (uid + gid) / 2  y  from  db3.user  
 where name="sync";
+
+
+
+					
+			3.3 操作查询结果（把select 命令的执行结果 再使用命令处理一下 ）
+		            
+				    排序
+mysql> select name,uid from db3.user 
+where uid >= 10 and uid <=50；					
+					
+					
+mysql> select name,uid from db3.user 
+where uid >= 10 and uid <=500  order by uid ;
+					
+mysql> select name,uid from db3.user 
+where uid >= 10 and uid <=500  order by uid  desc ;
+
+					分组
+mysql> select shell from  db3.user where uid <=500  group by shell ;
+mysql> select shell from  db3.user   group by shell ;
+							
+					过滤数据
+mysql> select name from db3.user where shell != "/bin/bash"  
+              having  name="sync";		
+					
+					限制显示行数 (默认显示查询结果的所有 行)
+	mysql> select name , uid , shell from db3.user where id <= 15；
+
+	mysql> select name , uid , shell from db3.user 
+	             where id <= 15  limit  1 ；
+
+	mysql> select name , uid , shell from db3.user 
+	             where id <= 15  limit 3 ；			 
+	
+mysql> select name , uid , shell from db3.user 
+              where id <= 15  limit 3,3;
+
+mysql> select name , uid , shell from db3.user 
+              where id <= 15  limit 6,5;
+	
+					聚集函数（数据统计命令）
+mysql> select min(uid) from db3.user;
+mysql> select max(gid) from db3.user;
+mysql> select max(uid) from db3.user where id <= 10 ;
+mysql> select   sum(uid) from db3.user where id <= 10 ;
+mysql> select   avg(uid) from db3.user  ;		
+mysql> select count(name) from  db3.user;
+
+mysql> select count(name) from db3.user 
+where shell not in ("/bin/bash","/sbin/nologin");
+
+mysql> select  count(*) from db3.user;
+
+mysql> select min(uid) , max(uid) , sum(uid),avg(uid),count(uid) 
+             from db3.user;
+
+mysql> select min(uid) x , max(uid) y , sum(uid) z ,
+avg(uid) k  ,count(uid) f from db3.user;
+					
