@@ -285,3 +285,28 @@ mysql> select min(uid) , max(uid) , sum(uid),avg(uid),count(uid)
 mysql> select min(uid) x , max(uid) y , sum(uid) z ,
 avg(uid) k  ,count(uid) f from db3.user;
 					
+
+                    mysql支持的其他查询方式：
+	 多表查询  嵌套查询   连接查询  视图  触发器 存储过程
+	 
+	 4  安装mysql图形工具
+				4.1 常用的图形工具
+				4.2 安装图形工具 phpmyadmin
+# yum  -y  install  httpd  php  php-mysql
+# systemctl start httpd 
+# systemctl  enabled  httpd 
+
+# tar  -zxvf  phpMyAdmin-2.11.11-all-languages.tar.gz
+# mv  phpMyAdmin-2.11.11-all-languages  /var/www/html/phpmyadmin
+
+# cd /var/www/html/phpmyadmin/
+# cp  config.sample.inc.php   config.inc.php  	//创建主配置文件
+
+# vim  config.inc.php
+17   $cfg['blowfish_secret'] = 'plj123';  		//cookies参数
+31   $cfg['Servers'][$i]['host'] = 'localhost'; 	//数据库服务器IP地址
+:wq
+
+打开真机的浏览器 输入网址  http://192.168.4.50/phpmyadmin
+	   用户名  root 
+	   密码      123456
