@@ -116,3 +116,88 @@ update  db3.user  set password="x"  where  name="root";
 			删除表里的行  delete 
 	mysql> delete from db3.user where  id > 19;
 	mysql> delete from db3.user ;  没加条件 删除所有行 请慎用)
+
+
+     2 管理表记录(命令格式)
+			插入表记录  insert  into 
+mysql> insert into db3.user 
+values
+(25,"bob","x",3001,3001,"test user","/home/bob","/sbin/nologin");
+			
+			
+mysql> insert into  db3.user 
+     values
+    (30,"jim","x",2002,2002,"test user","/home/jim","/bin/bash"),
+	(31,"jim","x",2002,2002,"test user","/home/jim","/bin/bash");
+
+mysql> insert into db3.user(name,shell) values("john","/sbin/nologin");
+	
+mysql> insert into db3.user(name,uid,gid)
+    -> values
+    -> ("a",1,1),("b",2,2),("c",3,3);
+
+	
+			查询表记录  select 
+			
+mysql> select  *  from db3.user;
+			
+mysql> select  name , uid   from db3.user;
+
+mysql> select  name , uid   from db3.user  where   uid  <= 3 ;	
+	
+			修改行列的值  update 
+mysql> update db3.user  set  password="a" , comment="student" ;
+
+update  db3.user  set password="x"  where  name="root";
+
+			
+			删除表里的行  delete 
+	mysql> delete from db3.user where  id > 19;
+	mysql> delete from db3.user ;  没加条件 删除所有行 请慎用)
+	
+	 3  匹配条件   （执行 select   update   delete   都可以加条件）
+			3.1 基本匹配条件
+		mysql> select  *  from  db3.user where id = 15 ;
+	    mysql> select name , uid , gid  from db3.user where uid = gid ;
+	    mysql> select name , uid , gid  from db3.user where uid != gid ;
+
+mysql> select id ,name , uid , gid  from db3.user where id <= 10 ;
+mysql> select name , shell from db3.user
+              where  shell = "/sbin/nologin";
+
+mysql> select name from db3.user where name != "root" ;
+
+mysql> select id  from  db3.user where name is null ;
+
+
+mysql> insert into db3.user(id , name ) values (29,null);
+
+mysql> select id  from  db3.user where name is null ;
+mysql> select id , name from db3.user where name is not null ;
+
+mysql> update db3.user set name="john" where name is null ;
+
+
+mysql> select name , uid  from  db3.user where
+    -> name = "bin"  and   uid = 3 and    name is null ;
+
+mysql> select name , uid  from  db3.user where 
+name = "bin"  or   uid = 3 or    name is null;
+
+mysql> select  * from db3.user where 
+name in ("sync","apache","mysql","root")
+
+mysql> select name ,uid from db3.user where uid in (1,3,5,7);
+
+mysql> select name ,shell from db3.user where 
+shell not in ("/sbin/nologin","/bin/bash");
+
+mysql> select * from db3.user where id between 5 and 10 ;
+
+
+			3.2 高级匹配条件
+mysql> select name from db3.user  where  name like '_ _ _';
+mysql> select name from db3.user  where  name like '_ _ _ _';			
+mysql> select name from db3.user  where  name like '%a%';
+mysql> select name from db3.user  where  name like '_ _%_ _';
+mysql> select name from db3.user  where  name like 'r%';
