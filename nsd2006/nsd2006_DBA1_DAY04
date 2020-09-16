@@ -184,7 +184,42 @@ systemctl  start mysqld
 mysql -uroot -p123456
 
 
+	数据备份策略：
+						完全备份：备份所有数据
+										  可以是1台服务器上的所有数据
+										  可以是1个库的所有数据
+										  可以是1张表的所有数据
+				 不是备份所有数据，只备份新产生的数据
+										  
+						增量备份： 备份上次备份后,所有新 产生的数据
+						
+						差异备份:    备份第1次备份后，所有新 产生的数据
+                                           用所有的数据减去第1次备份的剩下的就是新的
+   
+      工作中使用的备份策略
+				完全+差异
+				完全+增量
+						
 		2.2  数据的完全备份与恢复
+						mysqldump 完全备份命令
+				]# mysqldump  --help 
+				]# man   mysqldump 
+				
+				]# mysqldump  -uroot  -p密码  库名  > /目录名/文件.sql 
+				库名的表示方式：
+				       -A 或  --all-databases 备份1台服务器的所有数据
+					   库名  备份1个 库的所有数据
+					   库名  表名    备份1张表的所有数据
+					   -B 库名1 库名2    把多个库的所有数据放到一个备份文件里
+]# mysqldump  -uroot -p666...qqqA  -A > /root/all.sql	
+]# mysqldump  -uroot -p666...qqqA  db1  > /root/db1.sql				   
+]# mysqldump  -uroot -p666...qqqA  db1 t11   > /root/t11.sql
+]# mysqldump  -uroot -p666...qqqA  -B db1  db3    > /root/twodb.sql					   
+[root@host50 ~]# ls /root/*.sql
+/root/all.sql  /root/db1.sql  /root/t11.sql  /root/twodb.sql
+
+
+
 		
 3 增量备份 之 binlog日志的使用
 		3.1 binlog日志介绍
