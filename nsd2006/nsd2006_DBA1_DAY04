@@ -33,6 +33,8 @@ DBA1_DAY04
 				             identified by   "密码"   with  grant  option ;
 				
 			     参数的表示方式？ 详细见PPT
+                 授权的例子：见ppt 
+                 
 		
 		1.2  授权库（mysql库介绍）
 		1.3  撤销权限，和删除用户
