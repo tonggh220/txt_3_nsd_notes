@@ -70,7 +70,7 @@ mysql> show grants for  mydba@"%";
 
 mysql> select user ,  host , db  from  mysql.db   \G 
 
-mysql>  update  mysql.db  set  delete_priv="n" , update_priv="n" ;
+mysql>  update  mysql.db  set  delete_priv="n" , update_priv="n" 
                where   db="db3" ;
 			   
 mysql>  flush  privileges;
