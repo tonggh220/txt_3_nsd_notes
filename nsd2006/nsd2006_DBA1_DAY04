@@ -37,6 +37,7 @@ DBA1_DAY04
                  
 		
 		1.2  授权库（mysql库介绍）
+             查看表记录可以获取用户权限；也可以通过更新记录，修改用户权限
 
 				desc  mysql.user;
 				select  user ,  host   from   mysql,user;
@@ -49,7 +50,62 @@ DBA1_DAY04
 +--------------------------------------------------------------+
 1 row in set (0.00 sec)
 
-mysql> select * from mysql.user  where user="mydba" and host="%" \G
+mysql> select * from mysql.user 
+where user="mydba" and host="%" \G
+
+	
+mysql> update mysql.user set  delete_priv="N" , drop_priv="N" 
+where user="mydba" and host="%" ;
+
+mysql> flush privileges;
+
+mysql> select * from mysql.user 
+where user="mydba" and host="%" \G
+
+mysql> show grants for  mydba@"%";	
+
+
+
+			mysql> desc mysql.db;
+
+mysql> select user ,  host , db  from  mysql.db   \G 
+
+mysql>  update  mysql.db  set  delete_priv="n" , update_priv="n" ;
+               where   db="db3" ;
+			   
+mysql>  flush  privileges;
+
+mysql> show  grants  for  admin2@"localhost";
+
+mysql> select   *  from  mysql.db   \G 
+
+
+			mysql> desc  mysql.tables_priv ;
+
+			mysql> select  *  from   mysql.tables_priv ;
+			
+			mysql> show grants for  admin@"192.168.4.%";
+
+update  mysql.tables_priv  set   table_priv="select,insert,update"
+where  user="admin" and  host="192.168.4.%"	;
+
+flush  privileges;
+		
+mysql> show grants for  admin@"192.168.4.%";
+
+
+
+		desc  mysql.columns_priv;
+		
+mysql> select * from   mysql.columns_priv;
+		
+mysql> update mysql.columns_priv 
+set Column_priv="update,insert" where user="yaya2" ;
+
+mysql> flush  privileges;
+mysql> select * from   mysql.columns_priv;
+
+
 
 
 
