@@ -321,4 +321,41 @@ scp  /mylog/plj.000002   root@192.168.4.51:/root/
     mysql -uroot -p123456 -e 'select count(*) from db3.user' 
     mysql -uroot -p123456 -e 'select * from db3.user' 
 
+
+
+    					3.2.2   使用日志恢复指定的数据
+					命令格式
+mysqlbinlog  选项  /目录/文件名   |   mysql  -uroot -p密码
+
+
+					查看日志格式    mysql> show variables like  "binlog_format";
+
+					
+					修改日志格式   
+					vim /etc/my.cnf
+					[mysqld]
+					binlog_format="mixed"
+					:wq
+					systemctl restart mysqld
+					
+				insert   update    delete 
+					
+					选项介绍
+							偏移量范围 
+							
+			--start-position=起始偏移量   --stop-position=结束偏移量
+			
+						   时间范围 
+							   --start-datetime="YYYY/mm/dd  hh:mm:ss"
+							   --stop-datetime="YYYY/mm/dd  hh:mm:ss"              
+					
+[root@host51 ~]# mysqlbinlog  --start-position=1504   
+--stop-position=1646   /root/plj.000003 | mysql -uroot -p123456					
+	
+
+]# mysqlbinlog --start-datetime="2020/09/17 2:47:12"  
+/root/plj.000003  | mysql -uroot -p123456
+
+
+
         
