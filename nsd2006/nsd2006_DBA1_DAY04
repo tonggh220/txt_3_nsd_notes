@@ -217,17 +217,77 @@ mysql -uroot -p123456
 ]# mysqldump  -uroot -p666...qqqA  -B db1  db3    > /root/twodb.sql					   
 [root@host50 ~]# ls /root/*.sql
 /root/all.sql  /root/db1.sql  /root/t11.sql  /root/twodb.sql
+]# mysqldump -uroot -p123qqq...A mysql > /root/mysql.sql				   
+]# ls /root/*.sql
 
+[root@host50 ~]# scp /root/mysql.sql  root@192.168.4.51:/root/
+[root@host50 ~]# scp /root/t11.sql oot@192.168.4.51:/root/
+				
+				mysql 完全恢复命令
+				]# mysql  -uroot -p密码  库名 <  /目录名/文件.sql 
+host51:
+mysql> delete from mysql.user;
+mysql>  drop  table  db1.t11;
 
+]# mysql -uroot  -p密码  mysql  < /root/mysql.sql
+]# mysql -uroot  -p密码  db1 <      /root/t11.sql
 
-		
+每周一的早上六点把服务器的所有数据完全备份
+vim /root/bak.sh 
+#!/bin/bash
+mysqldump -uroot -p123qqq...A  -A  > /root/`date +%F`_alldata.sql
+:wq
+
+chmod  +x  /root/bak.sh
+
+crontab  -e 
+00 06  *   *   1  /root/bak.sh
+:wq
+
+休息到  10：10 上课 
+
 3 增量备份 之 binlog日志的使用
-		3.1 binlog日志介绍
+		3.1 binlog日志介绍 ？ 具体见 ppt 
+		
 		3.2 管理日志文件：
-						启用日志
-						查看日志
-						创建新的日志文件
-						删除日志文件
-		3.2 使用日志文件恢复数据
-					3.2.1  使用日志恢复所有数据
-					3.2.2   使用日志恢复指定的数据
+					启用日志
+						vim  /etc/my.cnf
+						[mysqld]
+						
+						:wq
+						systemctl restart  mysqld
+						
+						查看日志 > show  master status;
+						                   ls /var/lib/mysql/
+									   
+						
+						自定义日志文件存放的目录和文件名
+						mkdir  /mylog
+						chown  mysql  /mylog 
+						vim  /etc/my.cnf	
+						[mysqld]
+						server_id=50
+						#log_bin
+						log_bin=/mylog/plj
+						:wq
+						systemctl restart  mysqld
+							查看日志 > show  master status;
+						                   ]# ls /mylog
+						
+				创建新的日志文件
+						]# systemctl  restart mysqld
+
+						mysql> flush  logs;
+						等效于
+						]#mysql -uroot -p密码  -e   ' flush  logs'
+						
+]# mysqldump -uroot -p123qqq...A --flush-logs 
+-B db1 db3  mysql  > /root/three.sql 
+
+						
+						删除已有的日志文件
+		purge  master  logs  to  “日志名 ”；   #删除指定编号之前的日志文件
+							   
+		reset  master;	  #删除所有的日志文件，重新创建第1个日志文件
+
+        
