@@ -1,0 +1,42 @@
+dba1_day05  之  innobackupex 的使用 
+				特点：  在线热备不锁表
+				
+				数据的完全备份与恢复
+							完全备份  192.168.4.50
+							命令格式
+]#innobackupex    --user  用户名  --password  密码  备份目录名  
+--no-timestamp 
+
+]#innobackupex --user root --password 123qqq...A  /allbak  
+--no-timestamp
+
+]# ls /allbak/
+							
+							完全恢复   192.168.4.51
+							步骤如下：
+									停止数据库服务
+									清空数据库目录下的数据
+									准备恢复数据   --apply-log 
+									拷贝数据  --copy-back
+									修改数据库目录的所有者和组用户为mysql
+									启动服务
+									查看数据
+[root@host50 ~]# scp -r /allbak root@192.168.4.51:/opt/
+
+[root@host51 ~]# yum -y install libev-4.15-1.el6.rf.x86_64.rpm  
+[root@host51 ~]# yum -y install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+								
+[root@host51 ~]# systemctl  stop mysqld
+[root@host51 ~]# rm -rf /var/lib/mysql/*
+[root@host51 ~]# ls /var/lib/mysql
+[root@host51 ~]# 							
+
+innobackupex  --apply-log  /opt/allbak/
+cat /opt/allbak/xtrabackup_checkpoints 
+
+
+innobackupex  --copy-back  /opt/allbak/
+ls  -l  /var/lib/mysql
+chown  -R mysql:mysql /var/lib/mysql
+
+systemctl  start mysqld
