@@ -290,4 +290,35 @@ crontab  -e
 							   
 		reset  master;	  #删除所有的日志文件，重新创建第1个日志文件
 
+
+        只要在数据库服务器上启用的了binlog日志就是增量备份数据。
+		
+		3.2 使用日志文件恢复数据
+					3.2.1  使用日志恢复所有数据
+					命令格式
+					mysqlbinlog   /目录/文件名   |   mysql  -uroot -p密码
+
+ host50]#
+ mysqldump -uroot -p123qqq...A --flush-logs  db3 user   
+ > /root/db3_user.sql
+ 
+insert into db3.user(name,vid) values ("BBB",99)' 
+insert into db3.user(name,vid) values ("AAA",99)' 
+
+show  master status ;
+    plj.000002 |      720		
+
+
+scp   /root/db3_user.sql   root@192.168.4.51:/root/
+scp  /mylog/plj.000002   root@192.168.4.51:/root/
+
+
+[root@host51 ~]# mysql -uroot -p123456 -e  'create database db3'
+    mysql -uroot -p123456 db3  < /root/db3_user.sql 
+    mysql -uroot -p123456 -e 'select count(*) from db3.user' 
+    mysqlbinlog /root/plj.000002 
+    mysqlbinlog /root/plj.000002  | mysql -uroot -p123456
+    mysql -uroot -p123456 -e 'select count(*) from db3.user' 
+    mysql -uroot -p123456 -e 'select * from db3.user' 
+
         
