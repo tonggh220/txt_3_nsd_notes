@@ -40,3 +40,37 @@ ls  -l  /var/lib/mysql
 chown  -R mysql:mysql /var/lib/mysql
 
 systemctl  start mysqld
+
+
+
+				恢复1张表的所有数据
+				步骤如下：
+							删除表空间 （什么是表空间？ 表名.ibd）
+							导出表信息   （表信息？）
+							拷贝表信息文件到数据库目录下
+							修改表信息文件的所有者及组用户为mysql
+							导入表空间
+							删除数据库目录下的表信息文件
+							查看表记录
+					
+192.168.4.51]#  delete from db3.user;
+mysql> alter  table db3.user discard  tablespace;				
+				
+[root@host50 ~]# scp -r /allbak/  root@192.168.4.51:/opt/		
+
+192.168.4.51 ]# innobackupex --apply-log --export    /opt/allbak
+		
+[root@host51 ~]# innobackupex --apply-log --export /opt/allbak/				
+
+[root@host51 ~]# innobackupex --apply-log --export /opt/allbak/	
+
+[root@host51 ~]# cp /opt/allbak/db3/user.{cfg,exp,ibd} /var/lib/mysql/db3/
+
+[root@host51 ~]# chown  mysql:mysql /var/lib/mysql/db3/user.*
+			
+mysql> alter table  db3.user import  tablespace;  
+
+[root@host51 ~]# rm -rf /var/lib/mysql/db3/user.cfg 
+[root@host51 ~]# rm -rf /var/lib/mysql/db3/user.exp 
+
+mysql> select  * from db3.user;
