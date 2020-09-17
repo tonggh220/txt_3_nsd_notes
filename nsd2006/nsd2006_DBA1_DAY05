@@ -58,9 +58,6 @@ mysql> alter  table db3.user discard  tablespace;
 				
 [root@host50 ~]# scp -r /allbak/  root@192.168.4.51:/opt/		
 
-192.168.4.51 ]# innobackupex --apply-log --export    /opt/allbak
-		
-[root@host51 ~]# innobackupex --apply-log --export /opt/allbak/				
 
 [root@host51 ~]# innobackupex --apply-log --export /opt/allbak/	
 
