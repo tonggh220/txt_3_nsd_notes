@@ -1,0 +1,59 @@
+1 MySQL主从同步
+		1.1  mysql 主从同步，是存储数据的服务结构，实现功能 从角色的数据库服务器
+		自动同步主角色的数据库服务器上的数据。
+		
+		主数据库服务器： 客户端访问数据连接的 服务器做主
+		从数据库服务器： 自动连接主数据库服务器，并同步数据到本机
+		
+		mysql主从同步的工作过程：
+					主数据库服务器必须启用binlog日志文件
+					
+					从数据库服务器：有2个线程  IO   和 SQL 
+					
+	    构建主从同步结构：步骤如下：
+					配置主数据库服务器：  192.168.4.51
+							启用binlog日志文件   
+							用户授权  repluser  123qqq...A    查看日志信息
+							
+					配置从数据库服务器：192.168.4.52
+							
+							指定server_id   并重启数据库服务
+							
+						vim /etc/my.cnf
+							[mysqld]
+							  server_id=52
+					      :wq
+						  
+						  systemctl  restart  mysqld
+						  setenforce  0
+						  systemctl   stop  firewalld
+							
+						 确保与主数据库服务器数据一致
+[root@host51 ~]# mysqldump -uroot -p123qqq...A --master-data  db3  > /root/db3.sql							
+[root@host51 ~]# scp  /root/db3.sql  root@192.168.4.52:/opt/		
+[root@host52 ~]# mysql -uroot -p123qqq...A  -e 'create database db3'
+[root@host52 ~]# mysql -uroot -p123qqq...A   db3  < /opt/db3.sql
+
+
+					
+							指定主服务器信息
+[root@host52 ~]# grep master51 /opt/db3.sql 
+CHANGE MASTER TO MASTER_LOG_FILE='master51.000001',
+ MASTER_LOG_POS=999;
+[root@host52 ~]# 							
+				[root@host52 ~]#	mysql  -uroot  -p密码 		
+							
+			mysql>show   slave status  \G
+								 
+								 
+			mysql> change master to   master_host="192.168.4.51"	,
+			master_user="repluser" , master_password="123qqq...A",
+			master_log_file="master51.000001",master_log_pos=999;
+								 
+							启动slave进程
+				mysql> start  slave ;
+				
+							查看状态
+				mysql>show   slave status  \G
+							  Slave_IO_Running: Yes
+                              Slave_SQL_Running: Yes
