@@ -71,3 +71,72 @@ mysql> alter table  db3.user import  tablespace;
 [root@host51 ~]# rm -rf /var/lib/mysql/db3/user.exp 
 
 mysql> select  * from db3.user;
+
+
+
+
+				数据的增量备份与恢复
+							
+									增量备份命令   innobackupex   --user  root    --password  密码    
+									--incremental   目录名    
+									--incremental-basedir=上次备份文件存储的目录  --no-timestamp
+											
+							
+									增量恢复命令 
+											1   准备恢复数据
+	innobackupex	--apply-log   --redo-only   首次备份目录名
+	
+											2    合并数据 （合并数据的顺序要备份数据的顺序一致）
+	innobackupex	--apply-log   --redo-only   首次备份目录名	  	
+	--incremental-dir=备份文件存储的目录	
+	
+							例子：
+							增量备份 （定义备份上次备份后新产生的数据）
+									周一 首次备份（通常就是完全备份）
+host50 ~]# innobackupex --user root --password 123qqq...A  /fullbak  --no-timestamp	
+insert into db3.user(name) values("a"); 存储新数据 多存几次
+								  
+									周二  增量备份  备份新存储的数据
+host50 ~]# innobackupex --user root --password 123qqq...A  
+--incremental /new1dir  --incremental-basedir=/fullbak --no-timestamp
+insert into db3.user(name) values("b"); 存储新数据 多存几次
+
+									周三  增量备份  备份新存储的数据
+host50 ~]# innobackupex --user root --password 123qqq...A  
+--incremental /new2dir  --incremental-basedir=/new1dir --no-timestamp									
+	
+						增量备份的工作过程？
+									思考1 innobackupex 程序 如何知道有新数据产生？
+									
+									思考2 如果知道有新数据产生，如何判断所有数据里，
+									          那些是新数据呢？
+											  
+									在备份目录下有文件记录 当前目录数据的备份信息
+									
+		]# cat /备份目录名/xtrabackup_checkpoints 									  
+											  
+	    日志文件  ls /var/lib/mysql/ib_logfile0 和 ib_logfile1
+		
+							增量恢复数据
+[root@host50 ~]# scp -r /fullbak/   root@192.168.4.51:/opt/							
+[root@host50 ~]# scp -r /new1dir  root@192.168.4.51:/opt/		
+[root@host50 ~]# scp -r /new2dir  root@192.168.4.51:/opt/		
+
+								恢复步骤如下：
+											systemctl  stop  mysqld
+											
+											rm  -rf /var/lib/mysql/*
+											
+[root@host51 ~]# innobackupex --apply-log --redo-only  /opt/fullbak/
+											
+[root@host51 ~]# innobackupex --apply-log --redo-only  /opt/fullbak/   
+--incremental-dir=/opt/new1dir/
+											
+[root@host51 ~]# innobackupex --apply-log --redo-only  /opt/fullbak/   
+--incremental-dir=/opt/new2dir/
+
+
+[root@host51 ~]# innobackupex --copy-back  /opt/fullbak/
+
+[root@host51 ~]# chown  -R mysql:mysql /var/lib/mysql
+[root@host51 ~]# systemctl  start mysqld
