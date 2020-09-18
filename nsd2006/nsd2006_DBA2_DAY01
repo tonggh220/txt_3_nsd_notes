@@ -103,5 +103,41 @@ CHANGE MASTER TO MASTER_LOG_FILE='master51.000001',
 -e 'select  * from db3.t2'
 
 
+一主多从 例子  把主机 53 也配置为 51的从服务器
+							配置从服务器192.168.4.53
+										1 指定server_id并重启服务
+				vim /etc/my.cnf
+						[mysqld]
+						server_id=53
+				:wq
+				systemctl  restart  mysqld 
+				
+										2 确保与主数据库服务器数据一致
+[root@host51 ~]# mysqldump -uroot -p123qqq...A --master-data  db3  > /root/db3.sql							
+[root@host51 ~]# scp  /root/db3.sql  root@192.168.4.53:/opt/		
+
+[root@host53 ~]# mysql -uroot -p123qqq...A  -e    'create database db3'
+[root@host53 ~]# mysql -uroot -p123qqq...A   db3  < /opt/db3.sql
+					
+							指定主服务器信息
+[root@host53 ~]# grep master51 /opt/db3.sql 
+CHANGE MASTER TO MASTER_LOG_FILE='master51.000001',
+ MASTER_LOG_POS=3576;
+					
+				
+					     				3  指定主服务器信息
+	mysql> change master to  master_host="192.168.4.51",
+     master_user="repluser" ,  master_password="123qqq...A",
+     master_log_file="master51.000001",master_log_pos=3576;
+
+mysql> start slave;
+mysql> show slave status \G
+									
+										4 启动slave进程   start  slave ;
+										5 查看状态            show slave status \G 
+										6 测试数据同步
+										
+
+
 
                             
