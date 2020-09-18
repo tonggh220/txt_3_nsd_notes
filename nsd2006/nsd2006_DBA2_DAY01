@@ -53,7 +53,55 @@ CHANGE MASTER TO MASTER_LOG_FILE='master51.000001',
 							启动slave进程
 				mysql> start  slave ;
 				
+								启动slave进程    mysql> start  slave ;
+				
 							查看状态
 				mysql>show   slave status  \G
-							  Slave_IO_Running: Yes
+							  Slave_IO_Running: Yes   
                               Slave_SQL_Running: Yes
+						
+							
+							mysql>show   slave status  \G
+							
+				             Last_IO_Error:  IO 线程的报错信息
+	                         Last_SQL_Error:  SQL 线程的报错信息
+							 
+							 
+							修改指定的主服务器的信息 		
+							stop  slave;
+							    change master to   选项="值" ，选项="值" ；
+							start slave; 
+							 
+成为从服务器后相关的文件，删除文件 可以恢复为独立的数据库服务器
+					cd  /var/lib/mysql/
+					rm   -rf   master.info 
+	                rm  -rf host52-relay-bin.*
+                    rm -rf relay-log.info 
+                    systemctl  restart  mysqld
+					
+					测试主从同步的功能，步骤如下：
+								1 在主服务器添加用户，给客户端 连接使用
+[root@host51 ~]# mysql -uroot -p123qqq...A 
+-e 'grant all on db3.* to  yaya99@"%" identified by "123qqq...A"'			
+								
+								2 客户端连接主服务器存取数据
+[root@host50 ~]# mysql -h192.168.4.51 -uyaya99 -p123qqq...A 
+-e 'use db3;show tables'
+
+[root@host50 ~]# mysql -h192.168.4.51 -uyaya99 -p123qqq...A 
+-e 'insert into db3.user(name)values("boy")'
+
+[root@host50 ~]# mysql -h192.168.4.51 -uyaya99 -p123qqq...A 
+-e 'create table db3.t2(name char(10))'
+
+								3 在从服务本机能够查看到和主服务器一样的数据
+
+[root@host52 mysql]# mysql -uroot -p123qqq...A  
+-e 'select name from db3.user where name="boy"'
+
+[root@host52 mysql]# mysql -uroot -p123qqq...A  
+-e 'select  * from db3.t2'
+
+
+
+                            
