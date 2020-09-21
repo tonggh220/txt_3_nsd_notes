@@ -136,6 +136,95 @@ mysql> show slave status \G
 										4 启动slave进程   start  slave ;
 										5 查看状态            show slave status \G 
 										6 测试数据同步
+
+
+
+主从从结构的配置
+						53 恢复为独立的数据库服务器
+						54 和 55  运行mysql服务管理员能登陆
+						
+			
+		
+					配置主数据库服务器 53
+							启用binlog 日志文件
+vim /etc/my.cnf
+     [mysqld]
+	  server_id=53
+	  log_bin=master53
+:wq
+systemctl  restart  mysqld 
+
+							用户授权
+mysql> grant  replication slave  on  *.*  to repluser@"%"  
+identified by "123qqq...A" ;
+							
+							查看日志信息
+show  master  status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master53.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+							
+					
+					配置主数据库服务器 54
+启用binlog 日志文件
+vim /etc/my.cnf
+     [mysqld]
+	 log _ slave _updates   启用级联复制功能
+	  server_id=54
+	  log_bin=master54
+:wq
+systemctl  restart  mysqld 
+
+							用户授权
+mysql>  grant replication slave on *.* to  replusera@"%" 
+ identified by "123qqq...A";
+
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master54.000001 |      442 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql>
+						指定主服务器信息
+mysql> change master to master_host="192.168.4.53",
+master_user="repluser",master_password="123qqq...A",
+master_log_file="master53.000001",master_log_pos=441;
+
+mysql> start slave;
+
+mysql> show slave status \G
+	        Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+							
+
+												10:30 休息 10分钟 到  10：40 上课 
+					配置主数据库服务器 55
+							指定server_id
+							vim  /etc/my.cnf
+							[mysqld]
+							  server_id=55
+							:wq
+							systemctl  restart  mysqld 
+							
+							指定主服务器信息
+mysql> change master to master_host="192.168.4.54",
+             master_user="replusera",master_password="123qqq...A",
+             master_log_file="master54.000001",master_log_pos=442;
+							
+							启动slave进程
+mysql> start slave ;
+							查看状态
+							mysql>  show slave status \G
+                                           Slave_IO_Running: Yes
+                                           Slave_SQL_Running: Yes
+        
 										
 
 
