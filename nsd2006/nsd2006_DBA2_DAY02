@@ -85,3 +85,49 @@ protocol=maxscaled
 socket=default
 port=4016    #端口 
 [root@host57 ~]# 
+
+
+				
+								  3  配置数据库服务器51 和  52 
+								    mya用户								
+									mysqlb 用户
+mysql> grant replication slave, replication client on *.* to 
+     mya@"%" identified by "123qqq...A";
+
+
+mysql> grant select on mysql.* to  mysqlb@"%" 
+identified by "123qqq...A";
+								  
+								  4  启动读写分离服务
+[root@host57 ~]# maxscale -f /etc/maxscale.cnf
+[root@host57 ~]# 
+
+									 5  查看服务状态
+[root@host57 ~]# ps -C maxscale
+   PID TTY          TIME CMD
+121516 ?        00:00:00 maxscale
+[root@host57 ~]# 
+		  
+								  							 
+[root@host57 ~]# netstat  -utnlp  | grep maxscale
+tcp6       0      0 :::4006                 :::*                    LISTEN      121516/maxscale     
+tcp6       0      0 :::4016                 :::*                    LISTEN      121516/maxscale     
+[root@host57 ~]# 
+								  
+
+停止服务的命令 ： 
+				]#yum  -y  install psmisc
+				]#killall  -9  maxscale
+							  					 					
+								6  测试配置
+										6.1  在57本机访问管理服务查看监控状态
+[root@host57 ~]# maxadmin -uadmin -pmariadb  -P4016										
+MaxScale> list servers
+Servers.
+-------------------+-----------------+-------+-------------+--------------------
+Server             | Address         | Port  | Connections | Status              
+-------------------+-----------------+-------+-------------+--------------------
+server1            | 192.168.4.51    |  3306 |           0 | Master, Running
+server2            | 192.168.4.52    |  3306 |           0 | Slave, Running
+-------------------+-----------------+-------+-------------+--------------------
+MaxScale> exit
