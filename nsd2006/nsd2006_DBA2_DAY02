@@ -131,3 +131,40 @@ server1            | 192.168.4.51    |  3306 |           0 | Master, Running
 server2            | 192.168.4.52    |  3306 |           0 | Slave, Running
 -------------------+-----------------+-------+-------------+--------------------
 MaxScale> exit
+
+
+6.2   客户端连接57主机的读写分离服务，访问数据
+													 6.2.1 在主数据库服务器添加客户端连接使用的用户
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create database gamedb'
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create table gamedb.t1(id int)' 
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 
+'grant select,insert on gamedb.* to yaya66@"%" identified by "123qqq...A"'
+													 
+										             6.2.2 客户端连接 服务器，存查数据
+[root@host50 ~]# setenforce 0
+[root@host50 ~]# systemctl  stop firewalld
+[root@host50 ~]# mysql -h192.168.4.57 -P4006 -uyaya66 -p123qqq...A
+mysql> insert into gamedb.t1 values(110);
+mysql> select * from gamedb.t1;
++------+
+| id   |
++------+
+|  110 |
++------+
+												 
+										6.3   测试读写分离功能
+													 6.3.1  在从服务器本机向表里添加1行
+[root@host52 ~]# mysql -uroot -p123qqq...A 
+-e 'insert into gamedb.t1 values(8888)'			
+	
+													6.3.2  客户端连接 服务器，存查数据
+[root@host50 ~]# mysql -h192.168.4.57 -P4006 -uyaya66 -p123qqq...A			
+mysql> insert into gamedb.t1 values(120);		
+mysql> select  * from gamedb.t1;
++------+
+| id   |
++------+
+|  110   |
+| 8888  |
+|  120   |
++------+
