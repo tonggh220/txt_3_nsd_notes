@@ -224,6 +224,37 @@ mysql> start slave ;
 							mysql>  show slave status \G
                                            Slave_IO_Running: Yes
                                            Slave_SQL_Running: Yes
+
+
+
+复制模式介绍
+					（从服务器和主服务器实现数据库同步时，拷贝数据的方式）
+						
+					
+					配置半同步复制模式
+								查看服务器的模块是否安装？
+select  plugin_name, plugin_status from  information_schema.plugins  
+where plugin_name like '%semi%';  
+								
+								查看模块是否启用？
+show  variables  like  "rpl_semi_sync_%_enabled"; 	
+					
+								主服务器192.168.4.53 启用半同步复制模式
+										安装模块master
+install  plugin   rpl_semi_sync_master   	 SONAME   "semisync_master.so";  								
+										
+										启用master模块
+set  global rpl_semi_sync_master_enabled=1; 
+										
+										永久配置  vim /etc/my.cnf
+										
+										
+								从服务器192.168.4.55启用半同步复制模式
+										安装模块slave
+install  plugin   rpl_semi_sync_slave   	 SONAME   "semisync_slave.so";	
+									
+										启用slave模块
+set  global rpl_semi_sync_slave_enabled=1; 	
         
 										
 
