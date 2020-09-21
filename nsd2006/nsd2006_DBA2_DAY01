@@ -239,14 +239,20 @@ where plugin_name like '%semi%';
 								查看模块是否启用？
 show  variables  like  "rpl_semi_sync_%_enabled"; 	
 					
-								主服务器192.168.4.53 启用半同步复制模式
+主服务器192.168.4.53 启用半同步复制模式
 										安装模块master
 install  plugin   rpl_semi_sync_master   	 SONAME   "semisync_master.so";  								
 										
 										启用master模块
 set  global rpl_semi_sync_master_enabled=1; 
 										
-										永久配置  vim /etc/my.cnf
+										永久配置  
+										vim /etc/my.cnf
+										[mysqld]
+plugin-load=rpl_semi_sync_master=semisync_master.so
+rpl_semi_sync_master_enabled=1								
+										:wq
+										
 										
 										
 								从服务器192.168.4.55启用半同步复制模式
@@ -254,10 +260,34 @@ set  global rpl_semi_sync_master_enabled=1;
 install  plugin   rpl_semi_sync_slave   	 SONAME   "semisync_slave.so";	
 									
 										启用slave模块
-set  global rpl_semi_sync_slave_enabled=1; 	
-        
+set  global rpl_semi_sync_slave_enabled=1; 										
 										
+										永久配置  
+										vim /etc/my.cnf
+										[mysqld]
+plugin-load=rpl_semi_sync_slave=semisync_slave.so
+rpl_semi_sync_master_enabled=1								
+										:wq
+										
+										
+							    主从2种都是的服务器，2种模块都安装都要启用
+mysql> install  plugin   rpl_semi_sync_master    
+SONAME   "semisync_master.so";
+
+mysql> install  plugin   rpl_semi_sync_slave    
+SONAME   "semisync_slave.so";
 
 
+mysql> set  global rpl_semi_sync_master_enabled=1; 
+mysql> set  global rpl_semi_sync_slave_enabled=1;
 
-                            
+								永久配置  
+										vim /etc/my.cnf
+										[mysqld]
+plugin-load="rpl_semi_sync_slave=semisync_slave.so;
+rpl_semi_sync_master=semisync_master.so"
+
+rpl_semi_sync_slave_enabled=1
+rpl_semi_sync_master_enabled=1								
+										:wq
+										
