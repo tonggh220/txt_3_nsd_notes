@@ -177,9 +177,67 @@ mysql> select  * from gamedb.t1;
 						1 节约运维成本
 						2 提高硬件利用率
 						
-				配置多实例
+							配置多实例
 						 安装软件
 						 mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz
 						 修改文件
+[root@host58 ~]# rm -rf /etc/my.cnf
+[root@host58 ~]# 
+[root@host58 ~]# vim /etc/my.cnf
+[mysqld_multi]#多实例服务的运行配置项
+user =  root
+mysqld =   /usr/local/mysql/bin/mysqld_safe
+mysqladmin  =  /usr/local/mysql/bin/mysqladmin
+
+[mysqld1]#创建实例	1
+port=3307
+datadir=/dir1				 
+pid-file=/dir1/mysqld1.pid
+log-error=/dir1/mysqld1.error 
+socket=/dir1/mysqld1.sock
+				 
+[mysqld2]#创建实例	2
+port=3308
+datadir=/dir2
+pid-file=/dir2/mysqld2.pid
+log-error=/dir2/mysqld2.error 
+socket=/dir2/mysqld2.sock		
+:wq	 
 						 启动多实例
-						 访问实例
+[root@host58 ~]#mysqld_multi start 1
+[root@host58 ~]#ls /dir1
+[root@host58 ~]#ss -utnlp  | grep 3307
+						 
+[root@host58 ~]# mysql -uroot -p'xW7mW*BlvFej' -S /dir1/mysqld1.sock	
+mysql> alter user root@"localhost" identified by "123456" ;
+mysql> show databases;
+mysql> exit
+[root@host58 ~]# mysql -uroot -p123456 -S /dir1/mysqld1.sock	
+mysql> create database webdb;
+mysql> create table webdb.t1(id int);
+mysql> insert into webdb.t1 values(11);
+mysql> exit
+[root@host58 ~]# ls /dir1/webdb/
+db.opt  t1.frm  t1.ibd
+[root@host58 ~]#
+
+[root@host58 ~]#mysqld_multi start 2
+[root@host58 ~]#ls /dir2
+[root@host58 ~]#ss -utnlp  | grep 3308
+						 
+[root@host58 ~]# mysql -uroot -p'xW7mW*BlvFej' -S /dir1/mysqld1.sock	
+mysql> alter user root@"localhost" identified by "654321" ;
+mysql> show databases;
+mysql> exit
+[root@host58 ~]# mysql -uroot -p654321 -S /dir2/mysqld2.sock	
+
+
+[root@host58 ~]# ps -C mysqld
+   PID TTY          TIME CMD
+ 48202 pts/0    00:00:00 mysqld
+ 57689 pts/0    00:00:01 mysqld
+[root@host58 ~]# 
+[root@host58 ~]# netstat  -utnlp  | grep mysqld
+tcp6       0      0 :::3307                 :::*                    LISTEN      48202/mysqld        
+tcp6       0      0 :::3308                 :::*                    LISTEN      57689/mysqld        
+[root@host58 ~]#
