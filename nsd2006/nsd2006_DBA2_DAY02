@@ -241,3 +241,44 @@ mysql> exit
 tcp6       0      0 :::3307                 :::*                    LISTEN      48202/mysqld        
 tcp6       0      0 :::3308                 :::*                    LISTEN      57689/mysqld        
 [root@host58 ~]#
+
+
+				案例诉求： 
+					    启用实例1的binlog日志 文件名叫 mysqld1
+						允许所有客户端 使用 admin 用户 密码123456 对实例1的 buydb库有完全权限
+						 在客户端连接58主机的实例1 存取数据
+						 
+[root@host58 ~]# vim /etc/my.cnf
+[mysqld1]
+server_id=1
+log_bin=mysqld1
+:wq
+
+[root@host58 ~]# mysqld_multi  start 1
+[root@host58 ~]# mysql -uroot -p123456 -S /dir1/mysqld1.sock
+mysql> show master status;	
+mysql> grant all on  buydb.* to admin@"%" identified by "123456";
+mysql> exit
+
+[root@host50 ~]# mysql -h192.168.4.58 -P3307 -uadmin -p123456
+mysql> show grants;
+mysql> show databases;
+
+mysql> create database buydb;
+
+
+mysql> create table buydb.user(name char(10));
+
+
+mysql> insert into buydb.user values("bob");
+mysql> select  * from buydb.user;
++------+
+| name |
++------+
+| bob  |
++------+
+1 row in set (0.00 sec)
+
+mysql> exit
+Bye
+[root@host50 ~]#
