@@ -129,3 +129,176 @@ XML 扩展标记语言    有双标签 有单标签
 
 </mycat:schema>
 [root@host56 conf]# 
+
+
+
+3.3 配置数据库服务器
+[root@host54 mysql]# 
+mysql -uroot -p123qqq...A -e 'create database db2'										3.3.1 创建存储数据的库
+
+[root@host53 mysql]#
+ mysql -uroot -p123qqq...A -e 'create database db1'
+
+ [root@host55 mysql]# 
+ mysql -uroot -p123qqq...A -e 'create database db3'
+ 
+										3.3.2  添加 pljadmin
+[root@host53 mysql]# 
+mysql -uroot -p123qqq...A -e 'grant all on *.* to pljadmin@"%" 
+identified by "123qqq...A"'
+
+[root@host54 mysql]# 
+mysql -uroot -p123qqq...A -e 'grant all on *.* to pljadmin@"%" 
+identified by "123qqq...A"'										
+										
+[root@host55 mysql]# 
+mysql -uroot -p123qqq...A -e 'grant all on *.* to pljadmin@"%" 
+identified by "123qqq...A"'
+										
+								3.4 启动mycat服务
+[root@host56 conf]# /usr/local/mycat/bin/mycat  start
+Starting Mycat-server...
+[root@host56 conf]# 
+								3.5  查看服务状态
+[root@host56 conf]# ls /usr/local/mycat/logs/
+mycat.log  mycat.pid  wrapper.log
+[root@host56 conf]# 
+[root@host56 conf]# netstat -utnlp | grep  8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      120501/java         
+[root@host56 conf]# 								
+								
+								3.6  客户端连接分片服务器57 ,查看数据
+[root@host50 ~]# mysql -h192.168.4.56  -P8066 -uroot -p123456
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| TESTDB   |
++----------+
+mysql> use TESTDB
+mysql> show tables;
++------------------+
+| Tables in TESTDB |
++------------------+
+| company          |
+| customer         |
+| customer_addr    |
+| employee         |
+| goods            |
+| hotnews          |
+| orders           |
+| order_items      |
+| travelrecord     |
++------------------+
+9 rows in set (0.00 sec)
+
+								
+								
+					    4 统一排错时间 
+						
+						
+								
+			  分片规则的使用
+						枚举分片规则  sharding-by-intfile
+向表中的分片字段赋值是， 值必须在规则文件定义的值里选择
+
+						查看那张表使用sharding-by-intfile分片规则存储数据
+						   vim schema.xml
+                <table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+						
+						
+						
+						查看分片规则要求的分片字段名称
+						vim  rule.xml
+    <tableRule name="sharding-by-intfile"> 规则名称
+                <rule>
+                        <columns>sharding_id</columns> 分片字段名
+                        <algorithm>hash-int</algorithm>   算法
+                </rule>
+   </tableRule>
+						
+						查看分片规则对应算法使用的配置文件
+						vim  rule.xml
+        <function name="hash-int"   算法名
+                class="io.mycat.route.function.PartitionByFileMap">
+                <property name="mapFile">partition-hash-int.txt</property>配置文件
+        </function>
+						
+						
+						修改配置文件 定义值列表
+						cd  /usr/local/mycat/conf
+						vim  partition-hash-int.txt
+						10000=0 
+						10010=1 
+						10020=2
+						:wq
+						
+						重启mycat服务
+[root@host56 conf]# /usr/local/mycat/bin/mycat stop
+[root@host56 conf]# /usr/local/mycat/bin/mycat start
+[root@host56 conf]# netstat  -utnlp  | grep 8066	
+					
+						客户端连接mycat服务器建表并存储数据
+[root@host50 ~]# mysql -h192.168.4.56  -P8066 -uroot -p123456	
+use  TESTDB;
+					
+mysql> create table employee(
+    -> ID int primary key auto_increment,
+    -> sharding_id int , name char(10) , age int );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> desc employee;
++-------------+----------+------+-----+---------+----------------+
+| Field       | Type     | Null | Key | Default | Extra          |
++-------------+----------+------+-----+---------+----------------+
+| ID          | int(11)  | NO   | PRI | NULL    | auto_increment |
+| sharding_id | int(11)  | YES  |     | NULL    |                |
+| name        | char(10) | YES  |     | NULL    |                |
+| age         | int(11)  | YES  |     | NULL    |                |
++-------------+----------+------+-----+---------+----------------+
+4 rows in set (0.04 sec)
+
+mysql> 
+mysql> insert into employee(sharding_id,name,age)
+values(10000,"bob",19),(10000,"bob2",19),(10000,"bob3",19);
+
+mysql> insert into employee(sharding_id,name,age)
+values(10010,"tom",19),(10010,"tom2",19),
+
+mysql> insert into employee(sharding_id,name,age) 
+values(10020,"aaaa",19),(10020,"aaa",19);
+
+						在 数据库服务器本机查看数据
+[root@host53 mysql]# mysql -uroot -p123qqq...A -e 'select  * from db1.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | age  |
++----+-------------+------+------+
+|  1 |       10000 | bob  |   19 |
+|  2 |       10000 | bob2 |   19 |
+|  3 |       10000 | bob3 |   19 |
++----+-------------+------+------+
+[root@host53 mysql]# 						
+	
+[root@host54 mysql]# mysql -uroot -p123qqq...A
+mysql> select  * from db2.employee;
++----+-------------+------+------+
+| ID | sharding_id | name | age  |
++----+-------------+------+------+
+|  1 |       10010 | tom  |   19 |
+|  2 |       10010 | tom2 |   19 |
++----+-------------+------+------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+						
+[root@host55 mysql]# mysql -uroot -p123qqq...A						
+mysql> select  * from db3.employee;
++----+-------------+------+------+
+| ID | sharding_id | name | age  |
++----+-------------+------+------+
+|  1 |       10020 | aaaa |   19 |
+|  2 |       10020 | aaa  |   19 |
++----+-------------+------+------+
