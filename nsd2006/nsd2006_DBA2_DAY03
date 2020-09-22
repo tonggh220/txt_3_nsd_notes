@@ -1,0 +1,131 @@
+
+dba2_day03_mycat服务的配置(数据分布式存储的服务软件)
+				相关概念( 具体ppt) 
+						1 分库分表？
+						2  分割的方式？
+						3 为什么要分库分表
+						4 mycat软件介绍
+						5 拓扑结构
+						6 Mycat 服务的工作过程
+				配置mycat 服务  192.168.4.56
+						1 安装mycat 软件
+								
+						2  文件介绍
+						3 修改配置文件
+XML 扩展标记语言    有双标签 有单标签						
+							    有开始有结束 
+							 注释符号  <!--            -->    
+[root@host56 ~]# cd /usr/local/mycat/conf/
+[root@host56 conf]# cp server.xml  /root/
+[root@host56 conf]# cp schema.xml  /root/
+							
+								3.1  server.xml文件 (不需要修改 使用默认配置)
+								#定义客户端连接使用的用户名、密码   逻辑库名
+										
+										
+								3.2  schema.xml文件  
+								#指定要分片存储数据的表 
+[root@host56 conf]# sed -i '56,77d' schema.xml
+[root@host56 conf]#  vim schema.xml
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+			<schema  .......>   定义数据分片存储的表
+					 <table  ....     />  定义表名
+					 
+					 <table  ....>
+					 </table >
+			 </schema>
+					
+			 <dataNode .....    />  定义数据库服务器的主机名存储数据的库名
+			 
+
+			  <dataHost ....> 数据库服务器的ip 地址
+			  </datehost>
+</mycat:schema>
+
+
+
+[root@host56 conf]# cat schema.xml 
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+
+        <schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
+                <!-- auto sharding by id (long) -->
+                <table name="travelrecord" dataNode="dn1,dn2,dn3" rule="auto-sharding-long" />
+
+                <!-- global table is auto cloned to all defined data nodes ,so can join
+[root@host56 conf]# cat schema.xml 
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+
+        <schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
+                <!-- auto sharding by id (long) -->
+                <table name="travelrecord" dataNode="dn1,dn2,dn3" rule="auto-sharding-long" />
+
+                <!-- global table is auto cloned to all defined data nodes ,so can join
+                        with any table whose sharding node is in the same data node -->
+                <table name="company" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+                <table name="goods" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+                <!-- random sharding using mod sharind rule -->
+                <table name="hotnews" primaryKey="ID" autoIncrement="true" dataNode="dn1,dn2,dn3"
+                           rule="mod-long" />
+                <!-- <table name="dual" primaryKey="ID" dataNode="dnx,dnoracle2" type="global"
+                        needAddLimit="false"/> <table name="worker" primaryKey="ID" dataNode="jdbc_dn1,jdbc_dn2,jdbc_dn3"
+                        rule="mod-long" /> -->
+                <table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+                <table name="customer" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile">
+                        <childTable name="orders" primaryKey="ID" joinKey="customer_id"
+                                                parentKey="id">
+                                <childTable name="order_items" joinKey="order_id"
+                                                        parentKey="id" />
+                        </childTable>
+                        <childTable name="customer_addr" primaryKey="ID" joinKey="customer_id"
+                                                parentKey="id" />
+                </table>
+                <!-- <table name="oc_call" primaryKey="ID" dataNode="dn1$0-743" rule="latest-month-calldate"
+                        /> -->
+        </schema>
+        <!-- <dataNode name="dn1$0-743" dataHost="localhost1" database="db$0-743"
+                /> -->
+        <dataNode name="dn1" dataHost="mysql53" database="db1" />
+        <dataNode name="dn2" dataHost="mysql54" database="db2" />
+        <dataNode name="dn3" dataHost="mysql55" database="db3" />
+        
+        <!--<dataNode name="dn4" dataHost="sequoiadb1" database="SAMPLE" />
+         <dataNode name="jdbc_dn1" dataHost="jdbchost" database="db1" />
+        <dataNode       name="jdbc_dn2" dataHost="jdbchost" database="db2" />
+        <dataNode name="jdbc_dn3"       dataHost="jdbchost" database="db3" /> -->
+        
+
+        <dataHost name="mysql53" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM1" url="192.168.4.53:3306" user="pljadmin"
+                                   password="123qqq...A">
+                </writeHost>
+        </dataHost>
+
+        <dataHost name="mysql54" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM2" url="192.168.4.54:3306" user="pljadmin"
+                                   password="123qqq...A">
+                </writeHost>
+        </dataHost>
+
+        <dataHost name="mysql55" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM3" url="192.168.4.55:3306" user="pljadmin"
+                                   password="123qqq...A">
+                </writeHost>
+        </dataHost>
+
+
+</mycat:schema>
+[root@host56 conf]# 
