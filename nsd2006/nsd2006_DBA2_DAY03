@@ -336,6 +336,9 @@ mysql> select  * from db3.employee;
 		
 						            客户端连接mycat服务器建表并存储数据
 [root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot  -p123456
+
+MYSQL> use  TESTDB;
+
 mysql> create table hotnews(id  int  ,  title  char(10) , woker char(10),
 starday  datetime );
 
