@@ -394,3 +394,169 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 |   11 | e     | ee    | 2020-09-23 05:40:12 |
 +------+-------+-------+---------------------+
 [root@host55 ~]#	
+
+                                添加新库新表
+			       配置分片服务器：
+						添加新库名
+						]#vim server.xml
+<user name="root">
+                <property name="password">123456</property>
+                <property name="schemas">TESTDB,GAMEDB</property>
+        </user>
+        <user name="user">
+                <property name="password">user</property>
+                <property name="schemas">TESTDB,GAMEDB</property>
+                <property name="readOnly">true</property>
+        </user>	
+:wq
+		
+				添加新表名 （表名 具有唯一性 ）
+						]# vim schema.xml 
+  <schema name="GAMEDB" checkSQLschema="false" sqlMaxLimit="100">
+        <table name="user"  dataNode="dn1,dn2,dn3" rule="mod-long"/>
+        <table name="money" dataNode="dn1,dn2,dn3" type="global" />
+  </schema>
+						:wq 
+						重启服务
+	[root@host56 ~]# /usr/local/mycat/bin/mycat  stop 					
+	[root@host56 ~]# /usr/local/mycat/bin/mycat  start
+					
+	
+					验证配置：
+						向新表里存储数据
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot  -p123456			
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| GAMEDB   |
+| TESTDB   |
++----------+
+2 rows in set (0.00 sec)
+
+mysql> use GAMEDB;
+mysql> show tables;
++------------------+
+| Tables in GAMEDB |
++------------------+
+| money                  |
+| user                      |
++------------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> create table user( id  int , name char(10) , password char(6));
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> desc user;
++----------+----------+------+-----+---------+-------+
+| Field    | Type     | Null | Key | Default | Extra |
++----------+----------+------+-----+---------+-------+
+| id       | int(11)  | YES  |     | NULL    |       |
+| name     | char(10) | YES  |     | NULL    |       |
+| password | char(6)  | YES  |     | NULL    |       |
++----------+----------+------+-----+---------+-------+
+3 rows in set (0.01 sec)
+
+
+mysql> create  table  money ( name  char(10) , pay   int );
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> desc money;
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| name  | char(10) | YES  |     | NULL    |       |
+| pay   | int(11)  | YES  |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> insert into money(name,pay)values("lucy",100);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into money(name,pay)values("jerry",250);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select * from money;
++-------+------+
+| name  | pay  |
++-------+------+
+| lucy  |  100 |
+| jerry |  250 |
++-------+------+
+2 rows in set (0.01 sec)
+
+mysql> 
+
+
+mysql> insert into user(id,name,password)values(7,"bob","123456"),(8,"lucy","654321"),(9,"tom","abc123");
+Query OK, 3 rows affected (0.06 sec)
+
+mysql> select  * from  user;
++------+------+----------+
+| id   | name | password |
++------+------+----------+
+|    9 | tom  | abc123   |
+|    8 | lucy | 654321   |
+|    7 | bob  | 123456   |
++------+------+----------+
+3 rows in set (0.07 sec)
+
+mysql>	
+		
+						在数据库服务器本机查看数据
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select * from db1.user'mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+----------+
+| id   | name | password |
++------+------+----------+
+|    9 | tom  | abc123   |
++------+------+----------+
+[root@host53 ~]# 
+
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'select * from db2.user'mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+----------+
+| id   | name | password |
++------+------+----------+
+|    7 | bob  | 123456   |
++------+------+----------+
+[root@host54 ~]# 						
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select * from db3.user'mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+----------+
+| id   | name | password |
++------+------+----------+
+|    8 | lucy | 654321   |
++------+------+----------+
+[root@host55 ~]#						
+						
+						
+	[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select * from db3.money'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------+------+
+| name  | pay  |
++-------+------+
+| lucy  |  100 |
+| jerry |  250 |
++-------+------+
+[root@host55 ~]# 							
+								
+								
+	[root@host54 ~]# mysql -uroot -p123qqq...A -e 'select * from db3.money'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------+------+
+| name  | pay  |
++-------+------+
+| lucy  |  100 |
+| jerry |  250 |
++-------+------+
+[root@host55 ~]# 							
+								
+								
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select * from db3.money'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-------+------+
+| name  | pay  |
++-------+------+
+| lucy  |  100 |
+| jerry |  250 |
++-------+------+
+[root@host55 ~]# 		
