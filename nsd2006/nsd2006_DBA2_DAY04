@@ -293,3 +293,61 @@ mysql> select   * from db9.t1;
 [root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
 app1 (pid:31190) is running(0:PING_OK), master:192.168.4.52
 [root@host57 ~]#
+
+
+
+7  把宕机的数据库服务器再添加到集群里
+										7.1 配置数据库服务器192.168.4.51
+												启动数据库服务
+												确保与当前的主数据库服务器，数据一致
+[root@host52 ~]# mysqldump -uroot -p123qqq...A --master-data  db9 > 
+/root/db9.sql
+
+[root@host52 ~]# scp /root/db9.sql  root@192.168.4.51:/opt/
+[root@host51 ~]# mysql -uroot -p123qqq...A db9 < /opt/db9.sql 
+										
+												指定主服务器信息
+[root@host51 ~]# grep master52 /opt/db9.sql 
+CHANGE MASTER TO MASTER_LOG_FILE='master52.000001', 
+MASTER_LOG_POS=689;
+[root@host51 ~]#
+ [root@host51 ~]# mysql -uroot -p123qqq...A -e 'change master to 
+ master_host="192.168.4.52",master_user="repluser",
+ master_password="123qqq...A",master_log_file="master52.000001",
+ master_log_pos=689'
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'start slave'
+											
+												查看状态
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'show slave status \G' | 
+grep  -i yes
+
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@host51 ~]# 
+										
+										7.2 配置管理主机192.168.4.57
+												修改app1.cnf文件 添加 添加数据库服务器192.168.4.51
+					[root@host57 ~]# vim /etc/mha/app1.cnf
+	[server1]
+candidate_master=1
+hostname=192.168.4.51
+port=3306
+:wq
+				
+												检查主从同步配置，成功后
+[root@host57 ~]# masterha_check_repl --conf=/etc/mha/app1.cnf 												
+MySQL Replication Health is OK.
+
+												重启管理服务
+[root@host57 ~]# masterha_stop --conf=/etc/mha/app1.cnf 
+Stopped app1 successfully.
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf 
+--remove_dead_master_conf  --ignore_last_failover
+
+												
+												重启管理服务
+												查看服务运行状态
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+app1 (pid:86414) is running(0:PING_OK), master:192.168.4.52
+[root@host57 ~]# 
