@@ -102,8 +102,8 @@ my $ssh_stop_vip = "/sbin/ifconfig ens33:$key down";
 
 									2.4 把vip地址配置在当前的主数据库服务器192.168.4.51上
 									ifconfig  ens33:1  192.168.4.100/24
-									ifcongfig  ens33:1
-									ifcongfig  ens33
+									ifconfig  ens33:1
+									ifconfig  ens33
 									[root@host50 ~]# ping  192.168.4.100
 									
 							3 配置数据库服务器 192.168.4.51/52/53
