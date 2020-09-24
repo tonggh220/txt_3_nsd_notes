@@ -200,3 +200,96 @@ rpl_semi_sync_slave_enabled=1
 	 show  slave  status \G 			
 	        Slave_IO_Running: Yes
             Slave_SQL_Running: Yes
+
+
+
+4 检查配置
+									4.1  检查ssh配置
+[root@host57 ~]# masterha_check_ssh  --conf=/etc/mha/app1.cnf
+Thu Sep 24 03:13:37 2020 - [info] All SSH connection tests passed successfully.									
+									
+									4.2  检查主从同步配置
+[root@host57 ~]# masterha_check_repl  --conf=/etc/mha/app1.cnf									
+MySQL Replication Health is OK.							
+									
+							5 启动管理服务
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf 
+--remove_dead_master_conf   --ignore_last_failover
+
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+app1 (pid:22658) is running(0:PING_OK), master:192.168.4.51
+[root@host57 ~]# 
+							
+[root@host57 ~]# ls /etc/mha/
+app1.cnf  app1.master_status.health  manager.log  master_ip_failover
+[root@host57 ~]#	
+	
+	
+							6  测试高可用
+									6.1  客户端50 连接vip地址 192.168.4.100 访问数据库服务
+													     在主数据库服务器51 添加用户给客户端连接使用
+mysql> create database db9;
+mysql> create table db9.t1(id int);
+mysql> grant select , insert on db9.* to  yaya55@"%" 
+identified by "123qqq...A";
+											 
+														 客户端50 连接 vip地址 192.168.4.100 访问数据库服务
+[root@host50 ~]# mysql -h192.168.4.100 -uyaya55  -p123qqq...A
+						
+									 					  
+mysql> insert into  db9.t1 values (888);  存取数据
+Query OK, 1 row affected (0.03 sec)
+
+mysql> select  * from  db9.t1;
++------+
+| id   |
++------+
+|  888 |
++------+						
+									6.2 测试高可用
+										   停止当前master服务器51的mysql服务
+										   systemctl  stop  mysqld
+										   
+										   
+										   管理服务会 自动停止
+[root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf 
+app1 is stopped(2:NOT_RUNNING).
+[root@host57 ~]# 										   
+										   
+										   在主配置文件app1.cnf  自动 删除了主服务器  [server1]
+										   
+										   
+										   在 52 和 53 主机查看vip地址
+[root@host52 mha]# ifconfig ens33:1
+ens33:1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.4.100  netmask 255.255.255.0  broadcast 192.168.4.255
+        ether 00:0c:29:53:5e:a1  txqueuelen 1000  (Ethernet)
+
+[root@host52 mha]# mysql -uroot -p123qqq...A -e 'show slave status \G'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host52 mha]#										   
+										   
+										   剩下的数据库服务器，自动配置新主服务器为的slave 主机 
+[root@host53 mha]# mysql -uroot -p123qqq...A  -e 'show slave status \G '   | grep  -i yes 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@host53 mha]# 
+[root@host53 mha]# mysql -uroot -p123qqq...A  -e 'show slave status \G '   | grep  -i "master_host"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.52
+[root@host53 mha]# 	
+
+									客户端依然连接vip地址 192.168.4.100 访问数据库服务
+[root@host50 ~]# mysql -h192.168.4.100 -uyaya55  -p123qqq...A
+mysql> select   * from db9.t1;
+mysql> insert into db9.t1 values (666);
+mysql> select   * from db9.t1;
+									
+									启动管理服务，会自动监视新的主服务器 52
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf 
+--remove_dead_master_conf  --ignore_last_failover
+									
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+app1 (pid:31190) is running(0:PING_OK), master:192.168.4.52
+[root@host57 ~]#
