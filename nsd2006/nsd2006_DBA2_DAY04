@@ -87,3 +87,35 @@ hostname=192.168.4.53
 port=3306
 candidate_master=1
 ：wq
+
+                                2.3 创建故障切换脚本并编辑
+]# cd mha
+]# cp  master_ip_failover  /etc/mha/
+]# chmod  +x /etc/mha/master_ip_failover
+
+]# vim  +35  /etc/mha/master_ip_failover
+my $vip = '192.168.4.100/24';  # Virtual IP 
+my $key = "1";
+my $ssh_start_vip = "/sbin/ifconfig ens33:$key $vip";
+my $ssh_stop_vip = "/sbin/ifconfig ens33:$key down";
+:wq
+
+									2.4 把vip地址配置在当前的主数据库服务器192.168.4.51上
+									ifconfig  ens33:1  192.168.4.100/24
+									ifcongfig  ens33:1
+									ifcongfig  ens33
+									[root@host50 ~]# ping  192.168.4.100
+									
+							3 配置数据库服务器 192.168.4.51/52/53
+									3.1  添加监控用户root
+									在 master 服务器51  执行授权
+	mysql> grant all on  *.* to  root@"%" identified by "123qqq...A";
+								
+									在 slave 服务器 52 和 53 查看
+    mysql>  select user , host from  mysql.user;
+		
+									测试授权
+	[root@host57 mha]# which  mysql || yum  -y install mariadb
+	[root@host57 mha]# mysql -h192.168.4.53 -uroot -p123qqq...A
+	[root@host57 mha]# mysql -h192.168.4.52 -uroot -p123qqq...A
+    [root@host57 mha]# mysql -h192.168.4.51 -uroot -p123qqq...A
