@@ -128,7 +128,7 @@ my $ssh_stop_vip = "/sbin/ifconfig ens33:$key down";
 [root@host53 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm	
 
 									3.3  优化数据库的配置
-												启用半同步赋值模式(51 52 53)
+												启用半同步复制模式(51 52 53)
 												禁止自动删除本机的中继日志文件(51 52 53)
 												在52 和 53 主机添加repluser 用户,启用binlog日志 
 									
