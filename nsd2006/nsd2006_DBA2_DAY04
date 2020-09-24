@@ -119,3 +119,84 @@ my $ssh_stop_vip = "/sbin/ifconfig ens33:$key down";
 	[root@host57 mha]# mysql -h192.168.4.53 -uroot -p123qqq...A
 	[root@host57 mha]# mysql -h192.168.4.52 -uroot -p123qqq...A
     [root@host57 mha]# mysql -h192.168.4.51 -uroot -p123qqq...A
+
+
+
+    3.2  安装mha-node 软件
+[root@host51 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+[root@host52 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+[root@host53 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm	
+
+									3.3  优化数据库的配置
+												启用半同步赋值模式(51 52 53)
+												禁止自动删除本机的中继日志文件(51 52 53)
+												在52 和 53 主机添加repluser 用户,启用binlog日志 
+									
+配置主机52
+vim  /etc/my.cnf
+[mysqld]
+
+log_bin=master52
+
+relay_log_purge=0
+
+plugin-load="rpl_semi_sync_master=semisync_master.so;
+rpl_semi_sync_slave=semisync_slave.so"   
+
+rpl_semi_sync_master_enabled=1          
+rpl_semi_sync_slave_enabled=1
+:wq
+]# systemctl  restart mysqld
+
+]# mysql -uroot -p123qqq...A
+mysql> grant replication slave on *.* to repluser@"%" 
+identified by "123qqq...A";
+
+mysql> show slave status \G
+	        Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+		
+配置主机53
+vim  /etc/my.cnf
+[mysqld]
+
+log_bin=master53
+
+relay_log_purge=0
+
+plugin-load="rpl_semi_sync_master=semisync_master.so;
+rpl_semi_sync_slave=semisync_slave.so"   
+
+rpl_semi_sync_master_enabled=1          
+rpl_semi_sync_slave_enabled=1
+:wq
+]# systemctl  restart mysqld
+
+]# mysql -uroot -p123qqq...A
+mysql> grant replication slave on *.* to repluser@"%" 
+identified by "123qqq...A";
+
+mysql> show slave status \G
+	        Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+	
+	
+配置主机 51
+]# vim /etc/my.cnf 
+relay_log_purge=0
+
+plugin-load="rpl_semi_sync_master=semisync_master.so;
+rpl_semi_sync_slave=semisync_slave.so"   
+
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1
+:wq
+
+]# systemctl  restart mysqld
+
+因为主服务器重启服务 binlog 日志文件会改变，所以要再次查看从服务器的状态
+
+	 show  slave  status \G 			
+	        Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
