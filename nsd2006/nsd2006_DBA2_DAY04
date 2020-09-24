@@ -37,3 +37,53 @@ dba2_day04 _   mysql高可用集群
 														 指定主服务器信息
 														 启动slave 进程
 														 查看状态
+
+
+        2 配置管理主机 192.168.4.57
+							        1 安装软件
+									  ]# cd mha
+									  ]# yum -y install perl-ExtUtils-*    perl-CPAN*
+					]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+]# tar -zxf  mha4mysql-manager-0.56.tar.gz    perl
+]# cd   mha4mysql-manager-0.56
+]# perl  Makefile.pl     
+]# make
+]# make  install
+	
+
+									2 创建并编辑主配置文件（重点）
+]# mkdir /etc/mha
+]# cd mha4mysql-manager-0.56
+]# cp samples/conf/app1.cnf /etc/mha/
+]# ls /etc/mha/
+app1.cnf
+
+]# vim /etc/mha/app1.cnf 
+[server default]   管理服务的运行配置
+[server数字]  指定数据库服务器
+：wq
+
+]# vim /etc/mha/app1.cnf
+[server default]
+manager_workdir=/etc/mha
+manager_log=/etc/mha/manager.log
+master_ip_failover_script=/etc/mha/master_ip_failover
+ssh_user=root
+ssh_port=22
+repl_user=repluser
+repl_password=123qqq...A
+user = root
+password = 123qqq...A 
+[server1]
+hostname=192.168.4.51
+port=3306
+candidate_master=1
+[server2]
+hostname=192.168.4.52
+port=3306
+candidate_master=1
+[server3]
+hostname=192.168.4.53
+port=3306
+candidate_master=1
+：wq
