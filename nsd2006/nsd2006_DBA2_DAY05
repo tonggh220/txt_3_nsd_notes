@@ -1,0 +1,138 @@
+DBA2_DAY05
+	使用mha软件配置mysql高可用集群，必须做那些配置？
+	       提供数据存储服务的主机之间必须是mysql一主多从同步结构
+		   必须配置ssh免密登陆
+		   必须有VIP地址，客户端连接VIP地址访问mysql服务
+		   主数据库服务器宕机后，要手动启动管理服务
+		   
+		   要人为的将宕机的主服务器添加到集群，并且在添加进集群之前
+		   要手动确保与当前的主数据库服务器数据一致
+		   
+			
+	一、PXC集群（使用PXC软件配置mysql高可用集群）
+	       1.1 相关概念？
+		   1.2  创建PXC集群
+					     1   在3台主机分别安装pxc软件
+cd  pxc
+yum -y install libev-4.15-1.el6.rf.x86_64.rpm  
+yum -y install percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm 
+yum -y install qpress-1.1-14.11.x86_64.rpm 
+tar -xvf Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar 
+yum -y install Percona-XtraDB-Cluster-*.rpm
+
+					休息到	10:10 上课
+						
+						 2   在3台主机分别修改配置文件（重点 ）
+						 ]# cd /etc/percona-xtradb-cluster.conf.d/
+						 ]# ls
+mysqld.cnf   mysqld_safe.cnf   wsrep.cnf
+
+vim mysqld_safe.cnf（无需修改使用默认配置即可）
+
+host71]#  vim  mysqld.cnf
+[mysqld]
+server_id=71
+:wq
+host72]#  vim  mysqld.cnf
+[mysqld]
+server_id=72
+:wq
+host73]#  vim  mysqld.cnf
+[mysqld]
+server_id=73
+:wq
+
+host71]#  vim  wsrep.cnf
+wsrep_cluster_address=gcomm://192.168.4.71,192.168.4.72,192.168.4.73  	必须一致		             		//集群成员列表
+wsrep_node_address=192.168.4.71  	//本机ip地址
+wsrep_cluster_name=pxc-cluster 	//集群名称, 必须一致
+wsrep_node_name=pxcnode71		//本机主机名
+wsrep_sst_auth="sstuser:123qqq…A"	  //SST数据同步授权用户 必须一致
+
+host72]#  vim  wsrep.cnf
+wsrep_cluster_address=gcomm://192.168.4.71,192.168.4.72,192.168.4.73  	必须一致		             		//集群成员列表
+wsrep_node_address=192.168.4.72  	//本机ip地址
+wsrep_cluster_name=pxc-cluster 	//集群名称, 必须一致
+wsrep_node_name=pxcnode72		//本机主机名
+wsrep_sst_auth="sstuser:123qqq…A"	  //SST数据同步授权用户 必须一致
+
+host73]#  vim  wsrep.cnf
+wsrep_cluster_address=gcomm://192.168.4.71,192.168.4.72,192.168.4.73  	必须一致		             		//集群成员列表
+wsrep_node_address=192.168.4.73  	//本机ip地址
+wsrep_cluster_name=pxc-cluster 	//集群名称, 必须一致
+wsrep_node_name=pxcnode73		//本机主机名
+wsrep_sst_auth="sstuser:123qqq…A"	  //SST数据同步授权用户 必须一致
+
+
+						 3   在任意1台主机，执行初始化集群操作
+[root@pxc71 ~]# systemctl  start mysql@bootstrap.service  
+[root@pxc71 ~]# ls /var/lib/mysql
+auto.cnf         gvwstate.dat    mysqld_safe.pid     pxc71-bin.000002
+ca-key.pem       ib_buffer_pool  mysql.sock          pxc71-bin.index
+ca.pem           ibdata1         mysql.sock.lock     server-cert.pem
+client-cert.pem  ib_logfile0     performance_schema  server-key.pem
+client-key.pem   ib_logfile1     private_key.pem     sys
+galera.cache     ibtmp1          public_key.pem      xb_doublewrite
+grastate.dat     mysql           pxc71-bin.000001
+[root@pxc71 ~]# 
+[root@pxc71 ~]# netstat  -utnlp  | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      92243/mysqld        
+[root@pxc71 ~]# 
+[root@pxc71 ~]# netstat  -utnlp  | grep  4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      92243/mysqld        
+[root@pxc71 ~]# 
+[root@pxc71 ~]# grep password /var/log/mysqld.log 
+2020-09-25T10:46:42.517924Z 1 [Note] A temporary password is generated for root@localhost: JhLOS.S.w3jp
+[root@pxc71 ~]# 
+[root@pxc71 ~]# mysql -uroot -p'JhLOS.S.w3jp'
+mysql> alter  user  root@"localhost" ientified by "123456";
+mysql> grant all on *.* to sstuser@"localhost" identified by "123qqq...A";
+mysql> exit
+Bye
+[root@pxc71 ~]# mysql -uroot -p123456
+						 
+						 
+						 4   另外2台主机，执行启动mysql服务的命令
+[root@pxc72 ~]# ls /var/lib/mysql
+[root@pxc72 ~]# 
+[root@pxc72 ~]# systemctl  start mysql
+[root@pxc72 ~]# netstat  -utnlp  | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      100602/mysqld       
+[root@pxc72 ~]# netstat  -utnlp  | grep  4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      100602/mysqld       
+[root@pxc72 ~]# 
+[root@pxc72 ~]# ls /var/lib/mysql
+[root@pxc72 ~]# mysql -uroot -p123456						 
+mysql> show databases;
+mysql> select user from mysql.user;
++---------------+
+| user          |
++---------------+
+| mysql.session |
+| mysql.sys     |
+| root          |
+| sstuser       |
++---------------+
+4 rows in set (0.00 sec)
+
+[root@pxc73 ~]# ls /var/lib/mysql
+[root@pxc73 ~]# 
+[root@pxc73 ~]# systemctl  start mysql
+[root@pxc73 ~]# netstat  -utnlp  | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      100602/mysqld       
+[root@pxc73 ~]# netstat  -utnlp  | grep  4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      100602/mysqld       
+[root@pxc73 ~]# 
+[root@pxc73 ~]# ls /var/lib/mysql
+[root@pxc73 ~]# mysql -uroot -p123456						 
+mysql> show databases;
+mysql> select user from mysql.user;
++---------------+
+| user          |
++---------------+
+| mysql.session |
+| mysql.sys     |
+| root          |
+| sstuser       |
++---------------+
+4 rows in set (0.00 sec)
