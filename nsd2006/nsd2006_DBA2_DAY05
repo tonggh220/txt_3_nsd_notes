@@ -340,3 +340,15 @@ mysql> show variables  like "autocommit"; 		//查看提交状态
 mysql> set autocommit=off;  			  //关闭自动提交
 mysql> rollback; 				//数据回滚
 mysql> commit;   				//提交数据
+
+
+思考？
+			      2.6 建表时如果决定表使用哪种存储引擎？
+	 
+	 接收查询访问多的表，适合使用myisam存储引擎 ，节省硬件资源
+	 
+				   
+	 接收写insert /delete /update 访问多的表 ，适合使用inodb存储引擎,
+	 并发访问大 
+						行级表  只给被访问的行分别加锁 ， 
+						不加锁的行是允许其他用户做些操作
