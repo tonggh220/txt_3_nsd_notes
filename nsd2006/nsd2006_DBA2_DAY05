@@ -186,3 +186,157 @@ systemctl  start mysql
 
 mysql -uroot -p123456 -e 'select * from gamedb.t1'
 mysql -uroot -p123456 -e 'show status like "%wsrep%"'
+
+
+
+	二 、mysql存储引擎（偏理论）
+	         2.1 存储引擎介绍（什么是存储引擎）
+					是mysql服务的功能组件之一，每种存储引擎有各自的功能和
+					数据存储方式。是表的处理器。
+			 
+			 2.2 mysql体系结构（mysql服务的功能组件）
+					1 连接池  当数据库服务器接收客户端的连接请求后，连接池程序要
+					检查数据库服务有没有空闲mysql程序响应连接，以及检查连接的用户
+					与密码 和 服务器的硬件资源
+					
+					2 管理工具   安装mysql服务软件后提供的命令
+					3  SQL接口   把 执行的sql命令 传递给 本机的mysql服务
+					
+					4  分析器： 检查命令的格式 和执行命令的访问权限 
+					
+					5 优化器： 执行SQL命令之前，做优化处理 
+					
+					6 查询缓存 ：使用内存存储客户端曾经查找过的数据
+					
+					7 存储引擎 ： 对表的数据做不同处理的程序
+					
+					8 文件系统（硬盘 /var/lib/mysql/） 
+			  
+			 对mysql服务上的数据做访问时，无非  select   insert 
+			 			 2.3 mysql服务处理查询请求的工作过程
+			 client -----> mysql server ------>查询缓存 
+							<-------------------------
+			                          select 
+							
+							当客户端查找的数据在查询缓存里没有时，MySQL
+							服务会访问数据库目录下表查找数据，把找到的数据
+							先保存到查询缓存里，再把查询结果返回给客户端
+							
+			查看数据库服务的查询缓存是否启用？
+mysql> show variables like "%cache%";			
+ mysql> show variables like "query_cache_type";
++------------------+-------+
+| Variable_name    | Value |
++------------------+-------+
+| query_cache_type | OFF   |
++------------------+-------+
+1 row in set (0.00 sec)
+
+mysql> 
+           			
+			 
+			 2.4 存储引擎使用
+					      查看数据库服务默认使用的存储引擎
+						  show  engines ;
+						  
+						  修改数据库服务默认使用的存储引擎
+[root@dbsvr1 ~]# vim  /etc/my.cnf
+[mysqld]
+
+default-storage-engine="myisam"
+
+[root@dbsvr1 ~]# systemctl  restart  mysqld
+
+mysql -uroot -p密码 
+show  engines；
+create table   db3.t21(name char(10));
+show  create table   db3.t21 \G
+
+
+
+					
+						  查看数据库服务器已有表使用的存储引擎
+						  
+						  show  create  table  库.表  \G
+						  show  create table   db3.t21 \G
+						  
+						  ；
+						  建表是指定表使用的存储引擎
+mysql> create table db3.t22(name char(10))engine=MEMORY;
+         
+		                  修改表使用的存储引擎
+						   alter  table   库.表 engine=存储引擎
+mysql> alter table  db3.t22 engine=myisam;
+						  
+						   休息到 16:10 上课 
+			2.5 常用存储引擎特点介绍
+				 2.5.1  myisam存储引擎特点
+							 支持表级锁
+							 不支持 事务  和 事务回滚
+						     使用3个文件存储表数据
+							 表名.frm    表结构           desc  表名;
+							 表名.MYD    数据             select 
+							 表名.MYI    index             show index 
+				 2.5.2  innodb 存储引擎特点
+							 支持行 级锁
+							 支持 事务  和 事务回滚  外键
+						     使用2 个文件存储表数据
+							 表名.frm    表结构           desc  表名;
+							 表名.ibd    数据+index     select  * from 表名;
+							                                        show  index from  表名；
+																	
+							 
+				 2.5.3 专业术语
+							表级锁   把被访问的表，整张表加锁（即使访问的是表中的某1行
+							也会把整张表锁上 ）
+							
+							行级锁   只把表中被访问的行，分别加锁，没有被访问的行
+									     不加锁
+							
+							加锁的目的是什么？ 避免并发访问的冲突问题
+							例如：
+						pc1    update  db3.t1  set  name="bob" where  id =1; 
+						pc2    update  db3.t1  set  name="tom" where  id =1;
+						
+							
+							什么事务？ 连接服务器后 执行sql命令 断开连接
+							
+							什么是事务回滚？ 执行的sql命令没有正确完成的时候，
+							可以恢复到错误操作之前的状态。
+							
+							
+							mysql 服务会使用事务日志文件，记录对所有innodb
+							存储引擎的表的操作。所有可以回滚所有的操作。
+							事务日志文件  cd /var/lib/mysql/	
+							ibdata1
+							ib_logfile1
+							ib_logfile0
+							
+							锁类型：
+							     读锁： 对表的数据执行select 访问 加读锁，
+											读锁又称共享锁，在上锁期间，再来的访问
+											是select 允许访问，
+											如果是 insert   delete  update 不可以。
+											
+							     写锁    对表的数据执行 insert   delete  update访问 
+								            加写 锁，在上锁期间，再来的读和写访问都不可以
+											
+mysql> show  status like  "table_locks_waited";
++--------------------+-------+
+| Variable_name      | Value |
++--------------------+-------+
+| Table_locks_waited | 0     |
++--------------------+-------+
+1 row in set (0.00 sec)
+
+mysql> 		
+							事务特性（支持事务的表的特点）
+							        A   原子性
+									C   一致性
+									I    隔离性
+									D   持久性
+									
+mysql> show variables  like "autocommit"; 		//查看提交状态
+mysql> set autocommit=off;  			  //关闭自动提交
+mysql> rollback; 				//数据回滚
+mysql> commit;   				//提交数据
