@@ -1,0 +1,54 @@
+一  部署Redis服务
+		1.1 相关的概念 （具体 见PPT）
+			RDBMS  关系型数据库管理系统  （mysql ）
+			NoSQL   非关系型数据库管理系统 (Redis) 
+			Redis 介绍
+		1.2 搭建redis服务器  192.168.4.50 
+					1 安装软件   
+]# rpm -q gcc || yum -y install gcc
+]#tar -zxvf /var/ftp/pub/redis-4.0.8.tar.gz 
+]# cd redis-4.0.8/
+]#make && make install
+					
+					2  初始化配置
+redis-4.0.8]# ./utils/install_server.sh 	（使用默认配置 回车即可）
+				
+		3 修改配置文件（让服务按照默认配置运行，文件可以不修改）
+			        4  查看服务状态 （初始化成功，会自动 启动服务 ）
+					]# netstat  -utnlp  | grep 6379
+					或
+					]# ss  -utnlp  | grep 6379
+[root@host50 redis-4.0.8]# ps  -C redis-server  # 查看进程
+   PID TTY          TIME CMD
+ 61158 ?        00:00:00 redis-server
+			
+					5  连接服务存取数据
+					    连接本机的redis服务 
+[root@host50 redis-4.0.8]# redis-cli 
+127.0.0.1:6379> ping
+PONG
+127.0.0.1:6379> keys *
+(empty list or set)
+127.0.0.1:6379> 
+127.0.0.1:6379> set scholl tarena
+OK
+127.0.0.1:6379> keys *
+1) "scholl"
+127.0.0.1:6379> get scholl
+"tarena"
+127.0.0.1:6379> exit
+[root@host50 redis-4.0.8]#		
+
+						人为的停止和启动redis 服务
+[root@host50 ~]# /etc/init.d/redis_6379 stop  停止服务
+[root@host50 ~]# /etc/init.d/redis_6379 start 启动服务 
+
+[root@host50 ~]# redis-cli 
+127.0.0.1:6379> keys *
+1) "scholl"
+127.0.0.1:6379> exit
+[root@host50 ~]# 
+
+[root@host50 ~]# ls /var/lib/redis/6379/
+dump.rdb 
+[root@host50 ~]#
