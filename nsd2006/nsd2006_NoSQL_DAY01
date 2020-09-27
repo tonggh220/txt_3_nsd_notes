@@ -263,3 +263,66 @@ NOAUTH Authentication required
 
 redis-cli   -h 192.168.4.50 -p 6350
 >auth   123456
+
+
+二  部署LNMP+Redis
+	  2.1 部署网站运行环境LNMP
+[root@host51 ~]# rpm -q gcc
+未安装软件包 gcc 
+[root@host51 ~]# rpm -q pcre-devel
+未安装软件包 pcre-devel 
+[root@host51 ~]# rpm -q zlieb-devel
+未安装软件包 zlieb-devel 
+
+[root@host51 ~]# 
+[root@host51 ~]# yum -y install gcc pcre-devel zlib-devel
+tar -zxvf nginx-1.12.2.tar.gz 
+cd nginx-1.12.2/
+
+./configure 
+make && make install
+
+]# ls /usr/local/nginx/
+conf  html  logs  sbin
+  
+]# yum -y install php php-devel php-fpm						 
+						 
+   64  systemctl start php-fpm
+   65  systemctl enable php-fpm
+   66  netstat  -utnlp  | grep 9000					 
+]# vim +65 /usr/local/nginx/conf/nginx.conf
+ 65         location ~ \.php$ {
+ 66             root           html;
+ 67             fastcgi_pass   127.0.0.1:9000;
+ 68             fastcgi_index  index.php;
+ 69             include        fastcgi.conf;
+ 70         }
+：wq
+
+[root@host51 ~]# /usr/local/nginx/sbin/nginx  -t
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+[root@host51 ~]# 
+[root@host51 ~]# netstat -utnlp  | grep  80
+[root@host51 ~]# 
+[root@host51 ~]# /usr/local/nginx/sbin/nginx  
+[root@host51 ~]# 
+[root@host51 ~]# netstat -utnlp  | grep  80
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      19547/nginx: master 
+[root@host51 ~]# 
+
+
+[root@host51 ~]# vim /usr/local/nginx/html/test.php
+<?php
+$i = 99 ;
+echo  $i ;
+?>
+:wq 
+
+[root@host51 ~]# 
+[root@host51 ~]# curl  http://localhost/test.php
+99
+
+   休息到 16：05 
+   
+   php-redis-2.2.4.tar.gz  考给 192.158.4.51
