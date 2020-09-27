@@ -187,4 +187,38 @@ not connected> exit
 Starting Redis server...
 
 [root@host50 ~]# redis-cli 
-127.0.0.1:6379> 
+127.0.0.1:6379>
+
+
+				配置文件解析（/etc/redis/6379.conf  常用配置说明）
+				改变redis服务的运行配置，修改配置文件后要重启redis服务
+				才能生效。
+				
+		守护进程 （服务启动后无论是否有客户端访问，进程都在内存里运行）
+		常驻部队（无论是否有敌军进范 部队都驻守在边疆）
+		
+		非 守护进程    （服务启动后没有时客户端访问，进程就休眠） 
+		机动部队（发现敌军进犯时 ，才到达边疆抵抗 ）
+		
+内存清除策略：当向redis服务存储数据时，如果内存空间不足，
+删除内存里已有数据的方式，就是内存清除策略。
+
+LRU   最近最少使用
+volatile-lru 	//最近最少使用 （针对设置了TTL的key）
+allkeys-lru   	//删除最少使用的key(针对所有的key)
+
+
+
+LFU   最少使用
+allkeys-lfu	//从所有key中清除使用频率最少的key
+volatile-lfu  	//从所有配置了过期时间的key中清除使用频率最少的key
+
+
+
+RANDOM    随机删除
+volatile-random   	//在设置了TTL的key里随机移除
+allkeys-random    	//随机移除key
+
+TTL   生存时间  移除最近过期的key
+
+noeviction  不删除    存不下时也不删除内存里已经存储的数据 
