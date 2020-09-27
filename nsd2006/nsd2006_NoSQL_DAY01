@@ -361,10 +361,23 @@ $redis = new redis();
 $redis->connect("192.168.4.50" , "6350");
 $redis->auth("123456");
 echo  $redis->get("class");
-?>						
+?>
+
+							存储数据和查看数一起写
+vim /usr/local/nginx/html/setget.php	
+<?php
+$redis = new redis();
+$redis->connect("192.168.4.50" , "6350");
+$redis->auth("123456");
+$redis->set("age",19);
+echo  $redis->get("age");
+?>
+
+
 							5.3 通过访问脚本存/取数据
 curl  http://localhost/set.php
 curl  http://localhost/get.php
+curl  http://localhost/setget.php
 
 							5.4 在50 查看数据
 							redis-cli  -h 192.168.4.50 -p 6350 -a 123456
