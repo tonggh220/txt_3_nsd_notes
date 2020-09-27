@@ -222,3 +222,44 @@ allkeys-random    	//随机移除key
 TTL   生存时间  移除最近过期的key
 
 noeviction  不删除    存不下时也不删除内存里已经存储的数据 
+
+
+修改配置文件改变服务的运行配置
+				
+				vim /etc/redis/6379.conf       练习到14：32
+				port   6350
+				bind   192.168.4.50
+				requirepass  123456
+				:wq
+				/etc/init.d/redis_6379 stop 
+				/etc/init.d/redis_6379 start 
+				
+				netstat  -utnlp  | grep  6350
+				
+				]# redis_cli  -h 192.168.4.50  -p 6350  -a 123456  
+				> keys  *
+				> exit
+				
+				停止服务 				
+[root@host50 redis]# redis-cli -h 192.168.4.50  -p 6350 -a 123456 shutdown
+                  或
+				  vim  +43  /etc/init.d/redis_6379
+$CLIEXEC -h 192.168.4.50 -p 6350 -a 123456 shutdown
+				  :wq
+				  
+				 /etc/init.d/redis_6379 start
+				 /etc/init.d/redis_6379 stop 
+
+				 
+/var/run/redis_6379.pid exists, process is already running or crashed				 
+
+]# rm   -rf  		/var/run/redis_6379.pid	
+]# /etc/init.d/redis_6379 start
+
+修改配置文件后 服务无法启动 查看 日志 看报错
+[root@host50 redis]# cat   /var/log/redis_6379.log 
+
+NOAUTH Authentication required
+
+redis-cli   -h 192.168.4.50 -p 6350
+>auth   123456
