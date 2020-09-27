@@ -323,6 +323,50 @@ echo  $i ;
 [root@host51 ~]# curl  http://localhost/test.php
 99
 
-   休息到 16：05 
-   
-   php-redis-2.2.4.tar.gz  考给 192.158.4.51
+ 配置php支持redis服务
+					1  安装软件  php-redis-2.2.4.tar.gz			
+   82  rpm -q automake
+   83  rpm -q autoconf
+   84  tar -zxvf /var/ftp/pub/php-redis-2.2.4.tar.gz 
+   86  cd phpredis-2.2.4/
+   88  phpize 
+   92  ./configure --with-php-config=/usr/bin/php-config
+   93  make			
+]# make install 
+Installing shared extensions:     /usr/lib64/php/modules/
+]# ls /usr/lib64/php/modules/
+curl.so  fileinfo.so  json.so  phar.so  redis.so  zip.so
+[root@host51 phpredis-2.2.4]# 		
+					2  修改配置文件php.ini					
+ 728 extension_dir = "/usr/lib64/php/modules/"
+ 730 extension = "redis.so"				
+					3  重启php-fpm服务 
+]# systemctl  restart php-fpm					
+					4  查看模块
+						]# php -m | grep -i  redis
+					5 测试
+							5.1 编写存储数据的脚本
+vim /usr/local/nginx/html/set.php
+<?php
+$redis = new redis();
+$redis->connect("192.168.4.50" , "6350");
+$redis->auth("123456");
+$redis->set("class","nsd2006");
+echo "data save ok ";
+?>
+							5.2 编写查询数据的脚本
+vim /usr/local/nginx/html/get.php	
+<?php
+$redis = new redis();
+$redis->connect("192.168.4.50" , "6350");
+$redis->auth("123456");
+echo  $redis->get("class");
+?>						
+							5.3 通过访问脚本存/取数据
+curl  http://localhost/set.php
+curl  http://localhost/get.php
+
+							5.4 在50 查看数据
+							redis-cli  -h 192.168.4.50 -p 6350 -a 123456
+							> keys  *
+							> get class 
