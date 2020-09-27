@@ -52,3 +52,139 @@ OK
 [root@host50 ~]# ls /var/lib/redis/6379/
 dump.rdb 
 [root@host50 ~]#
+
+			相关命令？
+127.0.0.1:6379> mset  x  7  y 9  z 11 
+127.0.0.1:6379> mget  x  y  z	
+		
+127.0.0.1:6379> keys  sex
+(empty list or set)
+127.0.0.1:6379> 
+127.0.0.1:6379> keys  name
+1) "name"
+127.0.0.1:6379> keys  *
+1) "name"
+2) "x"
+3) "y"
+4) "z"
+5) "scholl"
+127.0.0.1:6379> keys  ?
+1) "x"
+2) "y"
+3) "z"
+127.0.0.1:6379> keys  ????
+1) "name"
+127.0.0.1:6379> keys  a??
+(empty list or set)
+127.0.0.1:6379> 
+				
+127.0.0.1:6379> set i 88
+OK
+127.0.0.1:6379> type i
+string
+127.0.0.1:6379> lpush tea plj
+(integer) 1
+127.0.0.1:6379>
+127.0.0.1:6379> type tea
+list
+127.0.0.1:6379>
+
+127.0.0.1:6379> EXISTS age
+(integer) 0
+127.0.0.1:6379> EXISTS name
+(integer) 1
+127.0.0.1:6379> get name
+"tom"
+127.0.0.1:6379> set name jerry
+OK
+127.0.0.1:6379> get name
+"jerry"
+127.0.0.1:6379> 				
+
+
+127.0.0.1:6379> ttl  x
+(integer) -1
+127.0.0.1:6379> EXPIRE x 20
+(integer) 1
+127.0.0.1:6379> ttl x
+(integer) 12
+127.0.0.1:6379> keys *
+1) "name"
+2) "x"
+3) "tea"
+4) "y"
+5) "z"
+6) "i"
+7) "scholl"
+127.0.0.1:6379> ttl x
+(integer) -2
+127.0.0.1:6379> keys *
+1) "name"
+2) "tea"
+3) "y"
+4) "z"
+5) "i"
+6) "scholl"
+	
+
+127.0.0.1:6379[2]> select 0
+OK
+127.0.0.1:6379> keys *
+1) "name"
+2) "tea"
+3) "y"
+4) "z"
+5) "i"
+6) "scholl"
+127.0.0.1:6379> move name 2
+(integer) 1
+127.0.0.1:6379> select 2
+OK
+127.0.0.1:6379[2]> keys *
+1) "name"
+127.0.0.1:6379[2]>
+127.0.0.1:6379[2]> select 0
+OK
+127.0.0.1:6379> keys *
+1) "tea"
+2) "y"
+3) "z"
+4) "i"
+5) "scholl"
+127.0.0.1:6379> del tea
+(integer) 1
+127.0.0.1:6379> keys *
+1) "y"
+2) "z"
+3) "i"
+4) "scholl"
+127.0.0.1:6379> del  y   z    i
+127.0.0.1:6379> flushdb
+OK
+127.0.0.1:6379> keys *
+(empty list or set)
+127.0.0.1:6379> 
+127.0.0.1:6379> flushall
+OK
+127.0.0.1:6379> 
+127.0.0.1:6379> set i 99
+OK
+127.0.0.1:6379> keys *
+1) "i"
+127.0.0.1:6379> save
+OK
+127.0.0.1:6379> shutdown
+not connected> exit
+[root@host50 ~]# 
+
+[root@host50 ~]# 
+[root@host50 ~]# redis-cli 
+Could not connect to Redis at 127.0.0.1:6379: Connection refused
+Could not connect to Redis at 127.0.0.1:6379: Connection refused
+not connected> exit
+[root@host50 ~]# 
+[root@host50 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+
+[root@host50 ~]# redis-cli 
+127.0.0.1:6379> 
