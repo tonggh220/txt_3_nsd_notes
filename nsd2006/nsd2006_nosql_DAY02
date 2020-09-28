@@ -126,3 +126,64 @@ cluster_known_nodes:6
         在 管理主机执行创建集群的命令	
 
  休息+排错 到  10：42 
+
+ 	
+					4、 客户端连接集群中的主机存取数据
+[root@host50 ~]# redis-cli -c -h 192.168.4.55 -p 6355
+192.168.4.55:6355> set name tarena
+-> Redirected to slot [5798] located at 192.168.4.52:6352
+OK
+192.168.4.52:6352> set age 18
+-> Redirected to slot [741] located at 192.168.4.51:6351
+OK
+192.168.4.51:6351> set class nsd2006
+-> Redirected to slot [7755] located at 192.168.4.52:6352
+OK
+192.168.4.52:6352> keys *
+1) "name"
+2) "class"
+192.168.4.52:6352> get age
+-> Redirected to slot [741] located at 192.168.4.51:6351
+"18"
+192.168.4.51:6351> exit
+[root@host50 ~]# 
+					
+					5、测试集群的高可用功能 、数据自动备份功能
+					      slave 服务器会自动同步主服务器的数据
+				[root@host57 ~]# redis-trib.rb  check 192.168.4.53:6353		  
+[root@host50 ~]# redis-cli -c -h 192.168.4.56 -p 6356
+192.168.4.56:6356> keys *
+1) "class"
+2) "name"
+192.168.4.56:6356> 		
+  
+						  master 服务器宕机后，对应的slave 服务器会自动升级为master
+						  并接手占用的hash槽
+[root@host57 ~]# redis-trib.rb  info 192.168.4.53:6353
+						  
+[root@host52 ~]# netstat  -utnlp  | grep redis-server
+tcp        0      0 192.168.4.52:16352      0.0.0.0:*               LISTEN      8456/redis-server 1 
+tcp        0      0 192.168.4.52:6352       0.0.0.0:*               LISTEN      8456/redis-server 1 
+[root@host52 ~]# \
+> 
+[root@host52 ~]# redis-cli -h 192.168.4.52 -p 6352 shutdown
+[root@host52 ~]# netstat  -utnlp  | grep redis-server
+[root@host52 ~]# 						  
+						  
+[root@host57 ~]# redis-trib.rb  info 192.168.4.53:6353
+192.168.4.53:6353 (518e3bde...) -> 1 keys | 5461 slots | 1 slaves.
+192.168.4.51:6351 (e5938a5a...) -> 1 keys | 5461 slots | 1 slaves.
+192.168.4.52:6352 (061cf09e...) -> 2 keys | 5462 slots | 1 slaves.
+[OK] 4 keys in 3 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+[root@host57 ~]# 
+[root@host57 ~]# redis-trib.rb  info 192.168.4.53:6353
+192.168.4.53:6353 (518e3bde...) -> 1 keys | 5461 slots | 1 slaves.
+192.168.4.51:6351 (e5938a5a...) -> 1 keys | 5461 slots | 1 slaves.
+192.168.4.56:6356 (472850cc...) -> 2 keys | 5462 slots | 0 slaves.
+[OK] 4 keys in 3 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+						  
+					11:20 上课 
