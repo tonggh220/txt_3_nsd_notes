@@ -308,3 +308,32 @@ OK
 									  在管理主机执行添加主机到集群的命令
 									   如果添加的是master 角色的服务器 要重新分配hash槽
 									   如果添加的是slave角色的服务器 就不需要分配hash槽
+
+
+	把集群中的主机 恢复为独立的数据库服务器？
+	     
+[root@host51 ~]# redis-cli -h 192.168.4.51 -p 6351 shutdown
+[root@host51 ~]# rm -rf /var/lib/redis/6379/*									  
+[root@host51 ~]# sed -i '815s/^/#/' /etc/redis/6379.conf 
+[root@host51 ~]# sed -i '823s/^/#/' /etc/redis/6379.conf 
+[root@host51 ~]# sed -i '829s/^/#/' /etc/redis/6379.conf 
+
+[root@host51 ~]# sed -n '829p;823p;815p' /etc/redis/6379.conf 
+#cluster-enabled yes
+#cluster-config-file nodes-6379.conf
+#cluster-node-timeout 5000
+[root@host51 ~]# 									 
+
+[root@host51 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host51 ~]# netstat  -utnlp  | grep redis-server
+tcp        0      0 192.168.4.51:6351       0.0.0.0:*               LISTEN      31796/redis-server  
+[root@host51 ~]# 									 
+			
+[root@host51 ~]# redis-cli -h 192.168.4.51 -p 6351 
+192.168.4.51:6351> info replication    查看主机角色
+# Replication
+role:master   默认都是主数据库服务器 
+192.168.4.51:6351> keys *
+(empty list or set)
+192.168.4.51:6351> 
