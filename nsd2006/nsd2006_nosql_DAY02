@@ -1,0 +1,128 @@
+NoSQL _day02---搭建redis高可用集群
+			
+			使用1台redis服务存储数据 有什么不足的地方？
+			单点故障   处理客户端速度问题    数据备份问题   存储空间
+            
+			redis可用集群：实现数据的分布式存储，解决服务的单点故障问题
+			并能自动完成数据的备份
+			
+		
+			
+							   
+								
+			创建集群，步骤如下：
+					1 、配置管理主机192.168.4.57
+					             作用对集群做管理（管理6台数据库服务器）
+						   
+						   1.1 准备脚本的运行环境
+						           ]# yum  -y  install  ruby   rubygems 
+						   		   ]#gem  isntall    redis-3.2.1.gem
+									
+						   1.2 创建管理集群的ruby脚本
+						   ]# tar -zxvf  redis-4.0.8.tar.gz
+						   ]# cd  redis-4.0.8
+						   ]# echo  $PATH
+						   ]# mkdir /root/bin/
+						   ]# cp src/redis-trib.rb /root/bin/
+						   ]# chmod +x /root/bin/
+						   ]# redis-trib.rb help
+						                                          时间10 分钟到  09：48 
+					2 、创建集群
+						   2.1  准备做集群的6台redis服务器，要求如下
+								安装Redis软件，并做初始化配置
+							    修改 6台服务使用的ip地址和端口,不需要设置连接密码
+							    不要向内存里存储数据
+							    启用集群功能
+								所有主机firewalld 关闭 
+								
+							2.2 在管理主机把6台服务创建成集群 57
+[root@host57 ~]# systemctl  stop firewalld
+[root@host57 ~]# 
+[root@host57 ~]# redis-trib.rb    create --replicas 1  
+192.168.4.51:6351 192.168.4.52:6352 192.168.4.53:6353 
+192.168.4.54:6354 192.168.4.55:6355 192.168.4.56:6356
+
+>>> Creating cluster
+>>> Performing hash slots allocation on 6 nodes...
+Using 3 masters:
+192.168.4.51:6351
+192.168.4.52:6352
+192.168.4.53:6353
+Adding replica 192.168.4.55:6355 to 192.168.4.51:6351
+Adding replica 192.168.4.56:6356 to 192.168.4.52:6352
+Adding replica 192.168.4.54:6354 to 192.168.4.53:6353
+M: e5938a5ac0e4ae6d8a5021a851b5d2a86c66049f 192.168.4.51:6351
+   slots:0-5460 (5461 slots) master
+M: 061cf09e1047cc879549567cf19a7a0d38dcf42d 192.168.4.52:6352
+   slots:5461-10922 (5462 slots) master
+M: 518e3bde12b5b168de89f129ea8cd29a58b98c0b 192.168.4.53:6353
+   slots:10923-16383 (5461 slots) master
+S: 879ad247935481fb31e0860b288f17903ba67abf 192.168.4.54:6354
+   replicates 518e3bde12b5b168de89f129ea8cd29a58b98c0b
+S: 926128f6be16fa318c2229c28e0c9d56fbe27656 192.168.4.55:6355
+   replicates e5938a5ac0e4ae6d8a5021a851b5d2a86c66049f
+S: 472850cc708ddb35d546ac742d45fd04d09c1de4 192.168.4.56:6356
+   replicates 061cf09e1047cc879549567cf19a7a0d38dcf42d
+Can I set the above configuration? (type 'yes' to accept): yes
+>>> Nodes configuration updated
+>>> Assign a different config epoch to each node
+>>> Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join...
+>>> Performing Cluster Check (using node 192.168.4.51:6351)
+M: e5938a5ac0e4ae6d8a5021a851b5d2a86c66049f 192.168.4.51:6351
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+S: 879ad247935481fb31e0860b288f17903ba67abf 192.168.4.54:6354
+   slots: (0 slots) slave
+   replicates 518e3bde12b5b168de89f129ea8cd29a58b98c0b
+M: 061cf09e1047cc879549567cf19a7a0d38dcf42d 192.168.4.52:6352
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+S: 926128f6be16fa318c2229c28e0c9d56fbe27656 192.168.4.55:6355
+   slots: (0 slots) slave
+   replicates e5938a5ac0e4ae6d8a5021a851b5d2a86c66049f
+S: 472850cc708ddb35d546ac742d45fd04d09c1de4 192.168.4.56:6356
+   slots: (0 slots) slave
+   replicates 061cf09e1047cc879549567cf19a7a0d38dcf42d
+M: 518e3bde12b5b168de89f129ea8cd29a58b98c0b 192.168.4.53:6353
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+[root@host57 ~]# 
+							
+								
+				    3、查看集群信息
+[root@host57 ~]# redis-trib.rb  info 192.168.4.52:6352
+192.168.4.52:6352 (061cf09e...) -> 0 keys | 5462 slots | 1 slaves.
+192.168.4.53:6353 (518e3bde...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.4.51:6351 (e5938a5a...) -> 0 keys | 5461 slots | 1 slaves.
+[OK] 0 keys in 3 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+					
+[root@host57 ~]# redis-trib.rb  check 192.168.4.52:6352
+					
+				    在数据库本机查看集群信息
+[root@host52 ~]# redis-cli -h 192.168.4.52 -p 6352	
+192.168.4.52:6352> cluster info
+				
+cluster_state:ok
+cluster_size:3	
+cluster_known_nodes:6
+
+192.168.4.52:6352> cluster nodes
+192.168.4.52:6352> exit 
+
+[root@host52 ~]# cat /var/lib/redis/6379/nodes-6379.conf	
+
+	
+统一的排错方法：
+        停止6台主机的redis服务
+        rm  -rf /var/lib/redis/6379/*
+        启动 6台主机的redis服务
+        在 管理主机执行创建集群的命令	
+
+ 休息+排错 到  10：42 
