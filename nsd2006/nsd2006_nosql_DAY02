@@ -186,4 +186,125 @@ tcp        0      0 192.168.4.52:6352       0.0.0.0:*               LISTEN      
 0.00 keys per slot on average.
 [root@host57 ~]# 
 						  
-					11:20 上课 
+				6、集群的工作过程（如何实现数据分布式存储的）
+
+ 变量名   和   crc16  计算    数字    % 16384    = 余数    
+ 根据余数 所在主数据库服务器占用槽的范围存储数据
+                                  
+			14：00  上课 
+			
+			管理集群：		
+					1  向集群里添加新的redis服务器
+					    考虑：什么情况下需要向集群里添加新的Redis服务器？
+									1  内存空间不足
+									2  访问了增量
+									
+						1.1  添加master 角色的数据库服务器，步骤如下：	
+						            1  运行redis服务并启用了集群配置 192.168.4.58
+									     IP   192.168.4.58  
+										 port  6358
+									
+					
+				     				2  在管理主机添加新服务器到集群里
+[root@host57 ~]# redis-trib.rb add-node 192.168.4.58:6358 
+192.168.4.53:6353	
+
+[root@host57 ~]# redis-trib.rb info 192.168.4.53:6353
+						
+									3   分配hash slots 给 新的主数据库服务器
+[root@host57 ~]# redis-trib.rb reshard 192.168.4.53:6353	
+1  移出hash槽个数             4096
+2  接收hash槽主机ID         58 主机的ID
+3  移出hash槽主机ID          all 
+4  同意配置                         yes 
+									
+	[root@host57 ~]# redis-trib.rb info 192.168.4.53:6353		
+ 
+ 
+ [root@host57 ~]# redis-trib.rb check  192.168.4.53:6353	
+ M: 68dfc7c05f75f16d6b47fd85483076a80ea96b92 192.168.4.58:6358
+   slots:0-1364,5461-6826,10923-12287 (4096 slots) master
+   0 additional replica(s)
+11786
+ 
+									4   访问新添加主数据库服务器存取数据
+[root@host50 ~]# redis-cli -c -h 192.168.4.58 -p 6358									
+192.168.4.58:6358> keys *
+1) "y"
+2) "age"
+3) "name"
+4) "x2"
+5) "v1"
+192.168.4.58:6358> set a1 alices
+-> Redirected to slot [7785] located at 192.168.4.56:6356
+OK
+192.168.4.56:6356> set a2 alices
+-> Redirected to slot [11786] located at 192.168.4.58:6358
+OK
+192.168.4.58:6358>									
+									
+									
+						1.2  添加slave 角色的数据库服务器
+						            1  准备新的虚拟机192.168.4.59 
+						            2 在59运行redis 服务并启用集群配置
+								   
+								    3 在管理主机把59 添加到集群里，做slave 服务器
+[root@host57 ~]# redis-trib.rb add-node --slave 192.168.4.59:6359 
+192.168.4.53:6353	
+								
+[root@host57 ~]# redis-trib.rb info 192.168.4.53:6353
+						        
+									 4 客户端连59 查看数据
+[root@host50 ~]# redis-cli -c -h 192.168.4.59 -p 6359
+192.168.4.59:6359> keys *
+
+					2  把redis服务器移除集群		
+						考虑：什么情况下把Redis服务器移除集群	
+						
+						     					 
+								 
+						         2.1  移除slave 角色的数据库服务器	
+										因为slave服务器不占用hash槽 可以直接移除
+										在管理主机执行移除的命令
+									     查看备移除主机的ID 
+[root@host57 ~]# redis-trib.rb check  192.168.4.53:6353									
+
+[root@host57 ~]# redis-trib.rb del-node 192.168.4.58:6358 
+879ad247935481fb31e0860b288f17903ba67abf										
+
+[root@host57 ~]# redis-trib.rb info   192.168.4.53:6353	
+
+									    2.2  移除master 角色的数据库服务器
+										        要先释放  hash槽 才可以 移除	
+												删除主服务器56
+]# redis-trib.rb reshard 192.168.4.53:6353
+    1 释放hash 槽 的个数  
+	2  接收hash 槽 主机的	ID 
+	3  释放hash 槽 主机的ID 
+	4  done   结束ID 的输入
+	5  yes   统一配置 
+	
+ ]# redis-trib.rb info 192.168.4.53:6353
+ 
+ ]# redis-trib.rb del-node 192.168.4.58:6358 
+ 472850cc708ddb35d546ac742d45fd04d09c1de4
+												
+							平均分配主服务器占用的hash槽
+[root@host57 ~]# redis-trib.rb rebalance  192.168.4.53:6353
+
+						
+							宕机的服务器，启动后，运行redis服务，会自动加入集群
+							并同步宕机期间的数据
+							
+							
+							3  把 移除数据库服务器再添加到集群里
+									 被手动移除的主机，服务启动后，不自动加入集群
+									 需要手动加入集群
+									 
+									 启动服务后，连接服务执行
+									 >  cluester   reset   #清除集群信息
+									 > exit 
+									 
+									  在管理主机执行添加主机到集群的命令
+									   如果添加的是master 角色的服务器 要重新分配hash槽
+									   如果添加的是slave角色的服务器 就不需要分配hash槽
