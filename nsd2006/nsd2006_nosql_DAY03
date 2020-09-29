@@ -1,0 +1,151 @@
+一、Redis 主从复制 (类似于 mysql服务的主从同步)
+			1.1 主从复制介绍 
+						主数据库服务器 ：接收客户端访问的主机
+						从数据库服务器 ： 自动同步主服务器的数据
+						
+						常用的结构模式有： 具体见ppt 
+						
+						
+			1.2 配置主从复制   50  -  55
+						查看服务器的角色   info   replication 
+						redis 服务运行后 ，默认的角色 是master 服务。
+						
+						
+						命令行配置的命令  slaveof    主服务器的ip     主服务器的端口
+						临时恢复为主服务器  slaveof  no  one
+						
+			            永久配置    vim /etc/redis/6379.conf
+										  slaveof  主服务器的ip     主服务器的端口
+			                             :wq
+										 
+						配置一主一从结构   把主机52 配置为 51的从服务器 
+									1  主机51 和  52  分别运行redis服务
+									2  在52主机执行 slaveof    192.168.4.51  6351
+									3  永久配置为51的从服务器
+									 vim /etc/redis/6379.conf
+									        282 slaveof 192.168.4.51  6351
+									:wq
+		
+						配置一主多从结构  把主机53 也配置为 51的从服务器 
+									  1 主机53 运行redis服务
+									  2  在53主机执行 slaveof    192.168.4.51  6351
+									  3 分别在 51 和 53 主机查看    info  replication 
+									  4  在 51 主机 存储 新变量   mset  school  tarena   age 99
+									  5  在 52  和  53 主机能查看到 同样的变量  keys *
+						 
+						
+					
+						配置主从从结构
+									   1 主机54 运行redis服务
+									   2  在54主机执行 slaveof    192.168.4.52  6352
+									   3 在 52主机查看    info  replication 
+									   4  在 51 主机 存储 新变量 
+									   5   在 52  和  54 主机能查看到 同样的变量 
+									   
+						配置带验证的主从复制结构
+								主服务器的redis服务设置了连接密码，从服务器在连接主服务器时
+								也必须指定连接密码
+								
+								1 在 51 主机设置连接密码
+[root@host51 ~]# vim +501 /etc/redis/6379.conf 								
+	requirepass 123456	
+:wq
+
+[root@host51 ~]# redis-cli -h 192.168.4.51 -p 6351 shutdown
+[root@host51 ~]# /etc/init.d/redis_6379  start
+Starting Redis server...
+[root@host51 ~]# redis-cli -h 192.168.4.51 -p 6351 
+192.168.4.51:6351> ping
+(error) NOAUTH Authentication required.
+192.168.4.51:6351> AUTH  123456
+OK
+192.168.4.51:6351> ping
+PONG
+192.168.4.51:6351> keys *
+	
+								2 从服务器指定连接主服务器的密码
+								> config set  masterauth 123456
+                                > config rewrite
+
+								或
+								]# vim /etc/redis/6379.conf 
+								  282 slaveof   192.168.4.51    6351
+								  289 masterauth  123456
+							   :wq
+						]# redis-cli  -h 192.168.4.53 -p 6353  shutdown
+                        ]# /etc/init.d/redis_6379 start
+
+								
+							   3  在2台从服务器 查看   info replication
+								
+
+						
+									   
+			1.3 主从复制的工作过程? 具体见PPT  
+			
+						休息到  11：10  上课 
+						
+						
+			1.4 哨兵服务
+			     1.4.1 哨兵服务介绍
+					作用： 监视主数据库服务器redis服务的状态，当主服务器的redis服务
+					无法连接， 把对应的从服务器 升级为主服务器。
+					
+					哨兵服务 + Redis主从复制 可以实现redis服务的高可用
+				
+				拓扑结构见PPT
+					配置Redis主从结构  把52 配置为 51 的从服务器 
+									
+					1.4.2 配置哨兵服务 192.168.4.57
+							  1 安装源码redis软件 （不需要做初始化配置 也不需要启动redis服务 ）
+ 241  yum -y  install gcc
+  242  tar -zxvf  /var/ftp/pub/redis-4.0.8.tar.gz 
+  243  cd redis-4.0.8/
+  244  make && make install	  
+							  
+					
+							  
+							  注意：如果主服务器设置了连接密码 从服务器也要设置同样连接密码
+[root@host52 ~]# redis-cli -h 192.168.4.52 -p 6352 
+192.168.4.52:6352> config set requirepass 123456
+OK
+192.168.4.52:6352> config rewrite
+(error) NOAUTH Authentication required.
+192.168.4.52:6352> 
+192.168.4.52:6352> auth 123456
+OK
+192.168.4.52:6352> config rewrite
+OK
+192.168.4.52:6352> exit
+
+[root@host52 ~]# redis-cli -h 192.168.4.52 -p 6352 
+192.168.4.52:6352> keys *
+(error) NOAUTH Authentication required.
+192.168.4.52:6352> auth 123456
+OK
+192.168.4.52:6352> keys *
+							  
+							 2  创建并编辑，哨兵服务的主配置文件
+							  vim /etc/sentinel.conf
+							       bind   192.168.4.57
+								   sentinel   monitor      dachui   192.168.4.51   6351   1
+							       sentinel   auth-pass   dachui   123456
+							  :wq
+							  
+							  
+							  3 启动哨兵服务
+							  ]# redis-sentinel   /etc/sentinel.conf          
+							  
+							  4 测试配置 
+								    4.1  停止 主服务器 51 的redis 服务 
+[root@host51 ~]# redis-cli -h 192.168.4.51 -p 6351  -a 123456  shutdown
+									
+									4.2  在从服务器查看 角色  变为master 
+									192.168.4.52:6352> auth 123456
+									OK
+									192.168.4.52:6352> info replication
+									# Replication
+										role:master
+									4.3 哨兵服务器 会监视新的 主数据库服务器 52
+									cat  /etc/sentinel.conf
+									sentinel monitor dachui 192.168.4.52 6352 1
