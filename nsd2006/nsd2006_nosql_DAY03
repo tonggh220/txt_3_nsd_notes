@@ -149,3 +149,169 @@ OK
 									4.3 哨兵服务器 会监视新的 主数据库服务器 52
 									cat  /etc/sentinel.conf
 									sentinel monitor dachui 192.168.4.52 6352 1
+
+
+二、持久化（Redis数据永久存储的方式） （偏理论） 192.168.4.50    192.168.4.55 
+       数据永久保存。
+
+		2.1 RDB (默认启用的方式)
+			  RDB介绍 ？ 具体见PPT 
+			  配置文件里有默认的存储时间定义
+dbfilename  dump.rdb
+ save 900 1
+ save 300 10
+ save 60 10000
+
+			使用备份的dump.rdb文件恢复 
+					在  192.168.4.50 备份dump.rdb 文件
+192.168.4.50:6350> keys *
+1) "a"
+2) "c"
+3) "name"
+4) "x"
+5) "age"
+6) "class"
+7) "b"
+192.168.4.50:6350> save 
+
+[root@host50 ~]# cp /var/lib/redis/6379/dump.rdb   /opt	
+[root@host50 ~]# 	scp    /opt/dump.rdb  root@192.168.4.55:/root/
+					在  192.168.4.55  使用备份的  dump.rdb 文件 恢复数据
+					  恢复步骤如下：
+									停止redis服务
+									清空数据库目录
+									拷贝备份文件到数据库目录里
+									启动服务后
+									连接服务，查看数据
+]#cp /root/dump.rdb  /var/lib/redis/6379/
+]#  ls /var/lib/redis/6379/
+]# /etc/init.d/redis_6379 start
+]#  redis-cli  -h 192.168.4.55 -p 6355  									
+> keys  *
+	
+					验证redis服务存盘频率
+]# redis-cli  -h 192.168.4.50  -p 6350  -a 123456 shutdown
+]# ls /var/lib/redis/6379/
+]# rm -rf /var/lib/redis/6379/*
+]# vim /etc/redis/6379.conf 
+save 900 1
+#save 300 10
+save 120 10
+save 60 10000
+：wq
+
+]#/etc/init.d/redis_6379 start
+]#redis-cli  -h 192.168.4.50  -p 6350  -a 123456 
+>         2分钟内存储 大于或等于 10个变量
+
+]# ls /var/lib/redis/6379/	dump.rdb 
+	   
+			休息到  15：10   上课 
+			
+			
+							   
+		2.2  AOF (没有启用)
+				AOF 介绍？ 见PPT  （和mysql服务binlog日志文件功能一样）
+			
+   			启用AOF文件
+[root@host50 ~]# redis-cli  -h 192.168.4.50  -p 6350  -a 123456 
+192.168.4.50:6350> config set appendonly yes
+OK
+192.168.4.50:6350> CONFIG rewrite
+OK
+192.168.4.50:6350> exit
+[root@host50 ~]# 
+[root@host50 ~]# ls /var/lib/redis/6379/
+appendonly.aof  dump.rdb
+[root@host50 ~]#		  
+[root@host50 ~]# redis-cli  -h 192.168.4.50  -p 6350  -a 123456	
+> set  name bob
+> set   age   19
+
+[root@host50 ~]# cat  /var/lib/redis/6379/	appendonly.ao
+
+
+				是备份的AOF文件恢复数据
+				192.168.4.50 备份
+[root@host50 ~]# cp /var/lib/redis/6379/appendonly.aof  /root/
+[root@host50 ~]# scp  /root/appendonly.aof  root@!92.168.4.55:/opt/
+
+				192.168.4.55 恢复    15:50 
+							停止数据库服务
+							清空数据库目录
+							启用aof文件 
+							拷贝备份的aof文件到数据库目录下
+							启动服务
+							访问服务查看数据
+[root@host55 ~]# redis-cli  -h 192.168.4.55 -p 6355   shutdown	
+[root@host55 ~]# rm -rf /var/lib/redis/6379/*	
+
+[root@host55 ~]# vim /etc/redis/6379.conf 
+appendonly yes	
+appendfilename "appendonly.aof"
+:wq
+
+[root@host55 ~]# cp /root/appendonly.aof  /var/lib/redis/6379/
+[root@host55 ~]# ls /var/lib/redis/6379/
+appendonly.aof
+[root@host55 ~]# 
+[root@host55 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host55 ~]# redis-cli  -h 192.168.4.55 -p 6355   
+192.168.4.55:6355> keys *
+			
+       与aof文件相关的配置  6379.conf
+				AOF文件记录写操作的方式?
+                何时触发日志重写？
+
+				修复AOF文件
+[root@host50 ~]# redis-check-aof --fix 
+/var/lib/redis/6379/appendonly.aof
+提示 输入 y 
+
+	
+	  .rdb      aof 
+	
+	
+三、数据类型（管理变量命令的使用）
+		字符类型 
+192.168.4.50:6350> set  stie   www.tedu.cn	
+192.168.4.50:6350> get stie
+"www.tedu.cn"
+192.168.4.50:6350> GETRANGE  stie 0 2
+"www"
+192.168.4.50:6350> GETRANGE  stie -2 -1
+"cn"
+192.168.4.50:6350> 
+	
+192.168.4.50:6350> strlen stie
+(integer) 11
+192.168.4.50:6350>
+
+192.168.4.50:6350> keys  *
+1) "stie"
+192.168.4.50:6350> APPEND name pang
+(integer) 4
+192.168.4.50:6350> APPEND name lijing
+(integer) 10
+192.168.4.50:6350> get name
+"panglijing"
+192.168.4.50:6350> APPEND name A
+(integer) 11
+192.168.4.50:6350> get name
+"panglijingA"
+	
+	
+192.168.4.50:6350> get x
+"7"
+192.168.4.50:6350> decr x
+(integer) 6
+192.168.4.50:6350> decr x
+(integer) 5
+192.168.4.50:6350> decr x
+(integer) 4
+192.168.4.50:6350> get x
+"4"
+192.168.4.50:6350> decrby x 3
+(integer) 1
+192.168.4.50:6350>	
