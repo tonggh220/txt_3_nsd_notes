@@ -121,3 +121,40 @@ mysql> select  * from gamedb.user;
 3 rows in set (0.01 sec)
 
 mysql> 
+
+4.2 测试nfs共享存储的配置
+				 在NFS共享目录下创建网页文件 test.html
+[root@nfs30 ~]# echo  "aaaaaa" >  /sitedir/test.html
+[root@nfs30 ~]# ls /sitedir/
+test.html
+[root@nfs30 ~]# 		
+
+			     在网站服务器本机查看网页目录 /var/www/html
+[root@web33 ~]# ls /var/www/html/
+test.html
+[root@web33 ~]# 
+
+
+				 在网站服务器本机 向网页目录新建网页文件test2.html 
+[root@web33 ~]# echo "BBBB" > /var/www/html/test2.html
+[root@web33 ~]# ls /var/www/html/
+test2.html  test.html
+[root@web33 ~]# 
+				 
+				 在nfs服务器本机查看，新建网页文件
+[root@nfs30 ~]# ls /sitedir/
+test2.html  test.html
+[root@nfs30 ~]# 
+
+				 客户端连接网站服务访问网页
+[root@mysql11 ~]# curl  http://192.168.4.33/test.html
+aaaaaa
+[root@mysql11 ~]# curl  http://192.168.4.33/test2.html
+BBBB
+[root@mysql11 ~]# 				 
+				 
+[root@mysql11 ~]# curl  http://192.168.4.44/test.html
+aaaaaa
+[root@mysql11 ~]# curl  http://192.168.4.44/test2.html
+BBBB
+[root@mysql11 ~]# 
