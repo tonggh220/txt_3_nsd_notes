@@ -315,3 +315,8 @@ Starting Redis server...
 192.168.4.50:6350> decrby x 3
 (integer) 1
 192.168.4.50:6350>	
+
+        redis 数据类型管理命令总结，具体操作见ppt 
+set  getrange   strlen   append  setbit   bitcount  decr   decrby  incr   incrby    incrbyfloat
+lpush   llen      lrange   lpop   lindex  lset   rpush     rpop
+hset  hmset  hgetall hkeys  hvals   hget  hmget  hdel
