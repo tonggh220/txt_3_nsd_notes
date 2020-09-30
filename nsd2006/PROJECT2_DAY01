@@ -1,0 +1,15 @@
+#############project1_day01					 
+一配置数据库服务器
+		1.1   在mysql11 主机创建逻辑卷 lv0
+		1.2   在mysql22 主机创建逻辑卷 lv0
+						 
+		1.3  配置 mysql11 主机mysql服务使用lv0存储数据
+		1.4  配置 mysql22 主机mysql服务使用lv0存储数据 	 
+						 
+	    1.5  把mysql11 服务配置为mysql主从同步中的
+		       master数据库服务器,统一要求
+		       binlog日志名    master11 
+			   授权用户名    repluser    密码  123qqq...A
+			 
+		1.6   把mysql2 服务配置为mysql主从同步中的
+		        slave 数据库服务器
