@@ -122,3 +122,233 @@ tarenaA tarenaB tarenaC
    22  systemctl  start mysqld
    23  mysql -uroot -p123qqq...A
 
+ 指定主服务器 (change master  to)
+[root@pxc66 ~]# grep  master11  /opt/fullbak/xtrabackup_info 
+binlog_pos = filename 'master11.000002', position '427'
+
+[root@pxc66 ~]# mysql -uroot -p123qqq...A			
+mysql> change master to  master_host="192.168.4.11",master_user="repluser",
+master_password="123qqq...A",master_log_file="master11.000002",
+master_log_pos=427;
+
+mysql> start slave;
+
+                查看状态信息  show  slave  status\G;
+			Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+            3.2 创建PXC集群，具体步骤如下：
+					3.2.1 配置第1台服务器，在192.168.4.66主机 做如下配置：
+							  停止mysqld服务
+[root@pxc66 ~]# systemctl  stop mysqld
+
+[root@pxc66 ~]# rpm -qa | grep -i mysql
+							  
+							  卸载 mysqld服务软件
+[root@pxc66 ~]# rpm  -e --nodeps mysql-community-libs 
+mysql-community-embedded mysql-community-embedded-devel 
+mysql-community-common mysql-community-client mysql-community-devel 
+mysql-community-test mysql-community-libs-compat 
+mysql-community-minimal-debuginfo mysql-community-server 
+mysql-community-embedded-compat
+
+                              安装PXC软件
+[root@pxc66 ~]# cd pxc/
+[root@pxc66 pxc]# rpm -q libev || yum -y install libev-4.15-1.el6.rf.x86_64.rpm 
+[root@pxc66 pxc]# yum -y install percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm
+[root@pxc66 pxc]# yum -y install qpress-1.1-14.11.x86_64.rpm 
+[root@pxc66 pxc]# yum -y install Percona-XtraDB-Cluster-*.rpm
+
+							  修改配置文件
+[root@pxc66 pxc]# cd /etc/percona-xtradb-cluster.conf.d/
+]# vim mysqld.cnf 							  
+	server-id=66
+:wq
+]# vim wsrep.cnf 
+    wsrep_cluster_address=gcomm:               //不需要写ip地址
+    wsrep_node_address=192.168.4.66 
+    wsrep_cluster_name=pxc-cluster
+    wsrep_node_name=pxcnode66
+    wsrep_sst_auth="sstuser:123qqq...A"
+:wq
+					  
+							  启动mysql服务
+[root@pxc66 ~]# setenforce 0
+[root@pxc66 ~]# systemctl  stop firewalld
+[root@pxc66 ~]# systemctl  start mysql
+							  
+                              数据库管理员登录
+[root@pxc66 ~]# mysql -uroot -p123qqq...A
+
+							  用户授权
+grant all on *.* to sstuser@"localhost" identified by "123qqq...A";	
+show  slave status \G 
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+							  查看集群状态信息                           练习+休息到 17:15 
+mysql> show status like "%wsrep%";
+wsrep_incoming_addresses         | 192.168.4.66:3306 							  
+wsrep_cluster_status             | Primary 
+
+			3.2.2 配置第2台服务器，在192.168.4.10主机 做如下配置
+					安装PXC软件   具体见PPT
+					修改配置文件
+]# cd /etc/percona-xtradb-cluster.conf.d/
+]# vim mysqld.cnf 							  
+	server-id=10
+:wq
+]# vim wsrep.cnf 
+    wsrep_cluster_address=gcomm: //192.168.4.66,192.168.4.10
+    wsrep_node_address=192.168.4.10 
+    wsrep_cluster_name=pxc-cluster
+    wsrep_node_name=pxcnode10
+    wsrep_sst_auth="sstuser:123qqq...A"
+:wq					
+					
+					
+					启动mysql服务
+[root@pxc10 ~]# setenforce 0
+[root@pxc10 ~]# systemctl  stop firewalld
+
+数据库管理员登录、查看状态信息、查看数据
+wsrep_incoming_addresses         | 192.168.4.10:3306,192.168.4.66:3306 	
+wsrep_cluster_status             | Primary	
+
+			3.2.3 配置第3台服务器，在192.168.4.88主机 做如下配置
+					安装PXC软件  具体见PPT 
+					修改配置文件
+]# cd /etc/percona-xtradb-cluster.conf.d/
+]# vim mysqld.cnf 							  
+	server-id=88
+:wq
+]# vim wsrep.cnf 
+    wsrep_cluster_address=gcomm: //192.168.4.10
+    wsrep_node_address=192.168.4.88
+    wsrep_cluster_name=pxc-cluster
+    wsrep_node_name=pxcnode88
+    wsrep_sst_auth="sstuser:123qqq...A"
+:wq
+
+
+					启动mysql服务   systemctl  start   mysql 
+				    数据库管理员登录  mysql  -uroot   -p123qqq...A
+
+查看状态信息
+mysql> show status like "%wsrep%";
+
+wsrep_cluster_status             | Primary			
+
+wsrep_incoming_addresses         | 192.168.4.88:3306,192.168.4.10:3306,192.168.4.66:3306 |
+
+            查看数据	 show  databses;
+			
+			
+			测试配置： 
+			     在mysql11 服务器添加新记录 ， 
+[root@mysql11 ~]# mysql -uroot -p123qqq...A -e 
+"insert into gamedb.user values("666","6666")"
+
+				在pxc集群中的3台服务器上都能查看到
+[root@pxc88 ~]#  mysql -uroot -p123qqq...A -e 'select * from gamedb.user'			
+			
+[root@pxc66 ~]#  mysql -uroot -p123qqq...A -e 'select * from gamedb.user'			
+			
+[root@pxc10 ~]#  mysql -uroot -p123qqq...A -e 'select * from gamedb.user'			
+			
+			
+					
+[root@mysql11 ~]# mysql -uroot -p123qqq...A -e 
+"alter table gamedb.user add id  int  primary key auto_increment first"
+					
+[root@web33 ~]# mysql -h192.168.4.77 -P4006 -uyaya55 -p123qqq...A
+mysql> insert into  gamedb.user(name,password) values("7766","799");
+					
+
+[root@web33 ~]# mysql -h192.168.4.10 -uyaya55 -p123qqq...A
+mysql> insert into gamedb.user(name,password)values("A","A");
+
+[root@web33 ~]# mysql -h192.168.4.66 -uyaya55 -p123qqq...A	
+insert into gamedb.user(name,password)values("AA","AA");
+
+[root@web33 ~]# mysql -h192.168.4.88 -uyaya55 -p123qqq...A
+mysql> select  * from gamedb.user;
+
+			四、部署集群
+					4.1 部署LB 集群 ： 把网站多访问平均的分发给3台数据库服务器 10 、66 和88
+								
+listen  dblb  *:3306
+    mode    tcp 
+    option  tcpka
+    balance roundrobin                      
+    server  db1 192.168.4.66:3306 check 
+    server  db2 192.168.4.10:3306 check 
+    server  db3 192.168.4.88:3306 check 
+					
+[root@mysql11 ~]# netstat  -utnlp  | grep 3306
+tcp        0      0 0.0.0.0:3306            0.0.0.0:*               LISTEN      15421/haproxy       
+[root@mysql11 ~]# 	
+
+
+[root@web33 ~]# mysql -h192.168.4.11 -uyaya55 -p123qqq...A -e 'select @@hostname'
+				
+					4.2 部署HA集群：配置调度器的高可用集群 
+							4.2.1 配置备用调度器 
+]# yum -y install haproxy
+							
+]# scp root@192.168.4.99:/etc/haproxy/haproxy.cfg /etc/haproxy/							
+[root@web33 ~]# mysql -h192.168.4.98 -uyaya55 -p123qqq...A -e 'select @@hostname'							
+							
+							4.2.2 配置HA集群
+									  1 分别在 主调度器和备用调度器上安装 keepalived软件
+									  
+									   2 修改主调度器器的配置文件
+		 vrrp_iptables  
+}
+
+vrrp_instance VI_1 {
+    state MASTER
+    interface ens33
+    virtual_router_id 51
+    priority 150 
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }   
+    virtual_ipaddress {
+        192.168.4.100
+    }   
+}
+：wq
+
+							     3 修改主调度器器的配置文件
+ vrrp_iptables
+}
+
+vrrp_instance VI_1 {
+    state BACKUP
+    interface ens33
+    virtual_router_id 51
+    priority 100
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }
+    virtual_ipaddress {
+        192.168.4.100
+    }
+}
+								
+							分别启动2台主机的keepalived服务
+]# systemctl  start keepalived
+ 
+]# ip addr show | grep  192
+    inet 192.168.4.11/24 brd 192.168.4.255 scope global noprefixroute ens33
+    inet 192.168.4.100/32 scope global ens33
+
+							
+							4.2.3 测试配置
+
+
