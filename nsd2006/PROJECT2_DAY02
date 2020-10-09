@@ -77,3 +77,48 @@ data save ok
 -> Redirected to slot [7629] located at 192.168.4.52:6379
 "tarenaC "
 192.168.4.52:6379> 
+
+ 编写获取数据的脚本 get.php
+[root@nfs30 sitedir]#vim  /sitedir/get.php 
+<?php
+$redis_list = ['192.168.4.51:6379','192.168.4.52:6379','192.168.4.53:6379','192.168.4.54:6379','192.168.4.56:6379','192.168.4.57:6379'];
+
+$client = new RedisCluster(NUll,$redis_list);
+
+echo $client->get("i");
+echo $client->get("j");
+echo $client->get("k");
+?>
+[root@nfs30 sitedir]# 
+				  
+				  
+				  访问脚本
+[root@R51 ~]# curl  http://192.168.4.33/get.php
+tarenaA tarenaB tarenaC 
+                     
+	三 、 数据迁移 （在不停止mysql数据存储服务的情况下，把数据复制到pxc 集群里）
+			3.1 把192.168.4.66主机配置mysql11的  slave服务器，步骤如下：
+				 安装软件mysql-5.7.17.tar  	修改 管理员登录密码123qqq...A 
+				 改配置文件 （指定server_id=66）
+				 重启 动mysqld服务
+				 
+				 确保数据一致 (使用innobackupex命令)
+						  1 在mysql11主机 做不锁表完全备份
+[root@mysql11 ~]# yum -y install  libev-4.15-1.el6.rf.x86_64.rpm	
+[root@mysql11 ~]# yum -y install  percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm					  
+[root@mysql11 ~]# innobackupex --user root --password 123qqq...A  /fullbak  --no-timestamp
+[root@mysql11 ~]# scp -r  /fullbak/  root@192.168.4.66:/opt/
+						  
+						  2 在66 主机使用备份文件恢复数据
+[root@pxc66 ~]# yum -y install  libev-4.15-1.el6.rf.x86_64.rpm	
+[root@pxc66 ~]# yum -y install  percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm	
+   15  systemctl  stop mysqld
+   16  rm -rf /var/lib/mysql/*
+   17  innobackupex --apply-log /opt/fullbak/
+   18  innobackupex --copy-back /opt/fullbak/
+   19  ls /var/lib/mysql
+   20  ls /var/lib/mysql -l
+   21  chown -R mysql:mysql /var/lib/mysql
+   22  systemctl  start mysqld
+   23  mysql -uroot -p123qqq...A
+
