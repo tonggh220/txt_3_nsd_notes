@@ -41,3 +41,39 @@ day02
 192.168.4.53:6379> get x
 192.168.4.53:6379> exit
 [root@R51 ~]# 
+
+
+			2.2 配置网站服务器（可以把数据存储到redis 集群里）
+				  2.2.1  安装连接集群的软件 redis-cluster-4.3.0.tgz
+		  
+				  2.2.2   调用软件
+				  
+				  
+				  
+			2.3 测试配置（编写连接集群存取数据的php脚本）
+				  编写存储数据的脚本set.php
+				  
+<?php
+$redis_list = ['192.168.4.51:6379','192.168.4.52:6379','192.168.4.53:6379','192.168.4.54:6379','192.168.4.56:6379','192.168.4.57:6379'];
+$client = new RedisCluster(NUll,$redis_list);
+$client->set("i","tarenaA ");
+$client->set("j","tarenaB ");
+$client->set("k","tarenaC ");
+echo   "data save  ok ";
+?>
+
+				  客户端访问脚本set.php 
+[root@R51 ~]# curl  http://192.168.4.33/set.php
+data save ok		
+		  
+				  命令行连接集群的Redis服务器查看数据
+[root@R52 ~]# redis-cli  -c -h 192.168.4.51 -p 6379
+192.168.4.51:6379> keys *
+1) "j"
+192.168.4.51:6379> get i
+-> Redirected to slot [15759] located at 192.168.4.53:6379
+"tarenaA "
+192.168.4.53:6379> get k
+-> Redirected to slot [7629] located at 192.168.4.52:6379
+"tarenaC "
+192.168.4.52:6379> 
