@@ -1,0 +1,262 @@
+创建1台新虚拟机 配置如下：
+yum 源
+关 selinux  和 firewalld
+拷贝软件  mysql-5.7.17.tar
+ip 地址  192.168.4.50   
+打开第1天的 PPT  及 案例
+
+++++++++++++++++++++++++
+第三阶段  系统管理
+数据库  关系型数据软件mysql 的使用
+               NoSQL 数据库软件 Redis
+			   
+庞丽静
+英语课  数学课  语文课
+5   基本课程
+5   进阶课程
+3   NoSQL
+2天 数据库项目
+
+数据库管理员  	DBA  
+基础运维              高级运维
+
+培训结构  没有工作经验
+DBA1_DAY01
+
+！＠＃￥％……＆×（）
+
+
+ｃｒｅａｔｅ　　ｔａｂｌｅ　
+
+
+
+ｄｅｓｃ　　ｍｙｓｑｌ．ｕｓｅｒ；
+
+1.48
+
+整数
+          正数    +17    等效   17
+          负数    -12
+		  
+小数  （带小数点的数）  浮点型  float  或 double
+          12.88
+			-12.88
+1 位数的  范围  0-9
+2 位数的  范围  10 - 99 
+                                100-999			
+		  
+
+
+11111111111
+   整数 .小数 
+  18.28             4
+
+xxx.xx
+
+999.99
+1088
+-999.99
+pay    float(5,2)
+
+                      09：00  上课 
+					  课前准备  运行50主机的数据库服务 
+					  管理员登录 可以看见昨天 练习创建的表 
+day01 学习内容回顾：
+1 搭建数据库服务器：
+					相关概念：什么数据库   数据是什么
+					数据库服务软件有哪些？
+					mysql 软件介绍
+					搭建mysql数据库服务器
+								安装软件
+								启动服务
+								相关参数
+								初始配置：使用初始密码登录
+													修改密码
+													设置密码策略（可选）
+2 服务基本使用：
+			SQL命令使用规则
+			命令分类
+			连接mysql服务连接方式
+			把数据存储到mysql服务器上的过程？
+						1 连接  2  建库  3 建表   
+						4 插入记录  5 断开
+3  mysql常用数据类型
+				字符类型
+				数值类型
+				枚举类型
+				日期时间类型
+				         日期时间类型的使用？
+						 datetime   timestamp   date    year  time
+						 
+					      掌握常用的时间函数
+						  （mysql 服务自带获取时间的命令）
+						  select  curtime() ;    
+						  select   curdate ();
+						  select  year( now() ) ;
+						  select  day(now()) ;
+						  select  date(now()) ;
+						  select  month(now());
+						select  time(now());
+						
+						  
+						  时间函数获取的数据给字段赋值
+
+账号名
+注册时间  2020102110000
+    
+create  table   user (name  char(6) ,password   char(15), 
+reg_time   timestamp );
+
+
+insert into   db1.t9 (name,pasword) values ("tt","123");						  
+						  tt   123     2020102110000
+						  
+datetime 类型和  timestamp类型的赋值的区别？
+mysql> create table t10(
+    meeting  datetime  ,  party  timestamp
+    );
+
+insert into t10(meeting) 
+values (20201223223458);
+
+ insert into t10(party) 
+values (20190315094516);
+
+						 
+DBA1_DAY02
+1 表结构
+		1.1 约束条件  ： 限制给表头赋值
+mysql> create  table  t11(
+    name char(10) ,
+    class  char(7) default "nsd2007" ,
+    age tinyint  unsigned  not null  ,
+  likes set("a","b","c","d") not null  default  "a,d"
+    );
+	
+insert into t11(name,age) values ("tom",21);
+insert into  t11 values ("john", "nsd2008" ,  27 , "b,c");
+
+mysql> insert into  t11(name,age) values(null,null);
+ERROR 1048 (23000): Column 'age' cannot be null
+
+mysql> insert into  t11(name,age) values(null,33);
+
+select  * from   t11  ;
+
+############修改表结构 
+mysql> alter  table  db1.t1   添加  
+add  age  int , 
+add email varchar(30) default "stu@tedu.cn" ;
+
+mysql> alter  table  db1.t1  
+add  class  char(7) default "nsd2007" after name;
+
+mysql> alter  table  db1.t1  add  stu_num  int  first ;
+
+mysql> desc  db1.t1 ;
+
+mysql> alter table  db1.t9  drop csnf , drop party ;    删除
+mysql>  select  * from  db1.t9;
+mysl> desc   db1.t9 ;
+
+mysql> alter table  db1.t9  rename 学生信息表;  修改表名
+mysql>  show  tables; 
+
+update   t11   set  name="lucy" where  age=33 ;
+
+alter table  t11  modify  name char(10) not null  default  "" ;  修改类型
+
+mysql> alter table t11 modify 
+age tinyint unsigned not null  default 19 ;
+		
+alter table  t11  
+modify age tinyint unsigned not null default 19  after name ;		
+
+alter table t11  
+change  name  user char(10) not null  default  "";   修改列名 
+
+alter table t11 change class  banji  varchar(10) not null ;
+
+                         
+2 MySQL键值
+               普通索引  index  ***
+			   唯一索引  unique
+			   主         键  primary  key *** 
+               外         键  foreign  key   ***
+			   全文索引      fulltext 		
+
+
+创建主键
+
+create table t12(
+   name char(10) primary key , class char(7) ) ;
+
+mysql> create table t13( name char(10),class char(7),primary key(name) );
+
+			添加主键 		  
+mysql> alter table  t1  add   primary    key (stu_num);					  
+					  
+					  
+update t8  set name="tom" where name is null ;
+update t8 set name="john" where name="bob" and likes="game,sleep";					  
+alter table  t8 add primary key(name);
+
+复合主键 ：表中2列或2列以上一起做主键
+						表中有多条记录时 ，复合主键字段的值不允许同时相同
+
+                    主席   一个人    独裁
+                               多个人      众裁
+
+PRI                       PRI 
+客户端地址	    服务端口号     访问限制
+cip 	                   port                     status 
+1.1.1.1             21                         allow 
+1.1.1.1             22                         deny 
+
+create   table    t14 ( cip   varchar(15) ,   
+port   smallint  , status   enum("allow","deny "), 
+primary key(cip ,port ) );
+
+mysql> insert  into   t14  values ("1.1.1.1","21","allow");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert  into   t14  values ("1.1.1.1","21","deny");
+ERROR 1062 (23000): Duplicate entry '1.1.1.1-21' for key 'PRIMARY'
+mysql> 
+mysql> insert  into   t14  values ("1.1.1.1","22","deny");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> 
+mysql> insert  into   t14  values ("2.1.1.1","22","deny");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from t14;
+
+删除主键
+mysql> alter table  t13 drop primary key ;
+mysql> alter table  t14  drop primary key ;
+
+
+mysql> alter table t14 add primary key(cip,port);  添加复合主键
+
+自增长  插入记录时 让字段通过 自加1的计算结果赋值
+
+x  数值类型  主键 auto_increment 
+
+create  table  t15  ( 
+name   char(10) ,  x   int   primary  key     auto_increment);
+
+mysql> select  * from t15;
+Empty set (0.00 sec)
+
+mysql> insert into  t15(name) values("tom");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into  t15(name) values("lucy");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from t15;
+
+
+
+
