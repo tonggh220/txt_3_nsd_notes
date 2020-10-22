@@ -372,3 +372,198 @@ mysql> insert into gztab values (1,70000);   可以
 
 
 
+############################################################################################
+
+*********DBA1_DAY03***********
+数据导入导出
+				1.1 检索目录： 导入导出数据是 在指定的目录下查找文件
+						查看默认的检索目录   
+						                       mysql> show  variables  like  "secure_file_priv";					
+						修改检索目录
+70  vim /etc/my.cnf						
+[mysqld]
+secure_file_priv="/myload"
+:wq
+
+   71  mkdir /myload
+   72  chown  mysql /myload
+   73  setenforce 0
+   74  systemctl restart mysqld
+   
+						数据导入命令格式？ load  data 
+ load  data  infile   "目录名/文件名"  into   table  库名.表名
+fields terminated   by   "分隔符"   lines  terminated  by   "\n" ;
+
+						导入数据的步骤：
+								建库 create  database  db3;
+								建表 
+								create table  db3.user( 
+								name     char(50) ,
+								password   char(1),
+								uid   int ,   gid   int ,  coment  varchar(100),
+								homedir    char(80) ,  shell   char(30)
+								);						
+								拷贝系统文件到检索目录下
+mysql> system  cp /etc/passwd  /myload/
+mysql> system ls /myload
+								导入数据
+mysql> load data  infile "/myload/passwd" into table  db3.user
+    -> fields  terminated by ":"  lines terminated by "\n" ;
+					
+								查看数据  select  *  from  db3.user ;											
+								添加行号字段 便于对数据做管理
+alter  table   db3.user  add   id   int   primary  key  auto_increment first ;
+select  *  from  db3.user  where  id <= 3 ;
+						
+						 数据导出：
+									命令格式？
+									select 查询命令   into   outfile   "/目录/文件名"；
+						
+									select 查询命令   into   outfile   "/目录/文件名"  
+									fields  terminated by  "列的间隔符号"     
+									lines  terminated by     "行的间隔符号" ；
+
+								
+mysql> select  *  from db3.user into  outfile  "/myload/a.txt"   ;
+
+							
+mysql> select  name,shell  from db3.user where id <= 3   
+into  outfile  "/myload/b.txt"    fields  terminated by ":"  ;
+						
+mysql>  system  ls  /myload/*.txt
+
+管理表记录
+				添加    insert  into
+ insert into  user 
+ values 
+ (30, "bob" , "x" , 3003 , 3003  , "test user" ,  "/home/bob" , "/bin/bash") ;				
+
+insert into  user 
+ values 
+ (40, "bob" , "x" , 3003 , 3003  , "test user" ,  "/home/bob" , "/bin/bash"),
+ (41, "bob" , "x" , 3003 , 3003  , "test user" ,  "/home/bob" , "/bin/bash"),
+ (48, "bob" , "x" , 3003 , 3003  , "test user" ,  "/home/bob" , "/bin/bash");
+ 
+insert  into   user (name,uid) values ("tom",4004);
+
+insert  into   user (name,password,uid )  values ("toma","x",4004),("tomb","x",4006);
+
+				查看    select 
+	
+	select   *   from  库.表;      查看每行的所有 列
+	
+	select    列名    from    库.表	；  查看所有行
+	
+	select    列名    from    库.表    where    条件 ；
+
+select    name  , uid , shell   , homedir  from   user	;
+select    name  , uid , shell   , homedir  from   user  where   shell ="/bin/bash";	
+select    *   from   user  where   shell ="/bin/bash";	
+	
+				休息到  16：15  上课 
+				
+				修改    update 
+	update  库名.表名  set  字段名=值 , 字段名=值 , 字段名=值,…….;
+	
+	                update  db3.user  set  password="a" , coment="test"   ;
+		
+    update   库名.表名 
+               set 字段名=值,字段名=值,字段名=值   where 条件表达式 ;
+               
+	mysql> update  user set  password="x" where  id = 1 ;
+
+				
+				删除    delete  from
+				
+				delete from  库.表;    删除所有行  (慎用)
+				
+				delete from  库.表     where   条件 ;  只删除与条件匹配的行 
+				
+				
+				select  * from  user  where   shell  =  "/bin/bash" ;
+				mysql> delete from  user where id >= 30 ;
+				
+				     
+匹配条件   
+		基本匹配条件：（适用于 select    update    delete）
+		                    数值比较  =   !=   >   >=      <    <=
+mysql> select  name , uid , gid  from user where uid = 7;
+mysql> select  name , uid , gid  from user where uid = gid ;
+mysql> select  *  from user where id <= 7;
+
+							
+							字符比较    =   !=
+mysql> select name, shell  from user   where  shell  != "/bin/bash";
+							
+mysql> select name from user where  name = "apache";
+Empty set (0.00 sec)
+
+mysql> select name from user where  name = "mysql";
++-------+
+| name  |
++-------+
+| mysql |
++-------+
+							
+							范围比较
+select name , uid from user where  uid in (2,4,6,8,17);
+select name from user where  name in ("sync","bin","root","dn");
+select name,shell from user where  shell  not  in  ("/bin/bash","/sbin/nologin");
+select  * from user where uid between 1 and 10 ;
+     
+  
+							空   is  null                是空
+							非空   is  not  null    不是空
+mysql> insert into user(name,uid) values("bob",null) ;
+mysql> select id , name ,uid  from  user where  uid  is null ;
+
+mysql> select name , shell from user ；
+mysql> select name , shell from user where shell is not null;
+
+							
+							逻辑比较 （有多个条件 ）
+							逻辑与    and     多个条件必须同时成立
+							逻辑或    or        多个条件某个条件成立即可
+			
+select  *  from   user  where   name="root"   or     uid > 10  or      gid  > 9   
+			
+select  *  from   user  
+where   name="root"   and     uid > 10 and   gid  > 9   ;
+	
+		
+		
+		
+		高级匹配条件 （适用于   select    update   delete ）
+						模糊匹配   like     _    %
+						
+select  name  from  user where  name like  '%a%' ;				
+select  name  from  user where  name like  'a%' ;
+select  name  from  user where  name like  '_ _ _ _' ;	
+select  name  from  user where  name like  '_ _%_ _' ;
+						
+						regexp 正则表达式  
+						^  $  .  []  |  *
+	
+select    name   from  	 user  where  name   regexp  '^a';
+select    name   from  	 user  where  name   regexp  't$';
+select    name   from  	 user  where  name   regexp  '^a|t$';
+select    name   from  	 user  where  name   regexp  '^a.*t$';
+
+insert into  user(name)values("99yaya"),("ji7n"),("8y8");
+select    name   from  	 user  where  name   regexp  '[0-9]';
+mysql> select name from user where  name regexp '^[0-9]';
+
+select    name ,uid   from  	 user  where  uid    regexp  '...';
+select    name ,uid   from  	 user  where  uid    regexp  '^...$';
+mysql> select name ,uid  from user where uid regexp '^.$'  ;
+
+        操作查询结果（对查找处理的数据 再 做处理）
+		|
+MySQL管理工具
+
+搭建第2台新的数据库服务器 ip 地址  设置为 192.168.4.52
+不需要修改密码策略   root 密码设置为 123qqq...A
+
+
+
+
