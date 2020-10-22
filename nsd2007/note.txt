@@ -259,4 +259,116 @@ mysql> select  * from t15;
 
 
 
+###################################################################################
+			日期时间类型的使用？
+							类型命令   date  time   year   datetime / timestamp
+							时间函数   now()  curtime()  curdate()
+							                      year()   day()  date()  month()  time()
+DBA1_DAY02 知识点 回顾		
+					修改表结构 ：
+								约束条件：作用？   包括哪些？ 
+								修改表结构： 命令格式？  
+															操作命令  add  drop  
+															modify  
+															change 
+															
+					mysql 键值（给列加标签）
+								键值的种类？
+								普通索引 index 的使用？
+								主键 primary  key 的使用？
+通常把表中唯一标识记录的字段设置为主键[记录编号字段]
+	
+ id    name   age   class  sex  	
+1	     bob    19     nsd2007      boy 
+2       tom    21     nsd2007      boy 
+3	
+4
+select  *  from  student  where id >5 ;
+  
+create table  db1.t16(
+id  int  primary  key  auto_increment,
+name char(10),  age int ,  class  char(7),
+sex  enum("b","g")
+ );
+ insert into  t16(name,age,class,sex)values("a",19,"nsd2007","g");	
+ insert into  t16(name,age,class,sex)values("b",19,"nsd2007","g");
+ insert into  t16(name,age,class,sex)values("c",19,"nsd2007","g");	
+ 
+ select  * from  t16;
+ select  * from  t16  where   id <= 2 ;
+ select  * from  t16  where   id = 2 ;
+					外键的使用？
+									作用？ 当把表的列设置为外键后，赋值的时候，值
+									必须在参考表中指定列的值的范围内选择。
+					外键的使用规则？
+					创建外键的命令格式？
+					
+					
+	t1  
+    name    外键　　－－－－－＞　　ｗ表　　　ｕｓｅｒ　字段
+	Ｂｏｂ																						ｊｅｒｒｙ
+																											ｊｏｈｎ
+																											　ａｌｉｃｅｓ
+																											
+人事部　
+	员工表
+	　　
+	
+   工号 	　　姓名　　　性别　　　部门
+	１　　　　王大拿
+	
+	３　　　　王大锤
+	
+
+　工资表
+　　
+	工号　　　姓名　							工资　
+	１　　　　王大拿							５００００
+	
+	３
+创建参考的表
+create table  ygtab(yg_id  int  primary key  auto_increment,
+name char(10) , sex   enum("m","w") )engine=innodb;
+
+创建有外键的表
+create table  	gztab( gz_id   int ,  gz   float(7,2),
+foreign  key(gz_id)   references  ygtab(yg_id)
+on  update  cascade   on  delete  cascade  )engine=innodb;
+
+mysql> show  create table gztab \G   查看建表命令
+
+mysql> alter table  gztab  drop foreign key gztab_ibfk_1 ;   删除外键
+	
+添加外键	
+mysql> alter table gztab  add foreign key (gz_id) 
+references ygtab(yg_id)
+on update cascade  on delete cascade ;
+	
+insert  into  ygtab(name,sex)values("a","w"),("b","m"),("c","w");
+select  * from ygtab;
+
+insert  into   gztab  values(1,50000),(3,35000),(2,34500);
+select  * from gztab;
+
+insert  into   gztab  values(8,2500); 报错
+insert  into  ygtab   values(8，"d","w");
+insert  into   gztab  values(8,2500);  存储成功
+
+mysql> update  ygtab set yg_id=16 where name="d";
+mysql> select  * from gztab;
+
+mysql> delete from ygtab where  yg_id=16 ;
+mysql> select  * from gztab;
+	
+mysql> insert into gztab values (1,40000), (null , 80000); 不合理
+
+解决不合理 
+mysql> delete from gztab where gz_id=1 or gz_id is null ;  删除 
+mysql> alter table gztab  add primary key(gz_id);   添加主键 
+
+mysql> insert into gztab values (3,50000);  报错
+mysql> insert into gztab values (null,80000);  报错
+mysql> insert into gztab values (1,70000);   可以 
+
+
 
