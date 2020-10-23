@@ -557,12 +557,72 @@ select    name ,uid   from  	 user  where  uid    regexp  '...';
 select    name ,uid   from  	 user  where  uid    regexp  '^...$';
 mysql> select name ,uid  from user where uid regexp '^.$'  ;
 
-        操作查询结果（对查找处理的数据 再 做处理）
-		|
-MySQL管理工具
+      
+					数学计算（+ - *  /   %）
+		select  name , uid  from  db3.user  where   uid  %  2   =  0 ; 
+	    select  name , uid  from  db3.user  where   uid  %  2   !=  0 ;	
+		mysql> update user  set  uid=uid+1 where id <= 5 ;
 
-搭建第2台新的数据库服务器 ip 地址  设置为 192.168.4.52
-不需要修改密码策略   root 密码设置为 123qqq...A
+alter  table   user  add  age  int  default  21  after  name ;
+mysql> select  name , 2020 - age  csnf from user where name="root" ;
+                 
+				 （    ）提高执行顺序
+mysql> select  name , uid , gid ,  (uid+gid)/2  pjz  
+from user where  name="bin";
+				 			 
+				  	 操作查询结果 ：
+					         聚集函数 ：mysql 服务自带对数据做统计的命令
+mysql> select count(name) from  user;
+mysql> select  max(uid)  from  user;
+mysql> select  min(uid)  from  user;
+mysql> select sum(uid)  from  user;
+mysql> select  avg(uid)  from  user;			
+
+select  count(*)  from user; 统计表的总行数
+		 
+					         排序
+mysql> select name,uid from  user where uid >=10 and uid <= 500 
+order by uid ;
+							 
+mysql> select name,uid from  user where uid >=10 and uid <= 500 
+order by uid  desc ;
+							 
+					         分组  group   by   字段名;  
+							 
+mysql> select shell  from user group by shell ;		查看表中用户使用shell的种类 	
+				 
+					         限制显示行数 limit 
+mysql> select name , uid  , shell from user where  shell="/sbin/nologin";
+mysql> select name , uid  , shell from user where  shell="/sbin/nologin" limit  1;
+mysql> select name , uid  , shell from user where  shell="/sbin/nologin" limit  3;
+
+mysql> select name , uid  , shell from user where  shell="/sbin/nologin" limit 3 , 3;
+								
+					     过滤数据  having   条件表达式;
+mysql> select  name from user where id > 1 having name="apache" ;
+Empty set (0.00 sec)
+
+mysql> select  name from user where id > 1 having name="mysql" ;
+mysql> select  name from user where shell = "/sbin/nologin"  having name="root";
+						
+						 
+安装mysql服务图形管理软件之 PHPmyadmin
+						图形管理工具有哪些？	
+				      
+					   
+######DBA1_DAY04
+1  用户授权
+			1.1 用户授权 :  数据库管理员用户，
+                                			在数据库添加用户设置访问权限及连接密码
+			         授权命令格式：
+
+grant  访问权限  on  数据库名  to   用户名@"客户端 地址"  
+identified by   "密码"  ;
+					 
+grant  访问权限  on  数据库名  to   用户名@"客户端 地址"  
+identified by   "密码"   with  grant    option ;
+					 		|
+
 
 
 
