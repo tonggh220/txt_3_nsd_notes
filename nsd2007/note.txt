@@ -610,7 +610,7 @@ mysql> select  name from user where shell = "/sbin/nologin"  having name="root";
 						图形管理工具有哪些？	
 				      
 					   
-######DBA1_DAY04
+#######DBA1_DAY04
 1  用户授权
 			1.1 用户授权 :  数据库管理员用户，
                                 			在数据库添加用户设置访问权限及连接密码
@@ -621,7 +621,134 @@ identified by   "密码"  ;
 					 
 grant  访问权限  on  数据库名  to   用户名@"客户端 地址"  
 identified by   "密码"   with  grant    option ;
-					 		|
+					 
+
+使用授权用户连接50服务器
+50   52   systemctl   stop  firewalld 
+
+host52 ]#   mysql    -h192.168.4.50  -uyaya  -p123qqq...A
+mysql> show  database  ;
+mysql>  create  database db4;
+mysql > 建表   存储记录  查看  删除  修改 
+mysql> exit 
+host52 ]#
+
+	   
+	  
+			1.2 授权库mysql库的使用（存储授权信息）
+
+mysql> select  *  from mysql.db where user="yaya" and db="db4" \G						
+
+mysql> update mysql.db set delete_priv="N", drop_priv="N"     
+where user="yaya" and db="db4";
+	
+mysql> flush privileges;
+	
+mysql> select  *  from mysql.db where user="yaya" and db="db4" \G
+
+   show   grants  for   yaya@"%" ;
+
+			1.3 撤销权限（ 删除权限）    休息到  16：05  
+			       命令格式？
+	mysql> select  host , user from mysql.user;	
+	
+	mysql> show grants for mydba@"%" ;
+	
+    mysql> revoke grant option on *.*  from mydba@"%" ;
+
+     mysql> show grants for mydba@"%" ;
+     mysql> revoke all  on *.*  from mydba@"%" ;
+     mysql> show grants for mydba@"%" ;
+	 
+	 mysql> drop user  mydba@"%";
+
+
+#####root 密码管理（操作系统管理员有 管理权限 ）
+			修改本机登录密码
+[root@localhost ~]#  mysqladmin -uroot  -p     password     "新密码"
+Enter password: 		旧密码	
+
+
+			恢复本机登录密码（破解数据库root管理本机登录密码）
+               root密码忘了怎么办？
+1. 停止MySQL服务程序   systemct   stop  mysqld
+2. 跳过授权表启动MySQL服务程序
+vim /etc/my.cnf
+[mysqld]
+skip-grant-tables
+#validate_password_policy=0
+#validate_password_length=6
+:wq
+systemct   start   mysqld
+3. 修改root密码
+[root@localhost ~]# mysql
+mysql> update mysql.user  set  
+authentication_string=password("123qqq...B")  
+where  user="root" and host="localhost" ;
+
+mysql> flush privileges;
+mysql> exit
+
+4. 以正常方式重启MySQL服务程序
+vim /etc/my.cnf
+[mysqld]
+#skip-grant-tables
+validate_password_policy=0
+validate_password_length=6
+:wq
+systemct   restart   mysqld	
+
+使用新密码本机登录
+			[root@localhost ~]# mysql    -uroot    -p123qqq...B
+
+            数据备份的相关概念：
+					数据备份方式：物理备份/逻辑备份     （备份方式分 ）
+												 热备份/冷备份  		（数据库服务的状态分）
+					
+					数据备份策略：
+											完全备份 ： 备份所有数据
+									备份新数据：
+											增量备份： 备份上次备份后新产生的数据
+											差异备份：  备份第1次备份后，所有多出来的新数据
+常用备份策略
+						完全+差异
+						完全+增量
+						
+				        休息到 17：10  上课 
+						
+2  完全备份
+				物理方式完全备份与恢复
+							备份    
+							cp   -r  /var/lib/mysql     /mysql.bak
+							
+							恢复
+   92  systemctl  stop mysqld
+   94  rm -rf /var/lib/mysql
+   95  cp -r /mysql.bak /var/lib/mysql
+   98  chown -R mysql:mysql /var/lib/mysql
+   99  systemctl  start mysqld
+  100  mysql -uroot -p123qqq...B
+							
+			    逻辑方式完全备份与恢复	
+									备份 mysqldump 
+							]# mysqldump   -uroot    -p密码    库名  >   /目录名/文件 .sql
+[root@localhost ~]# mkdir /mybak
+[root@localhost ~]# mysqldump -uroot -p123qqq...B --all-databases > /mybak/all.sql
+									
+]# mysqldump -uroot -p123qqq...B   db1  > /mybak/db1.sql
+								
+]# mysqldump -uroot -p123qqq...B   db1  ygtab  > /mybak/db1_ygtab.sql									
+									
+]# mysqldump -uroot -p123qqq...B   -B db1  db3  > /mybak/twodb.sql
+											
+[root@localhost ~]# ls   /mybak /*.sql
+
+									
+									恢复 mysql 
+									mysql   -uroot   -p密码     数据库名   <  /目录名/文件.sql
+host50]# scp /mybak/twodb.sql  root@192.168.4.52:/root/									
+[root@host52 ~]# mysql -uroot -p123qqq...A  <   /root/twodb.sql
+[root@host52 ~]# mysql -uroot -p123qqq...A  -e  'use db1 ; show tables'
 
 
 
