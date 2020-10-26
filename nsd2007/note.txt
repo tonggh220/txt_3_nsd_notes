@@ -868,6 +868,36 @@ DBA1_DAY05
    96  mysql -uroot -p123qqq...B
 
 
+
+   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+							delete  from db3.user ;
+							恢复单张表的步骤，如下：
+							         删除表空间   （表空间  ？）用来存储表记录的表文件   (表名.ibd) 
+							         导出表信息
+                                     拷贝表信息文件到数据库目录下
+                                     修改表信息文件的所有者及组用户为mysql
+							         导入表空间
+                                     删除数据库目录下的表信息文件
+                                     查看表记录						
+mysql> alter table  db3.user discard  tablespace;		
+					
+[root@host52 ~]# innobackupex  --apply-log --export  /root/allbak/							
+[root@host52 ~]# cp /root/allbak/db3/user.{cfg,exp,ibd} /var/lib/mysql/db3/							
+[root@host52 ~]# chown -R mysql:mysql /var/lib/mysql/db3/user.*
+
+mysql> alter  table db3.user  import  tablespace;
+
+[root@host52 ~]# rm -rf /var/lib/mysql/db3/user.cfg 
+[root@host52 ~]# rm -rf /var/lib/mysql/db3/user.exp
+
+mysql> select  * from db3.user;  
+
+
+		DBA2_DAY01 环境准备 					
+							50   client 
+							数据库服务器   51    52     53  54  55    
+
+
    
 
 
