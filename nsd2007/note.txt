@@ -793,4 +793,83 @@ host52]#  mysql  -uroot   -p密码  -e  ' select  name from  db3.user'
 
 
 
+1.2.1  查看部分日志内容，恢复指定数据
+mysqlbinlog  选项  /目录名/文件名   |  mysql -uroot  -p密码	
+						  
+								  
+					          选项  
+							         通过偏移量的范围查看
+							         通过执行命令的时间查看
+									 
+							日志记录命令格式的管理？
+									查看默认格式？
+												mysql> show variables like "binlog_format";
+
+									修改记录格式
+									]#  vim /etc/my.cnf 
+									 [mysqld]
+                                     binlog_format="mixed"
+									 :wq
+									 ]# systemctl  restart  mysqld
+									 
+									 ]#mysql  -uroot  -p密码  -e   'show variables like  "binlog_format" '
+mysql> insert into  db3.user(name) values("w2");
+mysql> insert into  db3.user(name) values("w8");
+mysql> insert into  db3.user(name) values("w11");
+mysql> update  db3.user set password="f" where id <= 5;
+mysql> delete from  db3.user where id>=15;
+
+host50 ~]# scp  /mylog/plj.000003   root@192.168.4.52:/opt/	
+
+                          通过偏移量范围恢复数据
+							         
+[root@host52 ~]# mysqlbinlog --start-position=325  --stop-position=776  /opt/plj.000003 |  
+mysql  -uroot -p123qqq...B	
+
+                        通过时间范围恢复数据
+[root@host52 ~]# mysqlbinlog --start-datetime="2020/10/26  10:15:43"  
+--stop-datetime="2020/10/26  10:16:25"  /opt/plj.000003  |  
+mysql  -uroot -p123qqq...B	
+		
+DBA1_DAY05 
+
+							2  安装软件提供的innobackupex 命令 
+								 2.1  安装软件
+				
+							     2.2 数据完全备份与恢复	
+										备份数据 
+[root@host50 ~]# innobackupex --user root --password 123qqq...B  /allbak --no-timestamp
+[root@host50 ~]# ls   /allbak 
+
+[root@host50 ~]# scp -r /allbak/   root@192.168.4.52:/root/
+									
+										恢复数据 ，具体步骤如下：  192.168.4.52
+													    安装软件 
+														停止数据库服务
+														清空数据库目录
+														准备准备恢复数据										
+														拷贝数据
+														修改数据库目录的所有者和组用户为mysql
+														启动服务
+														登录查看数据
+   77  systemctl  stop mysqld
+   79  rm -rf /var/lib/mysql/*
+
+   83  cat /root/allbak/xtrabackup_checkpoints 
+     85  innobackupex  --apply-log  /root/allbak/
+   86  cat /root/allbak/xtrabackup_checkpoints 
+
+   89  innobackupex --copy-back /root/allbak/
+
+   93  chown  -R  mysql:mysql /var/lib/mysql
+   94  ls -l  /var/lib/mysql
+   95  systemctl  start mysqld
+   
+   96  mysql -uroot -p123qqq...B
+
+
+   
+
+
+
 
