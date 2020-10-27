@@ -893,11 +893,66 @@ mysql> alter  table db3.user  import  tablespace;
 mysql> select  * from db3.user;  
 
 
-		DBA2_DAY01 环境准备 					
-							50   client 
-							数据库服务器   51    52     53  54  55    
+###############################################################
+
+     innobackupex 增量备份  192.168.4.50
+		增量备份： 备份上次备份后，新产生的数据
+		增量备份命令格式？  见PPT  
+		
+		
+	每个周一都做完全备份
+	每个周的 周二到周日 都做增量备份
+	
+周一    	完全备份   
+[root@host50 ~]# innobackupex --user root --password 123qqq...B  /fullbak --no-timestamp
+
+insert  into   db3.user(name) values ("a");存储新数据 
+
+周二       增量备份   
+[root@host50 ~]# innobackupex --user root --password 123qqq...B    --incremental  /new1dir
+--incremental-basedir=/fullbak   --no-timestamp 
 
 
+insert  into   db3.user(name) values ("b ");存储新数据
+
+周三      增量备份   
+[root@host50 ~]# innobackupex --user root --password 123qqq...B
+--incremental   /new2dir   --incremental-basedir=/new1dir    --no-timestamp
+
+
+[root@host50 ~]# scp  -r /fullbak/  root@192.168.4.52:/opt/
+[root@host50 ~]# scp  -r /new1dir/  root@192.168.4.52:/opt/
+[root@host50 ~]# scp  -r /new2dir/  root@192.168.4.52:/opt/	
+		
+		innobackupex 增量 恢复 192.168.4.52
+		
+		
+		命令格式 
+		
+		 #  innobackupex   --apply-log   --redo-only  目录名    //准备恢复数据
+         #  innobackupex   --apply-log   --redo-only  目录名   --incremental-dir=目录名 #合并数据
+         #  innobackupex    --copy-back   目录名     //拷贝数据
+
+恢复步骤如下：
+				停止数据库服务
+				清空数据库目录
+				准备恢复数据
+				合并数据
+				拷贝数据
+				修改所有者和组用户为 mysql 
+				启动服务
+				查看数据
+
+
+systemctl stop mysqld
+rm  -rf /var/lib/mysql/*		
+innobackupex --apply-log  --redo-only /opt/fullbak/
+innobackupex --apply-log  --redo-only /opt/fullbak/ --incremental-dir=/opt/new1dir
+innobackupex --apply-log  --redo-only /opt/fullbak/ --incremental-dir=/opt/new2dir	
+innobackupex --copy-back  /opt/fullbak/
+chown -R mysql:mysql /var/lib/mysql
+systemctl start  mysqld
+	
    
 
 
