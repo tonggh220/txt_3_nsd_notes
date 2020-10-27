@@ -1000,3 +1000,70 @@ mysql> show slave status \G
 Empty set (0.01 sec)
 
 
+
+								1.3.3  测试配置
+												1  在主数据库服务器添加用户，给客户端连接使用
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 
+'grant all on gamedb.* to yaya@"%" identified by "123qqq...A" '
+												
+												2  客户端连接主服务器，存储数据
+[root@host50 ~]# mysql -h192.168.4.51 -uyaya -p123qqq...A
+mysql> show databases;
+mysql> show grants;
+mysql> create database gamedb; create table gamedb.a(id int);
+mysql> insert into  gamedb.a values(110);
+mysql> select  * from gamedb.a;
+												
+												3   在从服务器本机可以查看到和主服务器一样的数据
+[root@host52 ~]# mysql -uroot  -p密码  -e  'select * from gamedb.a'
+												
+												
+			
+			1.4  主从同步配置排错
+							slave_IO_running:  connecting 或 NO 
+							
+															报错原因： 网络连接问题 
+															                    change master  to   指定的主服务器信息不对
+															
+							Last_IO_Error:  IO线程报错误信息	
+							
+                            如果是 change master  to   指定的主服务器信息不对 的解决办法
+							 stop   slave ;
+							           用 change master  to  重新 指定的主服务器信息 
+							 start  slave；
+                             show  slave   status  \G	
+
+
+                         Slave_SQL_Running: NoSQL
+												报错原因： 从服务器本机的数据比主服务器少 导致
+												Last_SQL_Error:  查看sql线程的报错的信息
+												
+												解决办法：
+												stop  slave; 
+												      使其有和主服务器上一样的数据
+												start  slave ;
+												show  slave   status  \G
+
+
+ERROR 1794 (HY000): Slave is not configured or failed to initialize properly. You must at least set --server-id to enable either a master or a slave. Additional error messages can be found in the MySQ
+
+ERROR 1794 (HY000): Slave is not configured or failed to initialize properly. You must at least set --server-id to enable either a master or a slave. Additional error messages can be found in the MySQ
+
+
+	
+	stop  slave; 
+	   drop  database   gamedb; 
+	start slave ;
+    show  slave status \G
+
+
+
+
+Last_IO_Error: Fatal error: The slave I/O thread stops because master and slave have equal MySQL server UUIDs; these UUIDs must be different for replication to work.
+
+[root@host52 mysql]# cat auto.cnf 
+[auto]
+server-uuid=553cd3b5-183e-11eb-9704-000c29e10928
+[root@host52 mysql]# 
+[root@host52 mysql]# systemctl  restart  mysqld
+
