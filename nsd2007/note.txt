@@ -955,6 +955,48 @@ systemctl start  mysqld
 	
    
 
+》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》
 
+++++++DBA2_DAY01 环境准备 					
+		一、mysql 主从同步结构
+				1.1  mysql 主从同步结构
+				1.2 mysql 主从同步工作过程
+			    1.3  配置 mysql 主从同步
+						1.3.1 配置主数据库服务器  192.168.4.51
+									   1  启用binlog 
+									   2 用户授权
+									   mysql> grant  replication slave on *.*  to repluser@"%" identified by "123qqq...A";
+										3 查看日志
+										show  master  status ;
+
+						1.3.2 配置从 数据库服务器  192.168.4.52
+									 1 指定server_id 
+									2 指定主服务器信息  （使用管理员root 登录配置）
+	mysql> change master to  master_host="192.168.4.51" , master_user="repluser" ,
+    master_password="123qqq...A" ,  master_log_file="master51.000001" ,
+    master_log_pos=441 ;
+		
+	mysql> start slave ;
+	mysql> show  slave  status \G
+	        Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+			
+			
+	
+把 从服务器 恢复为  独立的数据库服务器
+	[root@host52 ~]# cd /var/lib/mysql
+    [root@host52 mysql]# ls master.info 
+master.info
+[root@host52 mysql]# ls relay-log.info 
+relay-log.info
+[root@host52 mysql]# ls host52-relay-bin.*
+host52-relay-bin.000001  host52-relay-bin.000002  host52-relay-bin.index
+[root@host52 mysql]# 
+[root@host52 mysql]# rm -rf master.info  relay-log.info  host52-relay-bin.* 
+[root@host52 mysql]# systemctl  restart   mysqld
+
+[root@host52 mysql]# mysql   -uroot   -p 密码 
+mysql> show slave status \G
+Empty set (0.01 sec)
 
 
