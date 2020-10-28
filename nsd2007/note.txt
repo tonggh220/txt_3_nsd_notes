@@ -1191,5 +1191,88 @@ mysql>exit
 
 
 
+							排错方法 ： 查看日志 找报错信息
+							出错的原因：
+							                 maxscale.cnf文件定义要和 实际环境一致
+											所有主机的防火墙服务没关
+											保证主从同步状态
+											
+											保证主从数据库服务器 有 maxscale.cnf文件定义的连接用户，
+											并有对应的访问权限
+
+二、mysql多实例服务 
+		2.1 相关概念 （具体ppt ）
+		2.2 配置mysql 多实例服务
+				 2.2.1  安装软件
+				 2.2.2 创建并编辑主配置文件
+				 vim  /etc/my.cnf
+				 [mysqld_multi]
+				 mysqld=/usr/local/mysql/bin/mysqld_safe
+				 mysqladmin=/usr/local/mysql/bin/mysqladmin
+				 user=root 
+	
+				 [mysqld1]   
+				 datadir=/dir1
+				 port=3307
+				 log-error=/dir1/mysqld1.err 
+				 pid-file=/dir1/mysqld1.pid 
+				 socket=/dir1/mysqld1.sock
+				 
+				 [mysqld2]
+				datadir=/dir2
+				port=3308
+				log-error=/dir2/mysqld2.error
+				pid-file=/dir2/mysqld2.pid
+				 socket=/dir2/mysqld2.sock
+				 
+				启动实例服务 
+
+				mysqld_multi start   1    #启动名称 叫 [mysqld1]
+				ss  -utnlp  | grep 3307
+				
+                mysqld_multi start   2    #启动名称 叫 [mysqld2]
+				ss  -utnlp  | grep 3308
+
+               本机连接实例1服务
+			   mysql -uroot -p'b>2uH4jDrhh%' -S /dir1/mysqld1.sock 
+			   mysql> alter   user   root@"localhost"  identified  by  "123456";
+			   mysql> exit
+	
+			   使用修改的密码登录
+			   mysql -uroot -p123456 -S /dir1/mysqld1.sock
+			   mysql>
+			   
+			   本机连接实例2服务
+			   mysql -uroot -p'b>2uH4jDrhhxxx' -S /dir2/mysqld2.sock 
+			   mysql> alter   user   root@"localhost"  identified  by  "123456";
+			   mysql> exit
+
+			   使用修改的密码登录
+			   mysql -uroot -p123456 -S /dir2/mysqld2.sock
+			   mysql>
+			   
+			停止实例服务 
+[root@host58 ~]# ss -utnlp  | grep mysqld
+tcp    LISTEN     0      80       :::3307                 :::*                   users:(("mysqld",pid=68594,fd=16))
+tcp    LISTEN     0      80       :::3308                 :::*                   users:(("mysqld",pid=85143,fd=20))
+tcp    LISTEN     0      80       :::3309                 :::*                   users:(("mysqld",pid=96063,fd=20))
+[root@host58 ~]# 
+[root@host58 ~]# mysqld_multi --user=root --password=123456 stop 1
+[root@host58 ~]# mysqld_multi --user=root --password=123456 stop 2
+[root@host58 ~]# 
+[root@host58 ~]# ss -utnlp  | grep mysqld
+tcp    LISTEN     0      80       :::3309                 :::*                   users:(("mysqld",pid=96063,fd=20))
+[root@host58 ~]# 
+
+							统一排错时间： 步骤
+											关闭selinux 
+											检查 /etc/my.cnf文件 写对了吗 
+											杀进程  killall -9 mysqld
+											删除数据库目录  rm  -rf   /目录名 
+							                执行启动实例的命令  mysqld_multi  start   数字
+
+
+
+
 
 
