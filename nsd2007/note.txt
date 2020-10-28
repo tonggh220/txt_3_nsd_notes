@@ -1067,3 +1067,129 @@ server-uuid=553cd3b5-183e-11eb-9704-000c29e10928
 [root@host52 mysql]# 
 [root@host52 mysql]# systemctl  restart  mysqld
 
+
+
+
+
+二、主从同步模式		
+						2.1 主从同步结构 模式
+											一主一从
+											一主多从
+											     主从从
+											互为主从（主主结构）
+ mysql -uroot -p123qqq...A -e 'show  processlist'
+											
+											
+						2.2  主从同步复制 模式
+									（从服务器和主数据库服务器数据同步时的工作方式）
+						         2.2.1 主从同步复制 模式介绍？
+								 2.2.2 配置半同步复制模式
+								 
+											 查看数据库服务是否允许安装模块
+mysql> show  variables  like  "have_dynamic_loading";
+											 
+											 安装模块
+install  plugin  rpl_semi_sync_slave   SONAME  "semisync_slave.so";  安装slave模块
+install  plugin  rpl_semi_sync_master   SONAME  "semisync_master.so";安装master模块
+		
+											 查看已经安装的模块
+										 
+ select  PLUGIN_NAME,PLUGIN_STATUS  from information_schema.PLUGINS;											 
+ 
+ select  PLUGIN_NAME,PLUGIN_STATUS from information_schema.PLUGINS
+ where plugin_name like "%semi%";											 
+											 
+											 启用模块
+set  global rpl_semi_sync_slave_enabled=1;		 启用 slave 模块
+set  global rpl_semi_sync_slave_enabled=1;        启用master模块
+
+											查看模块是否启用
+ show  variables  like  "rpl_semi_sync_%_enabled";
+															
+											 
+											 永久配置 
+vim /etc/my.cnf
+[mysqld]
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1
+							 
+###########DBA2_DAY02
+mysql主从同步数据存储结构部署 
+          1 相关概念
+		  2  部署数据读写分离结构
+				2.1  搭建mysql一主一从结构
+				2.2  配置 读写分离服务器192.168.4.57 
+						 1  安装软件
+						 2  修改主配置文件 
+						 3  配置数据库服务器
+						 4  启动maxscale服务，并查看服务信息（端口号 ）
+			    2.3  测试配置
+						 1  在57本机连接管理服务，查看监控状态
+[root@host57 ~]# maxadmin  -uadmin -pmariadb -P4016
+MaxScale> list servers
+Servers.
+-------------------+-----------------+-------+-------------+--------------------
+Server             | Address         | Port  | Connections | Status              
+-------------------+-----------------+-------+-------------+--------------------
+server1            | 192.168.4.51    |  3306 |           0 | Master, Running
+server2            | 192.168.4.52    |  3306 |           0 | Slave, Running
+-------------------+-----------------+-------+-------------+--------------------
+MaxScale> exit    
+[root@host57 ~]# 						 
+						 
+						 
+						 2 测试读写分离的配置
+										2.1 客户端50连接57主机可以存取数据
+														2.1.1 在主服务器添加用户，给客户端连接使用
+mysql> create database bbsdb;
+
+mysql> create table bbsdb.user(name char(10));
+
+mysql> grant select , insert  on bbsdb.* to  plj@"%" 
+identified by "123qqq...A";
+
+														2.1.2 客户端50连接57 访问数据库服务
+[root@host50 ~]# mysql -h192.168.4.57 -P4006 -uplj -p123qqq...A
+mysql> select  * from bbsdb.user;
+mysql> insert into bbsdb.user values("bob"),（"tom"）;
+mysql> select  * from bbsdb.user;
+mysql>exit 
+												
+														
+										 验证读写分离功能
+										             在从服务器本机向表里添加1行数据
+[root@host52 ~]# mysql -uroot -p123qqq...B -e 'insert into bbsdb.user values("xxhh")'
+[root@host52 ~]# mysql -uroot -p123qqq...B -e 'select  * from bbsdb.user'
++------+
+| name |
++------+
+| bob  |
+| tom  |
+| xxhh |
++------+
+[root@host52 ~]#													 
+													 主服务器不会同步从服务器添加的数据
+[root@host51 ~]# mysql -uroot -p123qqq...A  -e 'select * from bbsdb.user'
+
++------+
+| name |
++------+
+| bob  |
+| tom  |
++------+
+[root@host51 ~]# 
+
+													 在客户端50连接57 访问数据库服务，测试 
+[root@host50 ~]# mysql -h192.168.4.57 -P4006 -uplj -p123qqq...A 
+-e  'select  * from bbsdb.user'
+
+[root@host50 ~]# mysql -h192.168.4.57 -P4006 -uplj -p123qqq...A 
+-e 'insert into bbsdb.user values("dcmm")'
+
+
+
+
+
+
