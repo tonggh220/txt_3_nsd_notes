@@ -1387,3 +1387,99 @@ mysql> insert into employee(sharding_id,name,age)
 [root@host53 ~]# 
 
 
+######################################################
+
+求模法 mod-long 根据分片字段值与设定的数字求模结果存储数据
+	 				 
+mysql> use TESTDB;
+Database changed
+mysql> 
+mysql> create table hotnews(
+    -> id int  ,   title  char(10) , comment varchar(30), work char(5)
+    -> );
+
+mysql> insert into hotnews(id,title,comment,work)
+    -> values
+    -> (7,"X","xxx","x1"),(7,"y","yyy","y1"),(11,"z","zzz","z1"),(9,"i","iii","i1");
+         
+	
+[root@host53 ~]# mysql -uroot -p123qqq...A -e ' select  * from db1.hotnews'
++------+-------+---------+------+
+| id   | title | comment | work |
++------+-------+---------+------+
+|    9 | i     | iii     | i1   |
++------+-------+---------+------+
+[root@host53 ~]# 
+		
+		
+						添加新库
+							]# server.xml
+ <user name="root">
+               
+                <property name="schemas">TESTDB,GAMEDB</property>
+</user >							
+							
+							
+	<user name="user">
+               
+                <property name="schemas">TESTDB,GAMEDB</property>
+</user >							
+					:wq
+
+					
+						添加新表 
+				]# vim schema.xml 
+<mycat:schema xmlns:mycat="http://io.mycat/">
+        
+        <schema name="GAMEDB" checkSQLschema="false" sqlMaxLimit="100">
+                <table name="user" dataNode="dn1,dn2,dn3" type="global" />                               <table name="tea"  dataNode="dn1,dn2,dn3" rule="mod-long" />                    </schema>
+				 <table name="tea"  dataNode="dn1,dn2,dn3" rule="mod-long" />                    </schema>
+		</schema>
+														
+</mycat:schema>						
+							重启mycat
+[root@host56 conf]# /usr/local/mycat/bin/mycat stop
+[root@host56 conf]# /usr/local/mycat/bin/mycat start
+[root@host56 conf]# ss -utnlp  | grep  8066
+						
+							客户端连接 56 查看新库新表
+[root@host50 ~]# mysql -h192.168.4.56  -P8066 -uroot  -p123456
+mysql> show  databases;
+mysql> SHOW TABLES;							
+							
+
+							根据表使用的分片规则建表
+mysql> use GAMEDB;
+mysql> create table tea(id int , name char(10),class  char(10),sex enum("b","g"));
+							
+							存储数据
+insert into  tea (id ,name,class,sex)
+values
+(9,"a","a","g"),(9,"b","b","g"),(10,"c","c","b"),(10,"c","c","b"),(11,"d","d","b"),
+(11,"e","e","b");
+							
+							在数据库服务器查看数据
+[root@host53 ~]# mysql -uroot -p123qqq...A -e ' select  * from db1.tea'
+
++------+------+-------+------+
+| id   | name | class | sex  |
++------+------+-------+------+
+|    9 | a    | a     | g    |
+|    9 | b    | b     | g    |
++------+------+-------+------+
+[root@host53 ~]#							
+
+
+
+mysql> create table user (name char(1));
+mysql> insert into user(name) values("a"),("b"),("c");
+
+[root@host53 ~]# mysql -uroot -p123qqq...A -e ' select  * from db1.user'
+
+| name |
++------+
+| a    |
+| b    |
+| c    |
++------+
+[root@host53 ~]#
