@@ -1329,6 +1329,61 @@ tcp    LISTEN     0      80       :::3309                 :::*                  
               exit;
 
 
+ 
+    2.6  在50主机连接 56
+             [root@host50 ~]# mysql -h192.168.4.56  -P8066 -uroot  -p123456
+             show  databases;
+              use   TESTDB;
+              show  tables;
+              exit;
+			  
+			  
+	排错思路 ：
+					1  检查schema.xml 文件 （拷贝其他同学的配置文件启动服务）
+					
+					2
+					加大虚拟机内存 到 1G
+					修改主机hostname   host56
+					
+					3
+					重启56虚拟机的操作系统 
+					
+					4
+					查看日志文件   vim  wrapper.log 
+  
+	
+cp  schema.xml    /opt/
+rm -rf /usr/local/mycat
+tar -zxvf Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz
+mv  mycat  /usr/local/
 
+rm  -rf /usr/local/mycat/conf/schema.xml
+cp /opt/schema.xml  /usr/local/mycat/conf
+				休息到 15：05 
+				
+				测试mycat 服务（建表存储数据）
+							要根据建表使用的分片规则建表
+							 查看表的分片字段名
+							 定义分片自动值
+							 建表 
+							 mysql> use  TESTDB;
+mysql> create table employee(
+   sharding_id  int ,
+   ID int primary key auto_increment,
+   name  char(10) , age  tinyint
+   );
+mysql> insert into employee(sharding_id,name,age)
+    -> values
+    -> (10000,"a",19),(10000,"a1",17),(10020,"b",31),(10010,"b1",34);
+
+[root@host53 ~]# mysql -uroot -p123qqq...A -e ' select  * from db1.employee'
+
++-------------+----+------+------+
+| sharding_id | ID | name | age  |
++-------------+----+------+------+
+|       10000 |  1 | a    |   19                   |
+|       10000 |  2 | a1   |   17                  |
++-------------+----+------+------+
+[root@host53 ~]# 
 
 
