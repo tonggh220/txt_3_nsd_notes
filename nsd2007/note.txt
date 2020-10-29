@@ -1272,6 +1272,62 @@ tcp    LISTEN     0      80       :::3309                 :::*                  
 							                执行启动实例的命令  mysqld_multi  start   数字
 
 
+##############################################################
+
+##########################################
+			DBA2_DAY03   数据分布式存储 服务架构的部署	MyCat 							
+
+			分布式存储：把数据存储在不同的服务器里
+			分布式存储架构适用于  数据大量并发写入的环境需求。
+	
+一、相关概念 ： 见	PPT 
+二、配置mycat服务器
+         2.1 安装软件
+		 2.2  安装文件说明
+		 2.3 修改56的配置文件  /usr/local/mycat/conf
+				 定义客户端连接时使用的用户名和密码 及 看到的库名
+				     server.xml   使用默认配置即可
+				 
+				 
+				 定义把那些表的数据分布式存储
+<mycat:schema xmlns:mycat="http://io.mycat/">
+				<schema>    定义数据分布式存储的表
+				                 <table                />             表名
+								<table> …… </table> 
+				</schema> 
+				
+				<dataNode 选项=值,…… />   定义数据库服务器的主机名
+				
+				<datahost 选项=值,…>……</datahost>  数据库服务器的Ip地址
+				
+</mycat:schema>
+			 
+			
+			 
+		2.4  配置数据库服务器 53 /54/ 55 		 
+					运行MySQL数据库服务
+					
+					创建存储数据的库
+					mysql> create database db1;    53主机
+                    mysql> create database db2;    54 主机
+                    mysql> create database db3;    55 主机
+					
+					创建连接用户 pljadmin (3台分别添加)
+                    grant  all  on  *.*  to    pljadmin@"%" identified by "123qqq...A";
+			
+      2.5  启动mycat服务
+			   32  /usr/local/mycat/bin/mycat start
+              33  ls /usr/local/mycat/logs/
+              34  cat /usr/local/mycat/logs/mycat.pid 
+              35  ss -utnlp  | grep  8066
+ 
+    2.6  在50主机连接 56
+             [root@host50 ~]# mysql -h192.168.4.56  -P8066 -uroot  -p123456
+             show  databases;
+              use   TESTDB;
+              show  tables;
+              exit;
+
 
 
 
