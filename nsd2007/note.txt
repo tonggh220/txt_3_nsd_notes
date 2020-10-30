@@ -1483,3 +1483,105 @@ mysql> insert into user(name) values("a"),("b"),("c");
 | c    |
 +------+
 [root@host53 ~]#
+
+
+#####################################################################################
+###########################################
+			DBA2_DAY04   MHA  软件 搭建MYSQL服务高可用集群
+			集群知识回顾？
+			什么集群？多台服务器一起提供相同的服务 
+			集群的类型？ 
+						LB   负载均衡集群：多台服务平均分摊客户端的访问
+						HA   高可用集群：    主备结构，主服务器宕机了，备用主机自动接替主
+						服务器集群提供服务，接替过程对客户端是透明的。
+			常用的集群服务软件？LVS   HAPROXY   keepalived    nginx 
+学习任务如下：
+一、相关概念
+二、集群拓扑
+三、集群环境准备
+四、配置管理主机
+          4.1  安装软件 mha_manager
+		  4.2  创建并编辑主配置文件（****）
+		  
+		  4.3   创建故障切换脚本，并指定vip地址
+		  ]# cd mha; 
+		  ]# cp master_ip_failover  /etc/mha/
+		  ]# chmod  +x master_ip_failover 
+		  
+          ]# vim +35 /etc/mha/master_ip_failover 
+my $vip = '192.168.4.100/24';  # Virtual IP 
+my $key = "1";
+my $ssh_start_vip = "/sbin/ifconfig ens33:$key $vip";
+my $ssh_stop_vip = "/sbin/ifconfig ens33:$key down";
+		:wq
+		
+		4.4  把vip地址 手动 配置在当前的主数据库服务器上
+]# which  ifconfig  ||  yum  -y   install  net-tools 
+[root@host51 mha]# ifconfig   ens33:1  192.168.4.100
+[root@host51 mha]# 
+[root@host51 mha]# ifconfig ens33:1
+				 
+五、配置数据库服务器		51/52/53
+			5.1 添加监控用户
+mysql> grant all on  *.*  to  root@"%" identified by "123qqq...A";
+			
+			5.2 安装软件 
+  ]# cd mha/
+  ]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+			
+			5.3 优化配置 
+			       ]# vim /etc/my.cnf
+				   [mysqld]
+			       relay_log_purge=0                  禁止自动删除中继日志文件
+				   
+				   启用半同步复制
+
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1
+				   
+		         在 52 和 53 主机启用binlog日志
+				  
+				  log_bin=master52   #52 主机的日志名
+				  
+				  log_bin=master53   #53主机的日志名
+				  
+				  在 52 和 53 主机添加从服务器同步数据的连接用户repluser
+				   grant  replication slave  on  *.* to  repluser@"%"  identified by "123qqq...A";
+			  
+			     重启3台主机的数据库服务（重启顺序　　５１　　　５２　　５３　）
+				 ｓｙｓｔｅｍｃｔｌ　　　ｒｅｓｔａｒｔ　　ｍｙｓｑｌｄ　
+				 
+				 查看 52 和 53  slave进程的运行状态
+				 ｓｈｏｗ　　ｓｌａｖｅ　　ｓｔａｔｕｓ　＼Ｇ
+				 
+				 休息到　　１６：１５　
+				 
+			
+六、测试配置（在５７主机测试）
+[root@host57 ~]# masterha_check_ssh  --conf=/etc/mha/app1.cnf
+[info] All SSH connection tests passed successfully
+
+[root@host57 ~]# masterha_check_repl 　 --conf=/etc/mha/app1.cnf
+MySQL Replication Health is OK.
+
+
+七、启动管理服务
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf --ignore_last_failover 
+Fri Oct 30 13:12:03 2020 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Fri Oct 30 13:12:03 2020 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Fri Oct 30 13:12:03 2020 - [info] Reading server configuration from /etc/mha/app1.cnf..
+
+
+[root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf 
+app1 (pid:36560) is running(0:PING_OK), master:192.168.4.51
+[root@host57 ~]# 
+
+八、测试高可用
+			8.1  在主服务器51 做用户授权 见PPT 
+			8.2 客户端连接vip地址访问数据库服务，存取数据
+			8.3 测试高可用  具体步骤见PPT
+		
+
+九、把宕机的数据库服务器再添加到集群里  具体步骤见ppt 
