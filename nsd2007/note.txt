@@ -1982,3 +1982,62 @@ ERR This instance has cluster support disabled
 # Replication
 role:master
 connected_slaves:0
+
+
+############NoSQL_day03
+1 redis主从复制(和mysql服务的主从同步使用一样的功能)
+		1.1  主从复制的结构
+		1.2  配置主从复制
+				相关命令?     slaveof    no  one
+                                         slaveof    ip   port
+										info  replication
+										
+                 vim /etc/redis/6379.conf 
+                 slaveof     ip    port
+				 
+	
+	           配置一主一从
+			   配置一主多从
+			   配置主从从
+		设置连接密码且永久生效       	   
+	> config  set    requirepass 123456		   
+    > config  rewrite 
+	> exit
+	
+	tail -5 /etc/redis/6379.conf
+	
+	     设置连接主服务器的密码且永久生效
+		  > config set  masterauth  123456
+		 > config  rewrite 
+	      > exit
+	
+	     tail -5 /etc/redis/6379.conf
+		 
+	哨兵服务
+  [root@host57 ~]# vim   /etc/sentinel.conf  	
+bind  192.168.4.57  #哨兵服务ip地址
+sentinel monitor   server51     192.168.4.51    6351      1   #监视的主服务器
+sentinel auth-pass     server51   123456  #主服务器连接密码
+:wq
+
+]# redis-sentinel  /etc/sentinel.conf  	 启动哨兵（占用终端显示启动信息）
+
+ 设置从服务器52 和51的连接密码
+     > config  set    requirepass 123456		   
+    > config  rewrite 
+
+
+ 测试哨兵服务
+     把51 主机的 redis服务停止
+
+     在52 主机查看 主从复制信息  info  replication   看到52的角色变成了 主master 
+	 
+	 查看57 的主配置文件 自动监视当前的主服务器 52 
+	 ]# cat /etc/sentinel.conf
+	 
+	把故障的51 修改好   启动系统 启动redis服务  
+	51 会自动做 52的从服务器，并同步宕机期间数据
+	手动设置连接主服务器52的连接密码 是 1234546
+	
+	     > config set  masterauth  123456
+		 > config  rewrite 
