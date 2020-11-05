@@ -2041,3 +2041,58 @@ sentinel auth-pass     server51   123456  #主服务器连接密码
 	
 	     > config set  masterauth  123456
 		 > config  rewrite 
+
+
+
+
+2 持久化 （支持数据永久存储，定期把内存里数据复制到硬盘存储）
+			2.1 RDB（默认方式）     指的是数据库目录下dump.rdb文件
+						RDB介绍
+						存储间隔
+						备份rdb 恢复数据
+			             ]# cp  dump.rdb   /root/
+                         scp  /root/dump.rdb   root@192.168.4.51:/opt/
+						 
+						使用dump.rdb文件恢复数据,步骤如下：	
+								1 	停止服务  
+								2 	清空数据库目录   rm  -rf   /var/lib/redis/6379/dump.rdb
+								3	拷贝备份文件到数据库目录下
+									cp   /opt/dump.rdb   /var/lib/redis/6379/
+								4	启动服务
+								5	连接服务查看数据
+									
+									
+						
+
+			2.2 AOF   (默认没有开启) 指的是数据库目录下xxx.aof文件
+                        AOF介绍
+						启用AOF:
+										  1 已经启动redis服务的主机启用AOF文件
+										  > config set appendonly    yes
+                                          > config rewrite
+
+										  2 没启动redis服务的主机启用AOF文件
+										  vim /etc/redis/6379.conf
+										  appendonly    yes
+                                          :wq
+				     使用备份的AOF文件恢复数据
+[root@host50 ~]# cp /var/lib/redis/6379/appendonly.aof /opt/
+[root@host50 ~]# ls /opt/
+appendonly.aof
+[root@host50 ~]# scp  /opt/appendonly.aof   root@182.168.4.51:/root/
+ 
+                     使用AOF文件恢复数据的步骤：
+									  1  停止服务 
+									  2  启用aof文件 
+									  3  清空数据库目录
+							          4  拷贝备份的aof文件到数据库目录下
+									  5 启服务服务
+									  6  连接查看数据
+									 做完休息到 17：15 
+						  
+3 数据类型
+
+
+###############
+复习 zabbix     lnmp    nfs    LVM      LB  集群(haproxy)    HA(keepalived) 
+	 
