@@ -1,0 +1,207 @@
+最新安装的模版机
+              克隆2台新虚拟机，要求如下
+						关闭防火墙 和 selinux
+						ip地址  192.168.4.5   和  192.168.4.100
+						yum源配置好
+						软件 zabbix(4.5/4.100)     nginx(4.5)
+每天上课前第1件事 开 PPT
+
+庞丽静    静静
+
+监控与安全    6天
+数据库         13天
+数据库项目    2天
+
+IDC监控    数据库运维（基础运维(数据库管理员)  高级运维（DBA））  
+ linux系统运维   
+ 
+监控day01 （zabbix监控基础）
+			一、搭建监控服务器 192.168.4.5
+			1.1  什么监控？ 监视并控制
+		
+			1.2  都监控谁？ 各种服务器（网站服务   数据库服务器）
+			
+			1.3  监控服务器的时候都监控什么呢？
+			       监控网络流量
+				   访问量   操作系统的运行情况   硬件资源使用情况
+				   服务的运行状态
+				   
+			1.3  怎么监控？ 
+			                    使用操作系统自带命令监控
+								计划任务执行自己编写的监控脚本
+			                    搭建监控服务器实现对所有 服务器的监控
+								
+			1.4 那些软件能够提供监控服务？
+						cacti   nagios   zabbix     普罗米修斯
+			
+			环境准备+休息到  10:15 
+			
+			在ip地址是192.168.4.5主机上部署zabbix监控服务，具体步骤如下：
+						1  部署服务运行环境  LNMP  【 时间15分钟到 10:36】
+						
+						测试配置 curl  http://localhost/test.php
+						               33
+                        2  安装源码的zabbix软件
+						3  初始化准备
+								 2.1 创建存储监控数据的库和存储数据时的连接用户
+[root@zabbix server ~]# mysql
+mysql> create database zabbix character set utf8;
+mysql> grant all on zabbix.* to zabbix@'localhost' identified by 'zabbix';
+mysql > exit
+                    drop database  zabbix;   恢复错误的同学，可以删除库重新创建 再执行 恢复
+]# cd zabbix-3.4.4/database/mysql/
+]# mysql -uzabbix -pzabbix zabbix < schema.sql
+]# mysql -uzabbix -pzabbix zabbix < images.sql
+]# mysql -uzabbix -pzabbix zabbix < data.sql
+
+]# mysql -uzabbix -pzabbix zabbix
+mysql >  show  databases;
+mysql>   use  zabbix;
+mysql>  show  tables;
+
+								 
+								 
+								 2.2 把网站页面文件拷贝到nginx的网页目录下
+								 
+								 2.3  初始化准备
+								 		        安装依赖的软件
+												修改配置文件 nginx.conf   php.ini
+												
+								 2.4  初始化配置（访问web页面做初始化配置，具体如下：
+								     http://192.168.4.5/index.php
+										  1
+										  2
+										  3 
+										  4 登录监控页面
+										  用户 admin
+										  密码  zabbix
+										  
+						/usr/local/nginx/html/conf/zabbix.conf.php  存储初始化配置
+						4   修改配置文件  
+						5   启动服务 
+						6   统一排错     休息到  16:05
+					                    监控页面显示不出来原因：    1 LNMP环境有问题
+										                                           2 初始化配置的准备工作没有做到位
+																				   3 初始化配置没有配对
+										监控服务没有启动的原因：1 配置文件的修改和初始化配置不	一致							   
+		
+			
+			二、监控服务的基本管理
+						2.1  把页面语言修改为中文
+						2.2  修改了管理员admin的密码  123456
+						2.3  查看已经监视的服务器
+						2.4  查看监控数据
+				        2.5  删除已经监控的主机
+			
+			
+			三、配置客户端 （通过监控服务器监视所有的主机）
+				   诉求：4.5 主机监控网站服务器 4.100  
+				   配置步骤如下：
+									1  配置被监控的主机（客户端）4.100
+												1.1   运行zabbixx_agentd服务
+												        安装软件  修改配置文件  启动服务  查看服务状态
+									
+									2 配置监控服务器 ： 登录管理页面做如下配置
+												2.1 添加主机
+												2.2 选择监控模板
+												2.3  查看监控数据
+												
+         四、自定义监控 ： 在客户端编写脚本，给监控服务器调用。
+		 
+				4.1  配置被监控的主机 192.168.4.100
+								4.1.1  启用自定义监控项功能
+								4.1.2  编写监控脚本
+	
+   编写获取系统总用户数量的命令
+   wc -l  /etc/passwd | awk '{print $1}'
+   54  awk  'BEGIN{x=0}{x++}END{print x}' /etc/passwd
+					
+								4.1.3  把脚本定义成zabbix_agentd服务可以使用的命令
+vim 	/usr/local/etc/zabbix_agentd.conf.d/x.conf
+UserParameter=get_sum_users,awk  'BEGIN{x=0}{x++}END{print x}' /etc/passwd						
+:wq
+							
+								4.1.4  重启zabbix_agentd服务
+								yum  -y  install psmisc
+								killall  -9 zabbix_agentd
+								zabbix_agentd
+								
+								4.1.5 测试定义的命令
+web100]# zabbix_get -s 127.0.0.1  -p 10050 -k get_sum_users								
+
+				配置监控服务器 192.168.4.5
+						 1 命令行测试 被监控主机定义的命令
+zabbix5]# zabbix_get -s 192.168.4.100 -p 10050 -k get_sum_users	
+	
+                         2  访问管理页面做如下配置：
+								   1  创建新监控模版     名 ATMP
+								   2  在新模版里创建应用集       名users
+                                   3  在新应用集里创建监控项   名getusers   对应  监控命令get_sum_users
+								   
+								   4  调用新创建的模版监控主机100
+								   5  查看监控数据（能够在web页面查看到监控的用户数量 就对）
+监控_day02								   							   								  
+	一 监控报警  通过邮件服务发生报警消息
+	                    诉求：监控100主机的系统总用户数量时 超过24 用户 就发报警邮件给zabbix@localhost 邮箱
+						在监控服务器4.5主机做如下操作：
+						        创建触发器      名  cfqone
+								               
+						        创建报警动作  名   actone
+								           1  设置邮件 ：   邮件服务器:  监控服务器本机提供邮件服务 localhost    
+										                            发件人: root@localhost    
+																	收件人: zabbix@localhost 
+																	
+																	
+									        2 创建动作 
+											          2.1  创建动作actone
+													  2.2  添加具体的操作
+													  
+											3 测试配置 
+											         3.1 触发触发器cfqone
+													 3.2 查看是否收到标题是  biguser24 邮件
+													 
+																	
+								                                    
+					
+	二 监控进阶
+		2.1  自动发现 
+		              1 设置  自动发现规则   名 ruleone
+					 
+					  2 创建动作  名字acttow    并添加 操作
+					 
+					  3 测试配置
+					           在网络中创建复合条件的服务器
+							     ip地址 192.168.4.200    yum  -y install httpd    systemctl start  httpd 
+							                                         systemctl  stop  firewalld
+							   查看已监控的主机列表
+	
+		2.2  主/被动监控
+							 （客户端主动连接监控服务器 把数据传递给监控服务器）
+							
+							配置被监控的主机  192.168.4.200 ，修改zabbix_agentd服务以主动模式运行
+							步骤如下：
+							        安装软件
+									修改配置文件
+									启动服务
+									查看服务状态
+									
+							配置监控服务器，登录管理页面，步骤如下：
+		                             1 添加主机  （要写对方定义的主机名web200）	
+									 2  复制已有的监控模版    给复制的模版 启名 BTMP
+									 3 修改监控命令的监控模式
+									 4  调用复制的模版监控添加的主机
+									 5 查看数据
+								
+									 
+		
+		2.3  拓扑图和聚合图形
+						2.3.1 拓扑图 （在网页上公司的网络架构画出来）
+						
+						2.3.2 聚合图形 （在一个网页页面上显示多个监控图片）
+						
+		
+	三监控案例（监控服务没有提供想要的监控功能，我们自己写一个）
+	    环境准备：
+			   监控服务器要有10051端口
+			   监控页面可以正常登陆
+			   能够监控到主机192.168.4.100
