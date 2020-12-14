@@ -234,3 +234,69 @@ zabbix5]# zabbix_get -s 192.168.4.100 -p 10050 -k get_sum_users
 						请求断开的数据量 
 						已经断开的数据量
 						查看监控数据
+
+
+############day03
+黑白名单控制客户端连接ssh服务
+ vim /etc/ssh/sshd_config
+ systemctl   restart  sshd
+ 
+ssh 黑名单： 仅不允许使用名单列表里的用户访问ssh服务
+DenyUsers    nb@192.168.4.200   wk
+
+ssh 白名单：仅允许使用白名单列表里的用户访问ssh服务
+AllowUsers       wk
+
+ssh服务验证客户连接的方式 支持2种
+			1 密码 （连接用户登录系统的密码）
+			2 密钥对 （公钥文件   私钥文件）
+                                加密         解密
+                                锁头         钥匙
+
+ 192.168.4.100
+			创建密码密钥对  ssh-keygen   （都敲回车）
+			查看密钥对文件 ls   ~/.ssh/
+			把公钥文件传给 ssh服务器    ssh-copy-id   -p  2222     wk@192.168.4.5
+ 
+ 192.168.4.5
+			查看客户端传递的公钥文件
+			ls /home/wk/.ssh
+			
+			禁止口令认证登录
+			sed   -i  '65s/yes/no/'  /etc/ssh/sshd_config
+			systemctl  restart  sshd
+			
+在 100 主机连接  5   不需要密码了 
+      ssh   wk@192.168.4.5
+
+在200 主机连接  5   连接不上
+	 ssh   wk@192.168.4.5   （报错）
+ 
+ 
+SElinux     linux 扩展安全
+                 selinux介绍
+
+
+查看文件的标签
+ls   -lZ    文件名
+ls  -lZ  /etc/passwd
+
+查看进程的标签
+ps  aux  -Z     |   grep   httpd
+
+查看目录的标签
+ls   -ldZ  目录名
+ls  -ldZ  /etc
+
+安全上下文件（标签）组成
+system_u:object_r:passwd_file_t:s0
+
+touch  /.autorelabel
+reboot 
+
+
+########安全_day04
+	相关概念？
+
+
+算法   加密与解密时使用的计算规则
