@@ -300,3 +300,66 @@ reboot
 
 
 算法   加密与解密时使用的计算规则
+
+		3.1  数据加密
+				3.1.1 对称加/解密
+						
+						加密
+useradd   jim
+echo  123456  | passwd  --stdin   jim
+
+ssh  -X  jim@localhost  (输入登录系统的密码)
+
+vim   a.txt
+  i   love  china 
+:wq
+
+gpg   -c   a.txt   (提示输入加密密码    2 次要一致)
+ls  a.txt*
+
+
+  
+						解密
+gpg  -d   /home/jim/a.txt.gpg   >  /root/a.txt
+cat  /root/a.txt						
+				
+				
+				3.1.2 非对称加/解密
+							  非对称加解密的工作过程 
+	
+                            公钥文件加密   私钥文件夹解密
+userA :
+          1 创建密钥对
+   26  mv /dev/random  /dev/oldrandom 
+   27  ln -s /dev/urandom /dev/random
+   28  useradd userA
+   29  echo 123456  | passwd  --stdin userA
+   30  ssh -X userA@localhost
+         gpg --gen-key
+	
+
+  
+		  2 导出公钥文件内容 并共享
+        ]# gpg --list-keys
+        ]# gpg -a  --export  panglj > /tmp/userA.pub
+        ]# cat /tmp/userA.pub 
+		  
+userB:
+		1 导入公钥
+		useradd  userB
+		echo 123456 | passwd  --stdin  userB
+		ssh   -X  userB@localhost
+        gpg --import  /tmp/userA.pub 
+        ls -a ~
+		
+		2  使用公钥加密文件 并把加密后的文件发送给对方
+        vim b.txt
+        gpg  -e -r panglj b.txt
+        mv   b.txt.gpg   /tmp/
+			
+userA:
+		1 使用私钥解密文件
+	    gpg -d /tmp/b.txt.gpg > ~/b.txt  （输入保护私钥的密码）	
+		2  查看文件内容
+		cat  ~/b.txt
+		
