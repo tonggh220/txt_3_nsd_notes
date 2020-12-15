@@ -363,3 +363,85 @@ userA:
 		2  查看文件内容
 		cat  ~/b.txt
 		
+
+
+
+
+#####################################
+二、 入侵检测 ：
+		sed -i   ‘99,312s/^/#/’ /etc/aide.conf
+		vim +99   /etc/aide.conf
+		/root/     FIPSR
+		:wq
+		
+		ls /root/
+		
+		aide   --init 
+
+       ls   /var/lib/aide/aide.db.new.gz 
+	   mv  /var/lib/aide/aide.db.new.gz     /opt/
+	   cp /opt/aide.db.new.gz  /var/lib/aide/aide.db.gz
+	   
+	   touch  /root/test.txt
+	   rm  -rf /root/xxx.txt
+	   vim /root/xxx.txt  
+	   aide  --check
+	   
+三  扫描与抓包
+	相关概念：
+	
+	肉鸡     
+	
+	3.1 扫描 nmap
+	3.2 抓包 tcpdump(命令行)   wireshark(图形界面)
+	   
+如何获取目标网站服务器的网站服务是否运行  及开放的端口号都有哪些？
+如何 得知当前的网站服务器能否和网关主机建立连接
+
+	   TCP    UDP 
+
+      -sT(全开)   -sS(半开)
+                       如果你的服务器接收到大量的半开扫描 是拒绝服务攻击 Dos
+                                                                                                      DDos
+
+
+]# tcpdump  -i  ens33  -c   2   -A   -w   one.cap
+
+]# tcpdump  -A  -r  one.cap
+
+]# tcpdump  -i ens33  icmp  and  src  host  192.168.4.100
+
+]# tcpdump  -i ens33   tcp port 22  and dst host 192.168.4.51 and src host 192.168.4.200
+
+]# tcpdump  -i ens33   tcp  port 80
+
+]# tcpdump  -i ens33   tcp  port 22  or  port 80
+
+]# tcpdump  -i ens33   tcp  portrange 22-80
+
+51: 
+yum  -y  install vsftpd
+useradd panglijing
+echo "abc123abc"  | passwd  --stdin  panglijing
+
+systemctl start   vsftpd
+
+ss  -utnlp  | grep  21
+
+cp /etc/passwd  /home/panglijing
+tcpdump   -i ens33   tcp   port   21    -A   -w   ftp.cap
+
+100：
+yum  -y install   lftp
+
+lftp   192.168.4.51
+> user   panglijing
+口令：密码
+> ls 
+> get   passwd
+> exit
+  
+51 
+ctrl +c   结束抓包
+tcpdump   -A   -r ftp.cap  | grep -i  user
+tcpdump   -A   -r ftp.cap  | grep -i  pass
