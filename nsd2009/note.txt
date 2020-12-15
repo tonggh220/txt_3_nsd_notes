@@ -364,7 +364,18 @@ userA:
 		cat  ~/b.txt
 		
 
-
+	3.2 数据签名 （检查数据的完整性 不可否认性）
+		      
+			  userA用私钥签名    
+			  gpg   -b   b.txt
+			  mv  b.txt   /tmp/
+			  mv  b.txt.sig  /tmp/
+			  
+			  userB使用公钥验证签名 
+              
+			  gpg --verify  /tmp/b.txt.sig
+	root]#  echo aaaa >>  /tmp/b.txt
+	          gpg --verify  /tmp/b.txt.sig
 
 
 #####################################
