@@ -483,3 +483,61 @@ tcpdump   -A   -r ftp.cap  | grep -i  pass
 							执行安全配置脚本
 							修改数据库管理登录密码
 							删除记录历史命令的文件
+
+数据备份与恢复
+							通过抓3306端口数据包 验证是否被访问
+				            用户授权			
+
+
+三、打补丁
+			运维岗位 写脚本 同步执行脚本完成 自动化运维
+			
+			给单个文件打补丁
+			              源文件
+						  更新文件
+						  生成补丁文件
+						  共享补丁文件
+						  打补丁 
+						  删除补丁文件
+			给目录打补丁
+			              源文件
+						  更新文件
+						  生成补丁文件
+						  共享补丁文件
+						  打补丁
+						  
+						  -p数字     删除重复目录的个数
+						  
+						  删除补丁文件
+						  
+#####安全_day04   iptables软件提供的防火墙服务
+                              firewalld软件提供的防火墙服务）
+		  iptables介绍
+		  
+				安装提供iptables服务软件包并启动服务
+				
+				
+				数据在网络传输时，要被封装成IP包   
+				
+				我爱你   协议（端口号   传输数据使用的协议   源ip地址 目标地址  Mac）
+				
+		  iptables组成 （重点）
+		  4张表  （服务的功能分类）
+		         包过滤表 filter 
+                 地址转换表 nat
+                 包标记表  mangle
+                 状态跟踪表  raw
+				 
+		  
+		  5种链   (ip包的传输方向)  以防火墙服务器为参照物
+		  
+		  INPUT  进入防火墙的数据包
+		  OUTPUT  从防火墙本机出去的数据包
+		  FORWARD   经过防火墙服务器的数据包
+		  PREROUTING  路由前处理   
+		  POSTROUTING 路由后处理
+		  
+iptables -t  raw  -L
+iptables -t  filter  -L
+iptables -t  mangle  -L
+iptables -t  nat  -L
