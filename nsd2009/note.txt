@@ -610,4 +610,18 @@ iptables -t  nat  -L
   iptables -t filter -D INPUT 3 
   iptables -t filter -I INPUT -p tcp --dport 8080  -s 192.168.4.100 -j ACCEPT
   iptables-save  > /etc/sysconfig/iptables
+
+
+  	  nat表的使用(可以转换到达防护墙服务器的数据包中的 源ip地址   目标ip地址  端口号)
+		  
+         公网                         防火墙服务器                私有网络
+          2.200                      2.51          4.51              192.168.4.100  gw  192.168.4.51
+	
+    
+ 公司地址固定
+          iptables -t  nat   -A  POSTROUTING  -s 192.168.4.0/24  -p tcp   --dport  80  -j SNAT --to-source  192.168.2.51        																		    
+	
+公司地址不固定，是服务商动态分配	
+     iptables -t nat -A POSTROUTING 
+	 -s 192.168.4.0/24    -o  ens38  -j MASQUERADE
   
