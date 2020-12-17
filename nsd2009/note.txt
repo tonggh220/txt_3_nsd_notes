@@ -542,6 +542,37 @@ iptables -t  filter  -L
 iptables -t  mangle  -L
 iptables -t  nat  -L
 
+相关知识：***
+		  
+		  表 ---- 链 ------规则  -----  匹配条件
+		 
+		  
+		  iptable  命令格式 ？
+		  
+		  常用选项  ？    
+		 		  
+		  匹配条件 怎么写？
+		  
+					-p  tcp  udp   arp   icmp 
+					-s  192.168.4.0/24      192.168.4.99   
+					-d  192.168.4.0/24      192.168.4.99 
+					-i  ens33 
+					-o  ens33 
+					--sport  80
+					--dport  80
+					
+		 主机型防火墙    运行防火墙服务后 保护本机（filter  --- INPUT ）
+		           
+		         
+				   
+		 
+         
+		 网络型防火墙  防火墙服务器 假设在2个网络中间， 2个网络中的主机
+在通信时，IP包必须经过防火墙服务器传送。(filter  ----  FORWARD)
+
+    公网                防火墙服务器                私有网络
+
+
 
 常用选项的使用 
 
@@ -570,3 +601,13 @@ iptables -t  nat  -L
   478  iptables-save  > /etc/sysconfig/iptables
   479  iptables  -I INPUT -p icmp -j ACCEPT
   480  iptables -t filter -nL INPUT  --line-numbers 
+
+
+  iptables -t filter  -A INPUT -p tcp --dport 80  -j ACCEPT
+  iptables -t filter -I INPUT 2  -p tcp  --dport 8080 -j ACCEPT
+   
+  iptables -t filter -I INPUT  -p tcp  --dport 3306  -j ACCEPT
+  iptables -t filter -D INPUT 3 
+  iptables -t filter -I INPUT -p tcp --dport 8080  -s 192.168.4.100 -j ACCEPT
+  iptables-save  > /etc/sysconfig/iptables
+  
