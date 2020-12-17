@@ -541,3 +541,32 @@ iptables -t  raw  -L
 iptables -t  filter  -L
 iptables -t  mangle  -L
 iptables -t  nat  -L
+
+
+常用选项的使用 
+
+456  iptables --help
+  457  man iptables 
+  458  iptables -t filter -L
+  459  iptables -t filter -nL
+  460  iptables -t filter -nL --line-numbers
+  461  iptables -t filter -D FORWARD 1
+  462  iptables -t filter -nL --line-numbers
+  463  iptables-save 
+  464  find  /  -name iptables
+  465  cat /etc/sysconfig/iptables
+  466  iptables-save 
+  467  iptables-save  > /etc/sysconfig/iptables
+  468  iptables -t filter -L
+  469  iptables -t filter -F INPUT 
+  470  iptables -t filter -L
+  471  iptables-save
+  472  iptables-save  > /etc/sysconfig/iptables
+  473  iptables -t filter -L
+  474  iptables -t filter -A INPUT  -p tcp  --dport 22 -j ACCEPT
+  475  iptables -t filter -nL INPUT  
+  476  iptables -t filter -P INPUT DROP
+  477  iptables -t filter -nL INPUT  
+  478  iptables-save  > /etc/sysconfig/iptables
+  479  iptables  -I INPUT -p icmp -j ACCEPT
+  480  iptables -t filter -nL INPUT  --line-numbers 
