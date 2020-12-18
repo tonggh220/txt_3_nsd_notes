@@ -624,4 +624,34 @@ iptables -t  nat  -L
 公司地址不固定，是服务商动态分配	
      iptables -t nat -A POSTROUTING 
 	 -s 192.168.4.0/24    -o  ens38  -j MASQUERADE
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+DBA1_DAY01
+	一 、 搭建数据库服务器
+			1.1 相关概念：
+			
+			
+	       在192.168.4.51 主机 运行mysql服务 管理员本机登录密码123qqq...A
+		   
+		   休息到 11:10  
+		   
+	二、 数据库服务的基本使用
+	mysql  -uroot  -ptarena
+	show   databases;
+	create  database  game;
+	use  game;
+	show  tables;
+	create  table  game.student(   name  char(10) , age int  , sex   char(10)    );
+	show tables;
+	select  * from  game.student;
+	desc  game.student;
+	insert into   game.student  values ("bob",19,"boy"),("tom",29,"boy");
+	select  * from  game.student;
+	
+    exit 
+	
+	ls /var/lib/mysql/game/student.*
+	
+
   
