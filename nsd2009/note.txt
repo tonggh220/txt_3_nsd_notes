@@ -652,6 +652,102 @@ DBA1_DAY01
     exit 
 	
 	ls /var/lib/mysql/game/student.*
+
+
+    	字符集   汉字的集合    gb2312   utf8  
+	
+	SQL  结构化查询语言
+	
+	mysql> create table game.t2(
+	姓名  char(10) , 地址 char(15) , 性别  char(10) )DEFAULT CHARSET=utf8 ;
+
+mysql> insert into game.t2  values ("孙悟空","花果山","男");
+
+mysql> select   *   from   game.t2 ;
+
+
+  
+	三、 数据类型
+			       字符类型   char      varchar   text  blob
+				   
+				            
+		
+		
+create table  game.t1(name   char(5) ,  mail   varchar(10));
+desc   game.t1;
+
+insert into  game.t1 values("panglijing","panglijing@sina.com.cn"); 报错 
+insert into  game.t1 values("plj","plj@163");  正确
+select   *  from game.t1;
+
+					休息到  16:25
+1位数的范围    0-9
+2位数的范围    10-99
+3位数的范围    100-999		
+
+正数    11     +11 
+负数	   -13
+   
+整数.小数    总位数
+1088.23            6
+  
+  
+  59.00
+			       数值类型
+								整型（没有小数点的数）只能存储整数，不存储小数
+use  game
+create  table   t3(name  char(10) ,  age   tinyint  unsigned , pay   smallint);		
+mysql> insert into  t3  values ("bob" , 257 , 20000);
+ERROR 1264 (22003): Out of range value for column 'age' at row 1
+mysql> insert into  t3  values ("bob" , -1 , 20000);
+ERROR 1264 (22003): Out of range value for column 'age' at row 1
+mysql> insert into  t3  values ("bob" , 23 , 20000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into  t3  values ("john",38,2099.54) ;
+mysql> insert into  t3  values ("tom",19,1888.28) ;
+
+mysql> select  * from  t3;
+
+		
+								浮点型（有小数点的数）可以存储小数的数，
+								
+								float      单精度
+								double  双精度
+								
+create  table   t4(name  char(10) , pay   float   ,  jiangjin   double );
+insert into  t4  values ("bob",1888.28 , 2099.54);
+select  * from  t4;
+																
+create  table   t5(name  char(10) , pay   float(5,2) ) ;
+insert into  t5  values ("jerry",2888.88);
+					
+mysql> insert into  t5  values ("jerry",888.88);
+mysql> insert into  t5  values ("jerrya",250);
+	
+休息到 17:25 
+
+	
+			       日期时间类型 
+				   年  year    YYYY   2020
+				   
+				   日期 date  YYYYMMDD    20201230
+				   
+				   时间 time   HHMMSS        174928   
+				   
+				   日期时间类型  datetime或timestamp
+	
+    create   table   t7  (name  char(10) ,  csnf  year  ,  up_class  time  ,
+	birthday   date   ,  party   datetime );
+	
+	mysql> insert into t7 values ("mmd",2000,083000,20210101,20201225183000);			      
+				   
+			       枚举类型  表头的值必须在规定的范围里选择  
+				   enum(值列表）  单选  
+				   set(值列表） 多选
+				   
+	create table  t5(name  char(10) , age  tinyint  unsigned  , 
+	sex  enum("m","w") , likes  set( "eat" , "sleep" , "game" , "money" ) );		
 	
 
   
