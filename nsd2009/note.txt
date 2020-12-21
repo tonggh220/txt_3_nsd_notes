@@ -747,7 +747,20 @@ mysql> insert into  t5  values ("jerrya",250);
 				   set(值列表） 多选
 				   
 	create table  t5(name  char(10) , age  tinyint  unsigned  , 
-	sex  enum("m","w") , likes  set( "eat" , "sleep" , "game" , "money" ) );		
+	sex  enum("m","w") , likes  set( "eat" , "sleep" , "game" , "money" ) );	
+
+
+	    时间函数（mysql服务内置的获取系统时间的命令）
+	               使用命令的获取结果给表头赋值
+		
+ mysql> insert into t7(name,csnf)values("xdog3",54),("xdog4",78);	
 	
+	
+mysql> create table t8 (meetting datetime , party timestamp  );	
+	
+insert  into    t8  values ( now() , now() );
+insert   into   t8(meetting)  values (20210101223018);
+insert   into   t8(party)  values (20190101223018);
+select   * from t8;
 
   
