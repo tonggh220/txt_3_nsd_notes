@@ -1,0 +1,38 @@
+
+一、表结构
+	1.1 约束条件: 
+			作用：限制字段赋值
+			包括？
+mysql> create table  t9 ( name char(10) not null  , 
+mail char(20) default "stu@163.com" , 
+age tinyint unsigned  not null default 19 , class char(7) );
+
+mysql> insert into t9(name,class) values ("bob","nsd2009"); 			
+mysql> insert into t9 values ("","xx@163.com",17,null); 
+mysql> insert into t9 values ("null","x@163.com",17,null); 
+mysql> insert into t9 values (null,"xx@163.com",17,null); 
+select  * from  t9 ;
+			
+	1.2 修改表结构
+			desc  表名；
+			命令 ?
+mysql> create table  t10 ( name char(5) );
+desc  t10;
+alter  table  game.t10 
+add  num   int  , 
+add  sex  enum("boy","girl") not  null  default  "girl"  first,
+add  csnf  year  after sex ;
+
+desc  t10;		
+
+mysql> alter table t10 modify 
+mail char(30) not null default "x@tedu.cn";
+				
+mysql> alter table t10 modify name char(5) first;
+
+mysql> alter table t10 change num  xuhao int ;
+mysql> alter table  t10  change addr  home varchar(20) not null  default "bj";
+
+mysql> alter  table t10 drop xuhao ,drop home , drop sex;
+
+mysql> alter table t10  rename tea_info ;
