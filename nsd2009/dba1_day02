@@ -36,3 +36,127 @@ mysql> alter table  t10  change addr  home varchar(20) not null  default "bj";
 mysql> alter  table t10 drop xuhao ,drop home , drop sex;
 
 mysql> alter table t10  rename tea_info ;
+
+
+二、mysql键值（给表头加标签  各自的功能不同  限制赋值的方式也不同）
+		 普通索引  index             ***
+		 唯一索引  unique
+		 主键         primary  key  ***
+         外键         foreign   key  ***
+        全文索引  fulltext 		 
+      
+		查看表头是否加了键值    desc   库.表 ；
+   
+		2.1 普通索引 index 的使用 (让表头下存储的数据排序)
+		       2.1.1  相关理论
+			   2.1.2  普通索引 index 的使用
+						 1 使用规则 ？
+                         2 建表是创建index字段		 					 
+						 3 在已有表里创建index字段				 
+						 4 查看index 字段
+						 5 查看index 详细信息 				 
+						 5  删除索引
+			2.1.2  主键primary key 的使用
+			            核心功能：表头下的数据不能重复也不能为空(不能存无)
+						1 使用规则？
+											
+						2 创建主键  primary key(表头名)；
+									2.1  建表时创建主键命令格式
+    create   table    game.tea8(name  char(10) , age  int  , class  char(7)
+, primary key(name)	);	
+	
+create   table    game.tea7(name  char(10)  
+primary key , age  int  , class  char(7) );
+	
+									2.2  在已有表添加主键
+mysql> alter table  t7  add primary key(name);
+									
+									2.3  查看主键
+mysql >  desc   t7;
+
+							
+
+						3 创建复合主键：表里的多个表头一起做主键
+						                       多条记录时，复合主键的，表头值不能同时重复
+							
+	tea6
+	 PRI                 PRI
+    客户端ip地址  服务的端口号      是否允许访问
+      cip                  sport               status 
+     1.1.1.1              22                    deny 
+     1.1.1.1              21                    allow
+	 2.1.1.1              21                    deny
+	 
+	create   table    tea6( cip  varchar(15)  ,  
+	   sport   smallint  , status  enum("deny","allow"),
+	   primary key(cip,sport) 
+	);
+	
+mysql> insert into tea6 values("1.1.1.1",22,"deny");
+
+mysql> insert into tea6 values("1.1.1.1",22,"allow");
+ERROR 1062 (23000): Duplicate entry '1.1.1.1-22' for key 'PRIMARY'
+
+ 
+mysql> insert into tea6 values("1.1.1.1",21,"allow");
+mysql> insert into tea6 values("2.1.1.1",21,"allow");
+					
+						
+						4  与auto_increment 连接
+								自增长 （让表头通过自加1的计算结果赋值）
+								自增长的设置必须满足2个条件  ： 必须是主键   必须是数值类型
+								
+create table  tea5(id  int  primary key   auto_increment  ,  name  char(10) , 
+school varchar(15) ,  class  char(7)  );
+								
+mysql> insert into tea5(name,school,class)values("tom","tarena","nsd2009");
+mysql> insert into tea5(name,school,class)values("toma","tarena","nsd2009");
+mysql> insert into tea5(name,school,class)values("tomb","tarena","nsd2009");
+																休息到 17:30 
+select  * from  tea5 ;
+
+mysql> insert into tea5   values(9,"tomb","tarena","nsd2009");
+
+mysql> insert into tea5(name,school,class)values("tomw","tarena","nsd2009");
+select  * from  tea5 ;
+
+delete  from   tea5;
+mysql> insert into tea5(name,school,class)   values("tomb","tarena","nsd2009");
+mysql> insert into tea5(name,school,class)   values("tomb","tarena","nsd2009");
+select  * from  tea5 ;
+
+mysql> alter table  tea5 drop id;
+
+mysql> alter table  tea5 add id int primary key auto_increment first;
+select  * from  tea5 ;
+
+
+								
+						5 删除主键
+	mysql> alter table  tea8 drop primary key ;
+					
+	mysql> alter table  tea5 drop primary key ;		
+	
+	mysql> alter table tea5 modify  id int not null ;
+	mysql> alter table  tea5 drop primary key ;			
+	mysql>  desc   tea5;
+
+			外键
+					作用？
+					使用规则？
+					
+			
+			员工信息表
+			                                         PRI 
+			       姓名     职位   部门     员工编号
+			       大锤     销售               1
+                   大锤	   市场               2
+				   
+				   
+			工资表
+					foreign key 
+				
+			      编号    工资  
+				  1        2W
+				  2        2w
+		create table   表名 （         ）engine=innodb；	
