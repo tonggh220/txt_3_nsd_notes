@@ -146,17 +146,44 @@ select  * from  tea5 ;
 					使用规则？
 					
 			
-			员工信息表
-			                                         PRI 
-			       姓名     职位   部门     员工编号
-			       大锤     销售               1
-                   大锤	   市场               2
+	员工信息表  yg_tab
+			                                         
+			                 员工编号yg_id     姓名 name
+			create table  game.yg_tab(yg_id  int  primary key auto_increment,
+			name  char(10)
+			)engine=innodb;      
+			
+			insert into game.yg_tab(name) values("bob"),("tom"),("jim");
+            select  * from  game.yg_tab;
+			
 				   
-				   
-			工资表
-					foreign key 
+			工资表 gz_tab
+			
+			      编号编号 gz_id    工资  pay 
 				
-			      编号    工资  
-				  1        2W
-				  2        2w
-		create table   表名 （         ）engine=innodb；	
+		create table   game.gz_tab （  gz_id   int  , pay  float(7,2) ,
+				foreign key(gz_id)  references  yg_tab(yg_id)   on  update cascade  
+				on  delete  cascade
+		)engine=innodb；		  
+			
+        mysql>  desc  game.gz_tab;			
+		mysql> show create table game.gz_tab \G   查看外键
+				
+          删除外键
+                mysql> alter table gz_tab drop foreign key gz_tab_ibfk_1;
+				
+          添加外键
+		  mysql> alter table  gz_tab  
+          add
+          foreign key(gz_id) references yg_tab(yg_id)
+          on update cascade  on delete cascade ;
+		  
+
+mysql> use game ;
+mysql> update  yg_tab  set yg_id=8 where name="tom";
+mysql> delete from  yg_tab where yg_id=1;
+mysql> select  * from  gz_tab;
+
+mysql> alter table  gz_tab add primary key(gz_id); (一个员工只能发一次工资)
+
+
