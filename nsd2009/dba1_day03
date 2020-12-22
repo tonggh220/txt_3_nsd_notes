@@ -1,0 +1,64 @@
+一、数据导入导出 （批量处理数据）
+		1.1  检索目录： mysql服务在执行数据导入导出时会在要求的目录里查找文件
+						查看默认使用的目录
+						mysql> show variables like "%file%";
+						mysql> show variables like "secure_file_priv";
+						
+						修改检索目录 ？
+		
+		1.2 数据导入 ： 把系统文件的内容保存数据的表里
+		                 数据导入命令？load  data 
+						 
+						数据导入步骤？
+								1 创建存储数据的库和表
+									create  database  db3;
+									create  table  db3.user(字段段名列表);
+								2 把系统文件拷贝到检索目录下
+								cp   /etc/passwd    /myload/
+								3 执行数据导入命令
+mysql> load  data  infile "/myload/passwd" into table db3.user 
+fields terminated by ":"   lines  terminated by "\n";								
+								
+								4 查看数据
+alter table  db3.user  add  id  int  primary key  auto_increment  first;
+
+mysql> select  * from  db3.user;
+mysql> select  * from  db3.user  where  id <= 3 ;
+mysql> select  * from  db3.user  where  id = 5 ;
+				休息到 11:25 
+
+						
+					
+		
+		1.3 数据导出 ： 把表记录保存到系统文件
+								命令格式1
+mysql> select name,uid,home  from db3.user where id <= 3	;							
+mysql> select name,uid,home  from db3.user where id <= 3  into outfile "/myload/b.txt";
+mysql>  system  cat /myload/b.txt
+
+
+								命令格式2
+mysql> select name,uid,home  from db3.user where id <= 3  into outfile "/myload/c.txt"
+fields  terminated by "#";
+								
+								命令格式3
+	
+mysql> select name,uid,home  from db3.user where id <= 3  into outfile "/myload/d.txt"
+fields  terminated by "#"   lines  terminated by "!!!";					
+		
+二、管理表记录 （对表里的行做管理）db3.user;
+		
+		2.1  添加新行, （新添加的行会添加在末尾）命令格式如下：
+					添加1行给所有列赋值
+ insert into user   values (21 ,"bob","x",2000,2000,"test user","/home/bob","/bin/bash");
+					
+					添加多行给所有列赋值
+ insert into user   values 
+ (23 ,"bob","x",2000,2000,"test user","/home/bob","/bin/bash")，
+ (29 ,"tom","x",3000,2000,"test user","/home/bob","/bin/bash")；
+					
+					添加1行给指定的列赋值 （没有赋值的列，使用默认值或自增长结果赋值）
+mysql> insert into user(name , uid ) values ("john",3001);
+					
+					添加多行给指定的列赋值（没有赋值的列，使用默认值或自增长结果赋值）
+mysql> insert into user(name , uid ) values ("john",3001),("alices",2888);
