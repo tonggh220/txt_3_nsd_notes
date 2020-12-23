@@ -250,3 +250,10 @@ mysql> select name ,uid , shell  from user where  id  <=10   limit  3;
 mysql> select name ,uid , shell  from user where  id  <=10  limit 0 , 5 ;					 
 mysql> select name ,uid , shell  from user where  id  <=10  limit 3 , 3 ;					 
 mysql> select name ,uid , shell  from user where  id  <=10  limit 2 , 3 ;					 
+
+四、安装图形管理工具
+			连接数据库服务的连接方式： 命令行连接    访问图形工具 连接数据服务器   编写脚本连接
+            可以管理数据库服务图形软件有哪些？
+			安装phpmyadmin软件
+			客户端访问软件管理数据库服务
+            
