@@ -43,3 +43,64 @@
 				where  db="db4" and  user="xdog" and  host="%";
 				
 				show  grants  for  mydba@"%";
+
+
+    二、完全备份
+			 相关概念：
+			          什么是备份？
+					  备份目的？
+					  备份方式？ 物理备份  物理恢复
+
+					  备份策略？
+								完全备份   备份服务上的所有数据
+												 只备份服务上新数据： 增量备份  、差异备份
+								
+								增量备份：备份上次备份后，多出来的新数据									
+                                差异备份：备份完全备份后，多出来的新数据
+
+							休息到 17:20 
+物理备份 
+ 147  cp -r  /var/lib/mysql    /mysql.bak
+ 150  tar -zcvf  /mysql.tar.gz /var/lib/mysql/*
+154  scp -r /mysql.bak  root@192.168.4.51:/root/
+
+ 物理恢复
+   24  systemctl  stop mysqld
+   25  rm -rf /var/lib/mysql/*
+   
+   27  cp -r /root/mysql.bak/*   /var/lib/mysql/
+
+   31  chown  -R mysql:mysql   /var/lib/mysql
+ 
+   34  systemctl  start mysqld
+   35  mysql -uroot -p654321
+
+逻辑备份 的方式实现数据的完全备份与完全恢复
+				完全备份命令格式
+				完全恢复命令格式
+				完全备份时 库名的表示方式？
+
+   157  mkdir /mybak
+
+  159  mysqldump -uroot -p654321  -A  > /mybak/alldata.sql
+
+ 
+  162  mysqldump -uroot -p654321 game  > /mybak/game.sql
+   
+  166  mysqldump -uroot -p654321 game t9  > /mybak/game_t9.sql
+ 
+ 167  mysqldump -uroot -p654321 -B game db3  > /mybak/db2.sql
+  
+  168  ls /mybak/
+  
+  scp   /mybak/game_t9.sql    root@192.168.4.51:/opt/
+	
+  每周一 把数据库服务器上的所有数据全备份 （定义计划任务执行备份数据的命令或脚本）
+  00  23   *  *    1   mysqldump -uroot -p654321 -A  > /mybak/`date +%F`.sql
+
+  
+   192.168.4.51  恢复
+    mysql>  delete  from  game.t9;
+	
+	]# mysql  -uroot  -p密码  game  < /opt/game_t9.sql
+	mysql>  select  * from   game.t9;
