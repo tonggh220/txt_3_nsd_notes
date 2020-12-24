@@ -104,3 +104,131 @@
 	
 	]# mysql  -uroot  -p密码  game  < /opt/game_t9.sql
 	mysql>  select  * from   game.t9;
+
+
+    三、增量备份（  使用binlog日志文件 ，实现对数据的增量恢复）
+		3.1 掌握日志的使用（binlog日志管理）
+		       3.1.1  binlog日志介绍
+			   3.1.2  启用binlog日志
+						vim /etc/my.cnf
+						[mysqld]
+						server_id=50
+						log_bin
+						
+						systemctl  restart  mysqld 
+			   3.1.3   自定义日志的存储目录和文件名
+		 mkdir /logdir
+         chown  mysql /logdir                         
+		setenforce   0
+		 vim /etc/my.cnf
+		  [mysqld]
+		  #log_bin
+		  log_bin=/logdir/plj
+		  
+		  systemctl   restart  mysqld
+	   
+	     休息到  10:10  上课 
+		 
+			   3.1.4  查看日志文件
+							mysql> show  master status ;   查看数据库服务正在使用的日志文件
+                           ~]# mysqlbinlog  /logdir/plj.000001 查看日志文件的内容
+							
+			   3.1.5  手动创建新的日志文件
+			 ]# mysqldump -uroot -p654321 --flush-logs  game  > /game.sql
+             
+			 ]# mysql -uroot -p654321 -e  'flush logs'
+			 
+			 mysql> flush logs;
+			 
+			 systemctl  restart  mysqld 
+			 
+			   3.1.6  删除已有的日志文件
+							mysql> purge master logs to "plj.000004";  删除指定编号之前的所有日志文件
+							mysql>  reset  master  ;删除当前所有日志文件，重新创建第1个日志文件
+							]#  rm  -rf   xxx.index   xxxx.000000X   
+							
+		3.2 使用binlog日志对数据做恢复
+				3.2.1  恢复所有数据
+				         命令格式： mysqlbinlog    /目录名/日志文件名  |  mysql  -uroot  -p密码 					 
+ 案例演示
+			50  对 db3库下的user 表做完全备份 ，并把完全备份文件发送给51
+						 select  count(*) from  db3.user;
+						 show master status;
+						 
+						 ]# mysqldump  -uroot -p密码  --flush-logs  db3 user >  /root/db3_user.sql
+						 
+    					 show master status;    
+						      insert into   db3.user(name) values ("tom");
+						      insert into   db3.user(name) values ("tom");
+							  
+						 select  count(*) from  db3.user;
+						 show master status;  查看日志名
+			      scp  /root/db3_user.sql   root@192.168.4.51:/opt/
+				  scp  /logdir/日志名    root@192.168.4.51:/opt/
+				
+		 在51主机恢复数据
+				mysql  -uroot -p密码   -e  'drop  table  db3.user'
+				
+				mysql  -uroot -p密码 db3  < /opt/db3_user.sql
+				
+				mysql  -uroot -p密码 -e 'select  count(*) from  db3.user'
+		
+	
+				mysqlbinlog   /opt/日志名  | mysql  -uroot -p密码
+				mysql  -uroot -p密码 -e 'select  count(*) from  db3.user'
+				
+				
+				
+    	3.2.2 恢复部分数据 	(查看日志文件里指定的SQL命令)
+		         命令格式 
+				 mysqlbinlog  选项   /目录/文件名   |  mysql  -uroot   -p密码
+
+				选项
+						查看指定时间范围内记录的sql
+						起始时间   结束时间
+						--start-datetime="yyyy/mm/dd  hh:mm:ss"   --stop-datetime="yyyy/mm/dd  hh:mm:ss"
+						
+						查看指定偏移量范围内记录的sql命令
+		                起始偏移量   结束偏移量
+						--start-position=数字   --stop-position=数字
+				
+				查日志文件记录命令的格式
+						mysql> show variables like  "%binlog%";
+						mysql> show variables like  "binlog_format";
+
+	
+				修改日志文件记录命令格式		
+				   vim   /etc/my.cnf
+						[mysqld]
+                        binlog_format="mixed"
+                    :wq
+					
+					systemctl   restart   mysqld
+  155  mysql -uroot -p654321 -e 'show master status'
+  156  mysql -uroot -p654321 -e 'insert into db3.user(name) values("A")'
+  157  mysql -uroot -p654321 -e 'insert into db3.user(name) values("b")'
+  158  mysql -uroot -p654321 -e 'insert into db3.user(name) values("C")'
+  159  mysql -uroot -p654321 -e 'insert into db3.user(name) values("D")'
+  160  mysql -uroot -p654321 -e 'select  count(*) from  db3.user'
+  161  mysql -uroot -p654321 -e 'show master status'
+  162  mysql -uroot -p654321 -e 'delete from db3.user where name in  ("A","b","D")'
+  163  mysql -uroot -p654321 -e 'show master status'
+  164  mysql -uroot -p654321 -e 'update db3.user set uid=1088 where name="root"'
+  165  mysql -uroot -p654321 -e 'show master status'
+  166  mysqlbinlog  /logdir/plj.000005
+  167  mysqlbinlog  /logdir/plj.000005 | grep  -i  insert
+  168  mysqlbinlog  /logdir/plj.000005 | grep  -i  delete
+  169  mysqlbinlog  /logdir/plj.000005 | grep  -i  update
+  170  history 
+  171  scp  /logdir/plj.000005   root@192.168.4.51:/root/
+					
+	
+在 51主机恢复数据	
+]#mysqlbinlog --start-position=325  --stop-position=463   /root/plj.000005 | 
+mysql -uroot -p654321	
+		
+		
+]#mysqlbinlog   --start-datetime="2020/12/24  9:26:20"    
+--stop-datetime="2020/12/24  9:28:28"  /root/plj.000005 |  mysql -uroot -p654321
+
+]# mysql -uroot -p654321  -e  'select name from db3.user where name in ("A","C","D")'
