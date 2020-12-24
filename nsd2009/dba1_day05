@@ -1,0 +1,108 @@
+####DBA1_DAY05  使用innobackupex命令对数据做备份和恢复
+		软件介绍（特点） percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm  (拷贝到 50 和  51里)
+        休息到  15:15 
+		命令格式：
+			完全备份命令
+					 innobackupex  --user  root   --password  密码      /目录名    --no-timestamp 
+				
+			完全恢复数据命令
+									准备恢复数据                              innobackupex  --apply-log  /目录名
+									拷贝备份数据到数据库目录下      innobackupex  --copy-back   /目录名
+		
+			增量备份命令
+					innobackupex  --user  root   --password  密码    --incremental    /目录名    
+					--incremental-basedir=/上次备份文件存储的目录名   --no-timestamp
+					
+			增量恢复命令
+					 准备恢复数据  innobackupex  --apply-log  --redo-only /目录名    
+					 
+					 合并数据 innobackupex  --apply-log  --redo-only /目录名   --incremental-dir=/备份文件目录名
+					 
+					 拷贝备份数据到数据库目录下      innobackupex  --copy-back   /目录名            
+					
+		练习：
+		数据完全备份与恢复
+			50主机 执行完全备份
+				]# innobackupex --user root --password 654321  /fullbak --no-timestamp
+		        ]#  ls   /fullbak 
+				]# scp -r /fullbak  root@192.168.4.51:/root/
+
+		    51主机执行完全恢复：具体步骤如下：
+								停止数据库服务
+								清空数据库目录
+								准备恢复数据
+								查看拷贝数据
+								修改数据目录的所有者和组用户为mysql
+								启动服务
+								管理员登录查看数据
+   43  yum -y install /var/ftp/pub/libev-4.15-1.el6.rf.x86_64.rpm 
+   44  yum -y install /var/ftp/pub/percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+   45  which  innobackupex
+   
+   46  systemctl  stop mysqld
+   48  rm -rf /var/lib/mysql/*
+  
+   51  cat /root/fullbak/xtrabackup_checkpoints 
+   
+   52  innobackupex --apply-log  /root/fullbak/
+   53  cat /root/fullbak/xtrabackup_checkpoints 
+
+   55  innobackupex --copy-back /root/fullbak/
+
+   58  chown  -R mysql:mysql /var/lib/mysql
+
+   61  systemctl  start mysqld
+   
+   62  mysql -uroot -p密码 
+								
+		
+       		数据增量备份与恢复
+					完全备份后向服务器里存储新数据
+					 mysql> create database db5;
+mysql> create table db5.t1(id int);
+mysql> insert into db5.t1 values(100);
+mysql> insert into db5.t1 values(100);
+mysql> insert into db5.t1 values(100);
+mysql> insert into db3.user(name)values("bob");
+mysql> insert into db3.user(name)values("bob");
+
+
+    增量备份（只备份新数据）  休息到  17:25 
+  innobackupex --user root --password 654321 --incremental  /new1dir 
+	 --incremental-basedir=/fullbak --no-timestamp
+                    
+					存储新数据
+
+innobackupex --user root --password 654321 --incremental  /new2dir 
+	 --incremental-basedir=/new1dir --no-timestamp			 
+			
+			     把备份的新数据拷贝给 51
+				 ]# scp  -r /new1dir  root@192.168.4.51:/opt/
+			     ]# scp  -r /new2dir  root@192.168.4.51:/opt/
+		
+	在51主机做数据的增量恢复，具体步骤如下：
+				停止服务 systemctl stop mysqld
+				清空数据库目录   rm  -rf /var/lib/mysql/*
+				做增量恢复数据的准备（告诉程序从哪开始恢复数据）
+				合并数据
+				拷贝数据
+				修改数据目录的所有者和组用户为mysql
+			   启动服务
+			   管理员登录查看数据
+   65  systemctl stop mysqld
+   66  rm -rf /var/lib/mysql/*
+   
+   67  innobackupex --apply-log --redo-only /root/fullbak/
+   68  cat /root/fullbak/xtrabackup_checkpoints 
+ 
+   70  innobackupex --apply-log --redo-only /root/fullbak/  --incremental-dir=/opt/new1dir/
+   73  innobackupex --apply-log --redo-only /root/fullbak/  --incremental-dir=/opt/new2dir/
+   
+   74  cat /root/fullbak/xtrabackup_checkpoints 
+  
+   80  innobackupex --copy-back /root/fullbak/ 
+   82  chown -R mysql:mysql /var/lib/mysql
+         rm   -rf  /opt/new1dir   /opt/new2dir 
+     84  systemctl  start mysqld
+   85  mysql -uroot -p密码 
+						
