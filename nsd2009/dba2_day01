@@ -13,3 +13,73 @@
                                     3 管理员登录指定主服务器信息
 									4  启动slave进程
 									5  查看io线程和sql线程的状态  （必须同时是 yes ）
+
+       1.3 测试主从同步的配置
+				主服务器添加用户 给客户连接使用
+				create database gamedb;  create table gamedb.user(name char(10) , id int);
+				grant  select ,insert  on  gamedb.* to yaya99@"%" identified by "123qqq...A";
+				
+				客户端使用添加的用户连接主数据库服务器 并存储数据
+[root@host50 ~]# mysql -h192.168.4.51 -uyaya99 -p123qqq...A		
+		insert into  gamedb.user  values("bob",11);
+		
+				从数据库的管理员连接本机的数据库服务后，和查看到和主数据库服务器一样的数据
+[root@host52 mysql]# mysql -uroot -p123qqq...A -e 'select * from gamedb.user'
+				
+
+      1.4  统一排错时间
+	              查看 IO线程的报错原因
+				  show  slave status \G
+				           Last_IO_Error:  报错原因
+						   报错的主要原因: change  master to  配置与实际环境不符合
+						   
+						                            解决的办法
+													 stop   slave ;
+													            使用change master  to 重新指定
+													  start  slave;
+													
+						           
+	  
+		           查看 SQL 线程的报错原因
+				                    Last_SQL_Error: 报错原因
+									
+					               报错的主要原因: 执行 中继日志里的命令时，操作的数据在从服务器本机没有
+								    手动在从服务器本机添加命令使用的数据
+									然后 stop  slave ; start slave ;
+									
+								   
+			
+			
+ 二、主从同步模式
+		2.1  主从同步结构
+							一主一从
+							一主多从
+							   主从从
+							主主结构（互为主从）
+ 
+                            
+      练习 一主多从    
+	  诉求 ： 把 53 数据库服务器配置为51的从服务器 ，具体配置如下
+					                1确保与主数据库服务器数据一致
+												 51 做完全备份 并把备份文件拷贝给53
+												 53 使用备份文件恢复数据
+												 
+									2 指定server_id 并重启数据库服务器
+									   休息到 16:10 
+									
+                                    3 管理员登录指定主服务器信息
+									4  启动slave进程
+									5  查看io线程和sql线程的状态  （必须同时是 yes ）
+
+             测试 客户端 50 连接主服务器 51  存储信息数据， 2台从服务器本机登录都能看到同样的数据。
+				 
+	练习主从从配置
+	       1  把一多结构中的53 还原为独立数据库服务器 
+           2 把53主机配置为主从从结构中的主服务器： 启用binlog日志   用户授权  查看日志信息 
+					休息到 17:10 上课 
+           3  配置从数据库服务器54  
+	       4  配置从数据库服务器55  
+		   5 测试主从从的配置
+
+
+   思考：把数据库服务器 56  和 57  配置为主主结构
