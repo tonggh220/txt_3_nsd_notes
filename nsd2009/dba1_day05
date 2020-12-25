@@ -106,3 +106,48 @@ innobackupex --user root --password 654321 --incremental  /new2dir
      84  systemctl  start mysqld
    85  mysql -uroot -p密码 
 						
+
+#############恢复1张表的所有数据
+
+把50主机数据完全备份  存放到/allbak 目录里
+  
+]# innobackupex  --user root --password  654321   /allbak  --no-timestamp
+]#  scp  -r  /allbak    root@192.168.4.51:/root/
+
+51主机使用完全备份文件恢复数据
+            停止数据库服务
+			清空数据库目录
+			准备恢复数据
+			拷贝数据
+			修改数据库目录所有者和组用户为mysql
+			启动服务
+			管理员登录查看数据   mysql  -uroot  -p654321  
+			                                select  * from  db3.user;
+											delete from  db3.user;
+											
+			恢复1张表的所有数据,具体步骤如下：
+						表空间  指的是  表名.idb 
+                         练习到 10:40
+						1 删除表空间文件
+						mysql> alter table   db3.user  discard tablespace;	
+						
+						2  导出表信息
+						]# innobackupex --apply-log --export /root/allbak/
+						[root@host51 ~]# ls /root/allbak/db3/user.*
+/root/allbak/db3/user.cfg  /root/allbak/db3/user.frm
+/root/allbak/db3/user.exp  /root/allbak/db3/user.ibd
+
+						3 拷贝表信息文件到数据库目录下 
+	]# cp /root/allbak/db3/user.{exp,cfg,ibd}  /var/lib/mysql/db3/					
+						
+						4 修改 表信息文件的所有者和组
+    ]# chown  mysql:mysql /var/lib/mysql/db3/*
+	                       
+	                   5 导入表信息
+					   mysql> select   * from  db3.user; 报错
+					   mysql> alter table db3.user import tablespace;
+			           mysql> select   * from  db3.user;   正常显示数据
+					   
+					   6 删除无用的信息文件 
+					   ]# rm -rf  /var/lib/mysql/db3/user.cfg
+                       ]# rm -rf  /var/lib/mysql/db3/user.exp
