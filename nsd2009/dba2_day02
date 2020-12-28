@@ -49,3 +49,152 @@ protocol=maxscaled
 socket=default
 port=4016
 [root@host56 ~]# 
+
+
+						1.6.3   在数据库服务器添加用户（在主服务器51 添加 ， 52 会自动同步）
+										添加监控用户 mysqla
+										grant   replication slave ,replication client  on *.*  to  mysqla@"%"
+										identified by "123qqq...A";
+										
+										replication slave  获取主从角色身份 
+										replication client  获取mysql服务的运行状态
+										
+										添加路由用户 mysqlb
+										grant  select  on  mysql.*  to   mysqlb@"%"
+										identified by "123qqq...A";
+									
+					
+						1.6.4  启动服务
+									1.6.4. 1  在56主机测试授权用户
+									8  which mysql  || yum -y install mariadb
+                                  10  mysql -h192.168.4.51 -umysqla -p123qqq...A
+                                  11  mysql -h192.168.4.51 -umysqlb -p123qqq...A
+                                  13  mysql -h192.168.4.52 -umysqla -p123qqq...A
+                                  14  mysql -h192.168.4.52 -umysqlb -p123qqq...A
+
+								  1.6.4.2  启动服务 
+		   maxscale  -f /etc/maxscale.cnf  启动 服务 
+		   
+    17  ss  -utnlp  | grep maxscale    查看状态   会看到  4006 端口 和    4016端口 
+ 
+   19  ls /var/log/maxscale/   查看日志文件  若服务没有启动 日志里会有报错信息
+
+   21  echo "maxscale  -f /etc/maxscale.cnf" >> /etc/rc.local    配置服务开机启动
+   
+   22  chmod +x /etc/rc.local 
+   
+   23  kill -9 13920  通过杀进程 停止服务 
+   
+		
+			1.7 测试配置
+						1.7.1    在56 本机访问管理服务 查看监控状态
+[root@host56 ~]# maxadmin  -uadmin -pmariadb -P4016
+maxscale>   list  servers
+
+					    1.7.2   测试读写分离服务的配置
+									        1   在主数据库服务器51添加用户（可以访问数据时连接使用）
+create database  buydb;
+create table buydb.user(id int);
+grant  select , insert on  buydb.*  to  jim@"%"  identified by "123qqq...A";
+
+											2   客户端50 连接读写分离服务器56 查询和存储数据
+mysql  -h192.168.4.56  -P4006  -ujim   -p123qqq...A;
+show  grants;
+insert into  buydb.user values (111);
+select  * from buydb.user;
+
+											3   测试数据读写分离功能
+														在从数据库服务器52本机向表里添加1行 ，主服务器51不会同步数据
+															52  insert into  buydb.user values(888);
+															
+														客户端连接56 存取数据
+														  mysql  -h192.168.4.56 -P4006  -ujim  -p123qqq...A
+															
+															select  * from  buydb.user ; (有记录888)
+															
+															insert into  buydb.user valuses(444);
+															select  * from  buydb.user ; (既有记录888又有444)
+					
+			1.8  统一排错时间     15:31  开始排错  到   16:00  
+						
+						服务启动失败错误：
+									检查防火墙和selinux 是否关闭
+									检查配置文件的编写
+									检查2台数据库服务器的授权用户是否和maxsacle.cnf文件的定义一致
+									在56主机 使用授权用户连接51 和 52 
+									
+									无论服务是否启动都都杀一下    
+   									which killall  ||  yum  -y install psmisc  
+									killall   -9  maxscale (多执行几遍  确保kill ) 
+						
+						            再执行启动服务的命令   maxscale  -f /etc/maxscle.cnf
+									查看进程状态  ss   -utnlp  | grep  maxscale 
+									
+									如果还是失败 查看日志 把报错信息发到聊天室里
+									
+						服务启动 ，查看监控状态失败：
+									在51 和 52本机 管理员查看 用户的权限是否权限
+									检查防火墙和selinux 是否关闭
+									在56主机 使用授权用户连接51 和 52
+									在 52本机 管理员查看io线程和sql线程的状态
+									
+									无论服务是否启动都都kill一下    
+   									which killall  ||  yum  -y install psmisc  
+									killall   -9  maxscale (多执行几遍  确保kill) 
+						
+						            再执行启动服务的命令   maxscale  -f /etc/maxscle.cnf
+									查看进程状态  ss   -utnlp  | grep  maxscale 
+								    
+									访问文件的管理服务查看状态
+						
+									如果还是失败 查看日志 把报错信息发到聊天室里
+									
+									休息到   16:15  
+									
+  二、mysql多实例  准备1台新虚拟机 不需要安装任何mysql服务软件。 
+                                配置ip为  192.168.4.57   配置 yum源  关闭 selinux    firewalld
+								拷贝软件mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz
+  
+      2.1 多实例介绍？
+	  2.2  优点与缺点？
+	  2.3  配置多实例服务，具体步骤如下：
+				2.3.1  安装软件
+				
+			 
+				
+				2.3.2 创建并编辑多实例服务的主配置文件
+	]# rm -rf /etc/my.cnf			
+	]# vim /etc/my.cnf
+	     [mysqld_multi]  多实例服务的运行配置
+	        
+	
+	     [mysqld数字]  定义实例
+	:wq
+	
+	例子
+	
+	
+					2.3.3  启动实例服务
+                              ]# mysqld_multi start 1     启动实例1  [mysqld1]
+				
+               	2.3.4 查看服务状态 			
+                             ]# ls /dir1  查看数据库目录 
+                             ]#  ss -utnlp  | grep 3307  查看端口号
+							
+                2.3.5 连接本机的实例服务
+   
+                            ]#mysql -uroot -p'tJg!ij4.ws&V' -S /dir1/mysqld1.sock  使用初始密登录
+                               alter user  root@"localhost" identified by  "123456";  修改登录密码
+		                       exit  端口连接
+		 
+                         42  mysql -uroot -p123456 -S /dir1/mysqld1.sock 使用新密码登录
+   
+                         45  mysqld_multi  --user=root --password=123456  stop 1  停止服务的命令
+                         46  ss -utnlp  | grep 3307  端口查看不到了 
+  			
+				
+				
+				
+				
+				2.3.6 客户端访问多实例服务
+				       可以在 50主机 分别连接  57 主机  实例1  实例2 实例3 服务  可以对 db1 有完全权限
