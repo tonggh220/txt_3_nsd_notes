@@ -83,3 +83,52 @@
 
 
    思考：把数据库服务器 56  和 57  配置为主主结构
+
+
+     二、复制模式 ：从服务与主服务器之间做数据同步的工作模式
+						2.1 复制模式的工作模式：
+										   异步复制模式（默认）
+										   半同步复制模式
+						
+						2.2 配置半同步复制模式：
+						
+			查看是否运行手动安装模块			
+mysql> show variables like "%loading";
++----------------------+-------+
+| Variable_name        | Value |
++----------------------+-------+
+| have_dynamic_loading | YES   |
++----------------------+-------+
+
+								  安装模块 install plugin
+											主服务器要安装master模块
+mysql> install  plugin   rpl_semi_sync_master   SONAME   "semisync_master.so";	
+										
+											从数据库器要安装salve模块
+mysql> install  plugin   rpl_semi_sync_slave   SONAME   "semisync_slave.so";											
+
+											如果服务器既是主服务器又是从服务器2种模块都要安装
+mysql> install  plugin   rpl_semi_sync_master   SONAME   "semisync_master.so";
+mysql> install  plugin   rpl_semi_sync_slave   SONAME   "semisync_slave.so";	
+										
+											查看模块是否安装
+mysql> select PLUGIN_NAME , PLUGIN_STATUS from  PLUGINS 
+where PLUGIN_NAME like  "%semi%";
+									
+										  启用模块 set  global
+mysql> set  global rpl_semi_sync_master_enabled = 1; 启用master模块
+mysql> set  global rpl_semi_sync_slave_enabled = 1; 启用slave模块
+										  
+									      查看是否启用了半同步复制模式
+mysql> show  variables  like  "rpl_semi_sync_%_enabled";
+
+											永久配置	  (验证方法 重启mysqld服务，查看模块状态)
+											
+											vim /etc/my.cnf
+[mysqld]
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_master_enabled = 1
+rpl_semi_sync_slave_enabled = 1
+:wq
+]# systemctl  restart mysqld
+
