@@ -1,0 +1,247 @@
+####DBA2_DAY03_数据分布式存储
+		分布式存储 ：  把数据存储在不同地点的服务器上
+		                        或
+								相同地点的不同服务器上
+								
+         相关概念？
+         环境准备
+		 mycat服务的工作过程
+		 配置mycat分片服务  192.168.4.56  ，步骤如下：
+					1 安装软件
+					2  修改配置文件
+							2.1  修改server.xml  文件     （xml  扩展标记语言）
+								注释  <!--     -->
+							    定义客户端连接mycat服务时，使用的用户名 密码 及逻辑库名
+								无需修改使用默认配置
+								
+                            2.2修改schema.xml文件 
+							     定义要分布式存储数据表 ，及使用的分片规则 和把数据分别存储在
+								 那几台数据库服务器上
+								sed  -i  '56,77d' schema.xml
+								cp   schema.xml  schema.xml.bak
+vim  	 schema.xml							
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+
+<mycat:schema xmlns:mycat="http://io.mycat/">
+			 
+			 定义要分布式存储的表名
+			 <schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
+						<table  .......>  </table>
+						<table  .......   / >
+			 </schema>
+
+			 <dataNode   .....    />   定义数据库服务器的主机名
+			 
+			  定义数据服务器ip地址
+			 <dataHost  ....... >
+			 </dataHost>
+			 
+</mycat:schema >
+				
+								
+										
+					3  配置数据库服务器（根据56主机的配置 在3台数据库服务器分别做如下配置）
+								53]#    create   database db1;
+								54]#    create  database  db2;
+								55]#    create  database  db3;
+								
+								53/54/55 分别添加 pljadmin 用户
+								grant all on  *.*  to pljadmin@"%" identified by "123qqq...A";
+								
+								
+							
+					
+					4 启动mycat服务
+							4.1 关闭 53/54/55/56主机的:   防火墙  selinux 
+							4.2  启动mycat服务 
+[root@host56 conf]# /usr/local/mycat/bin/mycat start
+Starting Mycat-server...
+[root@host56 conf]# /usr/local/mycat/bin/mycat status
+Mycat-server is running (1186).
+[root@host56 conf]# 
+[root@host56 conf]# ls /usr/local/mycat/logs/
+mycat.log  mycat.pid  wrapper.log
+[root@host56 conf]# 							
+							
+					5 测试配置
+							5.1 客户端50 连接56 访问数据库服务
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456							
+> show  databases;
+> use  TESTDB;
+> show  tables;
+						
+							5.2  统一排错时间
+							         方法1 
+									    把56的内存 调到1G+    
+								        在 /etc/hosts 定义主机 
+										重启56的主机操作系统
+										执行启动 mycat 命令    然后查看8066端口
+										
+								     方法2 
+                                           查看jdk的版本 不对使用 rpm  -e --nodeps  卸载 安装 正确的版本
+										  启动mycat服务  查看端口
+									
+									 方法3 
+									       在56主机 使用pljadmin用户分别连接3台数据库服务器要能连接，
+										   若干不能连接：检查所有主机防火墙服务是否关闭、
+										   重新在3台数据库服务器添加pljadmin账户，再在56主机测试连接
+										   
+										  使用其他同学正确的schema.xml 文件替换自己schema.xml 
+										  执行启动服务的命令 查看8066端口
+										  
+								方法4    查看日志
+											 tail  -f  /usr/local/mycat/logs/wrapper.log  动态显示启动过程 （注意error 行）
+											 
+											 /usr/local/mycat/bin/mycat  start   启动服务 
+										  
+					            以上都没解决 
+								把正确的写好的schema.xml 文件 拷贝到其他主机
+								把56虚拟机删除 重新创建  安装jdk  和mycat   把备份 schema.xml 拷贝到 conf 目录下 
+								执行启动服务的命令 
+								查看端口
+								
+								时间 到  15:15  上课 
+								
+								
+							
+								
+					6 分片规的使用   （水平分割存储 分片规则的使用）
+								6.1 sharding-by-intfile 枚举分片规则  ( “分片字段”的“值”必须在“分片规则配置文件”“定义的值里”选择)
+										
+										
+										  
+							vim  schema.xml     找到那张表存储数据时 使用的是 sharding-by-intfile分片规则
+<table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+					   
+						  vim  rule.xml    确定分片字段的名称 
+      <tableRule name="sharding-by-intfile">   分片规则名 
+                <rule>
+                        <columns>sharding_id</columns>  分片字段名
+                        <algorithm>hash-int</algorithm>   算法名（计算规则）
+                </rule>
+        </tableRule>
+						  
+        <function name="hash-int"  算法名 
+                class="io.mycat.route.function.PartitionByFileMap">
+                <property name="mapFile">partition-hash-int.txt</property>值列表配置文件
+        </function>		
+												  
+		vim  partition-hash-int.txt    找分片规则配置文件 在文件里定义值列表
+		10000=0
+        10010=1
+        10020=2
+        :wq
+		
+							   重启mycat 服务 
+[root@host56 conf]# /usr/local/mycat/bin/mycat  stop
+[root@host56 conf]# /usr/local/mycat/bin/mycat  start
+Starting Mycat-server...
+[root@host56 conf]# /usr/local/mycat/bin/mycat  status
+Mycat-server is running (101627).						   
+						
+											 
+											
+								            连接mycat服务 创建表并存储数据（要根据表使用的分片规则建表，才能实现数据的分布式存储）
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> use  TESTDB;
+mysql> create table  employee(
+    -> ID  int  primary key  auto_increment,
+    -> sharding_id  int ,
+    -> name char(10) , age tinyint  unsigned , gz  float );
+mysql> insert into employee(sharding_id,name,age,gz) 
+values (10000,"bobc",21,20000),(10010,"tom",23,35000),(10020,"lucy",18,45000);
+
+mysql> insert into employee(sharding_id,name,age,gz) values (10000,"bobc",21,20000);
+mysql> select  * from employee;
+
+											
+											在数据库服务器本机查看数据 （验证数据是否分别存储在3台服务器上）
+54]# mysql -uroot -p123qqq...A -e 'use db2 ; select  * from employee'				
+53]# mysql -uroot -p123qqq...A -e 'use db1 ; select  * from employee'	
+55]# mysql -uroot -p123qqq...A -e 'use db3 ; select  * from employee'	
+
+	
+java.lang.IllegalArgumentException: Invalid DataSource:0    建表或存储数据的错误，
+                                                                                                  找不到有效的数据库服务器
+检查  53    db1      54   db2     55  db3  
+56 使用pljadmin  连接 53 54  55  能连接吗 
+重启mycat 服务    查看端口  
+
+	              排错+休息时间 到  17:10 
+	
+								6.2 mod-long    求模分片规则      
+								     使用“分片字段” 的“值” 与 指定的
+									  “数字” 做“取余计算” 根据“计算结果”  存储数据
+								
+					
+					                       找到那张表存储数时 使用的是mod-long分片规
+								]# vim  schema.xml		 
+   <table name="hotnews"    dataNode="dn1,dn2,dn3"  rule="mod-long" />
+                           
+										   确定分片字段的名称 
+							    ]# vim  rule.xml
+<tableRule name="mod-long"> 分片规则名 
+                <rule>
+                        <columns>id</columns> 分片字段名              
+                        <algorithm>mod-long</algorithm> 算法
+                </rule>
+        </tableRule>								
+								          
+<function name="mod-long" class="io.mycat.route.function.PartitionByMod">
+                <!-- how many data nodes -->
+                <property name="count">3</property>   设置分片字段与什么数字做取余计算
+        </function>							
+										  
+										   
+										   重启mycat 服务 
+			[root@host56 conf]# /usr/local/mycat/bin/mycat restart
+							   
+										   
+								            连接mycat服务 创建表并存储数据
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+use  TESTDB;
+mysql> create table hotnews (id int , title  char(30) , worker char(5), comment varchar(100));
+mysql> insert into  hotnews(id,title,worker,comment) values(7,"xxx","xxxx","XXX");
+mysql> insert into  hotnews(id,title,worker,comment) values(6,"xxx","xxxx","XXX");
+mysql> insert into  hotnews(id,title,worker,comment) values(11,"xxx","xxxx","XXX");
+mysql> select  * from hotnews;
+											
+											
+											在数据库服务器本机查看数据 （验证数据是否分别存储在3台服务器上）
+					
+					
+					7 添加新库新表  在56主机做如下配置
+								添加新库
+								vim server.xml
+								<property name="schemas">TESTDB,GAMEDB</property>
+								:wq
+								
+								添加新表
+								vim schema.xml
+<mycat:schema xmlns:mycat="http://io.mycat/">
+
+        <schema name="GAMEDB" checkSQLschema="false" sqlMaxLimit="100">
+          <table name="user" dataNode="dn1,dn2,dn3" rule="mod-long" />
+          <table name="stu"  dataNode="dn1,dn2,dn3" type="global" />
+        </schema>
+
+       <schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
+:wq
+            
+         							
+								重启mycat服务
+	[root@host56 conf]# /usr/local/mycat/bin/mycat restart
+							
+							 
+								客户端56  查看新库新表 
+	[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+	mysql> show databases;
+	 mysql> use GAMEDB;
+      mysql> show tables;
+
+							
+								创建 表并向表里存储数据
+								
+								在数据库服务器本机查看数据
