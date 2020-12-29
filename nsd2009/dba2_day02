@@ -198,3 +198,12 @@ select  * from buydb.user;
 				
 				2.3.6 客户端访问多实例服务
 				       可以在 50主机 分别连接  57 主机  实例1  实例2 实例3 服务  可以对 db1 有完全权限
+
+                    [root@host57 ~]# mysql -uroot -p123456  -S /dir1/mysqld1.sock				
+> grant  all on  db1.* to  yaya@"%" identified by  "123456";
+>exit
+			
+[root@host50 ~]# mysql -h192.168.4.57 -P3307  -uyaya  -p123456	 
+> show  grants;
+> create  database  db1;
+> create  table   db1.t1(id int);
