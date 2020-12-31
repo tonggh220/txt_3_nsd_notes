@@ -1,0 +1,42 @@
+######dba2_day05
+		一 PXC集群 （使用PXC 软件配置mysql服务的高可用集群）
+		
+		mysqld.cnf（mysql服务的配置文件）  
+		mysqld_safe.cnf（默认即可）  
+		wsrep.cnf（集群配置文件）
+		
+						在任意1台主机执行集群初始化失败：
+									检查3台主机的wsrep.cnf文件的配置 
+									检查3台服务器的 selinux    firewalld 是否关闭 
+									清空数据库目录  rm  -rf /var/lib/mysql/*
+									
+									执行 systemctl  start  mysql@bootstrap.service
+									使用初始密码登录 修改密码  添加 sstuser用户
+									
+					   	在另外2台主机启动  mysql服务失败
+                                    清空数据库目录  rm  -rf /var/lib/mysql/*
+ 									执行启动数据库服务的命令  systemctl  start  mysql
+									查看 3306    4567 
+									
+						查看集群状态  show  status  like "%wsrep%";
+ wsrep_incoming_addresses           | 192.168.4.73:3306,192.168.4.72:3306,192.168.4.71:3306
+ | wsrep_cluster_status                   | Primary                                               |
+| wsrep_connected                        | ON  
+						   
+						
+								systemctl  start  mysql 
+
+		二  mysql存储引擎
+			  软件开发者在开发软件时编写的功能程序，是mysql服务的功能分类
+						
+	          查看数据库服务支持的存储引擎？	mysql> show engines;
+
+              修改数据库服务默认使用的存储引擎？
+			  
+		      查看表使用的存储引擎
+			 指定表使用的存储引擎
+			 修改表使用的存储引擎
+			 
+			 工作常用存储引擎的特点
+			 	   
+		     建表是如何决定表使用哪种存储引擎？
