@@ -77,11 +77,75 @@
 													检查51 52  53 的binlog日志是否启用了 
 												    检查一所有主机是不是 安装的 mha_node 
 													
-	    1 启动51 的数据库服务 再启动  52   53  的数据库服务
-		2 在管理主机测试 ssh  配置 和    主从同步配置	
-		
-						    四 、启动管理服务
+ 四 、启动管理服务
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf  --remove_dead_master_conf --ignore_last_failover
+Wed Dec 30 20:29:01 2020 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Wed Dec 30 20:29:01 2020 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Wed Dec 30 20:29:01 2020 - [info] Reading server configuration from /etc/mha/app1.cnf..
 							
+							
+[root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf 
+app1 (pid:20643) is running(0:PING_OK), master:192.168.4.51
+[root@host57 ~]# 	
+
+[root@host57 ~]# masterha_stop  --conf=/etc/mha/app1.cnf 停止服务的命令 
+						
 							五、测试高可用功能
+									5.1 访问 集群存取数据
+										  在 51添加用户给客户端连接使用
+											 mysql> create database db1;
+									         mysql> grant all on db1.* to   jing@"%" identified by "123qqq...A";
+										  
+										  在50 连接vip地址 访问数据库服务
+										  ping  -c 2  192.168.4.100
+										  mysql  -h192.168.4.100  -ujing   -p123qqq...A
+mysql> create table db1.t1(id int);
+mysql> insert into db1.t1 values(101);
+mysql> insert into db1.t1 values(102);
+mysql> select  * from db1.t1;   在2台备用的从数据库服务器上也可以查看到数据
+
+										  
+										  
+									5.2 测试高可用
+											  1 停止当前拥有vip地址 主机的数据库服务器 
+											 
+						
+							管理服务会自动停止   然后调用app1.cnf文件里定义故障切换脚本 把vip地址部署在
+							新的主数据库服务器上，  另外一台备用自动配置为新的主服务器的从库
+							
+							客户端依然可以连接VIP地址访问数据库服务
+							
+							在app1.cnf文件里会自动删除 宕机主服务器的配置 
+							
+							要再启动管理服务 ，会监视当前的主数据库服务
+							
+							
 							
 							六、把宕机的数据库服务器再添加到集群里
+									6.1  把宕机的服务器配置为  当前master服务器  从库
+											      1  启动数据库服务
+												  2  确保与当前的主数据库服务器数据一致
+												  3  配置为当前主数据库服务器的从库 
+									
+									6.2 把宕机的服务器添加到集群里 
+									        vim /etc/mha/app1.cnf
+[server1]
+candidate_master=1
+hostname=192.168.4.51
+port=3306
+:wq
+										[root@host57 ~]# masterha_check_ssh   --conf=/etc/mha/app1.cnf
+										[root@host57 ~]# masterha_check_repl  --conf=/etc/mha/app1.cnf
+
+[root@host57 ~]# masterha_stop  --conf=/etc/mha/app1.cnf
+[root@host57 ~]# masterha_manager    --conf=/etc/mha/app1.cnf     --remove_dead_master_conf --ignore_last_failover
+										  
+[root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf 
+app1 (pid:70771) is running(0:PING_OK), master:192.168.4.52
+									
+					MHA集群配置总结：
+								做集群的数据库服务器必须是一主多从
+								客户端访问数据库服务器必须连接vip地址
+								宕机的数据库服务器需要手动添加到集群里，并需要人为同步宕机期间的数据
+								管理服务监视到当前的主服务宕机后 管理服务会停止。需要人为启动管理服务
+								才能监视新的主数据库服务器。
