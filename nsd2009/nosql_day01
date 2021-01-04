@@ -1,0 +1,118 @@
+ 一  搭建Redis服务器
+		1.1  相关概念 ？
+			    数据服务软件的分类？ 关系型(RDBMS)      非关系型(NoSQL)
+                Redis服务软件介绍
+                搭建Redis服务器
+							1  安装软件
+							         
+							2  初始化配置（使用默认配置）
+							3  查看服务状态
+							
+				            4 管理服务
+									查看服务状态
+									停止服务
+									启动服务
+									
+							5 连接服务存取数据  
+												
+							6  常用命令的使用
+							    set   get    mset   mget    type   ttl    expire  move   select 
+								save   del   flushdb  flushall   shutdown  exists   keys 
+								
+     						7  主配置文件解析    /etc/redis/6379.conf
+							     修改配置  来改变服务的运行参数 必须重启服务才能生效。
+								 
+								 
+								 守护进程方式运行服务（常 驻内存的服务） 
+								 非守护进程方式运行服务 （非  常驻内存服务）
+								 
+								内存清除策略：
+												软件开发者写好的功能程序。
+												向内存里存储新数据时，内存空间不足，删除内存里
+												已经存储数据的方式。
+												
+								noeviction	  不删除内存里的数据。			
+								
+								ttl				     删除最近过期的变量
+								
+								random		随机删除变量
+								                     volatile-random  在设置了过期时间的变量里随机删除
+									                 allkeys-random   在内里所有变量随机删除
+													 
+								LRU             删除最近最少使用
+								                      volatile-LRU 在设置了过期时间的变量删除最近最少使用的变量
+													  allkeys-LRU 在内里所有变量里删除最近最少使用的变量
+								
+								LFU              删除使用频率最少的变量
+													volatile-lfu  在设置了过期时间的变量删除使用频率最少的变量
+													allkeys-lfu 在内里所有变量里删除使用频率最少的变量
+
+							    
+二  LNMP+redis 
+      诉求： 可以把网站51的数据存储在 50 的内存里 
+	  2.1 部署网站服务器51 (LNMP )
+	  
+	  2.2 让网站可以把数据存储在 50 的内存里 
+				   1  安装软件 php-redis-2.2.4.tar.gz  提供功能模块
+				   2  调用模块
+				   3  检查网站是否支持Redis服务
+				   4  在网站服务器上编写PHP脚本存取数据
+							4.1  存储数据脚本
+	[root@host51 phpredis-2.2.4]# cat /usr/local/nginx/html/a.php
+<?php
+$redis = new redis();
+$redis->connect("192.168.4.50","6350");
+$redis->auth("123456");
+$redis->set("linux","redhat");
+$redis->set("school","tarena");
+echo  "data save ok";
+?>
+[root@host51 phpredis-2.2.4]# curl http://192.168.4.51/a.php   访问脚本
+data save ok						
+							4.2  获取数据脚本
+[root@host51 phpredis-2.2.4]# cd /usr/local/nginx/html/
+[root@host51 html]# cp a.php  b.php
+							
+vim  b.php						
+<?php
+$redis = new redis();
+$redis->connect("192.168.4.50","6350");
+$redis->auth("123456");
+echo $redis->get("linux");
+echo $redis->get("school");
+?>
+							
+[root@host51 html]# curl http://192.168.4.51/b.php
+redhat tarena				   
+
+							4.3  存取数据一起的脚本
+				cp   a.php  c.php
+vim  c.php				
+<?php
+$redis = new redis();
+$redis->connect("192.168.4.50","6350");
+$redis->auth("123456");
+$redis->set("name","jerry");
+echo $redis->get("name");
+?>
+		curl   http://192.168.4.51/c.php
+		
+							在数据库服务器本机命令行连接查看
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350 -a 123456 
+192.168.4.50:6350> keys *
+1) "school"
+2) "y"
+3) "linux"
+4) "x"
+192.168.4.50:6350> mget school  linux
+1) "tarena"
+2) "redhat"
+192.168.4.50:6350> keys *
+1) "x"
+2) "name"
+3) "school"
+4) "y"
+5) "linux"
+192.168.4.50:6350> get name
+"jerry"
+192.168.4.50:6350>
