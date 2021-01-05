@@ -1,0 +1,193 @@
+nosql_day02   Redis集群
+						为什么搭建集群存储数据呢？
+									可以实现数据的分布式存储、数据的自动备份、实现服务的高可用
+
+一 创建Redis集群
+		1.1  环境准备
+		1.2  集群存储数据的工作原理（如何实现数据的分布式存储的）
+				hash  slots   hash  槽     用来判断数据是否会存储在集群中的某台redis服务器上
+				
+				
+				0-16384   编号     51     5461   0-5460   9  1000
+				
+		1.3  创建集群
+				1.3.1  配置管理主机   192.168.4.57
+				1.3.2  在每台redis服务器上启用集群功能
+								启用redis服务集群功能
+								查看Redis服务是否支持集群功能    cluster  info
+								查看Redis服务器在集群中的角色    info replication   （默认都是master 主机）
+								
+				1.3.3  在管理主机创建集群
+							创建集群的命令格式？
+[root@host57 ~]# redis-trib.rb  create --replicas 1  192.168.4.51:6351 192.168.4.52:6352  192.168.4.53:6353  \
+192.168.4.54:6354 192.168.4.55:6355 192.168.4.56:6356
+
+>>> Creating cluster
+>>> Performing hash slots allocation on 6 nodes...
+Using 3 masters:
+192.168.4.51:6351
+192.168.4.52:6352
+192.168.4.53:6353
+Adding replica 192.168.4.55:6355 to 192.168.4.51:6351
+Adding replica 192.168.4.56:6356 to 192.168.4.52:6352
+Adding replica 192.168.4.54:6354 to 192.168.4.53:6353
+M: cd4a143e05aa9191f6602ea5d97e4805e94b9c14 192.168.4.51:6351     16287
+   slots:0-5460 (5461 slots) master
+M: a8d520d5b0223749ed3e3e09fcfef5fef05bbfa8 192.168.4.52:6352
+   slots:5461-10922 (5462 slots) master
+M: 46b6d826e08877b10aab3bc2eab9bfa112950a91 192.168.4.53:6353
+   slots:10923-16383 (5461 slots) master
+S: f4a2cd675aed08ea1511aa6bd241a22e25005a17 192.168.4.54:6354
+   replicates 46b6d826e08877b10aab3bc2eab9bfa112950a91
+S: 5c96920b6c7769c08b51855a000de514d96d3971 192.168.4.55:6355
+   replicates cd4a143e05aa9191f6602ea5d97e4805e94b9c14
+S: 33d3faedc4f269a8b0d8a2795eb11857c6a24539 192.168.4.56:6356
+   replicates a8d520d5b0223749ed3e3e09fcfef5fef05bbfa8
+Can I set the above configuration? (type 'yes' to accept): yes
+>>> Nodes configuration updated
+>>> Assign a different config epoch to each node
+>>> Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join...
+>>> Performing Cluster Check (using node 192.168.4.51:6351)
+M: cd4a143e05aa9191f6602ea5d97e4805e94b9c14 192.168.4.51:6351
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+S: 33d3faedc4f269a8b0d8a2795eb11857c6a24539 192.168.4.56:6356
+   slots: (0 slots) slave
+   replicates a8d520d5b0223749ed3e3e09fcfef5fef05bbfa8
+S: f4a2cd675aed08ea1511aa6bd241a22e25005a17 192.168.4.54:6354
+   slots: (0 slots) slave
+   replicates 46b6d826e08877b10aab3bc2eab9bfa112950a91
+M: 46b6d826e08877b10aab3bc2eab9bfa112950a91 192.168.4.53:6353
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+M: a8d520d5b0223749ed3e3e09fcfef5fef05bbfa8 192.168.4.52:6352
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+S: 5c96920b6c7769c08b51855a000de514d96d3971 192.168.4.55:6355
+   slots: (0 slots) slave
+   replicates cd4a143e05aa9191f6602ea5d97e4805e94b9c14
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+[root@host57 ~]# 
+					
+				1.3.4  查看集群信息
+								在redis服务器本机查看  cluster  info  
+																	   info replication
+																	   cluster nodes
+								
+								在管理主机57 查看 （查看是连接集群中的任意Redis服务都可以）
+											redis-trib.rb  info 192.168.4.55:6355  查看统计信息
+                                             redis-trib.rb  check 192.168.4.55:6355 查看详细信息
+
+						
+				1.3.5 连接集群存取数据（连接方式2种：  php脚本连接    命令行连接）
+						访问集群中的任意1台redis服务器都可以存数据 和查看数据
+						
+					]#  redis-cli  -c  -h 192.168.4.55  -p 6355
+					]#  redis-cli  -c  -h 192.168.4.53 -p 6353
+				
+				1.3.6  统一排错时间
+									检查防火墙 selinux 是否关闭
+									检查创建命令是否正确
+									检查所有Redis服务器集群功能启用了吗
+									不能设置Redis服务连接密码
+									没创建集群之前  Redis服务不允许有数据
+									
+									如果以上都正确依然创建失败：
+											停止redis服务
+											清空数据库目录
+											启动Redis服务
+											再执行创建集群的命令
+											
+				
+二 管理Redis集群   
+      准备2台新的redis服务器  ip  192.168.4.58   192.168.4.59   且启用集群功能
+	  
+	  2.1 向集群添加新服务器 （内存空间存储不足时）
+					添加slave角色的redis服务器  192.168.4.59
+									1  在192.168.4.59 运行redis服务并启用了集群功能
+									
+									2  在管理主机 执行添加服务器的命令
+[root@host57 ~]# redis-trib.rb add-node --slave 192.168.4.59:6359 192.168.4.51:6351									
+
+									
+								    3  查看集群信息 
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6351									
+									
+									4 测试服务的高可用
+										  停止任意1台master角色服务器  的redis服务
+										  对应的从会自动升级为master ， 并平均分配slave 服务器的台数
+										  
+										  服务启动后自动加入集群并同步宕机期间的数据。自动配置为某个master
+										  主机的slave 服务器。
+										  
+										  
+										  
+										  
+									
+					添加master角色的redis服务器  192.168.4.58
+									1 、58 主机运行redis服务 并启用了集群功能
+									2、  在管理主机把58 添加进集群
+	host57 ~]# redis-trib.rb add-node  192.168.4.58:6358  192.168.4.51:6351								
+	host57 ~]# redis-trib.rb info  192.168.4.51:6351	
+	                
+					               3  、在管理主机给新 添加的主服务器分配 hash slots
+		host57 ~]# redis-trib.rb  reshard  192.168.4.58:6358	
+         4096
+         58主机的ID
+         all
+         yes 
+		
+		host57 ~]# redis-trib.rb info  192.168.4.51:6351 
+		host57 ~]# redis-trib.rb check   192.168.4.51:6351				
+		
+	  2.2 把服务器从集群中移除
+					移除slave角色的redis服务器  (移除后redis服务会停止)
+					
+					           查看主机ID
+							                     redis-trib.rb  check   192.168.4.51:6351
+							   移除主机
+							                                                                  从服务器的ID 
+host57 ~]# redis-trib.rb  del-node  192.168.4.51:6351 5c96920b6c7769c08b51855a000de514d96d3971
+
+                              查看集群信息
+								    redis-trib.rb  info    192.168.4.51:6351
+								
+					
+					移除master 角色的redis服务器   
+									释放占用hash slots 
+	redis-trib.rb  reshard  192.168.4.51:6351 	
+    4096
+    接收hash slots 主机的ID 
+    移除集群主机的ID
+   done
+   yes 
+   
+									删除主机
+    redis-trib.rb  del-node   192.168.4.51:6351 	  移除集群主机的ID
+    redis-trib.rb  info   192.168.4.51:6351
+
+                                17:05 
+								被移除的主机 再添加到集群里 添不进去怎么解决
+							      >  cluster reset
+                                  >  flushall
+								              或
+								            停止redis服务
+											清空数据库目录
+											启动Redis服务
+							
+ 把集群的中的主机恢复为独立的Redis服务器 51 - 59 
+ 
+   19  redis-cli -c -h 192.168.4.58 -p 6358 shutdown
+   20  rm -rf /var/lib/redis/6379/*
+ 
+   22  sed -n '815p' /etc/redis/6379.conf   注释
+   23  sed -n '823p' /etc/redis/6379.conf 注释
+   25  sed -n '829p' /etc/redis/6379.conf 注释
+   26  /etc/init.d/redis_6379 start
+
+								明天晚自习   18:30  ~ 20:00
+								周六全天加课  
