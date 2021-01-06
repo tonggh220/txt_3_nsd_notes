@@ -50,11 +50,110 @@ nosql_day03
 						 
 						 
 			  哨兵服务：
+				  哨兵服务：
 			            哨兵服务 + 主从复制结构 实现redis服务的高可用
 						
 						1 配置Redis主从复制结构（一主51一从52）
 						2 配置哨兵服务器 192.168.4.57 
 								2.1  安装源码的redis软件（不需要初始化操作）
+								rpm -q gcc  || yum  -y install gcc 
+          tar -zxvf /var/ftp/pub/redis-4.0.8.tar.gz 
+         cd redis-4.0.8/
+        make && make install
+							
 								2.2  创建并编辑哨兵服务的主配置文件
+								vim /etc/sentinel.conf
+bind  192.168.4.57
+port  26379
+sentinel monitor   redisserver  192.168.4.51 6351  1
+sentinel auth-pass   redisserver  123456
+:wq
+
+							  从服务器要设置和主服务器一样的连接密码  重启服务 
+								vim  +501  /etc/redis/6379.conf
+								 requirepass 123456
+
+
 								2.3  启动服务
-								2.4  测试配置
+								host57 ~]# redis-sentinel /etc/sentinel.conf 
+								
+								2.4  测试配置 
+											 1 停止 master 服务器的redis服务
+											 2 在结构中slave 主机查看 复制信息 时 角色为 master 
+											 3 查看哨兵服务的配置文件 回自动监视新的master服务器
+											 4  宕机的master 服务器  redis服务运行后 ，自动配置为 当前master 主机的从
+											     需要 人为的设置连接密码
+												 
+										 
+						
+			
+		二、数据持久化  （redis服务  提供的是分布式内存存储服务，并支持数据的永久存储）
+					2.1 RDB (dump.rdb文件)
+								RDB介绍？
+								
+								通过备份dump.rdb 实现对数据恢复
+								
+								       备份  cp   dump.rdb   /opt/
+									   
+									   恢复 ：
+												停止服务
+												清空数据库目录
+												拷贝 备份文件到数据库目录下
+												启动服务
+												查看数据
+							 
+							 验证存盘频率 
+											停止服务
+											删除dump.rdb文件
+											修改存盘频率
+											save 900 1
+											# save  300  10
+											save 120 10
+											save 60 10000
+
+											启动服务
+											
+								            连接服务存储数据 达到存盘频率的设置 会自动存盘
+											查看数据库目录 是否有 dump.rdb文件
+							
+							rdb方式实现时间永久存储的优缺点？				
+		
+					2.2 AOF   （类似于mysql服务的binlog日志文件）
+					           AOF介绍？
+							   启用AOF ？  命令行适合线上服务器   修改配置文件适合线下服务器
+							   
+							   通过备份aof文件实现对数据的恢复
+							   备份  cp   appendonly.aof   /opt/
+									    scp  appendonly.aof  root @192.168.4.51:/root/
+										
+							    恢复 ：  
+												停止服务
+												清空数据库目录
+												拷贝 备份aof文件到数据库目录下
+												启动服务
+												查看数据
+												休息到 17:05 
+					            与aof 相关的配置 ？
+											aof记录写操作命令方式？
+ 702 # appendfsync always
+ 703 appendfsync everysec
+ 704 # appendfsync no
+
+											优化日志文件的大小？  
+	744 auto-aof-rewrite-percentage 100
+    745 auto-aof-rewrite-min-size 64mb
+										
+									        修复aof文件
+  442  redis-cli  -h 192.168.4.50 -p 6350 -a 123456   shutdown 
+  443  vim  /var/lib/redis/6379/appendonly.aof
+        末行 随便写
+       :wq
+      /etc/init.d/redis_6379 start  启动服务  没成功
+  444  tail -5 /var/log/redis_6379.log 
+  445  redis-check-aof --fix /var/lib/redis/6379/appendonly.aof
+        rm -rf  /var/run/redis_6379.pid
+  446  /etc/init.d/redis_6379 start
+                                         
+											
+											
+								aof 方式实现时间永久存储的优缺点？
