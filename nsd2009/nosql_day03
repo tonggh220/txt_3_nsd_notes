@@ -157,3 +157,42 @@ sentinel auth-pass   redisserver  123456
 											
 											
 								aof 方式实现时间永久存储的优缺点？
+
+
+数据类型
+		client  ------>  nginx (*.php 脚本)----->redis (内存里)
+		
+		字符类型管理命令
+		
+		setbit   使用  二进制数  给变量赋值  节省内存存储空间
+		                      0 或 1
+							  
+	    setbit  tplj  3    1
+		setbit  tplj  1     0
+		setbit  tplj   2    0
+		
+		
+		setbit  nb   1  0
+		setbit  nb   2  0
+		setbit  nb   3  1
+		
+		bitcount nb 
+		
+		
+		  
+		1元  = 10角    1角=10分  1分=10厘
+		
+		1G=1024M     1M=1024K       1K  = 1024bytes       1byte=8bit      1bit= 0 或 1     
+		 字符类型数据的管理命令                                                                                          
+		列表类型数据的管理命令的使用
+					列表 ： 一个变量可以存储多个值 
+					lpush   lpop  lindex  lset  llen   lrange   rpush  rpop   
+					
+					
+					
+					
+		
+        hash表类型数据管理命令的使用	
+                hash表： 一个变量可以存储多列 每列有各自对应的值
+	        
+			   hset    hmset   hkeys    hvals   hgetall    hget   hmget   hdel 
