@@ -1,0 +1,141 @@
+DBA1  数据库基础   5天
+
+DBA2  进程课程     5天
+
+NoSQL Redis数据库服务的使用 3天
+
+数据库项目   2天
+
+
+数据库运维   DBA   薪资  （入行难）
+
+
+打开PPT   案例 
+
+DBA1_DAY01 
+一  搭建MySQL数据库服务器
+     1.1  相关概念 
+
+          数据库: 提供数据存储服务的 
+	  提供数据库服务软件有哪些？
+          专业术语？（行话）
+          MySQL软件介绍：历史  特点  应用场景
+
+     1.2 搭建MySQL服务器
+	  1.2.1  安装软件
+	  1.2.2  启动服务
+	  1.2.3  查看初始登录密码
+	  1.2.4  使用初始密码登录，修改登录密码
+          1.2.5  断开连接
+	  1.2.6  使用修改的密码登录
+          1.2.7  查看数据
+
+    服务启动成功但没有过滤出来 初始登录密码怎么办？
+    rpm -qa  | grep -i mysql
+    systemctl  status mysqld  服务是运行的
+    systemctl  stop  mysqld
+    rm -rf /var/lib/mysql/*
+    setenforce 0
+    systemctl  start  mysqld
+    grep  password  /var/log/mysqld.log | tail -1 
+
+   
+    修改MySQL服务的密码策略？ 默认密码策略等级1
+     查看密码等级
+     修改密码等级： 
+         命令行修改临时有效  修改配置文件永久有效
+     重启数据库服务
+
+
+二  MySQL数据库服务的基本使用
+    2.1  连接数据库服务的连接件方式： 命令行连接   图形工具连接  脚本连接
+		
+    2.2 把数据存储到数据库服务器上的过程？
+
+         1 连接  2 创建库  3 创建表(文件) 4 存储数据 5 断开连接
+
+    2.3  SQL命令的使用规则(结构化查询语言)
+
+
+    2.4 库的管理命令    
+
+    2.5 表的管理命令
+
+ 建表时指定表使用的字符集  
+
+字符集 汉字的集合  gb2312   utf8
+
+create database gamedb;
+create table gamedb.信息(姓名 char(15) , 地址 char(50) )DEFAULT CHARSET=utf8;
+desc gamedb.信息;
+show  create table gamedb.信息 ;
+
+mysql> insert into gamedb.信息 values ("孙悟空" , "花果山" ),("张三丰"," 武当山");
+
+mysql> select  * from gamedb.信息;		
+
+
+
+
+
+    2.6 记录的管理命令  
+select  * from  gamedb.信息;
+
+update  gamedb.信息 set  地址="北京";
+delete from  gamedb.信息;
+
+
+
+
+三  MySQL数据类型
+	字符类型
+		char
+                varchar
+
+        数值类型：
+		整数数值类型（根据存储数值的范围又分为了以下几种：
+			微小整型  小整型  中整型 大整型  极大整型		unsigned 使用无符号存储范围	
+
+		负数 正数
+
+                      17
+                -17  +17
+
+ create table db1.t14(name  char(10) , age tinyint  unsigned , gz int); 
+mysql> desc db1.t14;
+
+mysql> insert into db1.t14 values ("lucy", 318 , 50000);
+ERROR 1264 (22003): Out of range value for column 'age' at row 1
+mysql> insert into db1.t14 values ("lucy", -1 , 50000);
+ERROR 1264 (22003): Out of range value for column 'age' at row 1
+
+mysql> insert into db1.t14 values ("lucy", 118 , 50000);
+mysql> insert into db1.t14 values ("jerry", 19.5 , 45000.88);
+mysql> insert into db1.t14 values ("jerryB", 19.4 , 45000.23);
+
+
+
+                浮点型(小数)数值类型
+
+ 	日期时间类型 		
+		年  
+                日期 
+                时间
+                日期时间
+
+	枚举类型 (给表头存储数据时，数据必须在列举的范围内选择)
+		单选类型  enum
+                多选类型  set
+
+mysql> create database db1;
+mysql> create table db1.t15(name char(10), sex enum("m","w","n"), likes set("girl","money","sleep","eat") );
+mysql> desc db1.t15;
+
+
+mysql> insert into db1.t15 values ("bob","woman","sleep,eat,money");
+ERROR 1265 (01000): Data truncated for column 'sex' at row 1
+
+mysql> insert into db1.t15 values ("bob","w","sleep,eat,money");
+
+
+
