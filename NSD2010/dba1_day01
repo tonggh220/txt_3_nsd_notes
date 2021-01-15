@@ -85,12 +85,41 @@ update  gamedb.信息 set  地址="北京";
 delete from  gamedb.信息;
 
 
-
-
 三  MySQL数据类型
-	字符类型
-		char
-                varchar
+	字符类型 （存储英文字母或汉语拼音 或 汉字）
+		char   定长（固定长度）
+                varchar 变长 （长度可以变化）
+	
+ 
+create table t8 (name  varchar(3) , class char(7),mail varchar(30));
+mysql> desc t8;
++-------+-------------+------+-----+---------+-------+
+| Field | Type        | Null | Key | Default | Extra |
++-------+-------------+------+-----+---------+-------+
+| name  | varchar(3)  | YES  |     | NULL    |       |
+| class | char(7)     | YES  |     | NULL    |       |
+| mail | varchar(30) | YES  |     | NULL    |       |
++-------+-------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> insert into t8 values ("lucy","nsd2010","plj@tedu.cn");
+ERROR 1406 (22001): Data too long for column 'name' at row 1
+
+mysql> insert into t8 values ("jim","nsd2010","plj@tedu.cn");
+mysql> insert into t8 values ("ab","nsd2010","plj@tedu.cn");
+
+
+
+		大文本类型 （图片 视频 音频）
+                blob
+		text
+
+mysql> create table t4(name blob);
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> create table t5(name text);
+Query OK, 0 rows affected (0.03 sec)
+
 
         数值类型：
 		整数数值类型（根据存储数值的范围又分为了以下几种：
@@ -115,14 +144,111 @@ mysql> insert into db1.t14 values ("jerryB", 19.4 , 45000.23);
 
 
 
-                浮点型(小数)数值类型
+                浮点型(小数)数值类型 （能够存储有小数点的数）
+			float  单精度
+			double 双精度
+mysql> create table t13(name char(10) ,  gz float  ,  jiangjin   double );
+mysql> insert into t13 values ("bob",2088.23 , 280.79);
+mysql> insert into t13 values ("lucy",-2088.23 , -280.79);
+mysql> select  *  from t13;
 
- 	日期时间类型 		
-		年  
-                日期 
-                时间
-                日期时间
+  小数点后有多个小数位是建议使用double存储
+mysql> create table t12 (name char(10) , pai double ) ;
+mysql> insert into t12 values ("zhangzj" , 3.1415926);
+mysql> insert into t12 values ("zhangzj" , 3.1415927);
+mysql> select  * from t12;
++---------+-----------+
+| name    | pai       |
++---------+-----------+
+| zhangzj | 3.1415926 |
+| zhangzj | 3.1415927 |
++---------+-----------+
 
+		使用float类型时可以 设置小数位的位数
+create  table  t11 (name  char(10) ,  gz  float(5,2) );
+mysql> insert into t11 values("jerry",987);
+mysql> insert into t11 values("lilei",887.229);
+mysql> insert into t11 values("john",1888.22);
+ERROR 1264 (22003): Out of range value for column 'gz' at row 1
+
+
+  
+		字段名  float(数字1，数字2)
+		数字1  ： 总位数
+                数字2  ： 小数位数
+
+
+                 18233.66          总位数
+                 整数位.小数位       7
+
+              
+                 gz  float(5,2)
+                  
+		整数位是 3位数时  能存储的最大数  xxx 999.99  最小值 -999.99
+
+
+ 	日期时间类型 ：		
+		年   year   YYYY  2021
+                日期 date    YYYYMMDD  20210115
+                时间 time    HHMMSS    203455    或  082312
+                
+                日期时间 datetime 或 timestamp
+			 YYYYMMDDHHMMSS
+                         20210115101648
+
+mysql> create table t10(name char(10) , csnf  year , sksj time , birthday  date , party datetime );
+
+mysql> insert into t10 values ("bob",1990,090000,20211120,20210214223000);
+
+
+mysql> select  * from t10;
++------+------+----------+------------+---------------------+
+| name | csnf | sksj     | birthday   | party               |
++------+------+----------+------------+---------------------+
+| bob  | 1990 | 09:00:00 | 2021-11-20 | 2021-02-14 22:30:00 |
++------+------+----------+------------+---------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+时间函数的使用 （MySQL服务自带 获取系统时间的命令 可以使用命令的获取结果是列赋值）
+              
+select  now();
+select  curtime();
+select  curdate();
+select year(now());
+select date(now());
+select day(now());
+select month(now());
+select time(now());
+select hour(now());
+
+mysql> insert into t10 values ("jerry", year(now()) , time(now()) , date(now())  , now() );
+
+year类型的使用 使用2位数也可以赋值 但会自动补全4位
+mysql> insert into t10(name , csnf ) values ("tom",23);
+mysql> insert into t10(name , csnf ) values ("lucy",88);
+MySQL> select  * from  t10;
+
+
+datetime 与timestamp类型的区别
+mysql> create table t9 (meetting  datetime ,  party timestamp );
+
+
+mysql> insert into t9 values (20210219103000, 20210120183000);
+mysql> insert into t9(meetting) values(20191211221418);
+mysql> insert into t9(party) values(20150303152817);
+
+mysql> select  * from t9;
++---------------------+---------------------+
+| meetting            | party               |
++---------------------+---------------------+
+| 2021-02-19 10:30:00 | 2021-01-20 18:30:00 |
+| 2019-12-11 22:14:18 | 2021-01-15 04:11:19 |
+| NULL                | 2015-03-03 15:28:17 |
++---------------------+---------------------+
+
+        练习+休息到 11:20 
 	枚举类型 (给表头存储数据时，数据必须在列举的范围内选择)
 		单选类型  enum
                 多选类型  set
@@ -136,6 +262,37 @@ mysql> insert into db1.t15 values ("bob","woman","sleep,eat,money");
 ERROR 1265 (01000): Data truncated for column 'sex' at row 1
 
 mysql> insert into db1.t15 values ("bob","w","sleep,eat,money");
+
+
+
+
+DBA1_DAY01 知识回顾
+1  搭建MySQL数据库服务器？ 
+           安装软件 启动mysqld服务  了解与服务相关信息 使用初始密码
+           修改登录密码 修改服务使用的密码策略 
+
+2  MySQL服务基本管理 ？
+	   服务连接方式  存储数据的流程  管理库的相关命令  管理表的相关命令 
+           数据的管理: select  insert into     update  delete 
+
+           SQL命令的使用规则
+
+3  MySQL常用的数据类型
+		字符类型
+
+                数值类型 
+			整型类型
+                        浮点类型？
+
+                日期时间类型
+                枚举类型 ： 单选enum  多选set
+
+额外练习：创建前任信息表  表结构定义 （表里有几个表头  使用什么数据类型）
+
+搭建第2台数据服务器： 在ip地址是 192.168.4.51 的主机上运行mysql服务 设置数据库管理员的密码是 123456
+
+
+
 
 
 
