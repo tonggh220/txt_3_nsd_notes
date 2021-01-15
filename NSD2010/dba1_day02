@@ -1,0 +1,171 @@
+###########DBA1_DAY02
+一 、表结构
+	1.1  约束条件
+		作用：限制给表头赋值
+                如何查看 表头的约束条件  desc  库.表；
+                包括哪些？ Null | Key | Default | Extra
+
+mysql> create table t7(
+    -> name char(10) not null ,
+    -> age tinyint unsigned default 19,
+    -> class char(7) not null default "nsd2010",
+    -> pay  float(7,2) default 28000,
+    -> mail  char(30)
+    -> );
+
+mysql> insert into t7(name,mail)values("bob","bob@163.com");
+mysql> insert into t7(name,mail,class)values("bob","bob@163.com","nsd2011");
+
+不允许赋null值 验证
+mysql> insert into t7 values (null,null,null,null,null);
+ERROR 1048 (23000): Column 'name' cannot be null
+
+mysql> insert into t7 values ("tom",null,null,null,null);
+ERROR 1048 (23000): Column 'class' cannot be null
+
+mysql> insert into t7 values ("tom",null,"nsd2009",null,null);
+
+这样赋值的时候不是null （无）
+mysql> insert into t7 values ("null",null,"",null,null);
+
+select  *  from  t7;
+
+
+	1.2  修改表结构 (对已经创建完成的表做修改)
+
+	     
+
+             命令格式  alter table 库.表  操作动作；
+
+        可以改表名rename、字段名change、类型modify 约束条件modify 添加新字段名add
+删除表中已有字段名drop
+
+mysql> alter table db1.t15 rename stuinfo;
+
+mysql> alter table  stuinfo drop sex , drop likes  ;
+
+mysql> alter table stuinfo  add age  int  default 19 ;
+
+添加新列 first的使用
+
+mysql> alter table stuinfo add stu_num  int first;
+
+添加新列 after 的使用
+
+mysql> alter table  stuinfo  add sex enum("boy","girl") default "girl" after name;
+
+select  * from stuinfo;
+
+
+    modify 可以 修改字段类型 、约束条件 位置
+
+    注意修改字段类型和约束条件时，与表头下已经存储的数据冲突时，不允许修改
+
+mysql> alter table stuinfo modify stu_num int not null ;
+ERROR 1138 (22004): Invalid use of NULL value
+
+
+mysql> alter table stuinfo modify age tinyint  default 21;
+
+mysql> alter table  stuinfo modify age tinyint default 21 after name ;
+
+
+    change  可以 修改字段名 及 类型和约束条件
+           注意当把类型和约束条件原样写的时候就是只修改字段名
+
+ mysql> alter table stuinfo change name  user char(10) null  default null;
+
+ mysql> alter table stuinfo change stu_num xuehao smallint null default null;
+
+   
+
+	休息到 16:10 
+
+二、MySQL键值 个给表中的字段设置标签，每种标签有不同的功能
+	 标签： index  unique  primary key  foreign key    fulltext
+	
+        2.1 普通索引index 的使用 :作用 给表头下的数据排队
+				  排队的目的 是为加快查找数据的速度  
+
+	    相关概念 ？
+			索引介绍 
+			优/缺点
+
+新华字典 1--200  
+	目录 （给所有的汉字排队）
+            笔画
+            部首
+            拼音  
+      
+ 
+            使用：
+		使用规则
+		查看索引 ：   基本查看 desc  stuinfo;
+
+   		             查看详细信息  mysql> show index from stuinfo;
+				Btree  二叉树
+
+
+		创建索引 :
+			  建表时创建索引 index(列名)
+mysql> create table t15 (
+    -> name char(10),class char(7),sex enum("b","g"),age int ,
+    -> index(name) , index(class),index(sex)
+    -> );
+Query OK, 0 rows affected (0.06 sec)
+
+mysql> desc t15;
++-------+---------------+------+-----+---------+-------+
+| Field | Type          | Null | Key | Default | Extra |
++-------+---------------+------+-----+---------+-------+
+| name  | char(10)      | YES  | MUL | NULL    |       |
+| class | char(7)       | YES  | MUL | NULL    |       |
+| sex   | enum('b','g') | YES  | MUL | NULL    |       |
+| age   | int(11)       | YES  |     | NULL    |       |
++-------+---------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> 
+mysql> show index from t15 \G
+
+
+			  给已有表添加索引
+mysql> create index  yyy on  stuinfo(sex);
+mysql> create index  xxx on  stuinfo(user);
+
+
+		删除索引
+mysql> drop index yyy on stuinfo;
+
+	
+	select  * from stuinfo where  class="nsd2010";
+
+
+	2.2 主键primary key 的使用
+		作用：不允许给表头存储空null值  值不能重复
+
+                使用规则？
+
+		创建主键：
+			建表时创建主键
+mysql> create table t16(
+    -> stu_num  char(9) , name char(10) , age int,
+    -> primary key(stu_num)
+    -> );
+
+mysql> create table t17( 
+stu_num  char(9) primary key , name char(10) , age int );
+			
+		
+		删除主键
+mysql> alter table t17 drop primary key ;
+
+                        已有表里添加主键
+mysql> alter table t17  add primary key(stu_num);
+
+	
+添加行
+mysql> insert into t16 values("nsd201009","lucy",29);
+mysql> insert into t16 values("nsd201009","lucy",29);报错
+mysql> insert into t16 values("nsd201019","lucy",29);
+mysql> insert into t16 values(null,"lucy",29);报错
