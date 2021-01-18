@@ -81,3 +81,159 @@ select  * from db3.user;
 select  * from db3.user where id <= 3;
 
 select  * from db3.user where id = 1;
+
+
+	1.3 数据导出 把储数据库服务器的表里保存到系统文件里
+		命令格式1
+			select 查询命令  into outfile  "/目录名/文件名";
+
+		命令格式2
+  select 查询命令  into outfile  "/目录名/文件名"  fields terminated by "符号";                      
+		命令格式3
+  
+select 查询命令  into outfile  "/目录名/文件名"  fields terminated by "符号"  lines terminated by "符号" ；
+
+
+               例子
+mysql> select  * from db3.user where id = 1  into outfile "/myload/a.txt";
+
+mysql> select  * from db3.user where id = 2  into outfile "/myload/b.txt" fields terminated by ":" ;
+
+mysql> select name,uid,shell from db3.user where id <= 3 into outfile "/myload/d.txt" fields terminated by ":"  lines terminated by "###";
+
+
+	    数据导出注意事项？
+
+2 管理表记录 ( 添加新行 查询数据 更新数据 删除行)
+	2.1 添加表记录（向表里添加新行）分为以下几种情况
+		添加1行给所有列赋值
+mysql> insert into db3.user values(30,"bob","x",2009,2009,"test user","/home/bob","/bin/bash");
+
+		添加多行给所有列赋值
+mysql> insert into db3.user 
+values
+(42,"bob","x",2009,2009,"test user","/home/bob","/bin/bash"),(32,"bob","x",2009,2009,"test user","/home/bob","/bin/bash");
+
+
+		添加1行给某几列列赋值
+mysql> insert into db3.user(name,uid,homedir) values("jim",3000,"/home/jim");
+
+	        添加多行给某几列列赋值
+mysql> insert into db3.user(name,uid,homedir) 
+values("tom",3001,"/home/tomm"),("lucy",3002,"/home/lucy");
+
+
+            添加行的注意事项？
+              休息到 16:05 上课 
+               
+        2.2 更新表记录 (修改表行里的列)
+		update 库.表  set  列名=值 , 列名=值;  #不加条件的修改,批量修改
+		
+		update 库.表  set  列名=值 , 列名=值 where 条件表达式；	#加的条件的修改，只修改与条件匹配行里的列
+
+mysql> update db3.user set password="a" ;
+mysql> update db3.user set password="x" where name="root";
+	
+	2.3 查找表记录 （查看表里的行）
+	    命令格式?
+		select  字段名列表  from 库.表 where  匹配条件；
+
+		select  *  from db3.user; #查看所有行所有列
+
+select  *  from  db3.user where uid <=5;   #执行查看与条件匹配行的所有列
+select name,uid,gid from db3.user where uid <=5;  #只查看与条件匹配的行中 指定列的值
+
+	2.4 删除表记录 (删除表里的行)
+	    命令格式？
+		delete from 库.表 where 匹配条件；
+ 
+		delete from db1.stuinfo ; #不加条件是删除表里的所有行
+		delete from db3.user id > 20 ; #加条件 只删除与条件匹配的行
+
+
+3 匹配条件（查询select  更新update 删除delete ）
+	3.1 基本条件
+		1 数值比较  符号  =  !=  >  >=   <  <=
+
+ select name from db3.user where uid=15;
+ select name , uid from db3.user where id <= 3;
+ select name, uid , gid  from db3.user where uid = gid ;
+ select name , uid ,gid  from db3.user where uid != gid ;
+
+		2 字符比较   符号  =  !=
+
+mysql> select name,shell from  db3.user where shell = "/bin/bash";
+
+mysql> select name,shell from  db3.user where shell != "/bin/bash";
+
+mysql> select name  from  db3.user where name="httpd";
+Empty set (0.00 sec)
+
+
+mysql> select name  from  db3.user where name="mysql";
+
+		3 匹配空 is null （没有数据）
+              
+                4 非空  is not null （有数据）
+
+mysql> select id,name from db3.user where name is null ;
+Empty set (0.00 sec)
+
+mysql> select id,name from db3.user where name is not null ;
+
+
+                5 逻辑判断（有多个判断条件）
+			逻辑与  and  有多个判断条件必须都成立
+			逻辑或  or   有多个判断条件某1个条件成立即可
+                        逻辑非  not !      取反
+
+ 学历 本科   and  性别  女  and  英语水平 四级  and   颜值 高  
+ 学历 本科   or   性别  女  or  英语水平 四级  or   颜值 高  
+
+
+mysql> select name ,uid ,gid from db3.user where uid>=10 and uid<=20 and gid>100;
+
+
+mysql> select name ,uid ,gid from db3.user where uid>=10 and uid<=20 ;
+
+mysql> select name from db3.user where  name="root" or name="mysql" or  name="bin";
+
+mysql> select name,uid from db3.user where  name="root" and uid=0;
+
+
+	6  ( ) 提高执行顺序
+
+select name , uid  from db3.user where  name="root" and uid=0 or uid=1 ; 
+
+
+select name , uid  from db3.user where uid=1  or  name="root" and uid=0 ;
+
+
+mysql> select name , uid  from db3.user where  name="root" and (uid=0 or uid=1 );
+  
+  select name,uid,gid from user where  uid >= 10  and  uid <=20  and gid > 10 ;  
+		7 范围匹配
+			in 
+			not  in 
+			between ... and ...
+
+select name from db3.user where name in ("root","bin","sync","apche");
+
+select name,uid from db3.user where uid in (3,6,9,11,7);
+
+select shell from db3.user where shell not in ("/bin/bash","/sbin/nologin");
+
+mysql> select name,uid from db3.user where uid between 0 and 5 ;
+
+  
+
+
+	3.2 高级匹配条件
+	3.3 操作查询结果(把select 命令查询出来的数据，再使用命令处理一下)
+
+4 安装图形管理工具
+
+   50主机 部署LAMP环境 
+   拷贝软件到50主机 phpMyAdmin-2.11.11-all-languages.tar.gz
+
+   准备数据库服务器192.168.4.51  管理员root 密码123qqq...A
