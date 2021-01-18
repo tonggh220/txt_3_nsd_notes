@@ -1,0 +1,83 @@
+###DBA1_DAY03
+1 数据导入导出（批量处理数据）
+
+	1.1 检索目录：存放导入导出数据时文件存放的目录下
+		      查看默认的检索目录
+mysql> show  variables  like  "secure_file_priv";  
++------------------+-----------------------+
+| Variable_name    | Value                 |
++------------------+-----------------------+
+| secure_file_priv | /var/lib/mysql-files/ |
++------------------+-----------------------+
+                      修改检索目录
+】# vim /etc/my.cnf
+[mysqld]
+secure_file_priv="/myload"
+:wq
+
+[root@localhost ~]# mkdir /myload
+[root@localhost ~]# chown  mysql /myload/
+[root@localhost ~]# ls -ld /myload
+drwxr-xr-x. 2 mysql root 6 1月  18 09:10 /myload
+[root@localhost ~]# 
+[root@localhost ~]# setenforce 0
+[root@localhost ~]# 
+[root@localhost ~]# systemctl  restart mysqld
+
+mysql> show variables like "secure_file_priv";
++------------------+----------+
+| Variable_name    | Value    |
++------------------+----------+
+| secure_file_priv | /myload/ |
++------------------+----------+
+1 row in set (0.00 sec)
+
+
+	1.2 数据导入 把系统文件里内容存储数据库服务器的表里
+	        数据导入命令格式 load data
+MySQL> load  data  infile   "/目录名/文件名" into   table  库名.表名
+fields terminated   by   "分隔符"   lines  terminated  by   "\n";
+
+                导入数据的步骤：
+			1 建库
+			2 建表（根据要导入的数据创建表头）
+			3 把系统文件拷贝的检索目录下
+		        4 执行导入数据的命令
+                        5 查看数据
+
+               导入数据的注意事项？	
+	       例子：把/etc/passwd文件的内容存储到db3库下的user表里
+mysql> create database db3;
+mysql> use db3;   练习15分钟到 14:50 ；
+mysql> create table user(
+    -> name char(50), password char(1), uid  int , gid int ,
+    -> comment  varchar(150) , homedir  char(100) , shell char(60) );
+
+mysql> desc user;
++----------+--------------+------+-----+---------+-------+
+| Field    | Type         | Null | Key | Default | Extra |
++----------+--------------+------+-----+---------+-------+
+| name     | char(50)     | YES  |     | NULL    |       |
+| password | char(1)      | YES  |     | NULL    |       |
+| uid      | int(11)      | YES  |     | NULL    |       |
+| gid      | int(11)      | YES  |     | NULL    |       |
+| comment  | varchar(150) | YES  |     | NULL    |       |
+| homedir  | char(100)    | YES  |     | NULL    |       |
+| shell    | char(60)     | YES  |     | NULL    |       |
++----------+--------------+------+-----+---------+-------+
+               
+mysql> system  cp /etc/passwd /myload/ 
+mysql> system  ls /myload
+mysql> load  data  infile  "/myload/passwd" into table  db3.user
+fields terminated by ":" lines  terminated by "\n" ;
+
+mysql> select  * from db3.user;
+
+给表中的行添加行号 字段 ， 便于对表的管理
+alter table db3.user add  id int primary key auto_increment first;
+
+select  * from db3.user;
+
+select  * from db3.user where id <= 3;
+
+select  * from db3.user where id = 1;
