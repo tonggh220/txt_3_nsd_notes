@@ -169,3 +169,181 @@ mysql> insert into t16 values("nsd201009","lucy",29);
 mysql> insert into t16 values("nsd201009","lucy",29);报错
 mysql> insert into t16 values("nsd201019","lucy",29);
 mysql> insert into t16 values(null,"lucy",29);报错
+
+
+
+！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+
+
+复合主键 ：表中的多个表头一起做主键
+                        当给做主键的表头赋值时，多行的值不同时相同即可。反之不可以。
+                        复合主键 必须一起创建
+
+主键             主键
+客户端ip地址    服务的端口号   访问状态                        
+cip              port          status
+1.1.1.1          22            yes
+1.1.1.1          80            no
+
+创建并验证复合主键  练习到 09:31
+mysql> create table t18( cip  varchar(15) , port  smallint , stauts enum("yes","no"), primary key(cip,port) );
+
+
+mysql> desc t18;
++--------+------------------+------+-----+---------+-------+
+| Field  | Type             | Null | Key | Default | Extra |
++--------+------------------+------+-----+---------+-------+
+| cip    | varchar(15)      | NO   | PRI | NULL    |       |
+| port   | smallint(6)      | NO   | PRI | NULL    |       |
+| stauts | enum('yes','no') | YES  |     | NULL    |       |
++--------+------------------+------+-----+---------+-------+
+
+
+mysql> insert into t18 values("1.1.1.1",22,"yes");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into t18 values("1.1.1.1",22,"no");
+ERROR 1062 (23000): Duplicate entry '1.1.1.1-22' for key 'PRIMARY'
+mysql> 
+mysql> insert into t18 values("1.1.1.1",80,"no");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into t18 values("2.1.1.1",80,"yes");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from t18;
++---------+------+--------+
+| cip     | port | stauts |
++---------+------+--------+
+| 1.1.1.1 |   22 | yes    |
+| 1.1.1.1 |   80 | no     |
+| 2.1.1.1 |   80 | yes    |
++---------+------+--------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
+		删除复合主键
+mysql> alter table t18  drop primary key;
+mysql> desc db1.t18;
++--------+------------------+------+-----+---------+-------+
+| Field  | Type             | Null | Key | Default | Extra |
++--------+------------------+------+-----+---------+-------+
+| cip    | varchar(15)      | NO   |     | NULL    |       |
+| port   | smallint(6)      | NO   |     | NULL    |       |
+| stauts | enum('yes','no') | YES  |     | NULL    |       |
++--------+------------------+------+-----+---------+-------+
+3 rows in set (0.01 sec)
+
+		
+		在已有表添加复合主键
+mysql> alter table  t18 add primary key(cip,port);
+mysql> desc t18;
++--------+------------------+------+-----+---------+-------+
+| Field  | Type             | Null | Key | Default | Extra |
++--------+------------------+------+-----+---------+-------+
+| cip    | varchar(15)      | NO   | PRI | NULL    |       |
+| port   | smallint(6)      | NO   | PRI | NULL    |       |
+| stauts | enum('yes','no') | YES  |     | NULL    |       |
++--------+------------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+                primary key 与auto_increment连用
+
+		auto_increment 让表头通过自增长的方式赋值 
+			       自增长 用+1的计算结果赋值
+				添加新行时，不给自增长字段赋值时 ，通过+1的计算结果赋值。
+ 
+行号  姓名  年龄  班级
+id    name  age  class
+练习 + 休息 共计 15分钟 到  10:15 
+create table  t19 (id int  primary key  auto_increment , name char(10) , age tinyint ,  class char(7));
+
+mysql> desc t19;
++-------+------------+------+-----+---------+----------------+
+| Field | Type       | Null | Key | Default | Extra          |
++-------+------------+------+-----+---------+----------------+
+| id    | int(11)    | NO   | PRI | NULL    | auto_increment |
+| name  | char(10)   | YES  |     | NULL    |                |
+| age   | tinyint(4) | YES  |     | NULL    |                |
+| class | char(7)    | YES  |     | NULL    |                |
++-------+------------+------+-----+---------+----------------+
+4 rows in set (0.00 sec)
+
+mysql> insert into t19(name,age,class)values("bob",19,"nsd2010");
+mysql> insert into t19(name,age,class)values("tom",29,"nsd2010");
+mysql> insert into t19(name,age,class)values("jim",29,"nsd2010");
+mysql> insert into t19  values(6,"lucy",29,"nsd2010");
+mysql> insert into t19(name,age,class)values("jerry",29,"nsd2010");
+mysql> select  * from t19;
++----+-------+------+---------+
+| id | name  | age  | class   |
++----+-------+------+---------+
+|  1 | bob   |   19 | nsd2010 |
+|  2 | tom   |   29 | nsd2010 |
+|  3 | jim   |   29 | nsd2010 |
+|  6 | lucy  |   29 | nsd2010 |
+|  7 | jerry |   29 | nsd2010 |
++----+-------+------+---------+
+5 rows in set (0.00 sec)
+
+
+	2.3 外键foreign key 的使用
+		给表里的外键表头添加数据时，数据必须在参考的表中的列下边的值里选择
+
+                外键的使用规则？
+		
+		创建外键的命令格式
+
+		create table 库.表(字段名列表, foreign key(列名)  references 表名（列名） on  update cascade  on delete cascade  )engine=innodb;
+
+
+工资表gztab                  员工信息表ygtab
+
+   gz_id  pay                    PRI
+                                yg_id     name   
+   编号   工资                   编号     名字                     
+    9                             9    大锤
+    2                             2    大锤
+                        
+
+创建外键并验证功能
+
+被参考的表要先创建
+use  db1;
+
+create table ygtab(yg_id  int  primary key auto_increment,name char(10) )engine=innodb;
+
+
+insert into ygtab(name)values("dachui"),("tiechui"),("xxchui");
+
+select  * from ygtab;
+
+
+创建有外键的表
+
+create table  gztab( gz_id int ,pay float(7,2), foreign key(gz_id) references ygtab(yg_id) on update cascade on delete cascade )engine=innodb;
+
+查看表里是否有外键
+mysql> show create table  gztab \G
+*************************** 1. row ***************************
+       Table: gztab
+Create Table: CREATE TABLE `gztab` (
+  `gz_id` int(11) DEFAULT NULL,
+  `pay` float(7,2) DEFAULT NULL,
+  KEY `gz_id` (`gz_id`),
+  CONSTRAINT `gztab_ibfk_1` FOREIGN KEY (`gz_id`) REFERENCES `ygtab` (`yg_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+1 row in set (0.10 sec)
+
+mysql> 
+
+删除外键 
+mysql> alter table  gztab drop foreign key gztab_ibfk_1;
+
+
+添加外键
+alter table  gztab  add  foreign key(gz_id) references ygtab(yg_id) on update cascade on delete cascade ;
+
+          练习+休息到  11:21 
+验证外键功能
