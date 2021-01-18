@@ -347,3 +347,84 @@ alter table  gztab  add  foreign key(gz_id) references ygtab(yg_id) on update ca
 
           练习+休息到  11:21 
 验证外键功能
+       1  约束功能
+
+mysql> insert into gztab values(4,50000);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`db1`.`gztab`, CONSTRAINT `gztab_ibfk_1` FOREIGN KEY (`gz_id`) REFERENCES `ygtab` (`yg_id`) ON DELETE CASCADE ON UPDATE CASCADE)
+mysql> 
+
+mysql> insert into gztab values(1,10000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into gztab values(2,10000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into gztab values(3,20000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from gztab;
++-------+----------+
+| gz_id | pay      |
++-------+----------+
+|     1 | 10000.00 |
+|     2 | 10000.00 |
+|     3 | 20000.00 |
++-------+----------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
+	2 同步更新
+
+mysql> update ygtab set yg_id=6 where name="xxchui";
+Query OK, 1 row affected (0.11 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select  * from gztab;
++-------+----------+
+| gz_id | pay      |
++-------+----------+
+|     1 | 10000.00 |
+|     2 | 10000.00 |
+|     6 | 20000.00 |
++-------+----------+
+3 rows in set (0.00 sec)
+
+      3 同步删除
+mysql> delete from ygtab where yg_id=6;
+Query OK, 1 row affected (0.05 sec)
+
+mysql> select  * from gztab;
++-------+----------+
+| gz_id | pay      |
++-------+----------+
+|     1 | 10000.00 |
+|     2 | 10000.00 |
++-------+----------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+	
+      4 优化配置
+mysql> insert into gztab values(null,50000);
+mysql> insert into gztab values(1,10000);
+mysql> insert into gztab values(2,10000);
+
+mysql> delete from gztab;
+mysql> alter table gztab add primary key(gz_id);
+mysql> desc gztab;
++-------+------------+------+-----+---------+-------+
+| Field | Type       | Null | Key | Default | Extra |
++-------+------------+------+-----+---------+-------+
+| gz_id | int(11)    | NO   | PRI | NULL    |       |
+| pay   | float(7,2) | YES  |     | NULL    |       |
++-------+------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> 优化后的效果
+mysql> insert into gztab values(null,50000);
+mysql> insert into gztab values(1,10000);
+mysql> insert into gztab values(2,10000);
+mysql> insert into gztab values(1,10000);
+mysql> insert into gztab values(3,10000);
