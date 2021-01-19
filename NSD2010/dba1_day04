@@ -1,8 +1,57 @@
 #####DBA1_DAY04   主机50  主机51
-1 用户授权
-      1.1 用户授权 ，及相关命令
-      1.2 撤销权限
+
+1 用户授权： 在数据库服务器里添加新用户 给客户端连接时使用。
+             默认只有数据库管理root 用户 在本机自己访问自己机器的数据库服务。
+
+      1.1 用户授权 
+		命令格式 grant 
+  grant  权限列表  on   库名  to  用户名@"客户端地址"  
+           identified  by  "密码"  		//授权用户密码
+           with  grant  option ;    		//有授权权限 ,可选项
+          
+
+      例子50添加用户
+mysql> grant all on db4.* to yaya@"%" identified by "123qqq...A";
+
+mysql> grant all on *.* to  mydba@"%" identified by "123qqq...A" with grant option;
+
+mysql> select user,host from  mysql.user;
+
+      测试51主机测试添加的用户
+ host51]# mysql -h192.168.4.50 -uyaya -p123qqq...A   
+ mysql> select user();
+ mysql> select @@hostname;
+ mysql> show grants;
+ mysql> create database db4;
+
+host51]# mysql -h192.168.4.50 -umydba -p123qqq...A   
+mysql> grant select on db1.* to admin2@"localhost" identified by "123qqq...A";
+mysql> exit
+
+50]# mysql -uadmin2 -p123qqq...A
+
+
+
+         与授权用户相关命令
+
+      1.2 撤销权限 (删除已有用户的权限)
+revoke 权限列表 on  数据库名 from  用户名@"客户端地址";
+
+50]#mysql -uroot -p密码
+查看已有的授权用户  select user,host from mysql.user;
+查看已有用户的访问权限 show grants for 用户名@"客户端地址";
+
+#删除用户的权限
+mysql> revoke delete on db4.* from  yaya@"%";
+mysql> revoke update , drop  on db4.* from  yaya@"%";
+mysql> revoke all on db4.* from  yaya@"%";
+
+drop user yaya@"%"; #删除用户
+
       1.3 授权库
+
+
+
       1.4 破解数据库管理员本机登录密码
 		修改主配置文件
 ]# vim /etc/my.cnf
