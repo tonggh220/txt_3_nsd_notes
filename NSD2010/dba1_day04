@@ -1,0 +1,48 @@
+#####DBA1_DAY04   主机50  主机51
+1 用户授权
+      1.1 用户授权 ，及相关命令
+      1.2 撤销权限
+      1.3 授权库
+      1.4 破解数据库管理员本机登录密码
+		修改主配置文件
+]# vim /etc/my.cnf
+[mysqld]
+skip-grant-tables
+
+#validate_password_policy=0
+#validate_password_length=6
+:wq
+
+		重启mysqld服务
+】#systemctl restart mysqld
+
+                无密码登录
+[root@localhost ~]# mysql
+MySQL>
+               
+                修改密码 断开连接
+
+mysql> desc  mysql.user;
+
+mysql> select  host,user,authentication_string from mysql.user;
+
+mysql> update mysql.user set  authentication_string=password("123qqq...A")
+    -> where user="root" and host="localhost";
+
+mysql> flush privileges;
+
+mysql> exit
+
+
+                还原配置文件， 重启mysqld服务
+[mysqld]
+#skip-grant-tables
+validate_password_policy=0
+validate_password_length=6
+:wq
+
+]# systemctl restart mysqld
+
+
+                使用修改后的密码连接服务
+]# mysql -uroot -p123qqq...A
