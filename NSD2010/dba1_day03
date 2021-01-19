@@ -228,8 +228,135 @@ mysql> select name,uid from db3.user where uid between 0 and 5 ;
   
 
 
+
 	3.2 高级匹配条件
+		模糊匹配 like
+
+where 字段名  like   '通配符'
+
+_ ：表示1个字符
+
+%：表示0~n个字符
+
+select  name from db3.user where name like '%a%';
+select  name from db3.user where name like '____';
+select  name from db3.user where name like '_a_';
+select  name from db3.user where name like '__%__';
+
+		正则匹配 regexp
+where 字段名  regexp   '正则表达式'
+
+		元字符：^ $ . | [ ] *
+1 select name from db3.user where  name regexp '^a';
+
+2 select name from db3.user where  name regexp 't$';
+
+3 select name from db3.user where  name regexp '^at$';
+
+4 select name from db3.user where  name regexp '^a|t$';
+
+5 select name from db3.user where  name regexp '^a.*t$';
+
+6 select name from db3.user where  name regexp '[0-9]';
+
+7 select name from db3.user where  name regexp '^[0-9]';
+
+8 select name,uid from db3.user where uid regexp '...';
+
+9 select name,uid from db3.user where uid regexp '^...$';
+
+
+
+		四则运算(做数学计算) + - * / %    练习+休息到10:26
+1 update db3.user set uid=uid+1 where id <= 3;
+
+2 update db3.user set uid=uid-1 where id <= 3;
+
+3  select name,uid from db3.user where uid % 2  =  0;
+
+4 select name,uid from db3.user where uid % 2  !=  0;
+
+5  select name,uid,gid , (uid+gid)/2 pjf from db3.user where uid>=5 and uid <=10;
+
+6  select name,uid,gid , (uid+gid)*2 pjf from db3.user where uid>=5 and uid <=10;
+
+7  alter table db3.user add age int default 21 after name ;
+
+8  select name, age , 2021-age csnf from db3.user where name="root";
+
+
+                
 	3.3 操作查询结果(把select 命令查询出来的数据，再使用命令处理一下)
+		1 排序（排队）order by  字段名  排序的方式
+mysql> select name,uid from db3.user where id >= 10 and id<=20 ;
+
+mysql> select name,uid from db3.user where id >= 10 and id<=20 order by uid;
+
+mysql> select name,uid from db3.user where id >= 10 and id<=20 order by uid desc;
+
+
+		2 分组(把类似的数据放一块)group by 字段名；
+mysql> select shell from db3.user；
+mysql> select shell from db3.user group by shell;
+
+
+		3 过滤查询结果(在查找出来的数据里 再找一下想查找的数据)  
+                  having 条件；
+
+mysql> select name,uid from db3.user where id <=15 having name="zhangsan";
+Empty set (0.00 sec)
+
+mysql> select name,uid from db3.user where id <=15 having name in ("root","bin");
+
+
+select name,uid from db3.user where id <=15  and name="zhangsan";
+select name,uid from db3.user where id <=15  and name in ("root","bin");
+
+
+休息到 11:20 上课 
+
+
+		4 聚集函数的使用(mysql服务提供的对数据在统计的命令)
+
+mysql> select uid from db3.user;
+mysql> select avg(uid) from db3.user;
+mysql> select sum(uid) from db3.user;
+mysql> select min(uid) from db3.user;
+mysql> select max(uid) from db3.user;
+mysql> select min(uid) from db3.user where id <= 10 ;
+
+mysql> select count* from db3.user;
+mysql> select count(*) from db3.user;
+
+mysql> select name from db3.user where shell = "/sbin/nologin";
+mysql> select count(name) from db3.user where shell = "/sbin/nologin";
+
+mysql> select shell from db3.user group by shell;
+mysql> select count(shell) from db3.user group by shell;
+
+
+
+		5 限制查询结果显示的行数（不限制的话会输出所有的查询结果）
+			
+		   limit  数字； 只显示查询结果的前几行
+mysql> select  * from db3.user；
+mysql> select  * from db3.user limit 1;
+mysql> select  * from db3.user limit 2;
+mysql> select name,shell from db3.user where uid <= 10 ;
+
+mysql> select name,shell from db3.user where uid <= 10 limit 5;
+
+
+                   limit  数字1，数字2；显示指定范围的行
+
+		   数字1 从查询结果的第几行开始显示
+                   数字2 一共显示几行
+
+  select  name,comment,shell from db3.user ;
+
+  select  name,comment,shell from db3.user limit 0,5;
+
+  select  name,comment,shell from db3.user limit 1,3;
 
 4 安装图形管理工具
 
