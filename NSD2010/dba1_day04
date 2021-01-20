@@ -32,7 +32,6 @@ mysql> exit
 
 
 
-         与授权用户相关命令
 
       1.2 撤销权限 (删除已有用户的权限)
 revoke 权限列表 on  数据库名 from  用户名@"客户端地址";
@@ -48,7 +47,93 @@ mysql> revoke all on db4.* from  yaya@"%";
 
 drop user yaya@"%"; #删除用户
 
-      1.3 授权库
+  
+用户授权补充  
+
+host50]#  
+ mysql> grant all on db3.* to plj@"192.168.4.%" identified by "123qqq...A" with grant option;
+
+ mysql> grant insert on mysql.* to plj@"192.168.4.%";
+
+ mysql> revoke grant option on  *.* from mydba@"%";
+
+ mysql> grant all on  *.*  to  root@"192.168.4.51" identified by "666888" with grant option;
+
+
+ mysql> delete from mysql.user where user="root" and host="localhost";
+ mysql> flush privileges;
+
+
+host51]# mysql -h192.168.4.50 -uplj -p123qqq...A
+mysql>grant all on db3.*  to  plj88@"%" identified by "123qqq...A";
+
+
+host51]#mysql -h192.168.4.50 -uroot -p666888
+mysql> grant all on  *.*  to root@"localhost" identified by "123456" WITH GRANT OPTION;
+ 
+  相关命令：
+	授权用户登录后修改自己的登录密码
+               mysql> set password=password("abc123");
+
+	数据库管理员重置授权用户的密码
+		mysql> set password for mydba@"%"=password("123456");
+
+       查看已有用户的访问权限
+        mysql> show grants for plj@"192.168.4.%";
+
+
+  授权库 MySQL 存储授权信息,查看表记录可以获取用户权限；也可以通过更新记录，修改用户权限
+         要了解表中的表头有哪些 分别存储的是什么授权信息
+         练习+休息 20分钟到  11:25
+
+user表		记录已有的授权用户及权限（all  *.*）
+
+mysql> grant all on *.*  to admin4@"%" identified by "123456";
+
+mysql> update mysql.user set grant_priv="Y" where host="%" and user="admin4";
+mysql> flush privileges;
+mysql> select  * from  mysql.user \G
+mysql> show grants for admin4@"%";
+
+
+db表		 记录已有授权用户对数据库的访问权限 (库名.*)   db3.*  mysql.*
+
+desc mysql.db;
+
+mysql> select host,user,db from mysql.db;
+
+mysql> select  * from mysql.db where db="db3" and user="plj88" and host="%" \G
+
+mysql> update mysql.db set update_priv="N" , delete_priv="N" where db="db3" and user="plj88" and host="%";
+
+mysql> flush privileges;
+
+mysql> show grants for plj88@"%";
+
+  
+
+tables_priv表	 记录已有授权用户对表的访问权限（库名.表名）
+
+desc mysql.tables_priv;
+
+select  * from mysql.tables_priv \G
+
+mysql> update mysql.tables_priv set Table_priv="select,delete" where Table_name="user" and user="admin3";
+
+mysql> flush privileges;
+
+mysql> select  * from mysql.tables_priv \G
+
+mysql> show grants for admin3@"%";
+
+mysql> select user , table_name from mysql.tables_priv where table_name="user";
+
+
+
+columns_priv表	记录已有授权用户对字段的访问权限（  update(name,age) ）
+
+mysql> grant select,update(name)  on  db3.user to admin3@"%" identified by "123456";
+mysql> select  * from  columns_priv;
 
 
 
