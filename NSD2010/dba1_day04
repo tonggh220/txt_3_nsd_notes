@@ -180,3 +180,93 @@ validate_password_length=6
 
                 使用修改后的密码连接服务
 ]# mysql -uroot -p123qqq...A
+
+
+2 数据备份与恢复 之mysqldump命令使用
+	2.1 相关概念
+		1 什么数据备份？ 为什么要备份？ 怎么备份？
+                2 数据备份方式？物理备份  逻辑备份
+		3 数据备份策略？
+                           完全备份： 备份所有数据
+			   备份新数据：
+				
+                               增量备份 备份上次备份后 所有新产生的数据  
+                               差异备份 备份完全备份后 所有新产生的数据
+
+物理备份与恢复  练习10分钟 到 14:40
+
+	物理备份：直接拷贝数据目录下的文件
+host50]# cp -r /var/lib/mysql /root/mysql.bak
+host50]# tar -zcvf /root/mysql.tar.gz /var/lib/mysql/* 
+host50]# scp  -r  /root/mysql.bak  root@192.168.4.51:/opt/
+
+      恢复：把备份的文件 再次拷贝的数据库目录下,具体步骤如下：
+	停止mysqld服务
+        清空数据库目录
+        把备份文件拷贝的数据库目录下
+        修改所有者者组用户为mysql
+        启动服务
+        管理员登录查看数据
+
+ 在 host51 恢复数据
+   15  systemctl  stop mysqld
+   16  ls /var/lib/mysql
+   17  rm -rf /var/lib/mysql/*
+   18  ls /var/lib/mysql/
+   19  ls /opt/mysql.bak/
+   20  cp -r /opt/mysql.bak/* /var/lib/mysql/
+ 
+   23  chown -R mysql:mysql /var/lib/mysql
+
+   25  systemctl  start mysqld
+   24    ss  -utnlp  | grep 3306
+
+   27  mysql -uroot -p123456
+
+
+   使用MySQL服务自带的mysqldump命令对数据 做完全备份和完全恢复
+
+        [root@host50 ~]# man mysqldump
+
+	完全备份数据  ]# mysqldump -uroot  -p密码  数据库名  >  /目录名/文件名.sql
+
+        数据库名的表示方式？
+
+        完全恢复数据 ]# mysql  -uroot  -p密码  数据库名   <  /目录名/文件名.sql
+
+host50]# 完全备份数据例子
+]# mysqldump -uroot -p123456 --all-databases > /opt/allbak.sql
+]# mysqldump -uroot -p123456 db1  >  /opt/db1.sql
+]# mysqldump -uroot -p123456 -B db3 db1  >  /opt/twodb.sql
+]# mysqldump -uroot -p123456 db1 t19 > /opt/db1_t19.sql 
+]# ls /opt/*.sql
+
+			练习5分钟 到 15:25 
+host51 完全恢复数据
+                 注意：覆盖恢复数据。不需要停止或重启mysql服务
+[root@host51 ~]# scp root@192.168.4.50:/opt/*.sql  /opt/        休息+练习到 16:25
+[root@host51 ~]# ls /opt/*.sql
+/opt/allbak.sql  /opt/db1.sql  /opt/db1_t19.sql  /opt/twodb.sql
+[root@host51 ~]# 
+ 
+mysql> delete from db1.t19;
+
+[root@host51 ~]# mysql -uroot -p123456 db1 < /opt/db1_t19.sql 
+
+
+mysql> drop database db1;
+mysql> drop database db3;
+
+[root@host51 ~]# mysql -uroot -p123456 <  /opt/twodb.sql
+
+
+mysql> drop database db1;
+
+mysql> create database db1;
+
+[root@host51 ~]# mysql -uroot -p123456  db1 <  /opt/db1.sql
+
+
+mysql> drop  database db1; drop  database mysql;
+
+[root@host51 ~]# mysql -uroot -p123456  < /opt/allbak.sql
