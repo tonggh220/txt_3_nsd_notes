@@ -270,3 +270,91 @@ mysql> create database db1;
 mysql> drop  database db1; drop  database mysql;
 
 [root@host51 ~]# mysql -uroot -p123456  < /opt/allbak.sql
+
+
+00 23 * * 1  /root/bak.sh  计划任务+备份脚本
+
+工作中使用的备份策略是
+
+完全+差异
+完全+增量
+
+3 增量备份 之binlog日志的使用
+	3.1 binlog日志的使用
+		 binlog日志介绍？
+		 启用日志文件
+
+]# vim /etc/my.cnf
+   [mysqld]
+	server_id=50
+        log_bin
+:wq
+]# systemctl restart mysqld
+]# mysql -uroot -p密码
+
+mysql> show master status ; 查看当前数据库服务正在使用的日志信息
+
+]# ls /var/lib/mysql/
+
+
+
+
+		 修改日志文件的存放目录和文件名
+]# vim /etc/my.cnf
+   [mysqld]
+      server_id=50
+      #log_bin
+       log_bin=/mylog/plj
+:wq
+
+]# mkdir /mylog
+]# chown mysql /mylog
+]# setenforce 0
+
+]# systemctl restart mysqld
+
+]# mysql -uroot -p密码
+
+mysql> show master status ; 查看当前数据库服务正在使用的日志信息
+
+]# ls /mylog/plj*
+		      
+
+		 手动创建新的日志文件
+
+			mysql> flush logs;
+
+[root@host50 ~]# mysql -uroot -p123456 -e 'flush logs'
+[root@host50 ~]# mysql -uroot -p123456 -e 'show mater status'
+
+[root@host50 ~]# systemctl  restart mysqld
+
+[root@host50 ~]# mysqldump -uroot -p123456 --flush-logs db1 > /opt/db1.sql
+
+
+		 删除已有的日志文件
+
+			使用SQL命令删除
+mysql> purge  master  logs  to  "plj.000005";  #把编号之前的日志文件删除
+			
+
+mysql> reset master ; #删除所有日志文件，从新创建第1个日志文件
+
+				 	
+			使用系统命令rm删除  rm -rf /mylog/*
+
+                 验证日志的功能？ 
+                    执行除查询之外的命令看偏移量是否改变
+                     select * from db3.user;
+                     update
+                     delete
+                     show  databases;
+ 
+		 查看日志文件的内容
+mysql> show master status;
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000001 |     1118 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+[root@host50 ~]# mysqlbinlog /mylog/plj.000001		 
