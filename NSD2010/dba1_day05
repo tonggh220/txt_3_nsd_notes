@@ -65,3 +65,139 @@ recover_binlog_info = 0
    91  ss -utnlp  | grep 3306
  
    93  mysql -uroot -p123456 -e ' show databases'
+
+
+
+
+
+
+   3 使用 innobackupex 对数据增量备份与恢复
+        增量备份的定义： 备份上次备份后，所有新产生的数据
+
+	执行增备份前，必须先有1次备份（通常首次备份应该是备份所有数据），这样才能知道哪些数据是新数据
+
+周1完全备份 备份服务器的所有数据
+周2增量备份 做增量备份的时候 判断新数据有哪些 应该和周1比
+周3增量备份 做增量备份的时候 判断新数据有哪些 应该和周2比
+周4增量备份 做增量备份的时候 判断新数据有哪些 应该和周3比
+周5增量备份 做增量备份的时候 判断新数据有哪些 应该和周4比
+周6增量备份 做增量备份的时候 判断新数据有哪些 应该和周5比
+周7增量备份 做增量备份的时候 判断新数据有哪些 应该和周6比
+
+        增量备份数据命令
+innobackupex --user 用户  --password 密码  --incremental 目录名 --incremental-basedir=上次备份文件存储的目录 --no-timestamp
+
+        数据恢复命令
+]# innobackupex   --apply-log   --redo-only  目录名       #准备恢复数据
+
+]# innobackupex   --apply-log   --redo-only  目录名 --incremental-dir=目录名 
+ #合并数据
+         
+]#  innobackupex   --copy-back  目录名     #恢复数据
+
+
+例子：
+       首次的完全备份
+[root@host50 ~]# innobackupex  -u root -p 123456 /allbak --no-timestamp
+
+insert into db3.user(name,uid,gid) values("f",11,11);  多执行几遍
+
+
+host50 做增量备份 备份上次备份后 所有新产生的数据
+[root@host50 ~]# innobackupex -u root -p 123456 --incremental /new1dir --incremental-basedir=/allbak --no-timestamp
+
+[root@host50 ~]# ls /new1dir/
+
+
+insert into db3.user(name,uid,gid) values("w",11,11); 多执行几遍
+
+
+host50 做增量备份 备份上次备份后 所有新产生的数据
+
+[root@host50 ~]# innobackupex -u root -p 123456 --incremental  /new2dir 
+--incremental-basedir=/new1dir --no-timestamp
+ 
+[root@host50 ~]# ls /new2dir/
+
+[root@host50 ~]# scp -r /new1dir/  root@192.168.4.51:/root/
+[root@host50 ~]# scp -r /new2dir/  root@192.168.4.51:/root/
+
+
+
+host51 做增量恢复，具体步骤如下：
+	准备恢复数据 
+        合并数据
+        停止数据库服务
+	清空数据库目录
+        拷贝备份数据到数据库目录下
+        启动服务
+	查看数据
+
+[root@host51 ~]# cat /root/allbak/xtrabackup_checkpoints 
+backup_type = full-prepared
+from_lsn = 0
+to_lsn = 3189117
+last_lsn = 3189126
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+
+[root@host51 ~]# innobackupex --apply-log --redo-only /root/allbak/
+
+[root@host51 ~]# cat /root/allbak/xtrabackup_checkpoints 
+backup_type = log-applied
+from_lsn = 0
+to_lsn = 3189117
+last_lsn = 3189126
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]#
+
+
+[root@host51 ~]# innobackupex --apply-log --redo-only /root/allbak/ --incremental-dir=/root/new1dir/
+
+[root@host51 ~]# cat /root/allbak/xtrabackup_checkpoints 
+backup_type = log-applied
+from_lsn = 0
+to_lsn = 3192789
+last_lsn = 3192798
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+
+
+[root@host51 ~]# cat /root/new1dir/xtrabackup_checkpoints 
+backup_type = incremental
+from_lsn = 3189117
+to_lsn = 3192789
+last_lsn = 3192798
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+
+
+[root@host51 ~]# innobackupex --apply-log --redo-only /root/allbak/ --incremental-dir=/root/new2dir/
+	
+[root@host51 ~]# cat /root/allbak/xtrabackup_checkpoints 
+backup_type = log-applied
+from_lsn = 0
+to_lsn = 3194992
+last_lsn = 3195001
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]# 
+[root@host51 ~]# cat /root/new2dir/xtrabackup_checkpoints backup_type = incremental
+from_lsn = 3192789
+to_lsn = 3194992
+last_lsn = 3195001
+compact = 0
+recover_binlog_info = 0
+[root@host51 ~]#
+
+[root@host51 ~]# systemctl  stop mysqld
+[root@host51 ~]# rm -rf /var/lib/mysql/*
+[root@host51 ~]# innobackupex --copy-back /root/allbak/
+
+[root@host51 ~]# chown -R mysql:mysql /var/lib/mysql
+[root@host51 ~]# systemctl  start mysqld
+[root@host51 ~]# mysql -uroot -p123456 -e 'show databases'
