@@ -1,0 +1,67 @@
+####DBA1_DAY05 数据备份与恢复 之 innobackupex 
+ 软件介绍？
+
+      休息到 15:05 
+ 安装percona软件提供innobackupex命令对数据做备份和恢复
+ ]# yum -y install libev-4.15-1.el6.rf.x86_64.rpm 
+ ]# yum -y install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+ ]# innobackupex  --help
+ ]# man innobackupex
+
+ 命令格式 
+ innobackupex  选项 
+
+ 选项说明？
+
+1 使用 innobackupex 对数据完全备份与恢复
+	数据完全备份命令
+]#innobackupex    --user  用户名 --password  密码  备份目录名  --no-timestamp 
+
+        恢复数据命令
+]#innobackupex    --apply-log   目录名  //准备恢复数据 
+]#innobackupex    --copy-back  目录名  //恢复数据 
+
+
+例子
+host50 数据完全备份
+
+[root@host50 ~]# innobackupex  -u root -p 123456 /allbak --no-timestamp
+[root@host50 ~]# ls /allbak/
+[root@host50 ~]# scp -r /allbak/  root@192.168.4.51:/root/
+
+
+host51 完全恢复数据，具体步骤如下：
+	停止数据库服务
+	清空数据库目录
+        准备恢复数据
+        拷贝备份数据到数据库目录下
+        修改数据库目录的所有者和组用户为mysql
+        启动服务
+        查看数据 查看到数据为成功
+                    
+[root@host51 pub]# systemctl  stop mysqld
+[root@host51 pub]# rm -rf /var/lib/mysql/*
+[root@host51 pub]# cat /root/allbak/xtrabackup_checkpoints 
+backup_type = full-backuped
+from_lsn = 0
+to_lsn = 3189117
+last_lsn = 3189126
+compact = 0
+recover_binlog_info = 0
+
+[root@host51 pub]# innobackupex --apply-log /root/allbak/
+
+[root@host51 pub]# cat /root/allbak/xtrabackup_checkpoints 
+backup_type = full-prepared
+from_lsn = 0
+to_lsn = 3189117
+last_lsn = 3189126
+compact = 0
+recover_binlog_info = 0
+
+[root@host51 pub]# innobackupex --copy-back /root/allbak/
+[root@host51 pub]# chown -R mysql:mysql /var/lib/mysql
+[root@host51 pub]# systemctl  start mysqld
+   91  ss -utnlp  | grep 3306
+ 
+   93  mysql -uroot -p123456 -e ' show databases'
