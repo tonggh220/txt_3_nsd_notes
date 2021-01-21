@@ -449,7 +449,7 @@ delete from db3.user
 
 [root@host50 ~]# mysql -uroot -p123456 -e 'select count(*) from db3.user' 
 
-
+[root@host50 ~]# mysqlbinlog /mylog/plj.000004 #自己查看文件看执行命令的范围
 [root@host50 ~]# mysqlbinlog --start-datetime="2021/01/21 5:30:47" --stop-datetime="2021/01/21 5:30:50" /mylog/plj.000004 | mysql -uroot -p123456
 
 
