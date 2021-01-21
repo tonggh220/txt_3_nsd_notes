@@ -201,3 +201,41 @@ recover_binlog_info = 0
 [root@host51 ~]# chown -R mysql:mysql /var/lib/mysql
 [root@host51 ~]# systemctl  start mysqld
 [root@host51 ~]# mysql -uroot -p123456 -e 'show databases'
+
+
+4 使用 innobackupex 对数据差异备份与恢复
+	差异备份定义：每次判断新数据都和 完全备份比较
+                     也必须首先先有1次备份 才能做差异备份
+
+        差异备份数据命令
+
+[root@host50 ~]# innobackupex -u root -p 123456 /fullbak --no-timestamp
+存储新数据
+
+
+        差异恢复命令
+做第1次差异备份
+[root@host50 ~]# innobackupex -u root -p 123456 --incremental /adir --incremental-basedir=/fullbak/ --no-timestamp
+
+再存储新数据
+做第2次差异备份
+[root@host50 ~]# innobackupex -u root -p 123456 --incremental /bdir --incremental-basedir=/fullbak/ --no-timestamp
+
+再存储新数据
+做第3次差异备份
+[root@host50 ~]# innobackupex -u root -p 123456 --incremental /cdir --incremental-basedir=/fullbak/ --no-timestamp
+
+
+[root@host50 ~]# scp -r /fullbak root@192.168.4.51:/opt/
+[root@host50 ~]# scp -r /cdir/ root@192.168.4.51:/opt/
+
+
+  125  innobackupex --apply-log --redo-only /opt/fullbak/
+  127  innobackupex --apply-log --redo-only /opt/fullbak/ --incremental-dir=/opt/cdir/
+
+
+  131  systemctl  stop mysqld
+  132  rm -rf /var/lib/mysql/*
+  133  innobackupex --copy-back /opt/fullbak/ 
+  134  chown -R mysql:mysql /var/lib/mysql
+  135  systemctl  start mysqld
