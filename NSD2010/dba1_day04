@@ -357,4 +357,39 @@ mysql> show master status;
 +------------+----------+--------------+------------------+-------------------+
 | plj.000001 |     1118 |              |                  |                   |
 +------------+----------+--------------+------------------+-------------------+
-[root@host50 ~]# mysqlbinlog /mylog/plj.000001		 
+[root@host50 ~]# mysqlbinlog /mylog/plj.000001	
+
+
+
+
+	3.2 使用binlog日志恢复数据
+		3.2.1 使用日志恢复所有数据 （执行日志文件里记录的所有命令恢复数据）
+		mysqlbinlog  /目录名/日志文件名 |  mysql -uroot -p密码
+
+例子：
+host50：  时间10分钟 到 09:29 
+230  mysql -uroot -p123456 -e 'show master status'
+229  mysql -uroot -p123456 -e 'select count(*) from db3.user'
+228  mysqldump -uroot -p123456  --flush-logs db3 user > /root/user.sql
+230  mysql -uroot -p123456 -e 'show master status'
+  231  mysql -uroot -p123456 -e 'insert into db3.user(name,uid)values("yy",33)'
+  232  mysql -uroot -p123456 -e 'insert into db3.user(name,uid)values("zz",33)'
+  233  mysql -uroot -p123456 -e 'insert into db3.user(name,uid)values("kk",33)'
+  234  mysql -uroot -p123456 -e 'show master status'
+  235  mysql -uroot -p123456 -e 'select count(*) from db3.user'
+236  scp /root/user.sql  root@192.168.4.51:/root/
+237  scp /mylog/plj.000002  root@192.168.4.51:/root/
+
+
+
+host51 使用日志恢复数据  （使用mysqlbinlog提取历史SQL操作 通过管道交给 mysql 命令执行）
+
+   54  mysql -uroot -p123456 -e 'drop table db3.user'
+
+   55  mysql -uroot -p123456 db3 < /root/user.sql 
+   56  mysql -uroot -p123456 -e 'select count(*) from db3.user'
+
+   57  ls /root/plj.000002 
+   58  mysqlbinlog  /root/plj.000002 | mysql -uroot -p123456
+
+   59  mysql -uroot -p123456 -e 'select count(*) from db3.user'	 
