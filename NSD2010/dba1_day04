@@ -393,3 +393,66 @@ host51 使用日志恢复数据  （使用mysqlbinlog提取历史SQL操作 通�
    58  mysqlbinlog  /root/plj.000002 | mysql -uroot -p123456
 
    59  mysql -uroot -p123456 -e 'select count(*) from db3.user'	 
+
+
+
+
+		
+使用日志恢复指定的数据
+		1 查看binlog日志记录格式（日志文件记录命令的使用格式）
+mysql> show variables like "binlog_format";
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| binlog_format | ROW   |
++---------------+-------+
+1 row in set (0.01 sec)
+
+mysql> 
+		2 修改binlog日志记录格式 （支持的格式 报表  行 混合）
+
+mysql> show master status;
+
+]# vim /etc/my.cnf
+[mysqld]
+binlog_format="mixed"
+:wq
+
+]# systemctl  restart mysqld
+
+mysql> show master status;
+mysql> show variables like "binlog_format";
+
+insert into db3.user(name,uid)values("a9",22)
+insert into db3.user(name,uid)values("a8",22)
+insert into db3.user(name,uid)values("a18",22)
+insert into db3.user(name,uid)values("a88",22)
+delete from db3.user
+
+[root@host50 ~]# mysqlbinlog /mylog/plj.000004 | grep -i insert 
+[root@host50 ~]# mysqlbinlog /mylog/plj.000004 | grep -i delete
+
+
+
+		3 使用日志文件恢复指定的数据
+
+ ]# mysqlbinlog  选项  /目录名/文件名 | mysql -uroot -p密码
+ 时间范围选项  
+	起始时间   结束时间         
+--start-datetime="yyyy/mm/dd hh:mm:ss"   --stop-datetime="yyyy/mm/dd hh:mm:ss"
+ 
+       偏移量范围选项
+	--start-position=偏移量的值  --stop-position=偏移量的值
+
+
+[root@host50 ~]# mysql -uroot -p123456 db3 < /root/user.sql
+
+[root@host50 ~]# mysql -uroot -p123456 -e 'select count(*) from db3.user' 
+
+
+[root@host50 ~]# mysqlbinlog --start-datetime="2021/01/21 5:30:47" --stop-datetime="2021/01/21 5:30:50" /mylog/plj.000004 | mysql -uroot -p123456
+
+
+[root@host50 ~]# mysqlbinlog --start-position=1274 --stop-position=1420 /mylog/plj.000004 | mysql -uroot -p123456
+
+[root@host50 ~]# mysql -uroot -p123456 -e 'select count(*) from db3.user' 
