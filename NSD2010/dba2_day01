@@ -1,0 +1,93 @@
+####DBA2_DAY01 （搭建MySQL主从同步结构存储数据） 
+
+一 MySQL主从同步 
+	1.1 主从同步结构介绍  
+	1.2 工作原理
+	1.3 配置主从同步
+		环境准备： 51 和 52  都只保留初始的4个数据库。
+
+
+		1.3.1 配置master服务器 51
+			启用binlog日志  用户授权  查看日志信息
+
+例子：把数据库服务器51配置为 master服务器  到11:35 
+
+]# vim /etc/my.cnf
+[mysqld]
+server_id=51
+log_bin=master51
+:wq
+
+]# systemctl restart  mysqld
+]# systemctl  stop firewalld
+
+mysql> grant  replication slave on  *.*  to  repluser@"%"  identified by "123qqq...A";
+
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master51.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+
+MASTER binlog  SQL ---------> slave 
+
+		1.3.2 配置slave服务器  52
+                         1 启动server_id  重启数据库服务
+			 2 指定master数据库服务器的信息
+			 3 启动slave进程
+			 4 查看进程状态(必须是yes)
+
+例子：把52为slave 服务器
+]# vim /etc/my.cnf
+  [mysqld]
+  server_id=52
+:wq
+
+]# systemctl restart mysqld
+]# systemctl  stop  firewalld
+
+mysql> change master to  master_host="192.168.4.51" , master_user="repluser" , master_password="123qqq...A" , master_log_file="master51.000001" , master_log_pos=441;
+
+mysql> start slave;
+
+mysql> show slave status \G
+	slave_IO_running: YES
+	slave_SQL_running: YES
+
+
+	1.4 测试配置
+		客户端连接master服务器访问数据
+
+		在slave 服务本机可以看到同样的数据
+
+	1.5 统一排错时间
+                slave_IO_running: 错误
+
+		MySQL> stop slave;
+		mysql> 再执行一遍 change master to 的设置；
+		mysql> start slave;
+                mysql> show slave status \G 
+
+             uuid的错误
+		在slave服务器本机执行如下操作：
+		]# vim /var/lib/mysql/auto.cnf 修改某位数
+		]# systemctl restart mysqld
+		
+		mysql> show slave status \G
+
+            把slave服务器还原 重新配置
+	     cd  /var/lib/mysql/
+	     rm -rf  master.info
+	     rm -rf  relay-log.info
+	     rm -rf   *bin.*
+             systemctl restart mysqld
+
+            mysql> change master to  重新指定主服务器的信息
+            mysql> start slave ;
+	    mysql> show slave status \G
