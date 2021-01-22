@@ -195,7 +195,154 @@ host50]# mysql -h192.168.4.51 -u99yaya -p123qqq...A -e 'insert into db1.a values
 
   
 [root@host52 ~]# mysql -uroot -p123qqq...A -e 'select  * from db1.a'
+
+
               
 
+！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+
+
+
+            2.1.3 配置主从从同步结构存储数据
+
+                    主   从    从
+                    53   54     55
+
+		   把53 恢复为独立数据库服务器 做主从从结构中的主数据库服务器
+   16  cd /var/lib/mysql
+   17  rm -rf master.info 
+   18  rm -rf relay-log.info 
+   20  rm -rf *-relay-bin.*
+   22  systemctl  restart mysqld
+   23  mysql -uroot -p密码 
+MySQL> drop database db1'
+mysql> show slave status \G
+Empty set (0.01 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.05 sec)
+
+mysql> 
+               配置主数据库服务器53
+
+			启用binglog日志文件
+			用户授权
+			查看日志信息
+
+]# vim  /etc/my.cnf
+[mysqld]
+server_id=53
+log_bin=master53
+:wq
+
+]# systemctl restart mysqld
+]# systemctl stop firewalld
+]# mysql -uroot -p密码
+mysql> grant replication slave on  *.* to  repluser@"%" identified by "123qqq...A";
+mysql> show  master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master53.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+                配置既做从数据库服务器又做主数据库服务器的54 主机
+
+		  
+[root@host54 ~]# vim /etc/my.cnf
+[mysqld]
+server_id=54
+log_bin=master54
+log_slave_updates
+:wq
+
+[root@host54 ~]# systemctl  restart mysqld
+[root@host54 ~]# mysql -uroot -p123qqq...A
+
+mysql> grant replication slave on  *.* to  repluser@"%" identified by "123qqq...A";
+Query OK, 0 rows affected, 1 warning (0.16 sec)
+
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master54.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> change master to master_host="192.168.4.53",master_user="repluser",master_password="123qqq...A",master_log_file="master53.000001",master_log_pos=441;
+Query OK, 0 rows affected, 2 warnings (0.08 sec)
+
+mysql> start slave ;
+mysql> show slave status \G
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+
+			配置54的从数据库服务器 55主机
+
+				测试54的授权用户
+[root@host55 ~]# mysql -h192.168.4.54 -urepluser -p123qqq...A
+mysql> exit
+
+				指定server_id 并重启数据库服务
+
+[mysqld]
+server_id=55
+:wq
+
+]# systemctl restart mysqld
+]# systemctl stop firewalld
+
+			        管理员root登录 指定主服务器信息
+在54主机查看日志信息
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master54.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+[root@host55 ~]# mysql -uroot -p123qqq...A
+mysql> change master to master_host="192.168.4.54",master_user="repluser" , master_password="123qqq...A" , master_log_file="master54.000001" , master_log_pos=441;
+
+				启动slave进程
+mysql> start slave ;
+Query OK, 0 rows affected (0.01 sec)
+
+
+
+
+				查看进程状态
+mysql> show slave status \G			
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+
+				测试配置
+					 在主服务器53 建库 建表 插入记录
+
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'create database gamedb'
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'create table gamedb.user(name char(10))'
+
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'insert into gamedb.user values("yaya")'
+					 在服务器 54 和 55 主机都能看到同样的数据
+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select * from gamedb.user'
+
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'select * from gamedb.user'
               
 
