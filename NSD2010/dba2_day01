@@ -346,3 +346,9 @@ mysql> show slave status \G
 [root@host54 ~]# mysql -uroot -p123qqq...A -e 'select * from gamedb.user'
               
 
+    练习题  把数据库服务器 56 和 57  配置为 主主结构
+
+                56 主     57 从  
+                   从     主
+
+		要保证 51 和 52  一主一从结构正常 工作(52 的IO  、SQL 要是也是yes)
