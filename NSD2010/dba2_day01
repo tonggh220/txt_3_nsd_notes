@@ -134,5 +134,68 @@ error connecting to master 'repl           user@192.168.4.52:3306' - retry-time:
                start slave ;
               show slave status \G
 
+
+	从数据库目录下的相关文件
+	master.info 	relay-log.info  host52-relay-bin.index
+        host52-relay-bin.000001
+
+删除以上文件，重启数据库服务，可把主机恢复为独立的数据库服务器
+
+
+二 MySQL主从同步模式
+	2.1 主从同步结构模式
+             2.2.1 主从同步结构模式
+                   一主一从  一主多从 主从从  主主结构
+           休息到 16:05 
+
+	    2.1.2 配置一主多从同步结构存储数据
+		  诉求 ：把 53 也配置为51 的从数据库服务器
+
+		  从服务器53的配置
+			 1 运行mysqld服务 并关闭防火墙
+
+			 2 确保与主数据库服务器数据一致
+host51]# mysqldump -uroot -p123456  db1  > /root/db1.sql
+host51]# scp /root/db1.sql  root@192.168.4.53:/opt/
+
+host53]#
+mysql> create database db1;
+]# mysql -uroot -p密码  db1  < /opt/db1.sql
+mysql> select  * from db1.a;
+
+			 3  指定server_id 并重启mysqld服务
+[root@host53 ~]# vim /etc/my.cnf
+[mysqld]
+server_id=53
+:wq
+
+[root@host53 ~]# systemctl  restart mysqld
+
+
+			 4  测试主服务器的授权用户repluser
+[root@host53 ~]# mysql -h192.168.4.51 -urepluser -p123qqq...A
+			 
+			 5  指定主服务器信息
+show master status ; #在主服务器查看使用的日志名和偏移量
+
+mysql> change master to master_host="192.168.4.51",master_user="repluser" , master_password="123qqq...A" , master_log_file="master51.000001" , master_log_pos=1294;
+
+			 6 启动slave进程mysql> start slave;
+
+			 7 查看状态 show  slave status \G
+			 Slave_IO_Running: Yes
+                         Slave_SQL_Running: Yes
+
+                         8 测试配置
+		  	#客户端连接主数据库服务器存储数据 52 和 53 上都有同样的数据 ， 就对了
+host50]# mysql -h192.168.4.51 -u99yaya -p123qqq...A -e 'insert into db1.a values(114),(119),(1230)'
+
+
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select  * from db1.a'
+
+  
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'select  * from db1.a'
+              
+
               
 
