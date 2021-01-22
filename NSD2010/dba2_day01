@@ -66,7 +66,38 @@ mysql> show slave status \G
 
 		在slave 服务本机可以看到同样的数据
 
+	
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	1.5 统一排错时间
+
+		查看报错信息排错
+
+		 Last_IO_Error: 查看IO线程报错 
+                 Last_SQL_Error: 查看SQL线程报错 
+
+Fatal error: The slave I/O thread stops because master and slave have equal MySQL server UUIDs; these UUIDs must be different for replication to work.
+
+ uuid的错误
+		在slave服务器本机执行如下操作：
+		]# vim /var/lib/mysql/auto.cnf 修改某位数
+		]# systemctl restart mysqld
+
+
+Last_IO_Error: Got fatal error 1236 from master when reading data from binary log: 'Could not find first log file name in binary log index file'
+
+              找不到binlog日志文件名
+	      MySQL> stop slave;  在从服务器执行
+
+              show master status; 在主服务器查看日志
+	      
+
+	      在服务器重新指定日志信息
+		MySQL> change master to  master_log_file="日志名",master_log_pos=偏移量；
+		mysql>  start slave;
+		mysql>  show slave status \G
+		
+
+
                 slave_IO_running: 错误
 
 		MySQL> stop slave;
@@ -74,10 +105,7 @@ mysql> show slave status \G
 		mysql> start slave;
                 mysql> show slave status \G 
 
-             uuid的错误
-		在slave服务器本机执行如下操作：
-		]# vim /var/lib/mysql/auto.cnf 修改某位数
-		]# systemctl restart mysqld
+            
 		
 		mysql> show slave status \G
 
@@ -91,3 +119,20 @@ mysql> show slave status \G
             mysql> change master to  重新指定主服务器的信息
             mysql> start slave ;
 	    mysql> show slave status \G
+ 
+
+    	     
+error connecting to master 'repl           user@192.168.4.52:3306' - retry-time: 60  retries: 1
+          从服务器使用授权用户repluser连接不上主数据库服务器
+
+	  检查主从服务器的防火墙服务是否关闭
+	  在从服务器测试授权用户repluser
+           若连接失败 在主服务器再添加一遍repluser 
+           若能连接说明从服务器的change master to 指定有问题
+	要从新指定 stop slave ;
+        change master to  master_user="repluser",master_password="123qqq...A";
+               start slave ;
+              show slave status \G
+
+              
+
