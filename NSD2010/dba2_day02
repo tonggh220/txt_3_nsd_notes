@@ -206,5 +206,57 @@ Server             | Address         | Port  | Connections | Status
 server1            | 192.168.4.51    |  3306 |           0 | Master, Running
 server2            | 192.168.4.52    |  3306 |           0 | Slave, Running
 -------------------+-----------------+-------+-------------+--------------------
-MaxScale> exit                                                              [root@host57 ~]# 
+MaxScale> exit                                                              
 		
+
+2 连接读写分离服务，可以存储数据和查看数据 
+					2.1  在数据库服务器添加用户，给连接使用
+[root@host51 ~]# mysql -uroot -p123456 -e 'create database db22'
+[root@host51 ~]# mysql -uroot -p123456 -e 'create table db22.t1(num int)'
+[root@host51 ~]# mysql -uroot -p123456 -e 'grant select,insert on db22.* to  jing99@"%" identified by "123qqq...A"'
+
+                                       2.2 连接57 访问数据
+[root@host50 ~]# mysql -h192.168.4.57 -P4006 -ujing99 -p123qqq...A
+mysql> select  * from db22.t1;
+Empty set (0.07 sec)
+
+mysql> insert into db22.t1 values(666);
+Query OK, 1 row affected (0.03 sec)
+
+mysql> select  * from db22.t1;
++------+
+| num  |
++------+
+|  666 |
++------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+				3 测试57服务的读写分离功能
+
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'insert into db22.t1 values(9999)'
+[root@host51 ~]# mysql -uroot -p123456 -e 'select  * from db22.t1'
++------+
+| num  |
++------+
+|  666 |
++------+
+
+[root@host50 ~]# mysql -h192.168.4.57 -P4006 -ujing99 -p123qqq...A -e 'select  * from db22.t1'
++------+
+| num  |
++------+
+|  666 |
+| 9999 |
++------+
+[root@host50 ~]# mysql -h192.168.4.57 -P4006 -ujing99 -p123qqq...A -e 'insert into db22.t1 values(333333)' 
+
+[root@host50 ~]# mysql -h192.168.4.57 -P4006 -ujing99 -p123qqq...A -e 'select  * from db22.t1'
++--------+
+| num    |
++--------+
+|    666 |
+|   9999 |
+| 333333 |
++--------+        
