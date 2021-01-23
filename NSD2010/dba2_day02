@@ -1,3 +1,47 @@
+
+#####DBA2_DAY02
+
+
+1 数据读写分离  
+	介绍：也是一种数据存储结构，把客户端访问时的查询select访问和写(insert update delete)访问分别给不同的数据库服务器处理
+
+         为什么要使用读写分离结构提供数据存储服务？
+
+	    把查询请求给 slave服务器  把写请求给master服务器处理  减轻master 服务器工作压力
+
+         如何实现数据的读写分离？
+		1 通过程序员实现    select ----> slave服务器ip地址                   				   Insert -----> master服务器IP地址
+
+ 
+		2通过服务实现： 搭建读写分离服务器，实现数据的读写分离，访问数据库服务时，连接读写分离服务器的Ip地址，服务器根据访问的类型 做处理，把select访问 给slave服务器 ， 把insert 访问给master服务器。
+
+         能够实现数据读写分离服务的软件有哪些？软件的统称 叫 MySQL中间件（架设在数据库服务器和客户端之间的软件） 开源软件
+         mysql-proxy  mycat  maxscale 
+
+
+	       3 读写分离服务的拓扑结构
+
+
+		client 50  ---> 读写分离服务器   master51 /slave52 
+
+
+	       4 配置读写分离存储结构 ，具体步骤如下：
+			4.1 配置MySQL 一主一从同步结构
+				51主数据库服务器
+                                52从数据库服务器
+				要停止防火墙服务
+
+			4.2 配置读写分离服务器57
+			    1 57主机不需要运行mysqld服务并停止防火墙服务
+
+                            2 安装软件maxscale
+]# yum -y install maxscale-2.1.2-1.rhel.7.x86_64.rpm
+
+                           *** 安装软件后提供的： 命令 主配置文件 日志目录
+                          
+
+			    3 修改主配置文件
+
 [root@host57 ~]# cat /etc/maxscale.cnf
 [maxscale]
 threads=auto
@@ -101,3 +145,66 @@ protocol=maxscaled
 socket=default
 port=4016
 [root@host57 ~]# 
+
+
+			    4 配置数据库服务器（ 51 he 52 都要配置）
+				 （监控用户） 添加用户mysqla 监视数据库服务器时 57连接数据库服务器使用的用户
+				 （路由用户）添加用户mysqlb ： 57 使用mysqlb用户连接数据库服务器51 和 52  查看 是否添加了客户连接服务使用的用户
+
+				  因为51是主数据库服务器，所以只需要在51添加即可，52是从服务器可以自动同步。
+
+             在51添加
+		grant replication slave , replication client on *.* to mysqla@"%" identified by  "123qqq...A";
+
+replication slave  获取主从角色的权限 
+replication client 获取数据库服务是否运行的权限 
+
+
+                grant  select on  mysql.* to mysqlb@"%" identified by  "123qqq...A";
+
+		在52主机查看 
+select user,host from mysql.user where user in ("mysqla","mysqlb");
+
+
+			    5、 57 启动读写分离服务
+                                  5.1 停止 51 、52 、57 的防火墙服务
+
+				  5.2 检查数据库服务器的授权用户mysqla  和 mysqlb
+
+[root@host57 ~]# which  mysql  ||  yum -y install mariadb
+
+[root@host57 ~]# mysql -h192.168.4.51 -umysqla -p123qqq...A
+[root@host57 ~]# mysql -h192.168.4.52 -umysqla -p123qqq...A
+[root@host57 ~]# mysql -h192.168.4.51 -umysqlb -p123qqq...A
+[root@host57 ~]# mysql -h192.168.4.52 -umysqlb -p123qqq...A
+							 
+
+                                  5.3 启动读写分离服务
+ [root@host57 ~]# maxscale -f /etc/maxscale.cnf
+
+			    查看服务状态
+					
+
+					
+[root@host57 ~]# ps -C maxscale  #查看进程 
+   PID TTY          TIME CMD
+ 82413 ?        00:00:00 maxscale
+[root@host57 ~]# 
+[root@host57 ~]# ss -utnlp  | grep maxscale #查看端口号
+tcp    LISTEN     0      128      :::4006                 :::*                   users:(("maxscale",pid=82413,fd=11))
+tcp    LISTEN     0      128      :::4016                 :::*                   users:(("maxscale",pid=82413,fd=12))
+[root@host57 ~]#
+
+			    测试配置
+				在57本机访问管理服务，查看监控状态
+[root@host57 ~]# maxadmin -P4016 -uadmin -pmariadb
+MaxScale> list servers
+Servers.
+-------------------+-----------------+-------+-------------+--------------------
+Server             | Address         | Port  | Connections | Status              
+-------------------+-----------------+-------+-------------+--------------------
+server1            | 192.168.4.51    |  3306 |           0 | Master, Running
+server2            | 192.168.4.52    |  3306 |           0 | Slave, Running
+-------------------+-----------------+-------+-------------+--------------------
+MaxScale> exit                                                              [root@host57 ~]# 
+		
