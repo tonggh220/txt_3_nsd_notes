@@ -353,4 +353,23 @@ mysql> exit
 
 [root@host58 etc]# mysqld_multi  start 2
 [root@host58 etc]# ls /dir2/
-[root@host58 etc]# ss -utnlp  | grep 3308  查看端口号    
+[root@host58 etc]# ss -utnlp  | grep 3308  查看端口号 
+
+   			停止实例服务
+[root@host58 etc]# mysqld_multi  --user root --password 123456 stop 1	#停止实例1
+[root@host58 etc]# mysqld_multi  --user root --password 123456 stop 2	#停止实例2
+
+			统一排错方式：
+				检查 /etc/my.cnf
+				rm -rf /dir1
+				rm -rf /dir2
+				pkill -9  mysqld 多执行几遍 知道提示没有进程为止
+
+                                再执行启动实例的命令
+
+mysqld_multi   start 1  能查看到端口号和数据库目录的文件为成功
+mysqld_multi   start 2  能查看到端口号和数据库目录的文件为成功
+
+#####DBA2_DAY03
+  环境准备
+  把 53 54 55 恢复为独立数据库服务器， 如果不会恢复 重新搭建3台数据库服务器。
