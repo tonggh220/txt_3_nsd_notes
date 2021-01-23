@@ -259,4 +259,98 @@ mysql>
 |    666 |
 |   9999 |
 | 333333 |
-+--------+        
++--------+   
+
+
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+ 2 MySQL多实例
+    环境准备
+	创建1台新的虚拟机 不需要安装任何版本的MySQL服务软件 
+	配置ip地址  192.168.4.58   配置好yum源
+	拷贝 mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz 到58 主机
+
+    相关概念：
+	 多实例介绍？ 在一台物理主机上运行多个数据库服务
+
+	 多实例的优点与缺点？
+
+    配置多实例服务，具体步骤如下：
+          1 安装软件 mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz
+]# yum –y  install  libaio
+]# useradd  mysql
+]# tar  -zxvf  mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz
+]# mv  mysql-5.7.20-linux-glibc2.12-x86_64 /usr/local/mysql
+]# PATH=/usr/local/mysql/bin:$PATH
+
+]# vim /etc/bashrc
+    export  PATH=/usr/local/mysql/bin:$PATH
+:wq
+ 
+        
+          2 创建并编辑主配置文件/etc/my.cnf
+
+	     ]# ls /etc/my.cnf
+             ]# rm -rf /etc/my.cnf
+	     ]# vim /etc/my.cnf
+			[mysqld_multi] #多实例服务的运行配置
+				服务启动时调用的执行程序
+				启动多实例服务的用户
+				修改多实例管理员密码的命令
+
+			[mysqld1] 实例1 （第1个数据库服务）
+				数据库目录
+				端口号
+				错误日志文件
+				pid号文件
+				socket文件
+  
+	                [mysqld2] 实例2 （第2个数据库服务）
+				数据库目录
+				端口号
+				错误日志文件
+				pid号文件
+				socket文件
+             :wq
+
+例子
+	vim /etc/my.cnf
+[mysqld_multi]
+mysqld = /usr/local/mysql/bin/mysqld_safe
+mysqladmin = /usr/local/mysql/bin/mysqladmin
+user=root
+
+[mysqld1]
+datadir=/dir1
+port=3307
+pid-file=/dir1/mysqld1.pid
+log-error=/dir1/mysqld1.err
+socket=/dir1/mysqld1.sock
+
+[mysqld2]
+datadir=/dir2
+port=3308
+pid-file=/dir2/mysqld2.pid
+log-error=/dir2/mysqld2.err
+socket=/dir2/mysqld2.sock
+
+:wq
+		启动实例1
+[root@host58 etc]# mysqld_multi  start 1 #首次启动会创建数据和设置管理员root 的登录密码
+
+[root@host58 etc]# ls /dir1/
+[root@host58 etc]# ss -utnlp  | grep 3307  查看端口号
+
+		使用初始密码连接本机的实例1 服务
+
+    ]# mysql -uroot -p'2_)iwtw(:h+A' -S /dir1/mysqld1.sock
+mysql> alter user root@"localhost" identified by "123456";
+mysql> show databases;
+mysql> exit
+
+[root@host58 etc]# mysql -uroot -p123456 -S /dir1/mysqld1.sock 使用修改后的密码连接
+
+		启动实例2
+
+[root@host58 etc]# mysqld_multi  start 2
+[root@host58 etc]# ls /dir2/
+[root@host58 etc]# ss -utnlp  | grep 3308  查看端口号    
