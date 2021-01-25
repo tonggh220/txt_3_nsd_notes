@@ -433,3 +433,168 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 |   11 | a     | a     | aaa     |
 +------+-------+-------+---------+
 [root@host55 ~]# 
+
+
+#################################3
+六、添加新库新表，在56主机做如下配置
+	6.1 添加新库
+		vim server.xml
+        <user name="root">
+                <property name="password">123456</property>
+                <property name="schemas">TESTDB,GAMEDB</property>
+        </user>
+<user name="user">
+                <property name="password">user</property>
+                <property name="schemas">TESTDB,GAMEDB</property>
+                <property name="readOnly">true</property>
+</user>
+
+:wq
+	6.2 添加新表
+		vim schema.xml
+ <?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+
+      <schema name="GAMEDB" checkSQLschema="false" sqlMaxLimit="100">
+		<table name="user" rule="mod-long" dataNode="dn1,dn2,dn3" />
+                <table name="employee2" dataNode="dn1,dn2,dn3" type="global" />
+      </schema>
+                
+
+	6.3 重启mycat服务
+[root@mycat56 ~]# /usr/local/mycat/bin/mycat stop
+[root@mycat56 ~]# /usr/local/mycat/bin/mycat start
+
+	6.4 测试配置
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot  -p123456
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| GAMEDB   |
+| TESTDB   |
++----------+
+2 rows in set (0.01 sec)
+
+mysql> 
+mysql> use GAMEDB;
+mysql> show tables;
++------------------+
+| Tables in GAMEDB |
++------------------+
+| employee2        |
+| user             |
++------------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+
+mysql> create table employee2(name char(10) , age int);
+Query OK, 0 rows affected (0.70 sec)
+
+mysql> insert into employee2(name,age)values("aa",12);
+Query OK, 1 row affected (0.33 sec)
+
+mysql> insert into employee2(name,age)values("aa",12);
+Query OK, 1 row affected (0.20 sec)
+
+mysql> insert into employee2(name,age)values("bb",12);
+Query OK, 1 row affected (0.13 sec)
+
+mysql> 
+mysql> select  * from employee2;
++------+------+
+| name | age  |
++------+------+
+| aa   |   12 |
+| aa   |   12 |
+| bb   |   12 |
++------+------+
+3 rows in set (0.23 sec)
+
+mysql> 
+
+mysql> insert into employee2(name,age)values("aa",12);
+mysql> create table user(id int , class  char(7) , name  char(5));
+Query OK, 0 rows affected (0.60 sec)
+
+mysql> insert into user(id , class , name ) values(8,"aa","aa"),(9,"bb","bb"),(10,"cc","cc");
+Query OK, 3 rows affected (0.13 sec)
+
+mysql> select  * from user;
++------+-------+------+
+| id   | class | name |
++------+-------+------+
+|    9 | bb    | bb   |
+|   10 | cc    | cc   |
+|    8 | aa    | aa   |
++------+-------+------+
+3 rows in set (0.09 sec)
+
+mysql>
+   
+     在数据库服务器本机查看数据
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select * from  db1.user'mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+------+
+| id   | class | name |
++------+-------+------+
+|    9 | bb    | bb   |
++------+-------+------+
+[root@host53 ~]#
+
+[root@host54 ~]#  mysql -uroot -p123qqq...A -e 'select * from db2.user'mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+------+
+| id   | class | name |
++------+-------+------+
+|   10 | cc    | cc   |
++------+-------+------+
+[root@host54 ~]# 
+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select * from db3.user'mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+------+
+| id   | class | name |
++------+-------+------+
+|    8 | aa    | aa   |
++------+-------+------+
+[root@host55 ~]# 
+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select * from db3.employee2'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+
+| name | age  |
++------+------+
+| aa   |   12 |
+| aa   |   12 |
+| bb   |   12 |
++------+------+
+[root@host55 ~]# 
+
+[root@host54 ~]#  mysql -uroot -p123qqq...A -e 'select * from db2.employee2'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+
+| name | age  |
++------+------+
+| aa   |   12 |
+| aa   |   12 |
+| bb   |   12 |
++------+------+
+[root@host54 ~]# 
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select * from  db1.employee2'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+
+| name | age  |
++------+------+
+| aa   |   12 |
+| aa   |   12 |
+| bb   |   12 |
++------+------+
+[root@host53 ~]# 
+
+
+
+####DBA2_DAY04  MHA集群
+
+ 准备 3台  新的 MySQL数据库服务器  51  52   53  
+ 拷贝软件 mha 到 3台 服务里
