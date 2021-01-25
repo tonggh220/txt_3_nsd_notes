@@ -131,3 +131,67 @@ xml 扩展标记语言  html 超文本标记语言   注释 <!-- 内容  -->
           <writeHost host="hostM3" url="192.168.4.55:3306" user="pljadmin" password="123qqq...A">
           </writeHost>
        </dataHost>
+
+                      		3 rule.xml  表使用的分片规则（有10种） （默认即可）
+
+	2.2 配置数据库服务器 192.168.4.53  、 192.168.4.54 、192.168.4.55
+		1 创建存储数据的库 （库名要根据schema.xml创建）
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'create database db1'
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'create database db2'
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'create database db3'
+
+		2 用户授权 pljadmin
+
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'grant all on  *.* to  pljadmin@"%" identified by "123qqq...A"'
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'grant all on  *.* to  pljadmin@"%" identified by "123qqq...A"'
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'grant all on  *.* to  pljadmin@"%" identified by "123qqq...A"'
+
+
+三、启动服务
+	 3.1 检查所有主机的防火墙服务是否关闭
+	 3.2 测试数据库服务的授权用户
+[root@mycat56 ~]# mysql -h192.168.4.53 -upljadmin -p123qqq...A
+[root@mycat56 ~]# mysql -h192.168.4.54 -upljadmin -p123qqq...A
+[root@mycat56 ~]# mysql -h192.168.4.55 -upljadmin -p123qqq...A
+
+         3.3 启动服务
+[root@mycat56 ~]# ss -utnlp  | grep 8066
+
+[root@mycat56 ~]# ls /usr/local/mycat/logs/
+[root@mycat56 ~]# 
+[root@mycat56 ~]# /usr/local/mycat/bin/mycat start
+Starting Mycat-server...
+[root@mycat56 ~]# 
+
+[root@mycat56 ~]# ls /usr/local/mycat/logs/
+mycat.log  mycat.pid  wrapper.log
+[root@mycat56 ~]# 
+
+[root@mycat56 ~]# /usr/local/mycat/bin/mycat status
+Mycat-server is running (24344).
+[root@mycat56 ~]# cat /usr/local/mycat/logs/mycat.pid 
+24344
+[root@mycat56 ~]# 
+
+		
+	 3.4 查看服务状态
+		[root@mycat56 ~]#ss -utnlp  | grep 8066  #查看端口号
+
+                [root@mycat56 ~]# ps -C java    #查看进程
+   PID TTY          TIME CMD
+ 24358 ?        00:00:09 java
+[root@mycat56 ~]# 
+
+
+
+
+四、统一排错 
+        查看日志目录下日志文件wrapper.log 的报错信息，根据报错 排错，重启mycat服务
+	
+	日志报错看不懂的同学，按照如下步骤排错：
+		把56 主机的内存调到1.5G
+                echo  mycat56 > /etc/hosts
+                检查schema.xml的配置
+		检查数据库服务器的配置
+                重启56主机的操作系统
+                再次执行启动mycat服务的命令
