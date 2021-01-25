@@ -354,3 +354,82 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 |  3 |       10000 | b    | girl |
 +----+-------------+------+------+
 [root@host53 ~]# 
+
+
+查看使用求模分片规则的表名
+  ]# vim schema.xml
+    <table name="hotnews"  dataNode="dn1,dn2,dn3" rule="mod-long" /> 
+   :wq
+
+  [root@mycat56 ~]# /usr/local/mycat/bin/mycat restart
+
+  创建表
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot  -p123456
+> use TESTDB;
+> create table hotnews(id int , title  char(30) , woker char(10) , comment char(100));
+
+> desc hotnews;
+
+  在3台数据库服务器查看表结构
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'desc db1.hotnews'
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'desc db2.hotnews'
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'desc db3.hotnews'
+
+ 存储数据（验证是否实现数据的拆分存储）
+
+
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot  -p123456
+> use TESTDB;
+> 
+
+mysql> insert into hotnews values(7,"a","a","aaa");
+ERROR 1064 (HY000): partition table, insert must provide ColumnList
+mysql> 
+mysql> insert into hotnews(id,title,woker,comment) values(7,"a","a","aaa");
+Query OK, 1 row affected (0.07 sec)
+
+mysql> insert into hotnews(id,title,woker,comment) values(11,"a","a","aaa");
+Query OK, 1 row affected (0.06 sec)
+
+mysql> insert into hotnews(id,title,woker,comment) values(9,"a","a","aaa");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select  * from hotnews;
++------+-------+-------+---------+
+| id   | title | woker | comment |
++------+-------+-------+---------+
+|    7 | a     | a     | aaa     |
+|   11 | a     | a     | aaa     |
+|    9 | a     | a     | aaa     |
++------+-------+-------+---------+
+3 rows in set (0.91 sec)
+
+mysql> 
+
+    在3台数据库服务本机查看数据
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select * from  db1.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+-------+---------+
+| id   | title | woker | comment |
++------+-------+-------+---------+
+|    9 | a     | a     | aaa     |
++------+-------+-------+---------+
+[root@host53 ~]# 
+
+[root@host54 ~]#  mysql -uroot -p123qqq...A -e 'select  * from  db2.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+-------+---------+
+| id   | title | woker | comment |
++------+-------+-------+---------+
+|    7 | a     | a     | aaa     |
++------+-------+-------+---------+
+[root@host54 ~]#
+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select  * from db3.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+-------+---------+
+| id   | title | woker | comment |
++------+-------+-------+---------+
+|   11 | a     | a     | aaa     |
++------+-------+-------+---------+
+[root@host55 ~]# 
