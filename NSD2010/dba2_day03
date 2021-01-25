@@ -252,3 +252,105 @@ Mycat-server is running (24344).
 
 
      [root@mycat56 ~]# /usr/local/mycat/bin/mycat restart
+
+
+
+         
+   设置源码服务开机运行 
+     [root@mycat56 ~]#echo "/usr/local/mycat/bin/mycat start" >> /etc/rc.local
+     [root@mycat56 ~]#chmod +x /etc/rc.local
+
+  注意： 表中必须要创建使用的分片规则要求的字段名
+
+  查看使用枚举分片规则的表名
+	vim  schema.xml
+	<table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+
+
+  
+  创建表 
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot  -p123456
+> show  databases;
+> use TESTDB;
+> show  tables;
+
+>mysql> create table employee(  ID int primary key auto_increment , sharding_id int , name char(10) , sex enum("boy","girl")  );
+
+> desc employee;
+
+  在数据库服务器本机查看表结构
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'desc db1.employee'
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'desc db2.employee'
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'desc db3.employee'
+
+
+  存储数据 （向表里添加多行行时，能不能把多行分别存储在不同数据库服务器里）
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot  -p123456
+> show  databases;
+> use TESTDB;
+>
+mysql> insert into employee(sharding_id,name,sex) values (10010,"a","boy"),(10010,"a","boy"),(10010,"b","girl");
+Query OK, 3 rows affected (0.17 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> insert into employee(sharding_id,name,sex) values (10020,"a","boy"),(10020,"a","boy"),(10020,"b","girl");
+Query OK, 3 rows affected (0.46 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> insert into employee(sharding_id,name,sex) values (10030,"a","boy");
+ERROR 1064 (HY000): can't find any valid datanode :EMPLOYEE -> SHARDING_ID -> 10030
+mysql> 
+
+mysql> select * from employee;
++----+-------------+------+------+
+| ID | sharding_id | name | sex  |
++----+-------------+------+------+
+|  1 |       10020 | a    | boy  |
+|  2 |       10020 | a    | boy  |
+|  3 |       10020 | b    | girl |
+|  1 |       10000 | a    | boy  |
+|  2 |       10000 | a    | boy  |
+|  3 |       10000 | b    | girl |
+|  1 |       10010 | a    | boy  |
+|  2 |       10010 | a    | boy  |
+|  3 |       10010 | b    | girl |
++----+-------------+------+------+
+9 rows in set (0.09 sec)
+
+mysql> 
+
+     查看是拆分存储
+
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select * from  db1.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | sex  |
++----+-------------+------+------+
+|  1 |       10000 | a    | boy  |
+|  2 |       10000 | a    | boy  |
+|  3 |       10000 | b    | girl |
++----+-------------+------+------+
+[root@host53 ~]# 
+
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select * from  db1.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | sex  |
++----+-------------+------+------+
+|  1 |       10000 | a    | boy  |
+|  2 |       10000 | a    | boy  |
+|  3 |       10000 | b    | girl |
++----+-------------+------+------+
+[root@host53 ~]# 
+        
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select * from  db1.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | sex  |
++----+-------------+------+------+
+|  1 |       10000 | a    | boy  |
+|  2 |       10000 | a    | boy  |
+|  3 |       10000 | b    | girl |
++----+-------------+------+------+
+[root@host53 ~]# 
