@@ -195,3 +195,60 @@ Mycat-server is running (24344).
 		检查数据库服务器的配置
                 重启56主机的操作系统
                 再次执行启动mycat服务的命令
+
+
+五、分片规则的使用 (水平分割 分片规则）
+      5.1 枚举分片规则sharding-by-intfile  
+                    （给字段赋值时，值只能在规定的范围内选择）
+      
+      5.2 求模分片规则 mod-long
+                   （把字段值与指定的数字做取余计算 根据计算结果存储数据）
+
+         ****要想实现数据的分布式存储，表中必须创建 分片规则要求的字段名
+    
+     查看分片规则要求创建的字段名
+     
+     vim rule.xml  
+
+            查看了枚举分片表中要创建的字段名
+ 26         <tableRule name="sharding-by-intfile"> 分片规则名
+ 27                 <rule>
+ 28                         <columns>sharding_id</columns> 字段名
+ 29                         <algorithm>hash-int</algorithm> 算法
+ 30                 </rule>
+ 31         </tableRule>
+
+
+ 97         <function name="hash-int"  算法名
+ 98                 class="io.mycat.route.function.PartitionByFileMap">
+ 99                 <property name="mapFile">partition-hash-int.txt</property> 分片规则对应的配置文件
+100         </function>
+           
+
+            ls  /usr/local/mycat/conf/partition-hash-int.txt 
+            vim  /usr/local/mycat/conf/partition-hash-int.txt (定义字段的值列表）
+
+                 10000=0  
+		 10010=1
+		 10020=2
+            :wq
+
+
+
+	  查看求模分片规则表看要创建的字段名
+          
+ 38         <tableRule name="mod-long">  分片规则名
+ 39                 <rule>
+ 40                         <columns>id</columns> 字段名
+ 41                         <algorithm>mod-long</algorithm> 算法
+ 42                 </rule>
+ 43         </tableRule>
+
+ 
+ 105 <function name="mod-long"  class="io.mycat.route.function.PartitionByMod">
+ 106                 <!-- how many data nodes -->
+ 107                 <property name="count">3</property>  指定与数字3做取余运算
+ 108         </function>
+
+
+     [root@mycat56 ~]# /usr/local/mycat/bin/mycat restart
