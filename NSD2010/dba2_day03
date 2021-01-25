@@ -1,0 +1,133 @@
+####DBA2_DAY03 使用mycat软件提供的服务 实现对数据 的 分布式存储
+  环境准备
+    把 53 54 55 恢复为独立数据库服务器， 如果不会恢复 重新搭建3台数据库服务器。  
+    检查3台服务器的防火墙服务 和selinux 是否关闭
+
+  
+    把56主机 做mycat 服务 （如果有mysqld服务 停止服务并设置为开机不运行 检查停止防火墙服务 和selinux 是否关闭）
+
+    50做客户端 只要有mysql命令即可  检查防火墙服务 和selinux 是否关闭
+
+    把软件Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz 拷贝给56主机
+
+    休息一下到 10:00 
+一、相关概念：
+	知识回顾：ceph服务是做什么用的 ？
+                  什么是分布式存储？把数据存储在不同地点的服务器里，或把数据存储在
+同一地点的不同服务器里。
+	
+		  为什么要把数据分布式存储？
+
+        相关概念？
+        mycat软件介绍？
+        拓扑结构
+        工作过程
+        
+二、配置分片服务 
+	2.1 配置分片服务器 192.168.4.56
+		1 安装mycat软件
+			yum -y install  java-1.8.0-openjdk.x86_64
+[root@mycat56 ~]# tar -zxvf Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz
+[root@mycat56 ~]# mv mycat/  /usr/local/
+[root@mycat56 ~]# ls /usr/local/mycat/
+bin  catlet  conf  lib  logs  version.txt
+[root@mycat56 ~]# 
+
+		2 安装文件介绍
+[root@mycat56 ~]# /usr/local/mycat/bin/mycat --help
+Usage: /usr/local/mycat/bin/mycat { console | start | stop | restart | status | dump }
+[root@mycat56 ~]# 
+
+[root@mycat56 ~]# ls /usr/local/mycat/conf/*.xml
+[root@mycat56 ~]# ls /usr/local/mycat/conf/*.properties
+[root@mycat56 ~]# ls /usr/local/mycat/conf/*.txt
+
+[root@mycat56 ~]# ls /usr/local/mycat/lib/*.jar
+
+[root@mycat56 ~]# ls /usr/local/mycat/logs/
+
+		3 修改配置文件
+xml 扩展标记语言  html 超文本标记语言   注释 <!-- 内容  -->
+
+
+			1 server.xml （默认即可） //设置连接账号及逻辑库
+10:38
+
+
+			2 schema.xml  定义分布式存储数据的表（ 根据存储数据的需要修改）
+
+[root@mycat56 ~]# wc -l /usr/local/mycat/conf/schema.xml 
+77 /usr/local/mycat/conf/schema.xml
+
+[root@mycat56 ~]# sed -i '56,77d'  /usr/local/mycat/conf/schema.xml 
+
+[root@mycat56 ~]# wc -l /usr/local/mycat/conf/schema.xml 
+55 /usr/local/mycat/conf/schema.xml
+[root@mycat56 ~]# 
+
+			schema.xml 文件的格式
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+
+<mycat:schema xmlns:mycat="http://io.mycat/">
+	#定义拆分存储数据的表
+        <schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
+
+                #定义表名
+                <table ..... /> 单标签
+
+		<table .....> 双标签
+                </table>
+
+        </schema>
+
+
+        #定义数据库服务器的主机名
+        <dataNode ...... />
+
+	#定义数据库服务器的ip地址
+        <dataHost ......>
+       
+        </dataHost>
+
+</mycat:schema>
+			
+	
+    例子： vim  schema.xml
+
+<table name="goods" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+
+<table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"  rule="sharding-by-intfile" />
+                            
+<table name="customer" primaryKey="ID" dataNode="dn1,dn2,dn3"  rule="sharding-by-intfile">
+                           
+
+        <dataNode name="dn1" dataHost="mysqla" database="db1" />
+        <dataNode name="dn2" dataHost="mysqlb" database="db2" />
+        <dataNode name="dn3" dataHost="mysqlc" database="db3" />
+
+
+      <dataHost name="mysqla" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+
+          <heartbeat>select user()</heartbeat>
+          <writeHost host="hostM1" url="192.168.4.53:3306" user="pljadmin" password="123qqq...A">
+          </writeHost>
+
+       </dataHost>
+
+
+<dataHost name="mysqlb" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+          <heartbeat>select user()</heartbeat>
+          <writeHost host="hostM2" url="192.168.4.54:3306" user="pljadmin" password="123qqq...A">
+          </writeHost>
+       </dataHost>
+
+
+      <dataHost name="mysqlc" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+          <heartbeat>select user()</heartbeat>
+          <writeHost host="hostM3" url="192.168.4.55:3306" user="pljadmin" password="123qqq...A">
+          </writeHost>
+       </dataHost>
