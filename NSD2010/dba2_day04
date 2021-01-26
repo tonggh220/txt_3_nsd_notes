@@ -203,4 +203,119 @@ MySQL>grant all on  *.*  to  root@"%" identified  by "123qqq...A";
 
 
 
+	       2.3.1 安装mha-node软件 (3台数据库服务器都要安装)
+		]# cd mha
+                ]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+
+三、启动57主机的管理服务
+	3.1 测试配置 
+			#检查ssh免密登录
+[root@host57 ~]# masterha_check_ssh --conf=/etc/mha/app1.cnf 
+Tue Jan 26 11:24:51 2021 - [info] All SSH connection tests passed successfully
+
+			
+			#检查主从结构
+[root@host57 ~]# masterha_check_repl --conf=/etc/mha/app1.cnf 
+MySQL Replication Health is OK.
+
+        统一排错： 根据检查的报错信息排错 [error]
+
+		出错的原因  /etc/mha/app1.cnf 编写有问题
+			    环境准备不对：一主多从结构  ssh免密登录  软件没安装
+
+
+       
+
+	3.2 启动管理服务(管理服务运行要占用一个终端运行)
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf  --remove_dead_master_conf --ignore_last_failover
+
+Tue Jan 26 12:30:03 2021 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Tue Jan 26 12:30:03 2021 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Tue Jan 26 12:30:03 2021 - [info] Reading server configuration from /etc/mha/app1.cnf..
+
+		在新终端 查看服务运行状态
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+app1 (pid:51771) is running(0:PING_OK), master:192.168.4.51
+[root@host57 ~]#
+
+[root@host57 ~]# masterha_stop  --conf=/etc/mha/app1.cnf  停止服务的命令 
+
+
+
+四、测试高可用集群
+	  在51主机添加用户个客户端连接使用，52 和 53 都会同步用户
+mysql> grant all on bbsdb.* to plj188@"%" identified by "123qqq...A";
+
+	 在51 查看vip 地址
+[root@host51 mha]# ifconfig  ens33:1
+ens33:1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.4.100  netmask 255.255.255.0  broadcast 192.168.4.255
+        ether 00:0c:29:d5:c9:38  txqueuelen 1000  (Ethernet)
+
+
+          客户端连接数据库服务器 每次访问的都是vip地址
+
+  	  host50 mysql -h192.168.4.100 -uplj188  -p123qqq...A
+                 mysql>
+
+
+	 停止51 主机的mysqld服务  [root@host51 mha]# systemctl  stop mysqld
+
+  
+         57主机 发现51的数据库服务停止了 ， 会自动停止管理服务 ，触发故障切换脚本
+做vip地址迁移 把VIP 地址部署在新选举的主数据库服务器上
+
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+app1 is stopped(2:NOT_RUNNING).
+[root@host57 ~]# 
+
+         在52 和 53 主机查看vip地址 谁有vip地址 谁就是新的master 服务器 
+[root@host52 mha]# ifconfig  ens33:1
+ens33:1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.4.100  netmask 255.255.255.0  broadcast 192.168.4.255
+        ether 00:0c:29:56:93:3f  txqueuelen 1000  (Ethernet)
+
+[root@host52 mha]# 
+
+         在另外1台数据库服务器 查看 slave 状态，会自动做新的master 服务器的从服务器
+ [root@host53 mha]# mysql -uroot -p'123qqq...A' -e 'show slave status \G ' | grep -i  "master_host"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.52
+[root@host53 mha]# 
+        
+
+	客户端依然能连接vip地址数据库服务
+
+
+  	  host50 mysql -h192.168.4.100 -uplj188  -p123qqq...A
+                 mysql>
+
+        启动管理服务。管理会监视当前主从结构中主数据库服务器运行
+        
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf --ignore_last_failover  
+Tue Jan 26 13:06:44 2021 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Tue Jan 26 13:06:44 2021 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Tue Jan 26 13:06:44 2021 - [info] Reading server configuration from /etc/mha/app1.cnf..
+
+        [root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+app1 (pid:126102) is running(0:PING_OK), master:192.168.4.52
+[root@host57 ~]#
+
+     
+    启动集群的步骤
+        启动master的数据库服务
+        启动slave的数据服务
+        启动管理服务     
+
+五、把宕机的数据库服务器再添加到集群
+	
+
+
+
+####DBA2_DAY05
+1 PXC集群 准备新的3台 虚拟机（不需要安装任何数据库服务软件）
+              IP地址  71   72   73
+拷贝软件包 PXC目录
+
+
 
