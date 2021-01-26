@@ -122,3 +122,53 @@ hostname=192.168.4.53
 port=3306
 candidate_master=1
 [root@host57 mha4mysql-manager-0.56]#
+
+		创建故障切换脚本并编辑
+[root@host57 mha]# cd mha
+[root@host57 mha]#  cp master_ip_failover  /etc/mha/
+[root@host57 mha]# chmod  +x /etc/mha/master_ip_failover 
+
+[root@host57 mha]# vim +35  /etc/mha/master_ip_failover
+my $vip = '192.168.4.100/24';  # Virtual IP 
+my $key = "1";
+my $ssh_start_vip = "/sbin/ifconfig ens33:$key $vip";
+my $ssh_stop_vip = "/sbin/ifconfig ens33:$key down";
+:wq
+
+
+
+		把VIP地址配置在master 服务器51上
+[root@host51 ~]# which  ifconfig || yum  -y install net-tools
+/usr/sbin/ifconfig
+
+[root@host51 ~]# ifconfig  ens33:1  192.168.4.100               
+[root@host51 ~]# ifconfig  ens33:1
+
+
+[root@host52 ~]# which  ifconfig || yum  -y install net-tools
+/usr/sbin/ifconfig
+
+[root@host53 ~]# which  ifconfig || yum  -y install net-tools
+/usr/sbin/ifconfig
+
+
+	2.3 配置数据库服务器
+		2.3.1 安装mha-node软件
+		
+        2.3.2 优化配置 （3台数据库服务器都要配置）
+			开启半同步复制模式（3台数据库服务器都要配置）
+命令行配置，马上生效
+mysql> install  plugin  rpl_semi_sync_master   SONAME   "semisync_master.so";
+mysql> install  plugin  rpl_semi_sync_slave   SONAME   "semisync_slave.so";
+mysql> set  global rpl_semi_sync_master_enabled=1;
+mysql> set  global rpl_semi_sync_slave_enabled=1;
+
+vim /etc/my.cnf
+[mysqld]
+plugin-load ="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"  #安装模块
+
+rpl_semi_sync_master_enabled=1 #启用模块
+rpl_semi_sync_slave_enabled=1
+
+relay_log_purge=0 禁止自动删除本机的中继日志文件 
+:wq
