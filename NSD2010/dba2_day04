@@ -1,0 +1,124 @@
+####DBA2_DAY04 使用MHA 配置mysql数据库服务的高可用集群
+
+	集群知识点回顾：
+		什么是集群？多台服务器一起提供相同的服务
+		集群分类？ 
+			LB 集群怎么工作？集群中的所有主机平均分摊客户端的访问
+  					   
+			HA 集群怎么工作？ 至少2台服务器组成集群，一主 一备 主宕机后
+					备用的服务器自动接替主继续提供服务，这个过程				        对客户端是透明。
+
+			实现LB集群的软件？ haproxy  LVS  Nginx
+			实现HA集群的软件？ Keepalived （vip地址）浮动ip 
+	
+一 相关概念
+   1.1 软件介绍 
+   1.2 MHA集群工作原理 （数据库服务器之间必须是一主多从结构）
+   1.3 拓扑结构
+
+二、部署MHA集群
+	2.1 环境准备 
+		安装依赖的perl软件（先把yum源里没有的安装一下）51 52 53 57
+			]# cd  mha
+			]# yum -y perl-*.rpm
+
+		配置ssh免密登录
+			3台数据库服务器之间要能免密登录
+				配置51 免密登录 52 和 53
+					208  ssh-keygen 
+  					209  ssh-copy-id  root@192.168.4.53
+       					     ssh-copy-id  root@192.168.4.52
+  					210  ssh root@192.168.4.53
+  					211  ssh root@192.168.4.52
+
+                                配置52 免密登录 51 和 53
+					2  ssh-keygen 
+    					3  ssh-copy-id  root@192.168.4.51
+    					4  ssh-copy-id  root@192.168.4.53
+     
+    					6  ssh root@192.168.4.51
+    					7  ssh root@192.168.4.53
+
+                                配置53 免密登录 51 和 52 
+					5  ssh-keygen 
+    					6  ssh-copy-id root@192.168.4.51
+    					7  ssh-copy-id root@192.168.4.52
+       					9  ssh root@192.168.4.51
+   					10  ssh root@192.168.4.52
+
+				
+			管理主机57 可用免密登录3台数据库服务器
+				36  ssh-keygen 
+   				37  ssh-copy-id root@192.168.4.51
+   				38  ssh-copy-id root@192.168.4.52
+   				39  ssh-copy-id root@192.168.4.53
+   				40  ssh root@192.168.4.53
+  				41  ssh root@192.168.4.52
+   				42  ssh root@192.168.4.51
+
+				
+		配置一主多从 同步结构
+			配置主数据库服务器 51  
+
+                        配置从数据库服务器 52
+                    
+                        配置从数据库服务器 53
+
+		练习+ 休息到  11:15  
+
+	2.2 配置管理主机192.168.4.57
+		安装mha_manager软件
+		yum -y install perl-ExtUtils-*   perl-CPAN*
+                cd  mha
+		yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+
+            48  tar -zxvf mha4mysql-manager-0.56.tar.gz 
+  
+            50  cd mha4mysql-manager-0.56
+ 
+            52  perl Makefile.PL  
+   
+            64  make && make install
+
+ 
+		创建并编辑主配置文件app1.cnf
+   71  mkdir /etc/mha
+   72  cd mha4mysql-manager-0.56
+   74  ls samples/conf/
+   75  cp samples/conf/app1.cnf  /etc/mha/
+
+  vim /etc/mha/app1.cnf
+    [server default]  管理服务运行参数设置
+    [server数字] #指定数据库服务器ip地址
+  :wq
+
+[root@host57 mha4mysql-manager-0.56]# cat /etc/mha/app1.cnf 
+[server default]
+manager_workdir=/etc/mha
+manager_log=/etc/mha/manager.log
+master_ip_failover_script=/etc/mha/master_ip_failover
+
+ssh_user=root
+ssh_port=22
+
+repl_user=repluser
+repl_password=123qqq...A
+
+user=root
+password=123qqq...A
+
+[server1]
+hostname=192.168.4.51
+port=3306
+candidate_master=1
+
+[server2]
+hostname=192.168.4.52
+port=3306
+candidate_master=1
+
+[server3]
+hostname=192.168.4.53
+port=3306
+candidate_master=1
+[root@host57 mha4mysql-manager-0.56]#
