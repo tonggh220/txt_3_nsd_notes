@@ -153,8 +153,9 @@ my $ssh_stop_vip = "/sbin/ifconfig ens33:$key down";
 
 
 	2.3 配置数据库服务器
-		2.3.1 安装mha-node软件
-		
+         2.3.1 安装mha-node软件 (3台数据库服务器都要安装)
+		         ]# cd mha
+                ]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
         2.3.2 优化配置 （3台数据库服务器都要配置）
 			开启半同步复制模式（3台数据库服务器都要配置）
 命令行配置，马上生效
@@ -172,3 +173,34 @@ rpl_semi_sync_slave_enabled=1
 
 relay_log_purge=0 禁止自动删除本机的中继日志文件 
 :wq
+
+
+			在52 和 53主机 做如下配置： 
+                                启用binlog日志文件  
+host52~ ]# vim /etc/my.cnf
+   [mysqld]
+    log_bin=master52
+:wq
+]# systemctl restart mysqld
+host53~ ]# vim /etc/my.cnf
+   [mysqld]
+    log_bin=master53
+:wq
+]# systemctl restart mysqld
+
+                                添加repluser用户	 he  监控用户root 	
+host52 
+MySQL>grant replication slave on  *.*  to  repluser@"%" identified       by "123qqq...A";
+ 
+MySQL>grant all on  *.*  to  root@"%" identified  by "123qqq...A";
+
+host53
+MySQL>grant replication slave on  *.*  to  repluser@"%" identified by "123qqq...A";
+MySQL>grant all on  *.*  to  root@"%" identified  by "123qqq...A";
+
+host51
+MySQL>grant all on  *.*  to  root@"%" identified  by "123qqq...A";
+
+
+
+
