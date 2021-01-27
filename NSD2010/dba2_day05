@@ -99,3 +99,18 @@ mysql> exit;
    19  ls /var/lib/mysql
    20  mysql -uroot -p123456
        mysql> select user from mysql.user;
+
+
+             72 和 73  mysql启动失败的解决办法：
+			检查71  72 和 73 的 防火墙和 selinux 关闭了吗
+			检查 72 和  73 修改过的文件改对了吗 ？
+	
+			在72 和 73  killall -9 mysqld 执行杀进程的命令
+
+                        清空数据库目录 rm  -rf /var/lib/mysql/*
+
+
+                       以上做完之后
+		        在执行启动mysql服务命令
+
+		如下想知道具体错哪里了 看日志  /var/log/mysqld.log 
