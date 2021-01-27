@@ -308,6 +308,61 @@ app1 (pid:126102) is running(0:PING_OK), master:192.168.4.52
         启动管理服务     
 
 五、把宕机的数据库服务器再添加到集群
+        	5.1 配置数据库服务器
+		1 启动数据库服务 systemctl  start mysqld
+		2 同步自己宕机期间产生的数据
+			在master服务器做数据备份
+[root@host52 ~]# mysqldump -uroot -p123qqq...A bbsdb > /root/bbsdb.sql
+[root@host52 ~]# scp /root/bbsdb.sql  root@192.168.4.51:/opt/
+
+			在51 使用备份文件恢复数据
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create database bbsdb'
+[root@host51 ~]# mysql -uroot -p123qqq...A bbsdb < /opt/bbsdb.sql
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'select * from  bbsdb.t1'
+
+		3 配置为当前master服务的从服务器
+			1 查看主服务器当前使用的日志名和偏移量
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'show master status'
+
+			2 51 主机管理员登录指定主服务器信息
+mysql> change master to master_host="192.168.4.52",master_user="repluser",master_password="123qqq...A",master_log_file="master52.000001",master_log_pos=3362;
+Query OK, 0 rows affected, 2 warnings (0.03 sec)
+
+mysql> start slave;
+
+                4 查看从的状态
+mysql> show slave status \G
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+
+	5.2 配置管理主机 
+		1 把宕机的数据库服务器添加到app1.cnf文件
+]# vim /etc/mha/app1.cnf
+[server1]
+hostname=192.168.4.51
+port=3306
+candidate_master=1
+:wq
+
+		2 检查主从关系
+[root@host57 ~]# masterha_check_repl --conf=/etc/mha/app1.cnf 
+MySQL Replication Health is OK.
+
+		3 重启管理服务（服务启动成功了 说明添加成功）	
+[root@host57 ~]# masterha_stop --conf=/etc/mha/app1.cnf 
+Stopped app1 successfully.
+[root@host57 ~]#
+
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf  --remove_dead_master_conf --ignore_last_failover
+
+Wed Jan 27 04:36:17 2021 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Wed Jan 27 04:36:17 2021 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Wed Jan 27 04:36:17 2021 - [info] Reading server configuration from /etc/mha/app1.cnf..
+
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+app1 (pid:102436) is running(0:PING_OK), master:192.168.4.52
+[root@host57 ~]# 
 	
 
 
