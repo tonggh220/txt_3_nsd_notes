@@ -165,3 +165,119 @@ mysql> alter table bbsdb.c engine=myisam;
 		2.3.3 建表时指定表使用的存储引擎
 mysql> create table b (user char(10))engine=myisam;
 
+
+二、 mysql存储引擎 (80%都是理论)
+	2.1 什么是存储引擎（存储介绍）
+			MySQL服务的功能分类
+
+
+	2.2 查看存储引擎  练习 + 休息到 16:05
+		2.2.1 查看数据库服务器支持的存储引擎和默认使用的存储引擎 mysql> show engines;
+		2.2.2 查看已有表使用的存储引擎mysql> show create table bbsdb.t1 \G
+
+	2.3 修改存储引擎
+		2.3.1 修改数据库服务使用的存储引擎
+]# vim /etc/my.cnf
+[mysqld]
+  default-storage-engine="memory"
+:wq
+
+[root@host51 ~]# systemctl  restart mysqld
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'show engines'
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create table bbsdb.c(id int)'
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'show create table bbsdb.c \G'
+
+[root@host51 ~]# ls /var/lib/mysql/bbsdb/c.*
+/var/lib/mysql/bbsdb/c.frm
+[root@host51 ~]# 
+
+		2.3.2 修改表使用的存储引擎
+mysql> alter table bbsdb.c engine=myisam;
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'alter table bbsdb.c engine=myisam'
+
+[root@host51 ~]# ls /var/lib/mysql/bbsdb/c.*
+/var/lib/mysql/bbsdb/c.frm  /var/lib/mysql/bbsdb/c.MYD  /var/lib/mysql/bbsdb/c.MYI
+[root@host51 ~]# 
+
+
+		2.3.3 建表时指定表使用的存储引擎
+mysql> create table b (user char(10))engine=myisam;
+
+
+
+        2.4 常用存储引擎的特点
+		2.4.1 myisam特点
+		2.4.2 innodb特点
+
+
+
+
+	相关概念：
+
+	      加锁的目的：解决并发访问的写冲突问题
+
+	      锁颗度（给表加锁是 加锁的范围）
+
+		表级锁：只要对表做访问，不管访问表里多行还是1行都会把一张表锁上，
+在没有释放锁的时候，不允许其他客户端再对表做访问
+
+		行级锁:对表做访问时，仅对被访问的行分别加锁，没有访问的行不会加锁，且允许其他用户访问。
+
+		锁类型
+		读锁（共享锁，支持并发读）：当对表做select 访问时加的是读锁，在加读锁期间，如果在来的访问也是select 允许查 ，但如果是写 （insert update delete）不允许 
+
+                写锁（互斥锁、排它锁）：是独占锁，
+在对表中的数据做insert update delete MySQL服务会给表加写锁，在上锁期间 不能读表或写表
+
+
+  
+		事务 建立连接后和断开前 ，这期间执行的操作 称为事务
+
+		事务回滚  操作错误是，可以操作恢复到错误之前的状态
+
+		innodb存储引擎的表使用事务日志文件记录对表的操作命令
+	        cd  /var/lib/mysql/
+		ib_logfile0   ib_logfile1
+
+		事务的特点(ACID)
+
+
+		事务特点的演示  
+
+第1个连接
+MySQL -uroot -p密码
+create table bbsdb.tea(id int )engine=innodb;
+
+set autocommit=off;
+
+insert into  bbsdb.tea values(110);
+select  * from bbsdb.tea;  没有执行commit 时 第2连接查看不到数据 
+
+执行 insert  update  delete  操作后 ，如果没有执行 commit 第2连接也看不到操作
+
+执行rollback ； 可以回滚数据 
+
+insert into  bbsdb.tea values(120)； 执行 commit命令后第2连接可以看到数据
+
+第2个连接
+mysql -uroot -p密码
+
+
+		典型事务回滚应用场景
+		ATM 转账 （转账成功/失败）
+
+
+	建表时如何决定表使用哪种存储引擎？
+	 select 访问多的表使用使用myisam存储引擎， 好处是啥？节省系统硬件资源
+	insert/update/delete 访问多的表 适合使用innodb存储引擎， 好处是啥？并发访问量大
+
+	
+
+#####NoSQL_day01   
+50 51  52  
+要复习lnmp搭建
+软件redis-4.0.8.tar.gz 拷贝到 50 主机里 
+
