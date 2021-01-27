@@ -114,3 +114,54 @@ mysql> exit;
 		        在执行启动mysql服务命令
 
 		如下想知道具体错哪里了 看日志  /var/log/mysqld.log 
+
+二、 mysql存储引擎 (80%都是理论)
+	2.1 什么是存储引擎（存储介绍）
+			MySQL服务的功能分类
+
+
+	2.2 查看存储引擎
+		2.2.1 查看数据库服务器支持的存储引擎和默认使用的存储引擎
+mysql> show engines;
+
+InnoDB             | DEFAULT 
+
+
+		2.2.2 查看已有表使用的存储引擎
+mysql> show create table bbsdb.t1 \G
+
+
+	2.3 修改存储引擎
+		2.3.1 修改数据库服务使用的存储引擎
+]# vim /etc/my.cnf
+[mysqld]
+default-storage-engine="memory"
+:wq
+[root@host51 ~]# systemctl  restart mysqld
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'show engines'
+
+MEMORY             | DEFAULT
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create table bbsdb.c(id int)'
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'show create table bbsdb.c \G'
+
+[root@host51 ~]# ls /var/lib/mysql/bbsdb/c.*
+/var/lib/mysql/bbsdb/c.frm
+[root@host51 ~]# 
+
+
+		2.3.2 修改表使用的存储引擎
+mysql> alter table bbsdb.c engine=myisam;
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'alter table bbsdb.c engine=myisam'
+
+[root@host51 ~]# ls /var/lib/mysql/bbsdb/c.*
+/var/lib/mysql/bbsdb/c.frm  /var/lib/mysql/bbsdb/c.MYD  /var/lib/mysql/bbsdb/c.MYI
+[root@host51 ~]# 
+
+
+		2.3.3 建表时指定表使用的存储引擎
+mysql> create table b (user char(10))engine=myisam;
+
