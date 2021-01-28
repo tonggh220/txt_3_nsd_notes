@@ -1,0 +1,127 @@
+NoSQL数据库  3天  讲redis数据库服务的使用
+
+nosql_day01
+
+一、 搭建redis服务器
+	1.1 相关概念 
+		数据库服务软件2种类型：  关系型   非关系型
+
+	1.2 搭建Redis服务器
+		1.2.1 安装软件
+# rpm -q   gcc  ||  yum  -y  install  gcc
+# tar -zxvf redis-4.0.8.tar.gz
+# cd redis-4.0.8
+# make 
+# make install
+
+		1.2.2 初始化配置 
+redis-4.0.8]# ./utils/install_server.sh 
+		1.2.3 查看服务状态 
+			]# ss -utnlp  | grep  6379 #看端口号
+			]# ps -C redis-server #看进程
+
+		1.2.4 连接服务存储数据
+[root@host50 ~]# redis-cli 
+127.0.0.1:6379> ping
+PONG
+127.0.0.1:6379> set school tarena
+OK
+127.0.0.1:6379> keys *
+1) "school"
+127.0.0.1:6379> get school
+"tarena"
+127.0.0.1:6379> exit
+[root@host50 ~]# 
+
+	1.3 常用命令使用  
+set  x  99
+mset  i 7  j  9  k  99  ax 99  af  43  age 68
+
+get  x 
+mget  i j k 
+
+keys *
+keys ?
+keys ???
+keys  a?
+
+type  i 
+type  j
+lpush  tea plj  nb dmy
+type tea
+get  tea
+
+
+127.0.0.1:6379> get name
+127.0.0.1:6379> EXISTS name
+(127.0.0.1:6379> EXISTS username
+
+
+127.0.0.1:6379> ttl i
+127.0.0.1:6379> EXPIRE i 20
+
+127.0.0.1:6379> ttl i
+127.0.0.1:6379> ttl i
+127.0.0.1:6379> ttl i
+
+127.0.0.1:6379> keys i
+
+
+127.0.0.1:6379> select 2
+127.0.0.1:6379[2]> keys *
+
+127.0.0.1:6379[2]> select 0
+127.0.0.1:6379[2]> move  tea  2
+127.0.0.1:6379[2]> move  age 2
+
+127.0.0.1:6379> select 2
+OK
+127.0.0.1:6379[2]> keys *
+1) "tea"
+2) "age"
+127.0.0.1:6379[2]>
+
+127.0.0.1:6379[2]> keys *
+1) "tea"
+2) "age"
+127.0.0.1:6379[2]> del tea
+		  select  0
+127.0.0.1:6379> del x y ax
+
+127.0.0.1:6379> keys *
+127.0.0.1:6379> flushdb  删除所在库的所有变量
+
+127.0.0.1:6379[2]> flushall  清空内存
+
+127.0.0.1:6379> shutdown
+not connected> ping
+Could not connect to Redis at 127.0.0.1:6379: Connection refused
+not connected> exit
+
+     配置文件解析
+（修改配置文件可以改变服务的运行方式，要修改生效并重启服务）
+	
+     服务的运行方式有2种
+		守护进程（常驻内存） 常驻部队
+		非守护进程（非常驻内存）	机动部队
+
+
+[root@host50 ~]# /etc/init.d/redis_6379 stop
+[root@host50 ~]# vim /etc/redis/6379.conf 
+bind 192.168.4.50
+port 6350 
+requirepass 123456
+:wq
+
+[root@host50 ~]# sed -n '93p;70p;501p' /etc/redis/6379.conf 
+bind 192.168.4.50
+port 6350 
+requirepass 123456
+
+[root@host50 ~]# /etc/init.d/redis_6379 start
+[root@host50 ~]# ss -utnlp  | grep redis-server
+
+连接服务
+[root@host50 ~]# redis-cli -h 192.168.4.50 -p 6350 -a 123456
+192.168.4.50:6350> ping
+PONG
