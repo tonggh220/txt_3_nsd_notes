@@ -125,3 +125,122 @@ requirepass 123456
 [root@host50 ~]# redis-cli -h 192.168.4.50 -p 6350 -a 123456
 192.168.4.50:6350> ping
 PONG
+
+
+
+二、 LNMP+Redis
+	2.1 部署lnmp环境  （5分钟 到 14:32
+   36  rpm -q gcc  || yum -y install gcc
+   37  yum -y install pcre-devel zlib-devel
+   38  tar -zxvf /var/ftp/pub/nginx-1.12.2.tar.gz 
+   39  cd nginx-1.12.2/
+   40  ./configure 
+   41  make && make install
+
+[root@host52 nginx-1.12.2]# ls /usr/local/nginx/
+conf  html  logs  sbin
+
+				2分钟到 14:38 
+   45  yum -y install php php-devel php-fpm
+   46  systemctl  start php-fpm
+   47  systemctl  enable php-fpm
+   48  ss -utnlp  | grep 9000
+]# vim +65 /usr/local/nginx/conf/nginx.conf
+ 65         location ~ \.php$ {
+ 66             root           html;
+ 67             fastcgi_pass   127.0.0.1:9000;
+ 68             fastcgi_index  index.php;
+ 69             include        fastcgi.conf;
+ 70         }
+:wq
+[root@host52 ~]# /usr/local/nginx/sbin/nginx  -t
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+[root@host52 ~]# 
+
+[root@host52 ~]# ss -utnlp |grep httpd 有的要停止httpd服务并设置开机不运行
+
+[root@host52 ~]# ss -utnlp |grep 80
+
+编脚本测试配置
+[root@host52 ~]# vim  /usr/local/nginx/html/test.php
+<?php
+
+ echo "hello wrold!!!" ;
+
+?>
+:wq
+
+[root@host52 ~]# 
+# curl  http://localhost/test.php
+hello wrold!!!
+
+
+
+
+	2.2 配置网站可以把数据存储在redis服务器里
+		检查依赖的软件是否安装
+[root@host52 ~]# rpm -q php 
+[root@host52 ~]# rpm -q php-devel
+[root@host52 ~]# rpm -q autoconf
+[root@host52 ~]# rpm -q automake
+		2.2.1 在网站服务器安装提供链接模块的软件包
+   73  tar -zxvf /var/ftp/pub/php-redis-2.2.4.tar.gz 
+   75  cd phpredis-2.2.4/
+   78  phpize 
+   81  ./configure -with-php-config=/usr/bin/php-config
+   82  make
+   83  make install
+   84  ls /usr/lib64/php/modules/redis.*
+		2.2.2 调用模块
+]# vim /etc/php.ini
+  728 extension_dir = "/usr/lib64/php/modules/"
+  730 extension = "redis.so"
+:wq
+[root@host52 ~]# systemctl  restart php-fpm
+[root@host52 ~]# php -m  | grep redis
+redis
+
+	       2.2.3 测试配置 休息到16:05 
+
+[root@host52 html]# cd /usr/local/nginx/html/
+[root@host52 html]# vim s.php  
+<?php
+$redis = new redis();
+
+$redis->connect("192.168.4.50","6350");
+$redis->auth("123456");
+
+$redis->set("address","beijing");
+$redis->set("mail","plj@tedu.cn");
+
+echo  "save ok";
+?>
+:wq
+
+
+[root@host52 html]# cp s.php g.php
+[root@host52 html]# vim g.php
+<?php
+$redis = new redis();
+
+$redis->connect("192.168.4.50","6350");
+$redis->auth("123456");
+
+echo  $redis->get("address");
+echo  $redis->get("mail");
+?>
+:w
+
+[root@host52 html]# cp s.php sg.php
+
+[root@host52 html]# vim  sg.php
+<?php
+$redis = new redis();
+
+$redis->connect("192.168.4.50","6350");
+$redis->auth("123456");
+
+$redis->set("username","panglijing");
+echo  $redis->get("username");
+?>
