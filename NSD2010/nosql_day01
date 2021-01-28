@@ -244,3 +244,13 @@ $redis->auth("123456");
 $redis->set("username","panglijing");
 echo  $redis->get("username");
 ?>
+
+测试配置
+[root@host50 ~]# curl http://192.168.4.52/s.php
+save ok[root@host50 ~]# 
+
+[root@host50 ~]# curl http://192.168.4.52/g.php
+beijingplj@tedu.cn[root@host50 ~]# 
+
+[root@host50 ~]# curl http://192.168.4.52/sg.php
+panglijing[root@host50 ~]# 
