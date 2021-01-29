@@ -97,3 +97,108 @@ Can I set the above configuration? (type 'yes' to accept): yes
                 59主机  redis服务使用的ip  192.168.4.59  端口6359
 
 		58 和  59 的Redis服务都要启用集群功能
+
+	2.1 向集群中添加新redis服务器
+		
+
+
+		2.1.1 添加master角色的redis主机到集群里192.168.4.58
+			 1 运行redis服务 并启用了集群功能
+
+			 2 在管理主机57 ，把58添加到集群里
+[root@host57 ~]# redis-trib.rb add-node 192.168.4.58:6358 192.168.4.51:6351
+[OK] New node added correctly.
+
+[root@host57 ~]# redis-trib.rb info 192.168.4.52:6352
+
+			
+
+			 3 分配hash slots  时间到15:44
+[root@host57 ~]# redis-trib.rb reshard 192.168.4.52:6352
+移出hash槽个数   4096
+接收hash槽主机ID   58主机的ID
+移出hash槽主机ID   all
+同意配置           yes
+				练习+休息到 16:15 
+
+[root@host57 ~]# redis-trib.rb info 192.168.4.52:6352
+192.168.4.58:6358 (515e1384...) -> 3 keys | 4096 slots | 0 slaves.
+
+[root@host57 ~]# redis-trib.rb check 192.168.4.52:6352
+M: 515e1384e85aa8ffbfc4616a11aeeb49303a9b20 192.168.4.58:6358
+   slots:0-1364,5461-6826,10923-12287 (4096 slots) master
+   0 additional replica(s)
+
+       平均分配所有主机占用的hash slots 
+[root@host57 ~]# redis-trib.rb rebalance 192.168.4.52:6352
+
+              2.1.2 添加slave角色的redis主机到集群里 192.168.4.59
+  			 1 运行redis服务 并启用了集群功能
+
+			 2 添加主机到集群里
+[root@host57 ~]# redis-trib.rb add-node --slave 192.168.4.59:6359 192.168.4.52:6352
+
+[OK] New node added correctly.
+
+			 3 查看集群信息
+[root@host57 ~]# redis-trib.rb info 192.168.4.52:6352
+
+			
+
+	2.2 把redis服务器移除集群
+		 2.2.1 移除slave角色的Redis服务器
+
+]# redis-trib.rb check 192.168.4.52:6352 #查看移除主机的ID
+
+#移除slave服务器
+[root@host57 ~]# redis-trib.rb del-node 192.168.4.52:6352 f95ac6287d6651fb7cb6b1da9e1f00f870d85525  192.168.4.59
+
+[root@host57 ~]# redis-trib.rb info 192.168.4.52:6352
+
+练习到 16:45 
+
+		 2.2.1 移除master角色的Redis服务器
+			2.2.1.1  释放hash slots 
+[root@host57 ~]# redis-trib.rb reshard 192.168.4.52:6352
+移除hash slots 的个数  4096
+接收hash slots主机的ID    想给那个主服务器就写对应的ID 
+被移除集群主机的ID        ID值
+                          done
+同意                      yes   
+
+			2.2.1.2 查看ID
+[root@host57 ~]# redis-trib.rb check 192.168.4.52:6352
+
+			2.2.1.2  移除主机
+[root@host57 ~]# redis-trib.rb del-node 192.168.4.52:6352 515e1384e85aa8ffbfc4616a11aeeb49303a9b20
+
+			2.2.1.3 查看集群信息
+[root@host57 ~]# redis-trib.rb info 192.168.4.52:6352
+
+
+			额外知识
+     在移除的主机再次添加到集群里
+      /etc/init.d/redis_6379 start
+      redis-cli  -hip地址  -p端口号
+      > cluster reset
+      >exit
+
+redis-trib.rb  add-node  IP地址:端口     192.168.4.52:6352
+
+redis-trib.rb  add-node --salve  IP地址:端口     192.168.4.52:6352
+
+
+     把集群中的服务器恢复为独立Redis服务器
+[root@host51 ~]# redis-cli -h 192.168.4.51 -p 6351 shutdown
+[root@host51 ~]# rm -rf /var/lib/redis/6379/*
+[root@host51 ~]# vim  /etc/redis/6379.conf 
+#cluster-enabled yes
+#cluster-config-file nodes-6379.conf
+#cluster-node-timeout 5000
+
+[root@host51 ~]# /etc/init.d/redis_6379 start
+	
+]# redis-cli -h 192.168.4.51 -p 6351
+>cluster info
+>info replication
+>keys *
