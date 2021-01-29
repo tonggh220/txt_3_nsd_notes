@@ -1,1 +1,99 @@
-aaaaaaaaaaaaaaaaaa
+nosql _day 02  redis集群
+	为什么要架设集群提供数据存储服务？
+	解决服务的单点故障问题 解决数据的备份问题  实现数据分布式存储
+
+一 创建集群
+	集群的拓扑结构
+	集群的存储数据的工作原理
+	创建集群
+		1 配置管理主机 192.168.4.57
+			1.1 部署ruby脚本运行环境   
+			1.2 创建脚本
+			1.3 验证脚本
+  121  yum -y install ruby rubygems
+  122  ls /var/ftp/pub/*.gem
+  123  gem  install /var/ftp/pub/redis-3.2.1.gem 
+  124  tar -zxvf /var/ftp/pub/redis-4.0.8.tar.gz 
+  125  cd redis-4.0.8/
+  126  ls src/*.rb
+  127  ls /root/bin
+  128  mkdir /root/bin
+  129  echo $PATH
+  130  cp src/redis-trib.rb /root/bin/
+  131  chmod  +x /root/bin/redis-trib.rb 
+  134  redis-trib.rb help
+
+
+
+		2 配置redis服务器 ，启用集群功能
+vim /etc/redis/6379.conf
+[root@host51 ~]# sed -n '815p;823p;829p' /etc/redis/6379.conf 
+cluster-enabled yes
+cluster-config-file nodes-6379.conf
+cluster-node-timeout 5000
+[root@host51 ~]#
+295  redis-cli -h 192.168.4.51 -p 6351 shutdown
+296  /etc/init.d/redis_6379 start
+297  ss -utnlp  | grep redis-server
+ 	
+
+		3 创建集群
+[root@host57 ~]# redis-trib.rb create --replicas 1  192.168.4.51:6351  192.168.4.52:6352 192.168.4.53:6353 192.168.4.54:6354 192.168.4.55:6355 192.168.4.56:6356
+
+
+>>> Creating cluster
+>>> Performing hash slots allocation on 6 nodes...
+Using 3 masters:
+192.168.4.51:6351
+192.168.4.52:6352
+192.168.4.53:6353
+Adding replica 192.168.4.55:6355 to 192.168.4.51:6351
+Adding replica 192.168.4.56:6356 to 192.168.4.52:6352
+Adding replica 192.168.4.54:6354 to 192.168.4.53:6353
+M: 2d00aaf5ece0eca2f58932798c5c4acc9880a52c 192.168.4.51:6351
+   slots:0-5460 (5461 slots) master
+M: 58ca85799bb49111da118346fed63cf1471a8cfd 192.168.4.52:6352
+   slots:5461-10922 (5462 slots) master
+M: fdafe040336b1a19e5da298726566ab4ca4932d9 192.168.4.53:6353
+   slots:10923-16383 (5461 slots) master
+S: c07c5574884e533fcf81f80fda8c1eadd7a8c94e 192.168.4.54:6354
+   replicates fdafe040336b1a19e5da298726566ab4ca4932d9
+S: 209c2865f6fcc78c0ba23a6cd6b3e83f36d852a4 192.168.4.55:6355
+   replicates 2d00aaf5ece0eca2f58932798c5c4acc9880a52c
+S: 95b1d0c6e216ab34c9e03903ad344015dc6057b5 192.168.4.56:6356
+   replicates 58ca85799bb49111da118346fed63cf1471a8cfd
+Can I set the above configuration? (type 'yes' to accept): yes
+
+[OK] All 16384 slots covered.
+
+
+ 在数据库服务器主机执行如下命令
+  info replication  #查看角色
+  cluster info  #查看集群信息
+  cluster nodes #查看集群成员
+
+  
+
+		4 查看集群信息 在管理主机使用脚本查看
+[root@host57 ~]# redis-trib.rb info 192.168.4.52:6352#查看统计信息
+[root@host57 ~]# redis-trib.rb check 192.168.4.52:6352#查看详细信息
+
+		5 客户端访问集群存取数据
+[root@host50 ~]# redis-cli -c -h 192.168.4.56 -p 6356
+
+		11:35 统一排错
+			1 分别停止6台主机的redis服务
+			2 检查6台主机集群功能启用了吗？
+			3 清空数据库目录 rm -rf /var/lib/redis/6379/*
+			4 检查51-57 主机防火墙服务和selinux是否关闭
+			5 分别启动6台主机的redis服务
+			6 再次在管理主机 执行创建集群的命令
+
+二 管理集群 
+	准备准备工作：
+		创建2台新的虚拟机 IP分别为 192.168.4.58 和  192.168.4.59
+		安装源码redis软件 启动服务 修改服务使用的ip和端口
+		58主机  redis服务使用的ip  192.168.4.58  端口6358
+                59主机  redis服务使用的ip  192.168.4.59  端口6359
+
+		58 和  59 的Redis服务都要启用集群功能
