@@ -1,0 +1,157 @@
+Nosql_day03
+一 Redis主从复制 （类似于MySQL的主从同步）
+	功能 实现数据的自动备份
+	角色：主数据库服务器  和 从数据库服务器
+
+        支持的结构？
+	主从同步的工作过程？
+
+        配置主从复制结构存储数据：
+
+	
+		* 默认Redis服务运行后 就是 master 服务器
+
+	相关命令
+		查看角色 info replication 
+               
+                修改配置文件永久设置 
+                vim  /etc/redis/6379.conf
+			slaveof 主ip地址  端口号
+                :wq
+
+		重启Redis服务 /etc/init.d/redis_6379  start
+
+
+                slaveof no one #临时恢复为master服务器
+
+                命令指定为slave服务器 slaveof  主ip地址  端口号
+		
+
+
+	配置一主一从结构    
+                 51 主 (不做任何配置 )
+		 连接51 存储数据  mset  x 1 y 2 z 3
+  
+                 52 从
+		vim /etc/redis/6379.conf
+		282  slaveof  192.168.4.51 6351
+                :wq
+
+		]#redis-cli  -h 192.168.4.52 -p 6352 shutdown
+                ]#/etc/init.d/redis_6379 start
+		]#redis-cli  -h 192.168.4.52 -p 6352
+		> info  replication  
+		> keys *   #能够看和51上一样的数据
+ 
+  ]#redis-cli  -h 192.168.4.51 -p 6351
+  > mset  a 1 b 3  c 4
+
+  ]#redis-cli  -h 192.168.4.51 -p 6351
+  > keys *   #可以看到 51 新存储的数据
+
+		> slaveof no one
+		> info  replication 
+		> slaveof  192.168.4.51 6351
+                > info  replication
+
+
+   配置一主多从  把服务器53 也配置为 51 的 slave服务器 
+
+		 在主机53做如下配置：
+
+     *如果想永久做从服务器 就修改配置文件重启服务
+	vim /etc/redis/6379.conf
+         	slaveof 192.168.4.51 6351
+        :wq
+	]#redis-cli  -h 192.168.4.52 -p 6352 shutdown
+        ]#/etc/init.d/redis_6379 start
+
+     *如果临时设置为从服务器 命令行使用slaveof 配置即可
+        > slaveof 192.168.4.51  6351
+
+    在51主机查看时 会看到从服务器 有2台    
+    ]#redis-cli  -h 192.168.4.51 -p 6351
+    > info  replication
+    > set y  99     #存储的数据在2台从本机都可以查看到	
+	
+     配置主从从结构 （给主从结构中的slave服务器配置从服务器）
+     给主从结构中的53主机配置1台从服务器 IP 192.168.4.54
+          在54主机做如下配置：
+	  
+ *如果想永久做从服务器 就修改配置文件重启服务
+	vim /etc/redis/6379.conf
+         	slaveof 192.168.4.53 6353
+        :wq
+	]#redis-cli  -h 192.168.4.54 -p 6354 shutdown
+        ]#/etc/init.d/redis_6379 start
+
+     *如果临时设置为从服务器 命令行使用slaveof 配置即可
+        > slaveof 192.168.4.53  6353
+
+    
+ 
+    ]#redis-cli  -h 192.168.4.53 -p 6353
+    > info  replication 在53主机查看时 会看到连接的从服务器的台数
+
+    在51主机查看时 会看到从服务器 有2台    
+    ]#redis-cli  -h 192.168.4.51 -p 6351
+    > info  replication
+    > set y  99     #存储的数据在54本机也可以查看到	     
+
+
+    带验证的主从复制（主服务器有连接密码时，配置主从复制）
+	主服务器51设置连接密码
+[root@host51 ~]# redis-cli  -h 192.168.4.51 -p 6351 shutdown
+[root@host51 ~]# vim +501 /etc/redis/6379.conf 
+requirepass 123456
+:wq
+[root@host51 ~]# /etc/init.d/redis_6379 start
+
+
+        从服务器指定主服务器连接密码  
+]# redis-cli  -h 192.168.4.52 -p 6352  shutdown
+]# vim +289 /etc/redis/6379.conf 
+ masterauth 123456
+:wq
+]# /etc/init.d/redis_6379 start
+]# redis-cli  -h 192.168.4.52 -p 6352
+>info  replication
+
+
+ 哨兵服务： 实现Redis服务的高可用
+    
+    环境准备 一主一从结构的高可用
+
+      1  53 和 54 的redis服务停止
+
+      2  给52 主机设置连接密码 密码要和51 一样。
+
+      3  启动57 主机，不需要运行redis服务 若是新克隆的虚拟机57 要拷贝 redis-4.0.8.tar.gz
+
+
+       配置哨兵服务：
+]# yum -y install gcc
+]# tar -zxvf redis-4.0.8.tar.gz
+]# cd  redis-4.0.8
+]# make
+]# make install
+
+]#vim /etc/sentinel.conf
+bind 192.168.4.57
+port 26379
+sentinel   monitor  redisserver 192.168.4.51 6351  1
+sentinel auth-pass  redisserver 123456
+:wq
+
+]# redis-sentinel /etc/sentinel.conf  启动信息会占用终端输出
+
+]# cat /etc/sentinel.conf 文件的内容 会自动更新
+
+验证配置
+	停止当前主服务器上的redis服务 
+
+	哨兵服务会把对应的从升级为主，并自动监视新的主服务
+]# cat /etc/sentinel.conf  
+
+
+        从服务器查看状态 角色会变成master
