@@ -155,3 +155,43 @@ sentinel auth-pass  redisserver 123456
 
 
         从服务器查看状态 角色会变成master
+
+
+二 持久化  明天讲
+
+三 数据类型  
+    字符类型管理命令  set 
+    列表类型管理命令
+    hash表类型管理命令
+
+项目day01 环境准备
+
+day01	
+    ip地址	角色	主机名	安装软件	启动服务	备注
+	192.168.4.33	网站服务器	web33	httpd	否	
+						
+	192.168.4.11	mysql数据库服务器	mysql11	mysql-5.7.17	否	添加2块5G磁盘
+	192.168.4.22	MySQL数据可服务器	mysql22	mysql-5.7.17	否	添加2块5G磁盘
+						
+	192.168.4.77	数据读写分离服务器	maxscale77	maxscale	否	无
+						
+	192.168.4.30	NFS服务器	nfs30	nfs-utlis   rpcbind	否	添加1块3G磁盘(如果硬件配置低，可以在77主机配置)
+						
+						
+						
+day02	
+    192.168.4.51	redis服务器	redisA	redis	是	启用集群功能
+	192.168.4.52	redis服务器	redisB	redis	是	启用集群功能
+	192.168.4.53	redis服务器	redisC	redis	是	启用集群功能
+	192.168.4.54	redis服务器	redisD	redis	是	启用集群功能
+	192.168.4.55	redis服务器	redisE	redis	是	启用集群功能
+	192.168.4.56	redis服务器	redisF	redis	是	启用集群功能
+	192.168.4.57	redis集群管理主机	MGM58	无	无	创建redis-trib.rb脚本(也可用77主机做管理主机)
+						
+	192.168.4.66 	MySQL11主机的slave服务器	host66	mysql-5.7.17.tar	是	无
+	192.168.4.10   	pxc集群主机	pxc10	PXC集群软件	否	无
+	192.168.4.88 	pxc集群主机	pxc88	PXC集群软件	否	无
+						
+	192.168.4.99 	数据库服务LB集群调度器	haproxy99	haproxy软件	否	如果硬件配置低，可以在77主机配置
+
+
