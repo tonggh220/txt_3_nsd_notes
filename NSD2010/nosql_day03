@@ -157,10 +157,94 @@ sentinel auth-pass  redisserver 123456
         从服务器查看状态 角色会变成master
 
 
-二 持久化  明天讲
+二 持久化  
+    持久化  （Redis服务实现数据永久存储的2种方式）
+	RDB(默认) 指的是 /var/lib/redis/6379/dump.rdb
+
+        rdb介绍
+        存盘频率
+        手动存盘
+
+        通过备份rdb文件实现数据恢复
+192.168.4.50:6350> mset a 1 b 3 c 5  d 6  f 7
+192.168.4.50:6350> save        
+>exit
+]# cp /var/lib/redis/6379/dump.rdb  /opt/
+]# scp /opt/dump.rdb  root@192.168.4.51:/root/
+
+     恢复
+]# /etc/init.d/redis_6379 stop
+]# ls /var/lib/redis/6379/dump.rdb
+]# rm -rf /var/lib/redis/6379/dump.rdb
+]# cp /root/dump.rdb  /var/lib/redis/6379/
+]# /etc/init.d/redis_6379 start
+
+192.168.4.51:6351>  keys *    
+
+存盘频率验证
+[root@localhost ~]# redis-cli  -h 192.168.4.50 -p 6350 -a 123456  shutdown
+[root@localhost ~]# ls /var/lib/redis/6379/
+dump.rdb
+[root@localhost ~]# rm -rf /var/lib/redis/6379/dump.rdb 
+[root@localhost ~]# vim /etc/redis/6379.conf 
+ 219 save 900 1
+ 220 #save 300 10
+ 221 save 120 10
+ 222 save 60 10000
+:wq
+  /etc/init.d/redis_6379 start
+  525  ls /var/lib/redis/6379/
+  527  redis-cli  -h 192.168.4.50 -p 6350 -a 123456 
+> 争取在2分钟以为存储 大于等于 10个变量
+>exit
+]#ls -l /var/lib/redis/6379/dump.rdb
+
+再给2分钟 到10:45 
+		
+	RDB优点与缺点？
+
+	AOF（需要手动启用）        
+[root@localhost ~]# redis-cli  -h 192.168.4.50 -p 6350 -a 123456  
+192.168.4.50:6350> config get appendonly
+192.168.4.50:6350> config set appendonly yes
+192.168.4.50:6350> config get appendonly
+
+192.168.4.50:6350> config rewrite
+
+[root@localhost ~]# ls /var/lib/redis/6379/
+appendonly.aof  dump.rdb
+
+
+[root@host51 ~]# vim +673 /etc/redis/6379.conf 
+673:appendonly no
+677:appendfilename "appendonly.aof"
+[root@host51 ~]# redis-cli  -h 192.168.4.51 -p 6351 -a 123456  shutdown
+[root@host51 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host51 ~]# ls /var/lib/redis/6379/
+appendonly.aof  dump.rdb
+[root@host51 ~]# 
+
+    通过备份aof 文件恢复数据
+[root@localhost ~]# ls /var/lib/redis/6379/appendonly.aof  dump.rdb
+[root@localhost ~]# cp /var/lib/redis/6379/appendonly.aof  /opt/
+[root@localhost ~]# ls /opt/appendonly.aof 
+/opt/appendonly.aof
+[root@localhost ~]#
+[root@localhost ~]# scp /opt/appendonly.aof  root@192.168.4.51:/root/
+
+在51 主机使用AOF文件恢复数据
+[root@host51 ~]# redis-cli  -h 192.168.4.51 -p 6351 -a 123456  shutdown
+[root@host51 ~]# rm -rf /var/lib/redis/6379/*
+[root@host51 ~]# mv /root/appendonly.aof  /var/lib/redis/6379/
+[root@host51 ~]# ls /var/lib/redis/6379/
+[root@host51 ~]# /etc/init.d/redis_6379 start 
+> keys *
+  
+  aof优化配置
 
 三 数据类型  
-    字符类型管理命令  set 
+    字符类型管理命令  
     列表类型管理命令
     hash表类型管理命令
 
