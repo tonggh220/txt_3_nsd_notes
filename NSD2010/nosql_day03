@@ -243,6 +243,17 @@ appendonly.aof  dump.rdb
   
   aof优化配置
 
+  修复aof文件
+  566  redis-cli  -h 192.168.4.50 -p 6350 -a 123456  shutdown
+  568  vim appendonly.aof 
+  572  /etc/init.d/redis_6379 start
+  573  redis-cli  -h 192.168.4.50 -p 6350 -a 123456 
+  576  vim /var/log/redis_6379.log 
+  581  redis-check-aof --fix /var/lib/redis/6379/appendonly.aof 
+  583  rm -rf /var/run/redis_6379.pid 
+  584  /etc/init.d/redis_6379 start
+  585  redis-cli  -h 192.168.4.50 -p 6350 -a 123456
+
 三 数据类型  
     字符类型管理命令  
     列表类型管理命令
