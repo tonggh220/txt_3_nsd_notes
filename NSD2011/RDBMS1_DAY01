@@ -1,0 +1,208 @@
+庞丽静
+
+静静
+
+基础  5 
+
+进阶  5
+
+NoSQL 3 
+
+项目   2 
+
+数据库运维 
+
+              数据服务软件 MySQL    DBS
+
+192.168.4.50  数据库服务器    硬盘 100G 
+ 
+行话    黑社会  条子来了  警察
+
+相关概念： 数据库？ 数据库软件？ MySQL发展史？ 名词？
+
+搭建数据库服务器：
+           安装软件 
+           启动服务 
+           查看端口和进程 
+           初始密码登录
+           修改登录密码 
+           端口连接 
+           使用新密码登录 
+           查看数据
+查看默认的密码策略
+修改密码策略
+
+在ip地址是 192.168.4.51的主机搭建mysql服务 
+10分钟 到10:50
+                休息到11:05 上课
+
+SQL命令  结构化查询语言
+下课了 
+
+ show  databases;  查看已有的数据库  练习到 14:27
+ create  database mydb; 创建新库
+
+ create table mydb.pwlist(name char(10) ,  在库里创建新表 
+ age  int  ,  school char(20));
+
+ use mydb; 进入库里
+
+ show tables; 查看表名
+
+ desc  mydb.pwlist; 查看表头
+
+ select  * from mydb.pwlist; 查看表里的行
+ insert into mydb.pwlist values("bob",19 ,"tarena"); 添加行
+ insert into mydb.pwlist values("tom",21 ,"tarena");  添加行
+ select  * from mydb.pwlist; 再查看表里的行
+
+
+ 
+ 指定表使用的字符集  
+             字符的集合  gb2312  utf8
+
+ 英文字母  a  -  z   A  - Z 
+ 拼音   a - z  A - Z
+ 汉字  庞丽静  达内
+
+create table mydb.学生表(
+姓名 char(10) , 
+年龄 int  , 
+学校  char(10) 
+)default charset=utf8;  指定表使用的字符集
+
+show create table mydb.学生表 \G  查看表的字符集
+
+desc mydb.学生表; 查看表头
+
+insert into mydb.学生表 values ("钟碧茵",18, "达内"); 添加行
+
+select  * from  mydb.学生表; 查看行
+
+drop  table  mydb.学生表；  练习到15:05 
+show  tables；
+
+只改符合条件的行
+  update mydb.pwlist set name="CC" where name="bob";
+
+批量改  update mydb.pwlist set age=20;
+select  * from  mydb.pwlist; 查看是否改成功了 
+
+删除行
+delete from  mydb.pwlist where 条件 ;删除指定的行
+ 
+delete from mydb.pwlist where name="bob";
+
+delete from  mydb.pwlist ; 删除表里的所有行
+
+select * from mydb.pwlist; 没有行了 
+休息到 15:20
+
+
+ MySQL  规定了  类型的 对应的命令 都是固定
+
+ 字符类型
+	char  定长字符类型  255
+        varchar 变长字符类型 65532
+        
+	大文本类型 （图片 视频 音频）
+	blob 
+	text
+
+create table  mydb.t4(姓名 char(10) , 邮箱 varchar(15) );
+
+mysql> insert into mydb.t4 values ("panglijing" , "panglj@tedu.cn");
+
+mysql> insert into mydb.t4 values ("panglijingaaaa" , "panglj@tedu.cn");
+ERROR 1406 (22001): Data too long for column '姓名' at row 1
+mysql>
+
+mysql> select  * from mydb.t4;
+
+
+day02 
+
+ 日期时间类型 (存储范围）
+ 年   year   YYYY          2021  
+ 日期 date   YYYYMMDD      20210222
+ 时间 time   HHMMSS        153428
+ 日期时间 datetime 或 timestamp
+	  YYYYMMDDHHMMSS
+          20210222153548
+
+
+create table mydb.t1( csnf  year , 
+birthday  date , up_class  time , party datetime  );
+
+insert into mydb.t1 values (1990 ,20211120 , 090000 , 20210228203000);
+
+select  * from mydb.t1;
+
+
+
+insert into mydb.t1 values 
+(49 ,20211120 , 090000 , 20210228203000),
+(83,20211120 , 090000 , 20210228203000);
+
+select  * from mydb.t1;
+
+
+create table mydb.t2(
+聚会时间  datetime ,  开会时间 timestamp);
+
+insert into mydb.t2 values (20210707220000,20210228183000);
+
+insert into mydb.t2(聚会时间)values(20221224170000);
+insert into mydb.t2(开会时间)values(20210223094852);
+
+select  * from mydb.t2;  休息到 16:25 
+
+select curtime() ;  获取系统时间
+select cutdate() ;  获取系统日志
+select now() ; 获取系统日期和时间
+                       
+insert into mydb.t1 values (2000,curdate(),curtime(),now());
+mysql> select  * from mydb.t1;
+
+select year( now() );  只要年
+select  month( now() ); 只要月
+select day( now() ); 只要天
+select time( now() ); 只要时间
+select hour(now()); 只要小时
+
+insert into mydb.t1 values (year(now()),curdate(),curtime(),now());
+
+insert into mydb.t1 values 
+(year(19991120),curdate(),curtime(),now());
+mysql> select  * from mydb.t1;
+
+枚举类型 表头的值 要在列举的范围内选择
+enum(值列表) 单选：只能选择范围里的一个值
+set(值列表)多选： 可以选项范围里的一个或多个值                
+
+create table mydb.t3(性别 enum("boy","girl") , 爱好  set("eat","game","moneny","sleep") );
+
+desc mydb.t3;
+
+mysql> insert into mydb.t3 values ("no" , "film,music");
+ERROR 1265 (01000): Data truncated for column '性别' at row 1
+
+mysql> insert into mydb.t3 values ("boy" , "film,music");
+ERROR 1265 (01000): Data truncated for column '爱好' at row 1
+ 
+mysql> insert into mydb.t3 values ("boy" , "moneny,sleep,eat");
+
+select  * from mydb.t3;
+
+
+ 
+课后练习  50主机
+
+ 创建存储游戏人物信息表 
+（表头的个数 表头名称  使用的 数据类型 自己考虑）
+ 
+ 创建前任信息表（表头的个数 表头名称  使用的 数据类型 自己考虑）
+
+ 能够看到别人创建表 如何存储数据
+
+
