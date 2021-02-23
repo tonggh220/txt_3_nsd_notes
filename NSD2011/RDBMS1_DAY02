@@ -65,3 +65,156 @@ mysql> select  * from db1.t7;
 3 rows in set (0.00 sec)
 
 mysql> 
+
+修改表结构 ：创建的表不理想 在可以对其修改
+  alter table 库.表 处理动作；
+
+
+add 添加新表头
+
+alter table db1.t7 add mail varchar(20) not null default  "stu@tedu.cn";
+
+
+alter table db1.t7 add home  char(15);
+
+
+alter table db1.t7 add  sex enum("boy","girl") default "girl" after age;
+
+
+alter table db1.t7 add birthday date first;
+
+select  * from  db1.t7;
+desc  db1.t7;            
+
+modify修改字段类型和约束条件
+
+alter table db1.t7 modify name varchar(10) not null  default "tarena";
+
+desc  db1.t7;
+
+修改表头位置
+alter table db1.t7 modify sex enum("boy","girl") null default "girl" after name;
+
+select  * from db1.t7;
+desc  db1.t7;
+                        
+change 修改字段类型 和 字段名 
+
+alter table db1.t7 change birthday  sr date null default null;
+
+alter table db1.t7 change name  xingming char(5) null default null ;
+
+drop 删除表头
+alter table db1.t7  drop sr , drop home ;
+
+
+rename修改表名
+mysql> alter table db1.t7 rename stuinfo ;
+use db1;
+show tables;
+
+二 MySQL键值 （给表头加的标签 每种标签都有各自的功能和限制给表头赋值的方式）
+
+	键值的类型？
+	
+普通索引 index
+	什么是索引 ：给表头存储的数据生成排序信息
+	索引的优缺点？
+	索引的使用：
+		使用规则(背诵)
+
+		创建索引
+			在已有表里添加索引
+mysql> create index yyy on mydb.t1(birthday);
+mysql> create index xxx on mydb.t1(csnf);
+
+
+			建表时创建索引
+create table mydb.t10(name char(10) , age int , home char(30) , index(name) , index(home) );
+		
+		查看索引
+			查看是否有索引  desc 表名;
+			desc  mydb.t1;
+			desc  mydb.t10;
+
+			查看详细信息
+			show index from 库.表 \G
+			show index from  mydb.t1 \G
+			show index from  mydb.t10 \G
+
+		删除索引
+		drop index 索引名 on  库.表；
+                drop index  xxx on mydb.t1;
+
+主键 设置在表头上 控制给表头存储数据
+     核心功能： 表头存储的数据不能重复 也不能存null
+     主键的使用：
+	使用规则(背诵)
+        创建主键 （一个表头做主键）
+	   
+建表时创建 primary key(字段名)
+				练习到16:58 			
+mysql> create table  db1.t21(
+name char(10), age int , class char(10), 
+primary key(name) 
+);
+
+MySQL> desc db1.t21;
+	   删除主键
+	   alter table 库.表 drop primary key;
+           alter table db1.t21 drop primary key;
+	   在已有表添加主键
+           alter table 库.表 add primary key(列名);
+alter table db1.t21 add  primary key（name）;
+
+mysql> insert into db1.t21 values (null , 19 , "nsd2011");
+ERROR 1048 (23000): Column 'name' cannot be null
+
+mysql> insert into db1.t21 values ("jerry" , 29 , "nsd2012");
+mysql> insert into db1.t21 values ("jerry" , 29 , "nsd2012");
+ERROR 1062 (23000): Duplicate entry 'jerry' for key 'PRIMARY'
+mysql> 
+mysql> insert into db1.t21 values ("jerrya" , 29 , "nsd2012");
+Query OK, 1 row affected (0.00 sec)
+
+select  * from db1.t21;
+
+ 
+           复合主键 （多个表头一起做主键）
+	   约束：做主键表头的值不允许同时相同
+
+PRI         PRI
+客户端地址  服务端口号  访问状态
+cip          port       status
+1.1.1.1        22       allow
+1.1.1.1        80       deny
+2.1.1.1        80       allow
+
+create table db1.t22(cip varchar(15) , port smallint ,status enum("deny","allow") , primary key(cip,port) );
+
+desc db1.t22;
+
+
+insert into db1.t22 values ("1.1.1.1",22,"allow");
+insert into db1.t22 values ("2.1.1.1",80,"allow");
+insert into db1.t22 values ("1.1.1.1",80,"deny");
+
+select  * from db1.t22;
+
+	删除复合主键 
+mysql> alter table db1.t22 drop primary key;
+
+	添加复合主键
+ alter table db1.t22 add primary key(port,cip);
+
+主键通常与auto_increment连用
+           自增加：让表头通过自加1的计算结果赋值
+
+create table db1.t23( id int primary key auto_increment ,name char(10) , class char(7), home char(15) );
+
+ insert into db1.t23(name,class,home)values("tom","nsd2011","gz");
+ insert into db1.t23(name,class,home)values("toma","nsd2011","gz");
+ insert into db1.t23(name,class,home)values("tomb","nsd2011","gz");
+
+mysql> select  * from db1.t23;
+mysql> select  * from db1.t23 where id = 2 ;
