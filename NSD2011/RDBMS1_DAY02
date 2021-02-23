@@ -6,6 +6,15 @@ key			键值类型
 default 		设置默认值，缺省为NULL
 extra		额外设置
 
+mysql> create table db1.t7(
+name char(5) not null,
+age tinyint unsigned default 19 , 
+class char(9) not null default "nsd2011" ,
+pay float(7,2) default 28000,
+stu_num int 
+);
+
+
 mysql> desc db1.t7;
 +---------+---------------------+------+-----+----------+-------+
 | Field   | Type                | Null | Key | Default  | Extra |
