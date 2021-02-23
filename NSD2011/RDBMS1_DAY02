@@ -1,0 +1,58 @@
+字段约束条件
+
+null 		允许为空（默认设置）
+not  null 		不允许为null  (空)
+key			键值类型
+default 		设置默认值，缺省为NULL
+extra		额外设置
+
+mysql> desc db1.t7;
++---------+---------------------+------+-----+----------+-------+
+| Field   | Type                | Null | Key | Default  | Extra |
++---------+---------------------+------+-----+----------+-------+
+| name    | char(5)             | NO   |     | NULL     |       |
+| age     | tinyint(3) unsigned | YES  |     | 19       |       |
+| class   | char(9)             | NO   |     | nsd2011  |       |
+| pay     | float(7,2)          | YES  |     | 28000.00 |       |
+| stu_num | int(11)             | YES  |     | NULL     |       |
++---------+---------------------+------+-----+----------+-------+
+5 rows in set (0.01 sec)
+
+mysql> insert into db1.t7(name,stu_num) values("bob",1);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t7;
++------+------+---------+----------+---------+
+| name | age  | class   | pay      | stu_num |
++------+------+---------+----------+---------+
+| bob  |   19 | nsd2011 | 28000.00 |       1 |
+
+mysql> desc db1.t7;
++---------+---------------------+------+-----+----------+-------+
+| Field   | Type                | Null | Key | Default  | Extra |
++---------+---------------------+------+-----+----------+-------+
+| name    | char(5)             | NO   |     | NULL     |       |
+| age     | tinyint(3) unsigned | YES  |     | 19       |       |
+| class   | char(9)             | NO   |     | nsd2011  |       |
+| pay     | float(7,2)          | YES  |     | 28000.00 |       |
+| stu_num | int(11)             | YES  |     | NULL     |       |
++---------+---------------------+------+-----+----------+-------+
+5 rows in set (0.00 sec)
+
+mysql> insert into db1.t7(name,stu_num) values(null,7);
+ERROR 1048 (23000): Column 'name' cannot be null
+mysql> 
+mysql> insert into db1.t7(name,age,stu_num) values("lucy",null,7);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select  * from db1.t7;
++------+------+---------+----------+---------+
+| name | age  | class   | pay      | stu_num |
++------+------+---------+----------+---------+
+| bob  |   19 | nsd2011 | 28000.00 |       1 |
+| tom  |   21 | nsd2012 |  3333.12 |       9 |
+| lucy | NULL | nsd2011 | 28000.00 |       7 |
++------+------+---------+----------+---------+
+3 rows in set (0.00 sec)
+
+mysql> 
