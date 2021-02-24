@@ -218,3 +218,73 @@ create table db1.t23( id int primary key auto_increment ,name char(10) , class c
 
 mysql> select  * from db1.t23;
 mysql> select  * from db1.t23 where id = 2 ;
+
+
+外键foreign key
+	理论
+		外键是如何约束给表头存储数据的？
+	插入记录时，字段值在另一个表字段值范围内选择
+
+   
+        应用场景
+
+   员工信息表 db1.ygtab
+   PRI
+   编号         名字   
+   yg_id         name 
+   
+
+   工资表 db1.gztab
+    外键
+    编号      工资  
+    gz_id      pay
+      
+  
+     
+
+	外键的使用规则（背诵）
+        命令格式
+	create table 库.表(字段列表 , foreign key(字段名) references  表名(字段名) on update cascade   on delete cascade )engine=innodb;
+
+        on update cascade      同步更新 
+	on delete cascade      同步删除
+
+  休息到 10:15  
+
+	创建外键
+  创建员工表  时间10分钟到 10:45  休息到11:05 
+create table db1.ygtab(yg_id  int primary key auto_increment , name char(10) )engine=innodb;
+
+insert into db1.ygtab(name)values("ruhua");
+insert into db1.ygtab(name)values("cuihua");
+select  * from db1.ygtab;
+		创建工资表
+use db1;
+create table  db1.gztab(gz_id int , pay float(7,2) , foreign key(gz_id) references db1.ygtab(yg_id) on update cascade on delete cascade )engine=innodb;
+
+mysql> show create table db1.gztab \G  查看外键和外键名称
+	删除外键
+alter table  db1.gztab drop foreign key  gztab_ibfk_1 ;
+	添加外键
+alter table  db1.gztab add foreign key(gz_id) references ygtab(yg_id) on update cascade on delete cascade ;
+
+	添加主键
+mysql> alter table db1.gztab add primary key(gz_id);
+
+        
+        验证外键	  6分钟到 11:31 
+mysql> insert into db1.gztab values(3,30000);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`db1`.`gztab`, CONSTRAINT `gztab_ibfk_1` FOREIGN KEY (`gz_id`) REFERENCES `ygtab` (`yg_id`) ON DELETE CASCADE ON UPDATE CASCADE)
+
+mysql> insert into db1.gztab values(1,30000);
+mysql> insert into db1.gztab values(2,30000);
+
+mysql> select  * from db1.gztab;
+
+测试同步更新
+mysql> update db1.ygtab set yg_id=8 where name="ruhua";
+mysql> select  * from db1.gztab;
+
+测试同步删除
+mysql> delete from db1.ygtab where yg_id=2;
+mysql> select  * from db1.gztab;
