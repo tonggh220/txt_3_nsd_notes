@@ -1,0 +1,182 @@
+一、数据导入导出 功能：批量处理数据
+	检索目录：导入导出时存储数据的文件必须在指定的目录下
+		查看存放文件的默认目录
+mysql> show  variables  like  "secure_file_priv";  
++------------------+-----------------------+
+| Variable_name    | Value                 |
++------------------+-----------------------+
+| secure_file_priv | /var/lib/mysql-files/ |
++------------------+-----------------------+
+
+
+		修改存放文件的目录
+vim /etc/my.cnf
+[mysqld]
+secure_file_priv="/myload"
+:wq
+[root@mysql50 ~]# mkdir /myload
+[root@mysql50 ~]# chown mysql /myload
+[root@mysql50 ~]# setenforce 0
+[root@mysql50 ~]# systemctl  restart mysqld
+]#mysql -uroot -ptarena
+mysql> show  variables  like  "secure_file_priv"; 
++------------------+----------+
+| Variable_name    | Value    |
++------------------+----------+
+| secure_file_priv | /myload/ |
++------------------+----------+
+1 row in set (0.00 sec)
+
+
+	1.1  导入 把系统文件的内容存储到数据库的表里
+命令格式
+load  data  infile   "/目录名/文件名" into   table  库名.表名
+fields terminated   by   "分隔符" lines  terminated  by   "\n";
+
+把系统用户系统用户信息存储到db3库下user表里
+          /etc/passwd
+操作步骤：
+	创建存储数据的库 
+create database db3;
+	创建存储数据的表
+create table db3.user(name char(50) , password  char(1) , uid  int , gid int , comment varchar(100) , homedir char(60) , shell  char(30) );
+
+desc db3.user;
+select  * from db3.user;
+
+	把系统文件拷贝到要求的目录下
+mysql> system cp /etc/passwd /myload/
+	执行导入数据的命令
+mysql> load  data infile "/myload/passwd" into table db3.user  fields terminated by ":" lines terminated by "\n" ;
+	查看数据
+select  * from  db3.user;
+        根据自己的需要做优化
+mysql> alter table db3.user add id int primary key auto_increment first;
+mysql> select  * from db3.user where id = 1;
+mysql> select  * from db3.user where id <= 5;
+
+
+
+注意事项（背诵） 
+
+
+
+	1.2  导出 把表记录存储到系统文件里
+	命令格式1
+
+	select查询命令  into outfile  "/目录/文件";
+
+
+
+       命令格式2
+
+	select查询命令  into outfile  "/目录/文件"  fields terminated by "符号";
+
+
+
+
+       命令格式3
+
+	select查询命令  into outfile  "/目录/文件"  fields terminated by "符号"  lines terminated by "符号" ;
+      练习到 15:39
+
+        select  * from db3.user into outfile "/myload/a.txt";
+	
+        select  * from db3.user into outfile "/myload/b.txt" fields terminated by ":";
+        
+        select  * from  db3.user where id <= 3  into outfile  "/myload/c.txt" fields  terminated by "#" lines terminated by "!!!";
+   
+       select name,shell from db3.user into outfile "/myload/d.txt";
+
+ ]# ls /myload/*.txt
+
+ ]# cat /myload/a.txt
+
+	 导出数据注意事项（背诵）
+
+二、管理表记录 db3.user
+
+	查询select
+	select 表头名称列表 from  库.表 where 条件；
+
+      select  *  from db3.user ; 查看所有表记录
+
+      select  *  from  db3.user where  uid = 1 ;只显示与条件匹配的行
+
+      select  name , uid , shell  from  db3.user where  uid = 1 ;
+
+
+	插入insert      休息到 16:25
+		添加1行  给所有表头赋值
+insert into db3.user values(31,"bob" , "x" , 2000 , 2000 , "test user" , "/home/bob" , "/bin/bash");
+
+                添加多行 给所有表头赋值
+insert into db3.user 
+values 
+(41,"tom" , "x" , 2000 , 2000 , "test user" , "/home/bob" , "/bin/bash"),(28,"bob" , "x" , 2000 , 2000 , "test user" , "/home/bob" , "/bin/bash");
+
+		添加1行 给指定表头赋值
+insert into db3.user(name,shell,password) values("lucy","/sbin/nologin","x");
+
+		添加多行 给指定表头赋值
+insert into db3.user(name,shell,password) values
+("lucy1","/sbin/nologin","x"),("2lucy","/sbin/nologin","x"),("lucya","/sbin/nologin","x");
+
+	更新update  修改行里表头的值
+	update  库.表 set  字段名=值 , 字段名=值 where 条件；//只修改复合条件的行的表头值
+
+	update  库.表 set  字段名=值 , 字段名=值； //批量修改
+	
+update db3.user set password="a" , comment="student" ;
+select password , comment from db3.user;
+update db3.user set password="x" , comment="root" where name="root";
+
+	删除delete 删除表里行
+	delete from  库.表 where 条件; 只删除与条件匹配的行
+	delete from  库.表；删除所有行
+mysql> select  * from db3.user ;
+mysql> delete from db3.user where id > 20 ;
+mysql> select  * from db3.user where id <= 20 ;
+
+
+
+MySQL图形管理工具 之 phpmyadmin
+
+    准备软件运行环境
+  118  yum -y install httpd  php php-mysql
+  119  rpm -q httpd  php php-mysql
+  120  systemctl  start httpd
+  121  systemctl  enable httpd
+  122  vim /var/www/html/a.php
+       <?php
+	 $i = 9 ;
+	 echo  $i ;
+       ?>
+   :wq
+
+  123  curl  http://localhost/a.php
+	9
+
+
+
+     安装phpmyadmin软件
+tar -zxvf phpMyAdmin-2.11.11-all-languages.tar.gz 
+mv phpMyAdmin-2.11.11-all-languages/ /var/www/html/phpmyadmin
+ls /var/www/html/
+ls /var/www/html/phpmyadmin/
+ls /var/www/html/phpmyadmin/index.php
+
+    修改phpmyadmin软件的配置文件（告诉软件管理本机的数据库服务）
+     
+]# cp /var/www/html/phpmyadmin/config.sample.inc.php  /var/www/html/phpmyadmin/config.inc.php
+
+]# vim  /var/www/html/phpmyadmin/config.inc.php
+17 $cfg['blowfish_secret'] = 'plj123';
+31 $cfg['Servers'][$i]['host'] = 'localhost';
+:wq
+
+	
+	在客户端打开浏览器在地址栏输入网址
+http://192.168.4.50/phpmyadmin
+    用户 root
+    密码 tarena
