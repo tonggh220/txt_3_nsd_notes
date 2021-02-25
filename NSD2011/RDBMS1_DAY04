@@ -1,0 +1,60 @@
+RDMS1_DAY04 
+
+      用户授权 : 数据库管理员登录服务器后，添加新用户并设置访问权限和登录密码。默认数据库服务器只允许数据库管理员root本机登录数据库服务。
+      用户授权命令
+grant  权限列表  on   库名  to  用户名@"客户端地址"  
+           identified  by  "密码"  		//授权用户密码
+           with  grant  option ;    		//有授权权限 ,可选项
+
+	 权限列表的表示方式（背诵）
+
+
+	  库名的表示方式（背诵）
+	  客户端地址的表示方式（背诵）
+50 主机添加用户
+mysql> grant all on *.* to mydba@"%" identified by "123qqq...A" with grant option ;
+
+
+51主机做测试
+[root@host51 ~]# mysql -h192.168.4.50 -umydba -p123qqq...A
+> select user();
+> show grants;
+> create table db3.t1(id int);
+
+> grant select on db1.* to ruhua@"localhost" identified by "123qqq...A";
+> exit;
+
+
+[root@mysql50 ~]# mysql -hlocalhost -uruhua -p123qqq...A
+>select user();
+>show grants;
+>mysql> select  * from db3.user;
+ERROR 1142 (42000): SELECT command denied to user 'ruhua'@'localhost' for table 'user'
+
+mysql> use db1;
+mysql> select  * from ygtab;
+
+ 
+50 主机
+mysql> grant select on db3.user to admin@"192.168.4.%" identified by "123qqq...A";
+
+mysql> grant select,insert,update,delete on db1.* to admin2@"localhost" identified by "123qqq...A";
+
+
+相关命令（背诵）
+mysql> select host,user from mysql.user ;
+mysql> show grants for admin@"192.168.4.%";
+
+[root@host51 ~]# mysql -h192.168.4.50 -uadmin -p123qqq...A
+mysql> set password=password("A...qqq321");
+mysql> exit
+
+[root@host51 ~]# mysql -h192.168.4.50 -uadmin -pA...qqq321
+[root@host50 ~]# mysql -uroot -ptarena
+mysql> set password for admin@"192.168.4.%"=password
+("123qqq...A");
+
+[root@mysql50 ~]# mysql -hlocalhost -uroot -ptarena
+>select user , host from mysql.user;
+> drop user admin@"192.168.4.%";
+> select user , host from mysql.user;
