@@ -217,4 +217,4 @@ select  name , uid  from  db3.user where uid in (10,20,30,50);
 
 select name , shell from db3.user where shell not in    ("/bin/bash","/sbin/nologin");
 
-select name , uid  from  db3.user  uid where  between 10  and  20 ;
+select name , uid  from  db3.user   where  uid  between 10  and  20 ;
