@@ -265,3 +265,54 @@ insert into db3.user(name)values("ya3ya"),("8yaya");
 
 select name from db3.user where name regexp '[0-9]';
 select name from db3.user where name not  regexp '[0-9]';
+
+
+        数学计算 + - * / %
+select name , uid from db3.user where uid % 2 =  0 ;
+
+update db3.user set uid=uid+1 where id <= 5 ;
+update db3.user set uid=uid-1 where id <= 5 ;
+
+alter table db3.user add age tinyint unsigned default 21 after name;
+
+select  name, age , 2021-age csnf from db3.user where name="root";
+
+select name , uid , gid , (uid + gid)/2 pjz from db3.user where name="mysql";
+
+
+	
+	
+	操作查询结果：对查询出来的数据再做处理
+         聚集函数 对数据总统计的命令
+	 min(字段名)
+	 max(字段名)
+	avg(字段名)
+	sum(字段名) 
+	count(字段名)
+select max(uid) from db3.user;
+select min(uid) from db3.user;
+select sum(uid) from db3.user;
+select avg(uid) from db3.user;
+
+select count(name) numbers from db3.user where shell="/sbin/nologin";
+
+select count(*) from db3.user;
+
+select min(uid) , max(uid) , avg(uid) , sum(uid) ,count(uid) from db3.user;
+
+   查询结果排序 order by 字段名  asc或desc;
+
+select name,uid from db3.user where uid between 10 and 100 ;
+
+select name,uid from db3.user where uid between 10 and 100 order by  uid ;
+
+ select name,uid from db3.user where uid between 10 and 100 order by uid  desc;
+
+   查询结果分组 group  by 字段名
+
+select shell from db3.user group by shell;
+
+select shell from db3.user where id <= 10  group by shell;
+
+   过滤查询结果 having （在已经查找的的数据里 做查找）
+ select name from db3.user where shell not in ("/bin/bash","/sbin/nolog") having  name in ("root","mysql");
