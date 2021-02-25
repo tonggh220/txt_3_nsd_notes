@@ -218,3 +218,20 @@ select  name , uid  from  db3.user where uid in (10,20,30,50);
 select name , shell from db3.user where shell not in    ("/bin/bash","/sbin/nologin");
 
 select name , uid  from  db3.user   where  uid  between 10  and  20 ;
+
+
+多条件比较
+		逻辑与 and   &&  多个判断条件要同时成立
+		逻辑或 or    ||  多个判断条件，只要某1个条件成立即可
+
+select name  from db3.user where  name="root" and  uid=0 and  shell is not  null ;
+
+select name  from db3.user where  name="mysql" and  uid=0 and  shell is not  null ;
+
+select name , uid from db3.user  where name in ("a","b")  or  uid between 1 and 5;
+
+and  和  or  同时 使用时 and 的优先级 比 or 高
+select name , uid  from db3.user  where  name="root" or name="bin" and  uid=1 ;
+	
+() 提高优先级
+select name , uid  from db3.user  where  （name="root" or name="bin") and  uid=1 ;
