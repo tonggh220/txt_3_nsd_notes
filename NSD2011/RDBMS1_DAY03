@@ -180,3 +180,41 @@ ls /var/www/html/phpmyadmin/index.php
 http://192.168.4.50/phpmyadmin
     用户 root
     密码 tarena
+
+    匹配条件 :  在对数据做select update delete 都可以加条件
+	    MySQL只处理与条件匹配的数据，反之不处理。
+
+	数值比较 符号两边要是 数字或数值类型的字段
+		 >  >=  <  <=  =  !=
+select name , uid , gid  from db3.user where uid != gid;
+select name , uid , gid  from db3.user where uid = gid;	
+select name , uid , gid  from db3.user where id <= 10;
+select name , uid , gid  from db3.user where id = 5;
+
+	字符比较  符号两边要是字符或字符类型的表头
+		=  !=
+select name from  db3.user where  name = "root";
+
+select name , shell from db3.user where  shell != "/bin/bash" ;  
+                  练习5分钟到 09:27
+  
+insert into db3.user(name,shell) values (null , null);
+
+判断空 is null 
+select id , name from  db3.user where name is null ;
+
+	判断非空 is not null
+select name , shell from db3.user where shell is not null ; 
+
+select id , name , shell  from  db3.user where name is null;
+select id , name , shell  from db3.user where shell is null ;
+
+	范围比较
+	in   not in  between 数字 and 数字
+select name from  db3.user where name in ( "mysql","sync","bin" ); 
+
+select  name , uid  from  db3.user where uid in (10,20,30,50); 
+
+select name , shell from db3.user where shell not in    ("/bin/bash","/sbin/nologin");
+
+select name , uid  from  db3.user  uid where  between 10  and  20 ;
