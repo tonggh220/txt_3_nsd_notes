@@ -235,3 +235,33 @@ select name , uid  from db3.user  where  name="root" or name="bin" and  uid=1 ;
 	
 () 提高优先级
 select name , uid  from db3.user  where  （name="root" or name="bin") and  uid=1 ;
+
+	正则匹配  regexp  '正则表达式'
+	符号  ^  $  . |  []  *
+select name from db3.user where name regexp 'r';
+
+
+ 
+
+select name  from db3.user where name  regexp '^[atr]';
+
+select name  from  db3.user 
+ where name regexp '^a' or  name regexp '^t';
+
+select name from db3.user where name regexp  '^a|^t';
+select name  from db3.user where name  regexp '[atr]$';
+select name  from db3.user where name  regexp '^r.*t$';
+	模糊匹配
+where 字段名  like   '通配符'
+_ ：表示1个字符  %：表示0~n个字符
+mysql> select  name from db3.user where name like '___';
+mysql> select  name from db3.user where name like '____
+mysql> select  name from db3.user where name like '%a%' ;
+mysql> select  name from db3.user where name like 'a%' ;
+mysql> select name from db3.user  where name like '__%__';
+
+
+insert into db3.user(name)values("ya3ya"),("8yaya");
+
+select name from db3.user where name regexp '[0-9]';
+select name from db3.user where name not  regexp '[0-9]';
