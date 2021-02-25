@@ -316,3 +316,47 @@ select shell from db3.user where id <= 10  group by shell;
 
    过滤查询结果 having （在已经查找的的数据里 做查找）
  select name from db3.user where shell not in ("/bin/bash","/sbin/nolog") having  name in ("root","mysql");
+
+
+       限制查询结果显示行数 limit 
+	不限制的话，会显示所有与查询条件匹配的行
+
+	limit 数字; 只显示查询结果的头几行 
+        limit 数字,数字； 显示查询结果指定范围内的行
+
+mysql> select name , uid , gid from  db3.user ;
+mysql> select name , uid , gid from  db3.user limit 3;
+
+select name , uid , gid from  db3.user where id <= 5 ;
+select name , uid , gid from  db3.user where id <= 5 limit 3;
+
+select name,uid,shell from db3.user where id <=10 limit 1,4;
+
+从查询结果的第1行开始显示 一共显示3行
+select name,uid,shell from db3.user where id <=10 limit 0,3;
+
+从查询结果的第4行开始显示 一共显示3行
+select name,uid,shell from db3.user where id <=10 limit 3,3;
+
+
+       distinct 字段名  去重显示 查询结果有重复了 只显示第1次出现的
+
+mysql> select distinct shell from db3.user;
+
+mysql> select distinct gid from db3.user;
+
+
+
+select * from db3.user order by uid desc limit 1 ;
+
+
+去重显示时可以输出重复的次数吗 ？
+mysql> select shell from db3.user group by shell ;
+
+mysql> select count(shell) from db3.user group by shell ;
+
+insert db3.user(name)values("*"),("$"),("&");
+select name from db3.user where name in ("*","$","&","?");
+
+对表中的数据做处理还有如下方式：
+视图 触发器 存储过程 多表查询 嵌套查询 连接查询
