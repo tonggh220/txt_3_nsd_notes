@@ -1,0 +1,43 @@
+DBMS1_DAY05  数据备份和恢复 ：使用percona软件提供命令innobackupex备份数据（备份时不锁表）
+
+	软件介绍见PPT
+    安装软件
+]#rpm -ivh percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+]#yum -y install  percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+
+命令格式  ]# innobackupex  选项
+
+常用选项说明(背诵)
+
+
+	完全备份与恢复
+		完全备份命令格式
+]#innobackupex    -u 用户名  -p 密码  备份目录名  --no-timestamp
+
+
+
+		完全恢复命令格式
+	]#innobackupex    --apply-log   目录名   //准备恢复数据
+	]#innobackupex    --copy-back   目录名   //拷贝数据
+
+在50 主机做备份的例子：
+]# innobackupex -u root -p 123qqq...A /allbak --no-timestamp
+]# ls /allbak
+
+[root@mysql50 ~]# scp -r  /allbak root@192.168.4.51:/root/
+
+
+在51主机恢复数据
+		具体的操作步骤，如下
+			
+[root@host51 pub]# innobackupex --apply-log /root/allbak/   准备恢复数据
+[root@host51 pub]# cat /root/allbak/xtrabackup_checkpoints  查看是否准备恢复成功
+
+		systemctl stop mysqld  停止服务
+		rm -rf /var/lib/mysql/*   清空数据库目录
+		innobackupex --copy-back /root/allbak/ 拷贝备份文件
+                chown -R mysql:mysql /var/lib/mysql  修改所有者和组用户为mysql
+		systemctl start mysqld启动服务
+		
+                ]#mysql -uroot -p密码 (和50主机的密码一样)
+		        MySQL> show databases;
