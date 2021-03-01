@@ -167,13 +167,64 @@ mysql> show master status;
 [root@mysql50 mysql]# scp /root/db3.sql root@192.168.4.51:/opt/
 [root@mysql50 mysql]# scp /mylog/plj.000002  root@192.168.4.51:/opt/
 
-数据库服务器 51  要有和50一样的数据
+在51主机 使用备份文件恢复数据
+ls /opt/
+[root@host51 ~]# mysql -uroot -p密码 db3 < /opt/db3.sql  
+[root@host51 ~]# mysql -uroot -p密码 db3
+mysql> show tables;
+mysql> select  count(*) from db3.user;
+mysql> exit
+
+[root@host51 ~]#mysqlbinlog  /opt/plj.000002 | mysql -uroot -p密码
+[root@host51 ~]# mysql -uroot -p密码 db3
+mysql> select  count(*) from db3.user;
+mysql> select  * from db3.user;
+
+修改日志记录格式
+vim  /etc/my.cnf
+[mysqld]
+binlog_format="mixed"  修改日志记录格式
+:wq
+
+systemctl  restart  mysqld
+
+mysql> show variables like "binlog_format"；
+mysql> show  master status;
+
+mysql> insert into db3.user(name,uid)values("A",11);
+mysql> insert into db3.user(name,uid)values("AB",11);
+mysql> insert into db3.user(name,uid)values("ABC",11);
+mysql> insert into db3.user(name,uid)values("ABCD",11);
+mysql> delete from db3.user;
+mysql> show  master status;
+mysql> exit;
+
+]# mysqlbinlog  /mylog/plj.000004 可以查看到执行的sql命令
+
+[root@mysql50 ~]# scp /mylog/plj.000004  root@192.168.4.51:/opt/
+
+
+查看命令的起始时间 起始偏移量 在记录命令的上方 
+查看命令结束时间 结束偏移量 在记录命令的下方 （不文件记录的最后1条命令 ， 要把commit对应结束时间 结束偏移量包涵在内）
+
+在51 主机恢复数据
+	查看日志文件内容加选项，适合恢复指定的数据
+
+[root@host51 ~]# mysql -uroot -p123456 -e 'select count(*) from db3.user'
+
+[root@host51 ~]# mysqlbinlog --start-position=293 --stop-position=701 /opt/plj.000004 | mysql -uroot -p密码
+
+[root@host51 ~]# mysql -uroot -p123456 -e 'select count(*) from db3.user'
+
+[root@host51 ~]# mysqlbinlog --start-datetime="2021/03/01  8:55:39"  --stop-datetime="2021/03/01 9:26:08" /opt/plj.000004 | mysql -uroot -p密码
+
+[root@host51 ~]# mysql -uroot -p123456 -e 'select count(*) from db3.user'
+
+[root@host51 ~]# mysql -uroot -p123456 -e 'select * from db3.user'
 
 
 
-软件 libev 和  percona  分别拷贝到50 和 51 虚拟机里 
-libev-4.15-1.el6.rf.x86_64.rpm
-percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm
+
 
 
 
