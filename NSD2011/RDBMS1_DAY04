@@ -60,3 +60,120 @@ mysql> set password for admin@"192.168.4.%"=password
 > select user , host from mysql.user;
 
 
+缺失的部分 见 .xmind 文件
+
+mysqldump 优点与缺点：
+		缺点:命令执行过程中锁表，表被锁后，不允许客户端访问，只能把数据恢复到备份时的状态。
+
+			
+		优点：时候备份数据量比较小的数据，最好在服务器访问量少的使用，是MySQL服务自带的备份命令。
+
+
+备份新产生的数据
+	binlog日志的使用
+		1  binlog日志介绍(背诵)	
+扩展一下:mysql服务有4种日志文件分别是
+错误日志  binlog日志  查询日志  慢查询日志
+
+        mysql> show master status;  查看日志信息
+
+	启用binlog日志 实现对数据的实时备份
+vim /etc/my.cnf
+    [mysqld]
+    server_id=50
+    log_bin
+:wq
+
+systemctl  restart  mysqld
+  
+	修改日志文件的存放目录和日志名
+	]# mkdir /mylog         
+	]# chown  mysql /mylog  
+	]# setenforce  0
+]#vim /etc/my.cnf
+    [mysqld]
+    server_id=50
+    #log_bin
+    log_bin=/mylog/plj
+:wq
+]#systemctl  restart  mysqld
+]# ls /mylog/plj.*
+mysql> show  master  status;
+
+        
+ 手动创建新的binlog日志文件，存放sql命令
+        mysql> flush logs;  登录状态执行
+
+  ]# mysql -uroot -p123qqq...A -e "flush logs" 系统命令行执行
+
+        只要重启数据服务就会自动创建新日志文件
+        ]# systemctl  restart mysqld
+
+在对数据做完完全备份后，创建新的日志文件存储再执行的sql命令
+]# mysqldump -uroot -p123qqq...A --flush-logs   db3 > /root/db3.sql
+
+         删除已有的日志文件
+		  
+mysql>purge  master  logs  to  "plj.000003"; 删除指定编号之前的日志文件
+
+		
+
+mysql> reset master; 删除所有日志文件重新创建第1个日志文件
+
+		
+]# rm -rf /mylog/*   使用系统命令删除 
+
+
+日志的使用已经掌握: 启用日志  修改日志存放目录和日志名  创建新的日志文件 删除已有的日志文件 查看正在使用的日志文件
+
+只要把日志启用会自动记录执行的对数据做写操作的SQL命令
+
+	
+	
+	使用binlog日志恢复数据
+查看日志文件的内容 管道给 连接数据库的命令mysql 执行
+
+]# mysqlbinlog  /目录/日志名 |  mysql -uroot -p密码  //查看全部的日志内容恢复数据。
+
+查看日志文件内容时，加选项 可以指定查看命令的范围
+
+]#mysqlbinlog  选项  /目录/日志名 |  mysql -uroot -p密码 
+
+日志文件记录命令时 有2种方式区分记录的多条命令
+
+通过偏移量
+    --start-position=数字  --stop-position=数字
+
+通过执行命令时的时间
+    --start-datetime="yyyy/mm/dd  hh:mm:ss"  --stop-datetime="yyyy/mm/dd  hh:mm:ss"
+
+   例子
+50主机的操作如下： 
+mysql> reset master;
+mysql> show master status;
+mysql> select count(*) from db3.user;
+mysql> insert into db3.user(name,uid,gid,homedir)values("B4",1,1,"bj"); 可以执行多遍
+
+mysql> select count(*) from db3.user;
+mysql> show master status;
+
+]# mysqldump -uroot -p123qqq...A --flush-logs db3 > /root/db3.sql
+mysql> show master status;
+mysql> insert into db3.user(name,uid,gid,homedir)values("C1",1,1,"bj"); 多执行几遍
+
+mysql> select count(*) from db3.user;
+mysql> show master status;
+
+[root@mysql50 mysql]# scp /root/db3.sql root@192.168.4.51:/opt/
+[root@mysql50 mysql]# scp /mylog/plj.000002  root@192.168.4.51:/opt/
+
+数据库服务器 51  要有和50一样的数据
+
+
+
+软件 libev 和  percona  分别拷贝到50 和 51 虚拟机里 
+libev-4.15-1.el6.rf.x86_64.rpm
+percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm
+
+
+
