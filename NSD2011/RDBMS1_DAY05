@@ -97,3 +97,37 @@ mysql> insert into db1.t23(name,class,home) values("b","b","b"); 存储新数据
 
 周三增量备份
 [root@mysql50 ~]# innobackupex -u root -p 123qqq...A  --incremental  /new2dir --incremental-basedir=/new1dir --no-timestamp 周三增量备份
+
+mysql> insert into db1.t23(name,class,home) values("c","c","c"); 存储新数据 多存储几行
+
+周四增量备份
+[root@mysql50 ~]# innobackupex -u root -p 123qqq...A  --incremental  /new3dir --incremental-basedir=/new2dir --no-timestamp 周四增量备份
+
+把50备份文件拷贝给51 主机
+[root@mysql50 ~]# scp -r /fullbak/  root@192.168.4.51:/
+[root@mysql50 ~]# scp -r /new1dir/  root@192.168.4.51:/
+[root@mysql50 ~]# scp -r /new2dir/  root@192.168.4.51:/
+[root@mysql50 ~]# scp -r /new3dir/  root@192.168.4.51:/
+	
+在51 主机恢复数据，具体操作如下
+		1 准备恢复数据
+[root@host51 ~]# innobackupex --apply-log --redo-only /fullbak/  
+
+		2 合并数据（合并的顺序要和备份的顺序一致）
+[root@host51 ~]# innobackupex --apply-log --redo-only /fullbak/  --incremental-dir=/new1dir
+[root@host51 ~]# innobackupex --apply-log --redo-only /fullbak/  --incremental-dir=/new2dir
+[root@host51 ~]# innobackupex --apply-log --redo-only /fullbak/  --incremental-dir=/new3dir
+
+		3 停止服务
+systemctl  stop mysqld
+		4 清空数据库目录
+rm -rf /var/lib/mysql/*
+		5 拷贝数据
+]#innobackupex --copy-back /fullbak
+
+		6 修改所有者和组用户为MySQL
+]# chown -R mysql:mysql /var/lib/mysql
+
+		7 启动服务 并查看数据
+systemctl start mysqld 
+mysql> select  * from db1.t23;
