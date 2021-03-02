@@ -131,3 +131,48 @@ rm -rf /var/lib/mysql/*
 		7 启动服务 并查看数据
 systemctl start mysqld 
 mysql> select  * from db1.t23;
+
+
+！！！！！！！！！！！！！！！！！！扩展知识 差异备份与恢复！！！！！！！！！！！！！！！！！
+	innobackupex 做差异备份与恢复
+	差异备份的定义：备份完全备份后所有新产生的数据
+周一 完全备份  周二到周日做差异备份
+
+[root@mysql50 ~]# innobackupex -u root -p 123qqq...A  /allbak --no-timestamp    #周一完全备份
+
+insert into db1.t23(name,class,home) values("F","F","F"); 存储新数据，可以多存几行
+
+[root@mysql50 ~]# innobackupex -u root -p 123qqq...A --incremental /adir  --incremental-basedir=/allbak  --no-timestamp #周二做差异备份
+
+insert into db1.t23(name,class,home) values("Ff","Ff","Ff"); 存储新数据，可以多存几行
+
+[root@mysql50 ~]# innobackupex -u root -p 123qqq...A --incremental   /bdir --incremental-basedir=/allbak --no-timestamp #周三做差异备份
+ 
+insert into db1.t23(name,class,home) values("Fff","Fff","Fff"); 存储新数据，可以多存几行
+
+[root@mysql50 ~]# innobackupex -u root -p 123qqq...A --incremental   /ddir --incremental-basedir=/allbak --no-timestamp #周四差异备份
+
+
+[root@mysql50 ~]# scp -r /allbak  root@192.168.4.51:/opt/
+[root@mysql50 ~]# scp -r /ddir  root@192.168.4.51:/opt/
+
+在51主机使用差异备份文件恢复数据
+	准备恢复数据
+	合并数据
+	停止服务
+	清空数据库目录
+	拷贝数据
+	修改所有者和组用户为mysql
+	启动服务
+	登录查看数据
+  388  innobackupex  --apply-log --redo-only /opt/allbak/
+  392  innobackupex  --apply-log --redo-only /opt/allbak/ --incremental-dir=/opt/ddir/
+
+  396  systemctl  stop mysqld
+
+  398  rm -rf /var/lib/mysql/*
+  399  innobackupex  --copy-back /opt/allbak/
+
+  402  chown -R mysql:mysql /var/lib/mysql
+  403  systemctl  start mysqld
+  404  mysql -uroot -p123qqq...A 
