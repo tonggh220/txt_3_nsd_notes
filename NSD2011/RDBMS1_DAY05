@@ -41,3 +41,59 @@ DBMS1_DAY05  数据备份和恢复 ：使用percona软件提供命令innobackupe
 		
                 ]#mysql -uroot -p密码 (和50主机的密码一样)
 		        MySQL> show databases;
+
+只恢复一张表的所有数据
+mysql> delete from db1.t23;
+mysql> select  * from db1.t23;   /var/lib/mysql/db1/t23.ibd
+mysql> desc db1.t23;
+
+
+		具体的操作步骤，如下
+1 删除表空间 (表空间? 表用来存储数据的文件 表名.ibd )
+  删除表空间，就是把数据库目录下没有记录的.ibd 删除
+mysql> alter  table  db1.t23  discard  tablespace;  
+2 导出表信息
+]# innobackupex --apply-log --export /opt/fullbak   
+3 拷贝表信息文件到数据库目录下
+]# cp /opt/fullbak/db1/t23.{ibd,cfg,exp} /var/lib/mysql/db1/
+4 修改表信息文件的所有者及组用户为mysql
+]# chown mysql:mysql /var/lib/mysql/db1/t23*
+5 导入表空间
+mysql> select  *from  db1.t23; 报错
+mysql> alter  table  db1.t23   import  tablespace; 导入表空间
+mysql> select  *from  db1.t23; 正常
+6 删除数据库目录下的表信息文件
+]# rm -rf /var/lib/mysql/db1/t23.cfg 
+]# rm -rf /var/lib/mysql/db1/t23.exp 
+
+
+
+		相关的命令(见PPT)
+
+
+
+	增量备份与恢复
+		增量备份命令格式
+]#innobackupex  -u 用户名 -p 密码 --incremental /目录  
+--incremental-basedir=/上次备份文件存放的目录   --no-timestamp 
+
+
+		增量恢复命令格式
+]#innobackupex --apply-log --redo-only /目录名   //准备恢复数据
+
+]#innobackupex --apply-log --redo-only /目录名 	--incremental-dir=/目录名	//合并数据
+
+]#innobackupex --copy-back /目录名	//拷贝数据
+
+
+备份策略  完全备份+增量备份
+
+[root@mysql50 ~]# innobackupex -u root -p 123qqq...A  /fullbak --no-timestamp  周一 完全备份
+ 
+mysql> insert into db1.t23(name,class,home) values("a","a","a"); 存储新数据 多存储几行
+
+[root@mysql50 ~]# innobackupex -u root -p 123qqq...A  --incremental   /new1dir --incremental-basedir=/fullbak --no-timestamp  周二做增量备份
+mysql> insert into db1.t23(name,class,home) values("b","b","b"); 存储新数据 多存储几行
+
+周三增量备份
+[root@mysql50 ~]# innobackupex -u root -p 123qqq...A  --incremental  /new2dir --incremental-basedir=/new1dir --no-timestamp 周三增量备份
