@@ -79,3 +79,100 @@ mysql> show slave status \G
 	]# cd /var/lib/mysql/
 	]# rm -rf master.info relay-log.info host52-relay-bin.*
         ]# systemctl  restart mysqld
+
+
+	配置 一主多从  
+		诉求:把主机53 也配置为 51的 slave服务器
+		       1 确保数据一致
+		          把51 比53 多的库 做备份 传给 53 
+			  53使用备份文件恢复数据
+host51 ~]# mysqldump -uroot -p123qqq...A -B db1  > /root/db1.sql
+host51 ~]# scp /root/db1.sql  root@192.168.4.53:/opt/
+
+host53 ~]# mysql -uroot -p123qqq...A  < /opt/db1.sql		
+host53 ~]# mysql -uroot -p123qqq...A  -e 'use db1;show tables'
+
+		      2 配置53 为 51 的从数据库服务器
+			具体如下： 休息到10:15
+]# vim /etc/my.cnf
+   [mysqld]
+    server_id=53
+:wq
+]# systemctl  restart mysqld
+]# mysql -uroot -p密码
+mysql> change master to  master_host="192.168.4.51" , master_user="repluser" , master_password="123qqq...A" , master_log_file=" master51.000001",master_log_pos=1827;
+mysql> start slave;
+mysql> show slave status \G
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+mysql> GRANT SELECT, INSERT ON db1.* TO jingyaya@'%' identified by "123qqq...A";  手动添加客户端访问数据使用的连接用户
+
+
+ 
+	 配置主从从结构
+		把53 恢复为独立的数据库服务器，具体操作
+		vim /etc/my.cnf
+			
+			#server_id=53
+                :wq
+		systemctl  stop  mysqld
+		cd /var/lib/mysql/
+		]# rm -rf master.info 
+                ]# rm -rf relay-log.info 
+                ]# rm -rf  *-relay-bin.*
+              systemctl  start  mysqld
+              mysql -uroot -p密码
+	      删除自己创建的库，只保留默认的4个库
+	      删除自己添加的用户,只保留默认的用户
+	      delete from mysql.user where user not in("root","mysql.sys"); flush privileges;
+
+	      配置主服务器53
+]# vim /etc/my.cnf
+   [mysqld]
+      server_id=53
+      log_bin=master53
+:wq
+]# systemctl restart mysqld
+]# mysql -uroot -p密码
+   mysql> grant replication slave on *.* to repluser@"%"           identified by "123qqq...A";
+
+mysql> show master status;
+
+
+	      配置从服务器54
+	54既要有主数据库服务器的配置又要有从服务器的配置
+[root@host54 ~]# vim /etc/my.cnf  练习+休息到 11:15 
+    [mysqld]
+    server_id=54
+    log_bin=master54
+    log_slave_updates 启用级联复制功能
+:wq
+[root@host54 ~]# systemctl  restart mysqld
+[root@host54 ~]# mysql -uroot -p123qqq...A
+mysql> grant replication slave on  *.* to repluser@"%" identified by "123qqq...A";
+mysql> show master status;
+mysql> change master to master_host="192.168.4.53" , master_user="repluser" , master_password="123qqq...A" , master_log_file="master53.000001" ,master_log_pos=441;
+mysql> start slave;
+mysql> show slave status \G
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+	    配置从服务器55 
+		具体如下：
+[root@host55 ~]# vim /etc/my.cnf
+[mysqld]
+server_id=55
+:wq
+[root@host55 ~]# systemctl  restart mysqld
+[root@host55 ~]# mysql -uroot -p密码
+mysql> change master to master_host="192.168.4.54",master_user="repluser" , master_password="123qqq...A" , master_log_file="master54.000001",master_log_pos=441;
+
+mysql> start slave;
+mysql> show slave status \G
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+
+
+ 晚自习练习  把数据库56 和 57 配置为主主结构 
+
