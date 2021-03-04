@@ -166,6 +166,114 @@ DBMS2_DAY03
  把软件Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz拷贝给ip 192.168.4.56 虚拟机 
 
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+多实例
+  准备1台新虚拟机 不需要安装数据库服务软件。
+      配置IP为 192.168.4.58  配置YUM  关闭firewalld 和selinux 
+      拷贝软件 mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz
+
+      配置多实例，具体操作如下
+	1 安装软件
+]# rpm -q libaio || yum -y install libaio
+]# useradd  mysql
+]# tar -zxvf mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz
+]# mv mysql-5.7.20-linux-glibc2.12-x86_64/ /usr/local/mysql
+        
+        2 优化配置
+PATH=/usr/local/mysql/bin:$PATH
+
+vim /etc/bashrc  在文件的末尾添加
+export  PATH=/usr/local/mysql/bin:$PATH  
+:wq
+
+	3 创建并编辑主配置文件 /etc/my.cnf
+	  [mysqld_multi]#管理实例服务的运行参数
+          mysqld = /usr/local/mysql/bin/mysqld_safe   
+          mysqladmin=/usr/local/mysql/bin/mysqladmin
+          user = root 
+		
+	  [mysqld1]#创建实例1
+数据库目录
+端口号
+错误日志文件
+PID文件
+socket文件   
+
+	  [mysqld2]#创建实例2
+数据库目录
+端口号
+错误日志文件
+PID文件
+socket文件 
+:wq
+
+[root@host58 ~]# cat /etc/my.cnf
+[mysqld_multi]
+mysqld=/usr/local/mysql/bin/mysqld_safe   
+mysqladmin=/usr/local/mysql/bin/mysqladmin
+user=root 
+
+[mysqld1]
+datadir=/dir1
+port=3307
+log-error=/dir1/mysqld1.err
+pid-file=/dir1/mysqld1.pid
+socket=/dir1/mysqld1.sock
+
+[mysqld2]
+datadir=/dir2
+port=3308
+log-error=/dir2/mysqld2.err
+pid-file=/dir2/mysqld2.pid
+socket=/dir2/mysqld2.sock
+[root@host58 ~]#
+
+ 
+
+	 
+	4 启动实例
+		启动实例1 
+]# mysqld_multi start 1
+]# ss -utnlp  | grep 3307
+]# ls /dir1/mysqld1.*
+
+              5 连接实例服务
+]# mysql -uroot -p'fpl>%.FrD5X4' -S /dir1/mysqld1.sock
+       
+mysql> alter user  root@"localhost" identified by "123456"; 修改登录密码
+mysql> show databases;
+mysql> create database bbsdb;
+mysql> system ls /dir1  查看数据库存储的位置
+mysql> exit 断开连接
+]# mysql -uroot -p123456 -S /dir1/mysqld1.sock使用新密码登录
+
+	     6 停止实例
+[root@host58 ~]# mysqld_multi --user root --password 123456 stop 1
+[root@host58 ~]# ss -utnlp  | grep 3307
+
+	
+	      实例2的操作
+   54  mysqld_multi  start 2 
+   55  ls /dir2
+   56  ss -utnlp  | grep 3308
+   57  mysql -uroot -p'As1uIdeoF,_)' -S /dir2/mysqld2.sock
+   58  mysql -uroot -p123456 -S /dir2/mysqld2.sock
+   59  mysqld_multi  --user root --password 123456 stop 2
+   60  ss -utnlp  | grep 3308
+
+
+[root@host58 ~]# mysqld_multi  start  2
+[root@host58 ~]# mysqld_multi  start  1
+	
+[root@host58 ~]# ss -utnlp | grep 3308
+tcp    LISTEN     0      80       :::3308                 :::*                   users:(("mysqld",pid=14187,fd=16))
+[root@host58 ~]# ss -utnlp | grep 3307
+tcp    LISTEN     0      80       :::3307                 :::*                   users:(("mysqld",pid=14392,fd=28))
+[root@host58 ~]# 
+
+
+
 
 
 
