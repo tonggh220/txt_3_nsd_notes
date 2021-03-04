@@ -1,0 +1,19 @@
+DBMS2_DAY03  mycat分库分表
+ 准备新的数据库服务器 53（db1） 54(db2) 55(db3)
+     把软件Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz拷     贝给 ip 192.168.4.56 虚拟机 
+
+     56虚拟机 不需要运行mysqld服务 
+
+1 相关概念
+2 mycat软件的介绍
+3 拓扑结构
+
+4 配置mycat服务 ：具体操作如下
+        内存>=1G   
+        主机名  hostname mycat56 
+		echo  mycat56  > /etc/hostname
+
+	1 安装软件
+]# yum  -y   install java-1.8.0-openjdk.x86_64
+]# tar -zxvf /var/ftp/pub/Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz
+]# mv mycat /usr/local/
