@@ -100,6 +100,178 @@ xml  扩展标记语言  配置项要放在标签里 有单标签和双标签
         </dataHost>
 </mycat:schema>
 
+3 配置数据库服务器
+		3.1 创建schema.xml文件中指定的库名
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'create database db1'
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'create database db2'
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'create database db3'
+
+                3.2 分别添加schema.xml文件中指定pljadmin 用户
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.*  to pljadmin@"%" identified by "123qqq...A"'
+
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.*  to pljadmin@"%" identified by "123qqq...A"'
+
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.*  to pljadmin@"%" identified by "123qqq...A"'
+
+
+	5 启动服务
+[root@mycat56 mycat]# /usr/local/mycat/bin/mycat help
+Usage: /usr/local/mycat/bin/mycat { console | start | stop | restart | status | dump }
+
+
+[root@mycat56 mycat]# /usr/local/mycat/bin/mycat start
+Starting Mycat-server...
+
+[root@mycat56 mycat]# ls /usr/local/mycat/logs/
+mycat.log  mycat.pid  wrapper.log
+
+[root@mycat56 mycat]# ss -utnlp  | grep 8066
+tcp    LISTEN     0      100      :::8066                 :::*                   users:(("java",pid=16855,fd=78))
+
+
+
+        动态查看日志 看报错信息
+		第1个终端 
+		 tail -f /usr/local/mycat/logs/wrapper.log
+
+                第2个终端
+                ]# /usr/local/mycat/bin/mycat start
+
+                
+	排错思路：
+		1 检查  schema.xml 文件 配置
+		2 检查 数据库的配置
+                3 内存>=1G   
+                4 主机名  hostname mycat56 
+		4  echo  mycat56  > /etc/hostname
+		5  重启56 主机的操作系统
+	        6  启动mycat服务
+
+
+	
+6 测试配置
+
+	客户连接mycat服务 访问数据
+	mysql -h192.168.4.56 -u用户 -p密码
+[root@mysql50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| TESTDB   |
++----------+
+1 row in set (0.01 sec)
+mysql> use TESTDB;
+mysql> show tables;
++------------------+
+| Tables in TESTDB |
++------------------+
+| company          |
+| customer         |
+| customer_addr    |
+| employee         |
+| goods            |
+| hotnews          |
+| orders           |
+| order_items      |
+| travelrecord     |
++------------------+
+
+分片规则的使用：
+	注意：根据表使用的分片规则建表，必须创建分片规则要求的表头。
+
+	sharding-by-intfile 枚举法分片规则的使用
+        表头的值 必须在  规则文件定义的值 里选择
+
+        vim schema.xml
+<table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+
+        vim  rule.xml
+        <tableRule name="sharding-by-intfile">
+                <rule>
+                        <columns>sharding_id</columns> 表头名
+                        <algorithm>hash-int</algorithm> 算法名
+                </rule>
+        </tableRule>
+
+ <function name="hash-int"
+              class="io.mycat.route.function.PartitionByFileMap">
+     <property name="mapFile">partition-hash-int.txt</property> 定义表头值的规则文件
+        </function>
+
+vim /usr/local/mycat/conf/partition-hash-int.txt 定义表头的值
+表头的值=第几台数据库服务器
+10000=0   
+10010=1    
+10020=2    
+:wq
+
+	让修改生效要重启mycat服务
+[root@mycat56 ~]# /usr/local/mycat/bin/mycat restart
+[root@mycat56 ~]# ss -utnlp  | grep  8066
+
+        建表
+[root@mysql50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> use TESTDB;
+mysql> create table  employee( 
+       ID int primary key , 
+       sharding_id int,
+       name char(15) , 
+       age  int );
+
+存储数据
+mysql> insert into employee(ID,sharding_id,name,age) values(1,10000,"aaa",29),(2,10000,"bbbb",21);
+
+mysql> insert into employee(ID,sharding_id,name,age) values(1,10010,"xxx",29),(2,10010,"yyy",21);
+
+mysql> insert into employee(ID,sharding_id,name,age) values(1,10020,"jjjj",29),(2,10020,"kkkk",21),(3,10020,"fff",23);
+
+mysql> select  * from employee;
++----+-------------+------+------+
+| ID | sharding_id | name | age  |
++----+-------------+------+------+
+|  1 |       10010 | xxx  |   29 |
+|  2 |       10010 | yyy  |   21 |
+|  1 |       10000 | aaa  |   29 |
+|  2 |       10000 | bbbb |   21 |
+|  1 |       10020 | jjjj |   29 |
+|  2 |       10020 | kkkk |   21 |
+|  3 |       10020 | fff  |   23 |
++----+-------------+------+------+
+7 rows in set (0.32 sec)
+
+
+查看是否分片存储
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select  * from  db1.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | age  |
++----+-------------+------+------+
+|  1 |       10000 | aaa  |   29 |
+|  2 |       10000 | bbbb |   21 |
++----+-------------+------+------+
+[root@host53 ~]# 
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'select * from db2.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | age  |
++----+-------------+------+------+
+|  1 |       10010 | xxx  |   29 |
+|  2 |       10010 | yyy  |   21 |
++----+-------------+------+------+
+[root@host54 ~]# 
+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select * from db3.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | age  |
++----+-------------+------+------+
+|  1 |       10020 | jjjj |   29 |
+|  2 |       10020 | kkkk |   21 |
+|  3 |       10020 | fff  |   23 |
++----+-------------+------+------+
+[root@host55 ~]#
 
 
 
