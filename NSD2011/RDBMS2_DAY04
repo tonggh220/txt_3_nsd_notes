@@ -24,3 +24,31 @@ RDBMS2_DAY04 配置mysql服务 高可用集群
 
 
  MHA软件介绍 见PPT
+
+ 3台数据库服务运行参数的公共配置（优化配置）
+  vim /etc/my.cnf
+   [mysqld]
+	都要加载master模块和slave模块
+	都要启用2种角色的半同步复制模式
+	都要启用binlog日志文件
+	都要禁止删除本机的中继日志文件 
+	
+ :wq
+]# systemctl restart mysqld
+]# vim /etc/my.cnf
+[mysqld]
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_slave_enabled=1
+
+relay_log_purge=0
+
+server_id=51  三台服务器不能相同
+
+log_bin=master51
+:wq
+
+都要添加拷贝sql命令的连接用户
+]#mysql -uroot -p密码  
+mysql> grant replication slave on  *.* to repluser@"%" identified by "123qqq...A"; 三台服务必须相同
