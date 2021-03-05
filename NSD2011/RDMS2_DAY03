@@ -355,6 +355,73 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +------+-------+---------+
 [root@host53 ~]# 
 
+3 添加新库新表 
+       		3.1 添加新库名
+		vim  server.xml
+<user name="root">
+                ....
+                <property name="schemas">TESTDB,GAMEDB</property>
+
+</user>
+<user name="user">
+               ....
+                <property name="schemas">TESTDB,GAMEDB</property>
+                .....
+</user>
+		3.2 添加新表名（不能和已有表名重名）
+		vim schema.xml
+<mycat:schema xmlns:mycat="http://io.mycat/">
+      <schema name="GAMEDB" checkSQLschema="false" sqlMaxLimit="100">
+	<table name="user" dataNode="dn1,dn2,dn3" rule="mod-long"  />	
+     	<table name="tea"  dataNode="dn1,dn2,dn3" type="global" />
+      </schema>
+      ......
+<mycat:schema>
+
+                3.3 重启mycat服务
+]#/usr/local/mycat/bin/mycat restart
+]#ss -utnlp  | grep  8066
+
+		3.4 测试配置
+]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| GAMEDB   |
+| TESTDB   |
++----------+
+mysql> use GAMEDB;
+mysql> show tables;
++------------------+
+| Tables in GAMEDB |
++------------------+
+| tea              |
+| user             |
++------------------+
+mysql> 
+mysql> create table tea(name char(10),age int);
+mysql> insert into tea(name,age)values("A",19),("b",25),("c",18),("D",16);
+mysql> select  * from tea;
+
+mysql> create table user(id int , class char(10),addr char(10));
+
+mysql> insert into  user(id , class,addr)values(11,"aaa","bj"),(12,"bbb","sz"),(101,"cc","sh");
+
+mysql> select  * from user;
+
+[root@host53 ~]#  mysql -uroot -p123qqq...A -e 'select * from db1.user'
+
+[root@host54 ~]#  mysql -uroot -p123qqq...A -e 'select * from db2.user'
+
+[root@host55 ~]#  mysql -uroot -p123qqq...A -e 'select * from db3.user'
+
+[root@host54 ~]#  mysql -uroot -p123qqq...A -e 'select * from db2.tea'
+
+[root@host55 ~]#  mysql -uroot -p123qqq...A -e 'select * from db3.tea'
+
+[root@host53 ~]#  mysql -uroot -p123qqq...A -e 'select * from db1.tea'
+
 
 
 
