@@ -111,9 +111,126 @@ mysql>change master to master_host="192.168.4.51",master_user="repluser" , maste
 
 mysql> start slave ;
 mysql> show slave status \G 
-配置管理主机
+配置管理主机 57
+	1 安装依赖软件包
+yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+yum -y install perl-ExtUtils-*  perl-CPAN*
+
+	2 安装mha_manager软件
+   47  tar -zxvf mha4mysql-manager-0.56.tar.gz 
+   49  cd mha4mysql-manager-0.56
+   51  perl Makefile.PL 
+   59  make 
+   60  make install
+
+	3 创建并编辑主配置文件 （相当重要，根据环境准备做编辑）
+]# mkdir /etc/mha
+]# cd mha4mysql-manager-0.56
+]# cp samples/conf/app1.cnf  /etc/mha/
+
+]# vim /etc/mha/app1.cnf
+[server default]#管理服务的运行参数配置
+配置项=值
+
+[server数字]#定义被管理的数据库服务器
+配置项=值
+:wq
+
+[root@host57 ~]# cat /etc/mha/app1.cnf 
+[server default]
+manager_workdir=/etc/mha
+manager_log=/etc/mha/manager.log
+
+master_ip_failover_script=/etc/mha/master_ip_failover
+
+ssh_user=root
+ssh_port=22
+repl_user=repluser
+repl_password=123qqq...A
+
+user=plj
+password=123qqq...A
+
+[server1]
+hostname=192.168.4.51
+port=3306
+candidate_master=1
+
+[server2]
+hostname=192.168.4.52
+port=3306
+candidate_master=1
+
+[server3]
+hostname=192.168.4.53
+port=3306
+candidate_master=1
+
+
 配置数据库服务器
-在管理主机测试配置
-启动管理服务
-测试高可用集群
-把宕机的数据库服务器再添加到集群里
+	1 三台数据库服务器分别安装软件
+[root@host51 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+
+[root@host52 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+
+[root@host53 mha]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+
+       2  三台数据库服务器添加监控用户plj
+	  在服务器51添加2台从服务器会自动同步
+[root@host51 ~]# mysql -uroot -p123456 -e 'grant all on *.* to plj@"%" identified by "123qqq...A"'
+
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'show grants for plj@"%"'
+
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'show grants for plj@"%"'
+
+
+
+在管理主机57 ，创建故障切换脚本，并指定vip地址
+]# cd mha
+]# cp master_ip_failover /etc/mha/
+]# chmod  +x  /etc/mha/master_ip_failover
+]# vim +35 /etc/mha/master_ip_failover
+     35 my $vip = '192.168.4.100/24';  # Virtual IP
+     36 my $key = "1";
+     37 my $ssh_start_vip = "/sbin/ifconfig ens33:$key $vip";
+     38 my $ssh_stop_vip = "/sbin/ifconfig ens33:$key down";
+:wq
+
+根据脚本的设置，把vip地址配置的，主从结构中当前主机服务器51上。
+[root@host51 ~]# which  ifconfig || yum -y install net-tools
+[root@host51 ~]# ifconfig ens33:1 192.168.4.100
+[root@host51 ~]# ifconfig ens33:1
+ens33:1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.4.100  netmask 255.255.255.0  broadcast 192.168.4.255
+        ether 00:0c:29:d5:c9:38  txqueuelen 1000  (Ethernet)
+
+确保另外2台数据库服务器有ifconfig 命令
+[root@host52 ~]# which  ifconfig || yum -y install net-tools
+[root@host53 ~]# which  ifconfig || yum -y install net-tools   
+
+		
+四、测试配置
+	4.1  管理主机57 测试ssh免密登录配置
+[root@host57 ~]# masterha_check_ssh --conf=/etc/mha/app1.cnf
+Fri Mar  5 12:56:21 2021 - [info] All SSH connection tests passed successfully
+
+        4.2  管理主机57 测试主从同步配置
+[root@host57 ~]# masterha_check_repl --conf=/etc/mha/app1.cnf
+MySQL Replication Health is  OK!
+
+
+虚拟机的启动顺序 
+	先启动主数据库服务器51 的系统 
+	51 完全启动成功后 在启动52 和 53 的操作系统
+    
+        检查52 和 53 的io 和 sql 线程是否正常 不正常要手动配置正常
+
+	检查51的vip地址是否存在，不存在要手动在配置上
+
+        在57 主机检查ssh 配置和  主从配置 
+
+	
+vip 地址 怎么取消： 在虚拟本机做如下操作
+      ifdown ens33
+      ifup  ens33
+      ifconfig  ens33:1  查看不到了 
