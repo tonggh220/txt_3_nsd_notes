@@ -273,6 +273,93 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +----+-------------+------+------+
 [root@host55 ~]#
 
+ mod-long  求模分片规则的使用
+        根据表头值与设定的数字，取余的结果 存储数据
+	
+		查看mod-long规则的表名
+		vim schema.xml
+<table name="hotnews"  dataNode="dn1,dn2,dn3"  rule="mod-long" />
+ 
+		查看表头的名字  和 和取余的数字
+		vim rule.xml
+<tableRule name="mod-long"> 规则名称
+                <rule>
+                        <columns>id</columns> 表头名
+                        <algorithm>mod-long</algorithm> 算法名
+                </rule>
+</tableRule>
+<function name="mod-long" class="io.mycat.route.function.PartitionByMod">
+                <!-- how many data nodes -->
+                <property name="count">3</property> 与数字3做取余计算
+</function>
+
+		如果有修改，需要重启mycat服务
+[root@mycat56 ~]# /usr/local/mycat/bin/mycat restart
+[root@mycat56 ~]# ss -utnlp  | grep 8066
+
+		连接mycat服务建表存储数据
+[root@mysql50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> use TESTDB;
+mysql> create table hotnews(id int , 
+title char(10) , comment char(200));
+
+mysql> insert into hotnews(id,title,comment)values(7,"aaa","AAAAA"),(7,"bbb","BBBB");
+
+mysql> insert into hotnews(id,title,comment)values(9,"aaa","AAAAA"),(9,"bbb","BBBB"),(9,"bbb","BBBB");
+
+mysql> insert into hotnews(id,title,comment)values(11,"aaa","AAAAA"),(11,"bbb","BBBB"),(11,"bbb","BBBB");
+
+mysql> select  * from hotnews;                                                +------+-------+---------+
+| id   | title | comment |
++------+-------+---------+
+|    7 | aaa   | AAAAA   |
+|    7 | bbb   | BBBB    |
+|    9 | aaa   | AAAAA   |
+|    9 | bbb   | BBBB    |
+|    9 | bbb   | BBBB    |
+|   11 | aaa   | AAAAA   |
+|   11 | bbb   | BBBB    |
+|   11 | bbb   | BBBB    |
++------+-------+---------+
+8 rows in set (0.01 sec)
+
+
+		在数据库服务器查看数据   
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select * from db3.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+---------+
+| id   | title | comment | 
++------+-------+---------+
+|   11 | aaa   | AAAAA   |
+|   11 | bbb   | BBBB    |
+|   11 | bbb   | BBBB    |
++------+-------+---------+
+[root@host55 ~]# 
+ [root@host54 ~]# mysql -uroot -p123qqq...A -e 'select * from db2.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+---------+
+| id   | title | comment |
++------+-------+---------+
+|    7 | aaa   | AAAAA   |
+|    7 | bbb   | BBBB    |
++------+-------+---------+
+[root@host54 ~]# 
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select  * from  db1.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+---------+
+| id   | title | comment |
++------+-------+---------+
+|    9 | aaa   | AAAAA   |
+|    9 | bbb   | BBBB    |
+|    9 | bbb   | BBBB    |
++------+-------+---------+
+[root@host53 ~]# 
+
+
+
+
+
+
 
 
 
