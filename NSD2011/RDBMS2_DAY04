@@ -53,3 +53,33 @@ log_bin=master51
 都要添加拷贝sql命令的连接用户
 ]#mysql -uroot -p密码  
 mysql> grant replication slave on  *.* to repluser@"%" identified by "123qqq...A"; 三台服务必须相同
+
+
+在4台服务器 51 52 53  57 安装yum源里没有的依赖软件（yum 里有的依赖根据提示单独安装）
+
+]# cd mha
+]# yum -y install perl-*.rpm
+
+配置 ssh 免密登录
+	1 三台数据库服务器之间彼此可以ssh免密登录
+          51 ---> 52 / 53
+[root@host51 ~]#
+ssh-keygen 
+ssh-copy-id  root@192.168.4.52
+ssh-copy-id  root@192.168.4.53
+
+ssh root@192.168.4.52
+ssh root@192.168.4.53
+
+          52 --->51 / 53 
+          53 ----> 51 / 52
+ 
+	2 管理主机57 可以ssh免密登录三台数据库服务器
+
+配置一主多从结构
+配置管理主机
+配置数据库服务器
+在管理主机测试配置
+启动管理服务
+测试高可用集群
+把宕机的数据库服务器再添加到集群里
