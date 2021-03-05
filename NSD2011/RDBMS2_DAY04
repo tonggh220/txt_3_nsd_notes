@@ -75,8 +75,42 @@ ssh root@192.168.4.53
           53 ----> 51 / 52
  
 	2 管理主机57 可以ssh免密登录三台数据库服务器
+2 管理主机57 可以ssh免密登录三台数据库服务器
+        57 ----> 51/52/53
+[root@host57 ~]#
+   35  ssh-keygen 
+   36  ssh-copy-id root@192.168.4.51
+   37  ssh-copy-id root@192.168.4.52
+   38  ssh-copy-id root@192.168.4.53
+   39  ssh root@192.168.4.53
+   40  ssh root@192.168.4.52
+   41  ssh root@192.168.4.51
 
 配置一主多从结构
+	配置主数据库服务器51
+		启用binlog日志
+		添加用户
+		查看日志信息
+[root@host51 ~]# mysql -uroot -p123456 -e 'show master status'
+
+	配置从数据库服务器52
+		指定server_id
+		管理员登录指定主服务器信息
+		查看状态
+]# mysql -uroot -p密码
+change master to master_host="192.168.4.51",master_user="repluser" , master_password="123qqq...A" , master_log_file="master51.000001" , master_log_pos=441;
+mysql> start slave ;
+mysql> show slave status \G
+
+        配置从数据库服务器53
+		指定server_id
+		管理员登录指定主服务器信息
+		查看状态	
+]mysql -uroot -p密码
+mysql>change master to master_host="192.168.4.51",master_user="repluser" , master_password="123qqq...A" , master_log_file="master51.000001" , master_log_pos=441;
+
+mysql> start slave ;
+mysql> show slave status \G 
 配置管理主机
 配置数据库服务器
 在管理主机测试配置
