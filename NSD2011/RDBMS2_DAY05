@@ -104,3 +104,30 @@ mysql>create database db5;
 mysql> create table db5.a(id int primary key auto_increment,name char(10));
 mysql> insert into db5.a(name) values("A");
 mysql> select  * from db5.a;
+
+在另外2台主机，启动数据库服务，会自动同步71主机的数据，做的是首次全量同步
+
+	     统一先启动72主机的数据库服务
+[root@pxc72 pxc]# systemctl  start mysql
+[root@pxc72 pxc]# ls /var/lib/mysql
+[root@pxc72 pxc]# ss -utnlp  | grep 4567
+[root@pxc72 pxc]# ss -utnlp  | grep 3306
+		连接服务并存取数据
+[root@pxc72 pxc]#mysql  -uroot -p123456
+mysql> select * from db5.a;
+mysql> insert into db5.a(name) values("B");
+	
+		启动73主机的数据库服务
+[root@pxc73 ~]# systemctl  start mysql
+[root@pxc73 ~]# ls /var/lib/mysql
+[root@pxc73 pxc]# ss -utnlp  | grep 4567
+[root@pxc73 pxc]# ss -utnlp  | grep 3306
+连接服务并存取数据
+[root@pxc73 pxc]#mysql  -uroot -p123456
+mysql> select * from db5.a;
+mysql> insert into db5.a(name)values("C");
+
+		另外2台主机也可以查看到73主机存储的新数据
+[root@pxc72 pxc]# mysql -uroot -p123456 -e 'select  * from db5.a'
+
+[root@pxc71 pxc]# mysql -uroot -p123456 -e 'select  * from db5.a'
