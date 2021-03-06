@@ -323,3 +323,21 @@ app1 is stopped(2:NOT_RUNNING).
 [root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
 app1 (pid:73411) is running(0:PING_OK), master:192.168.4.52
 [root@host57 ~]# 
+
+客户端连接VIP 地址访问数据库服务
+	具体步骤如下：
+	1 在主服务器添加用户（给客户端连接使用）
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.* to yaya55@"%" identified  by "123qqq...A"'
+
+	2 在从服务器查看是否同步添加的用户
+]# mysql -uroot -p密码 -e 'show grants for yaya55@"%"'
+
+	3 在客户端50连接vip 访问数据库服务
+[root@mysql50 ~]# mysql -h192.168.4.100 -uyaya55 -p123qqq...A
+mysql> show grants;
+mysql> select * from db9.user;
+mysql> insert into db9.user values(3);
+mysql> select * from db9.user;
+
+	4 在备用的2台数据库服务器 也可以查看到同样数据
+mysql> select * from db9.user;
