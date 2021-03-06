@@ -244,3 +244,26 @@ vip 地址 怎么取消： 在虚拟本机做如下操作
 ]#jobs 查看后台运行进程
 ]# masterha_check_status --conf=/etc/mha/app1.cnf 查看服务状态 
 ]# masterha_stop  --conf=/etc/mha/app1.cnf 停止服务的命令 
+
+测试高可用集群
+	1 模拟主服务器51故障 
+          停止51主机的数据库服务或关闭51的操作系统
+        
+	2 管理服务会停止
+          ]#jobs 查不后台运行的进程
+
+	3 查看vip地址在那台机器上 查看到vip地址的就是新的主服务器并查看不到从的状态信息
+          ]# ifconfig  ens33:1
+         
+	4 另1台备用的主机会自动做新主服务器的从服务器
+         mysql> show slave status \G
+
+	5 管理主机会自动删除宕机服务器在app1.cnf文件里配置
+	 vim /etc/mha/app1.cnf  发现 [server1]配置没有了
+ 
+        6 启动管理服务，监视当前的主服务器52
+[root@host57 ~]# nohup masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf  --ignore_last_failover 2> /dev/null &
+
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+app1 (pid:74198) is running(0:PING_OK), master:192.168.4.52
+[root@host57 ~]#
