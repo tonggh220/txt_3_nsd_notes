@@ -234,3 +234,13 @@ vip 地址 怎么取消： 在虚拟本机做如下操作
       ifdown ens33
       ifup  ens33
       ifconfig  ens33:1  查看不到了 
+启动管理服务
+]# masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf  --ignore_last_failover
+  
+或
+
+]# nohup masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf  --ignore_last_failover 2> /dev/null &
+
+]#jobs 查看后台运行进程
+]# masterha_check_status --conf=/etc/mha/app1.cnf 查看服务状态 
+]# masterha_stop  --conf=/etc/mha/app1.cnf 停止服务的命令 
