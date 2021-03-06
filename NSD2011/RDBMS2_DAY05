@@ -171,3 +171,44 @@ mysql> exit
 [root@mysql50 ~]# mysql -h192.168.4.72 -uplj -p123456 -e 'select * from db5.a'
 
 
+二mysql存储引擎  在 192.168.4.50 主机做实验
+  是MySQL服务软件的组件之一，是表处理器。对表中的数据做访问时，
+想如何对表里的数据做处理，由表使用的存储引擎决定。
+
+  MySQL服务的功能组件：
+	1 管理工具 安装数据库服务软件后提供的命令
+	2 连接池   验证用户连接和系统硬件资源
+	3 sql接口  负责把命令传递给mysqld进程处理
+	4 分析器  检查命令的语法格式 和 用户的访问权限
+	5 优化器  对命令做优化再执行
+	6 查询缓存 占用系统的物理内存空间，存储曾经查找过的数据
+		   默认情况MySQL服务的查询缓存没有开启
+	7 存储引擎 支持多种存储引擎，有各自的存储方式和功能
+	8 文件系统 (硬盘)
+
+  查看数据库服务支持的存储引擎
+mysql> show  engines；
+  
+   建表时指定表使用的存储引擎
+mysql> create table  gamedb.a(name char(10));使用默认的存储引擎
+ mysql> create table gamedb.b(name char(10))engine=memory;
+ mysql> create table gamedb.c(age int)engine=myisam; 
+
+ mysql> show create table gamedb.b \G  查看表使用的存储引擎
+
+ mysql> system ls /var/lib/mysql/gamedb/  查看表对应的文件
+
+  修改使用存储引擎
+mysql> alter table gamedb.b engine=myisam;
+mysql> system ls /var/lib/mysql/gamedb/b*
+  修改数据库服务使用的存储
+]# vim /etc/my.cnf
+[mysqld]
+default-storage-engine="myisam"
+:wq
+]# systemctl  restart mysqld
+
+mysql> create table gamedb.D(user char(1));
+mysql> show create table gamedb.D \G
+
+
