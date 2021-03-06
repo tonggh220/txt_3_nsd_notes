@@ -131,3 +131,17 @@ mysql> insert into db5.a(name)values("C");
 [root@pxc72 pxc]# mysql -uroot -p123456 -e 'select  * from db5.a'
 
 [root@pxc71 pxc]# mysql -uroot -p123456 -e 'select  * from db5.a'
+
+
+
+71 初始化失败， 按如下步骤解决
+		1 检查 mysqld.cnf 和  wsrep.cnf的修改
+		2 rm -rf /var/lib/mysql/*
+		3 检查 firewalld   selinux 是否关闭
+		4 再次执行初始化
+
+        71 初始化成功， 但72 和 73 启动服务失败，按如下步骤解决
+		1 检查 firewalld   selinux 是否关闭
+		2 检查 72 和 73  mysqld.cnf 和  wsrep.cnf的修改
+		3 分别 在 72 和 72 执行rm -rf /var/lib/mysql/*
+		4 分别 在 72 和 72 执行启动服务 
