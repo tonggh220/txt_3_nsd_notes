@@ -293,3 +293,33 @@ mysql> change master to  master_host="192.168.4.52", master_user="repluser",mast
 启动slave进程  
 mysql> start slave;
 查看状态信息 show slave status \G
+
+
+		2 配置管理主机57
+修改主配置文件,添加新服务器51
+]# vim /etc/mha/app1.cnf
+[server1]
+candidate_master=1
+hostname=192.168.4.51
+port=3306
+:wq
+
+测试主从同步，新添加的51 是否和52 是主从结构
+[root@host57 ~]# masterha_check_repl --conf=/etc/mha/app1.cnf
+MySQL Replication Health is OK.
+
+重启管理服务
+[root@host57 ~]# jobs
+[1]+  运行中               nohup masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf --ignore_last_failover 2> /dev/null &
+[root@host57 ~]# 
+[root@host57 ~]# kill -9 %1
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+app1 is stopped(2:NOT_RUNNING).
+
+[root@host57 ~]# nohup masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf  --ignore_last_failover 2> /dev/null &
+
+
+查看服务状态
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
+app1 (pid:73411) is running(0:PING_OK), master:192.168.4.52
+[root@host57 ~]# 
