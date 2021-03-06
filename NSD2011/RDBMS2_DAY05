@@ -145,3 +145,29 @@ mysql> insert into db5.a(name)values("C");
 		2 检查 72 和 73  mysqld.cnf 和  wsrep.cnf的修改
 		3 分别 在 72 和 72 执行rm -rf /var/lib/mysql/*
 		4 分别 在 72 和 72 执行启动服务 
+
+]# yum -y  install  psmisc
+        ]# pstree -p  查看mysql服务父进程 pid  并将其kill 
+	
+     测试PXC集群 (至少要保证有1台是工作着)
+[root@pxc71 ~]# systemctl  stop mysql@bootstrap.service
+
+     连接服务查看集群状态  
+     mysql -uroot -p123456 
+     > show status like  "%wsrep%";
+     mysql> insert into db5.a(name)values("D");
+
+[root@pxc71 ~]# systemctl  start mysql
+[root@pxc71 ~]# mysql -uroot -p123456 -e  'select  * from db5.a'
+
+[root@pxc72 pxc]# mysql -uroot -p123456 -e 'grant all on *.*  to plj@"%" identified by "123456"'
+
+[root@pxc73 ~]# mysql -uroot -p123456 -e 'select user from mysql.user'
+      
+[root@mysql50 ~]# mysql -h192.168.4.71 -uplj -p123456   
+mysql> insert into db5.a(name)values("AAA");
+mysql> exit
+
+[root@mysql50 ~]# mysql -h192.168.4.72 -uplj -p123456 -e 'select * from db5.a'
+
+
