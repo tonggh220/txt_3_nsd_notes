@@ -267,3 +267,29 @@ vip 地址 怎么取消： 在虚拟本机做如下操作
 [root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf 
 app1 (pid:74198) is running(0:PING_OK), master:192.168.4.52
 [root@host57 ~]#
+
+把宕机的数据库服务器再添加到集群里
+		1 配置数据库服务器51
+
+启动mysql服务  systemctl  start mysqld
+
+与主服务器数据一致
+[root@host52 ~]# scp /var/lib/mysql/master52.000001 root@192.168.4.51:/root/
+[root@host52 ~]# mysql -uroot -p123qqq...A  -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master52.000001 |     2760 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@host52 ~]#
+
+[root@host51 ~]# mysqlbinlog /root/master52.000001 | mysql -uroot -p123456
+
+指定主服务器信息
+]#mysql -uroot -p密码
+mysql> change master to  master_host="192.168.4.52", master_user="repluser",master_password="123qqq...A",master_log_file="master52.000001",master_log_pos=2760; 
+
+启动slave进程  
+mysql> start slave;
+查看状态信息 show slave status \G
