@@ -83,3 +83,24 @@ wsrep.cnf 集群配置文件
 30 wsrep_node_name=pxc-cluster-node-73
 39 wsrep_sst_auth="sstuser:123qqq...A"
 :wq
+
+
+	检查3台主机的firewalld 和 selinux 是否关闭
+
+	在任意1台主机 ，做集群初始化操作（统一在71主机操作）
+[root@pxc71 ~]# systemctl  start mysql@bootstrap.service
+[root@pxc71 ~]# ls /var/lib/mysql
+[root@pxc71 ~]# ss -utnlp  | grep 3306
+[root@pxc71 ~]# ss -utnlp  | grep 4567
+[root@pxc71 ~]# grep -i "password" /var/log/mysqld.log
+[root@pxc71 ~]# mysql -uroot -p'5B*ioXLxkosf'
+mysql> alter user root@"localhost" identified by "123456";
+mysql> exit
+[root@pxc71 ~]# mysql -uroot -p123456
+mysql> grant all on *.*  to sstuser@"localhost" identified by "123qqq...A";
+
+建库存储数据
+mysql>create database db5;
+mysql> create table db5.a(id int primary key auto_increment,name char(10));
+mysql> insert into db5.a(name) values("A");
+mysql> select  * from db5.a;
