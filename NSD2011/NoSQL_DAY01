@@ -106,3 +106,46 @@ list
 127.0.0.1:6379> shutdown 停止服务
 
 
+3 配置文件解析
+
+  
+
+二 、LNMP+Redis
+	2.1 部署lnmp环境
+  283  yum -y install gcc pcre-devel zlib-devel
+  284  tar -zxvf nginx-1.12.2.tar.gz 
+   286  cd nginx-1.12.2/
+  287  ./configure 
+  288  make
+  289  make install
+  291  ls /usr/local/nginx/
+  292  yum -y install php-fpm
+  293  vim +65 /usr/local/nginx/conf/nginx.conf
+        location ~ \.php$ {
+            root           html;
+            fastcgi_pass   127.0.0.1:9000;
+            fastcgi_index  index.php;
+            include        fastcgi.conf;
+        }
+：wq
+
+[root@host51 nginx-1.12.2]# /usr/local/nginx/sbin/nginx  -t
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+  
+  295  /usr/local/nginx/sbin/nginx
+  296  systemctl  start php-fpm
+
+
+]# ss -utnlp  | grep 80
+]# ss -utnlp  | grep 9000
+
+]# vim /usr/local/nginx/html/test.php
+
+<?php
+   echo "hello world!!!";
+?>
+：wq
+
+]# curl http://localhost/test.php
+hello world!!!
