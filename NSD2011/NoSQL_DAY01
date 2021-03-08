@@ -1,0 +1,34 @@
+1 相关概念
+	数据库服务软件的分类?
+		RDBMS
+		NoSQL
+    redis软件介绍？
+			
+
+2 搭建Redis服务器  
+	诉求：在192.168.4.50部署redis服务
+	具体操作如下：
+	1 安装源码软件
+# rpm -q   gcc  ||  yum  -y  install  gcc
+# tar -zxvf redis-4.0.8.tar.gz
+# cd redis-4.0.8
+# make  
+# make install
+
+	2 初始化配置 （会自动启动服务）
+cd redis-4.0.8
+]# ./utils/install_server.sh
+
+	3 管理服务
+[root@host50 redis-4.0.8]# ss -utnlp  | grep 6379
+	4 连接服务
+[root@host50 ~]# redis-cli   连接服务
+127.0.0.1:6379> keys *  查看变量
+127.0.0.1:6379> set school tarena 存储变量
+127.0.0.1:6379> keys * 再查看变量
+127.0.0.1:6379> get school 获取变量的值
+127.0.0.1:6379> save  手动保存变量到硬盘
+127.0.0.1:6379> exit 断开连接
+[root@host50 ~]# ls /var/lib/redis/6379/ 查看数据库目录
+dump.rdb 保存数据的文件
+[root@host50 ~]# 
