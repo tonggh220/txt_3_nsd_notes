@@ -344,3 +344,10 @@ tty2
   mysql> select  * from db5.a;  依然看到的是88 的记录
 
 
+
+  建表时如何确定表使用哪种存储引擎比较合适？
+查询数据select操作多的表适合使用myisam存储引擎，好处 是节省系统的硬件资源。
+
+存储数据insert/delete/update操作多的表适合使用innodb存储引擎，好处并发访问量大
+
+
