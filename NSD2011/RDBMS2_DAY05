@@ -212,3 +212,135 @@ mysql> create table gamedb.D(user char(1));
 mysql> show create table gamedb.D \G
 
 
+
+工作常用存储引擎的特点
+	myisam存储引擎特点
+		支持表级锁
+		不支持事务、事务回滚、外键
+		每个表有3个文件 表名.frm  表名.MYI  表名.MYD
+				表结构    索引信息  表的数据
+			       desc 表名  show index select 
+
+	innodb存储引擎特点
+		支持行级锁定
+		支持事务、事务回滚、外键
+		每个表有2个文件 表名.frm     表名.ibd
+				desc 表名   show index select
+
+	事务日志文件 记录对innodb存储引擎的表执行的sql命令
+ibdata1
+ib_logfile0
+ib_logfile1
+
+建表时如何决定表使用哪种存储引擎合适？
+
+专业术语：
+	加锁的目的： 解决并发访问，写冲突问题。
+
+pc1  			   myisam
+		update db3.user set name="tom" where id =1;
+	  mysql  同1个库 同一个表 同一个表 做的修改不一样
+		update  db3.user set name="jim" where id >=2;
+pc2 
+
+	锁粒度：加锁的范围
+	    行级锁: 仅仅对被访问的行分别加锁，其他行不加锁
+	    表级锁: 只要是对表访问，无论访问的是表的1行还是多行，都会给整张表加锁。
+
+	锁类型？
+	    读锁（共享锁）：对表做select访问，MySQL服务会给表加读锁，加读锁后，只允许再连接执行查询访问。
+
+	    写锁（排它锁或互斥锁）：对表做insert delete update 访问,mysql服务会给表加写锁。加了写锁后，再连接的连接读写访问都不可以。
+mysql> show status like "table_lock_waited"; 查看锁状态
+		
+           	   
+	    
+	事务？ 连接服务器后  执行各自sql操作 断开连接 这个过程被称为事务。
+
+	事务回滚? 把错误的操作恢复到操作错误之前的状态
+	事务日志？ ib_logfile0 ib_logfile1 ibdata1
+	事务特性？ ACID
+
+
+tty1 
+mysql> set autocommit=off; 
+mysql> show variables like "autocommit";
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| autocommit    | OFF   |
++---------------+-------+
+1 row in set (0.00 sec)
+
+tty2
+mysql> show variables like "autocommit";
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| autocommit    | ON    |
++---------------+-------+
+1 row in set (0.01 sec)
+
+
+tty1
+mysql> create database db5;
+mysql> create table db5.a(id int)engine=innodb;
+mysql> desc db5.a;
+
+
+tty2
+mysql> desc db5.a;
+
+
+tty1
+   mysql> insert into db5.a values(1);
+   mysql> select  * from db5.a;
+
+tty2
+    mysql> select  * from db5.a;  看不到数据
+
+tty1
+    mysql> commit ；
+
+tty2
+    mysql> select  * from db5.a;  看到数据了
+
+tty1
+    mysql> delete from  db5.a;
+    mysql> select  * from db5.a;
+
+tty2
+    mysql> select  * from db5.a;  看到数据了
+
+tty1 
+   mysql> commit; 提交
+   mysql> select  * from db5.a;
+
+tty2
+   mysql> select  * from db5.a;  看不到数据了
+
+!!!!!!!!!!!!!!!!!!!!!
+tty1
+    mysql> insert into db5.a values(88);
+    mysql> commit;
+    mysql> select  * from db5.a;
+
+tty2
+   mysql> select  * from db5.a;
+
+tty1
+   mysql> insert into db5.a values(99);
+   mysql> update db5.a set id=1010;
+   mysql> delete from db5.a;
+
+tty2
+  mysql> select  * from db5.a;  依然看到的是88 的记录
+
+tty1
+  mysql> rollback;
+  mysql> mysql> select  * from db5.a;然看到的是88 的记录
+
+tty2
+  mysql> select  * from db5.a;  依然看到的是88 的记录
+
+
