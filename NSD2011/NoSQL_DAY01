@@ -168,3 +168,42 @@ curl.so      mysqli.so     pdo.so         redis.so
 fileinfo.so  mysql.so      pdo_sqlite.so  sqlite3.so
 json.so      pdo_mysql.so  phar.so        zip.so
 [root@host51 phpredis-2.2.4]# 
+
+
+ 2 调用模块
+]# vim /etc/php.ini
+728 extension_dir = "/usr/lib64/php/modules/"
+730 extension = "redis.so"
+:wq
+
+]# systemctl  restart php-fpm
+
+[root@host51 phpredis-2.2.4]# php -m | grep -i "redis"
+redis
+
+休息16:23 
+	    3 编写php脚本连接redis服务存取数据
+[root@host51 ~]# vim /usr/local/nginx/html/set.php
+<?php
+//连接服务
+$redis = new redis();
+$redis->connect("192.168.4.50" , "6379");
+$redis->auth("123456");
+
+$redis->set("linux","redhat"); //存储数据
+echo "save data ok "; //数据存储成功的提示
+?>
+:wq
+
+
+[root@host51 ~]# cd /usr/local/nginx/html/
+[root@host51 html]# cp set.php get.php
+<?php
+//连接服务
+$redis = new redis();
+$redis->connect("192.168.4.50" , "6379");
+$redis->auth("123456");
+
+echo $redis->get("linux"); //查询数据
+
+?>
