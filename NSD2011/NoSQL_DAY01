@@ -207,3 +207,40 @@ $redis->auth("123456");
 echo $redis->get("linux"); //查询数据
 
 ?>
+
+修改50主机的redis服务的主配置文件定义服务使用的IP地址、端口号 、连接密码
+
+[root@host50 ~]# /etc/init.d/redis_6379 stop
+
+[root@host50 ~]# vim /etc/redis/6379.conf
+bind  192.168.4.50
+port  6379
+requirepass  123456 
+:wq
+[root@host50 ~]# /etc/init.d/redis_6379 start
+
+[root@host50 ~]# ss -utnlp  | grep 6379
+
+tcp    LISTEN     0      128    192.168.4.50:6379                  *:*                   users:(("redis-server",pid=30230,fd=6))
+[root@host50 ~]# 
+
+	    4 访问网站存取数据的php脚本
+[root@host51 html]# curl http://localhost/set.php
+save data ok 
+[root@host51 html]# curl  http://localhost/get.php
+redhat
+
+	    5 在redis服务50本机 命令行访问服务查看数据，能查看到数据为成功
+
+ [root@host50 ~]# redis-cli -h 192.168.4.50 -p 6379 
+192.168.4.50:6379> keys *
+(error) NOAUTH Authentication required.
+192.168.4.50:6379> 
+192.168.4.50:6379> auth 123456
+OK
+192.168.4.50:6379> keys *
+1) "linux"
+192.168.4.50:6379> get linux
+"redhat"
+192.168.4.50:6379> exit
+[root@host50 ~]# 
