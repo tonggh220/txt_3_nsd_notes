@@ -149,3 +149,22 @@ nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
 
 ]# curl http://localhost/test.php
 hello world!!!
+
+
+
+	配置支持redis
+	    1 安装软件提供模块
+yum -y install php  php-devel  automake  autoconf
+tar -zxvf php-redis-2.2.4.tar.gz
+  329  cd phpredis-2.2.4/
+  331  phpize 
+  334  ./configure --with-php-config=/usr/bin/php-config
+  335  make
+[root@host51 phpredis-2.2.4]# make install
+Installing shared extensions:     /usr/lib64/php/modules/
+
+[root@host51 phpredis-2.2.4]# ls /usr/lib64/php/modules/
+curl.so      mysqli.so     pdo.so         redis.so
+fileinfo.so  mysql.so      pdo_sqlite.so  sqlite3.so
+json.so      pdo_mysql.so  phar.so        zip.so
+[root@host51 phpredis-2.2.4]# 
