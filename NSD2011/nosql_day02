@@ -81,3 +81,149 @@ dump.rdb  nodes-6379.conf
 192.168.4.52:6352> cluster info  查看集群信息
 192.168.4.52:6352> cluster nodes 查看成员列表
 192.168.4.52:6352> info replication 查看角色和主从关系
+
+在客户端连接集群存储数据和查询数据
+[root@host50 ~]# redis-cli  -c -h 192.168.4.56 -p 6356
+> keys *
+> set school tarena
+> set name  plj
+> set sex  girl
+> set age  19
+> keys *
+> get  name
+	
+	集群的工作过程（理论）
+16384个槽  范围0-16383  创建集群时 会平均的分片给3台主服务器
+  4G
+  51        52            53
+ 0-5460   5461-10922   10923-16383
+         
+
+	向集群中存储数据或查询数据 会自动调用集群算法crc16 ,通过算法计算后得到一个计算结果 根据计算结果 存储数据
+		
+
+	测试集群的高可用功能
+	       把任意1台mater角色的 服务器的redis 服务停止，对应的
+slave服务器会自动升级为master , 并接管 hash slots ,服务启动后会自动加入集群，并自动同步宕机期间的数据
+
+
+      管理集群
+		1 添加新的Redis服务器到集群里
+			1.1 添加master角色的Redis服务器
+	                    诉求：把50主机添加到集群里
+
+		配置数据库服务器：
+			1 安装软件并初始化
+			2 运行Redis服务，并启用的集群功能
+                        3 保证内存没有数据 没有连接密码）
+
+		在管理主机做如下配置
+			1 添加主机进集群并做master角色的服务器
+[root@host57 ~]# redis-trib.rb add-node 192.168.4.50:6379 192.168.4.51:6351
+[OK] New node added correctly. 添加成功的提示
+
+
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6351 查看
+....
+192.168.4.50:6379 (fd1059c5...) -> 0 keys | 0 slots | 0 slaves.
+.....
+		     
+     		  2 给新master服务器分片hash slots
+[root@host57 ~]# redis-trib.rb reshard 192.168.4.51:6351
+移出hash槽个数    4096
+接收hash槽主机ID  新数据库服务器的id
+移出hash槽主机ID  all
+同意配置          yes
+
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6351 查看
+.....
+192.168.4.50:6379 (fd1059c5...) -> 4 keys | 4096 slots | 0 slaves.
+....                         
+
+[root@host57 ~]# redis-trib.rb check  192.168.4.51:6351 查看
+M: fd1059c59123d2f71e0e63d4c8193e3f563221fc 192.168.4.50:6379
+   slots:0-1364,5461-6826,10923-12287 (4096 slots) master
+   0 additional replica(s)
+
+	连接新的主服务器存储数据
+[root@host53 ~]# redis-cli -c -h 192.168.4.50 -p 6379
+192.168.4.50:6379> keys *
+192.168.4.50:6379> set v1 101
+192.168.4.50:6379> set v2 102
+
+
+		
+
+			2.2 移除slave角色的Redis服务器
+比较简单直接移除，因为slave服务器不占用hash slots 在管理主机做如下操作：
+	诉求：把55 从服务器移除集群   休息到17:08
+         查看55主机的id
+[root@host57 ~]# redis-trib.rb check 192.168.4.51:6351
+
+	 通过id移除主机
+[root@host57 ~]# redis-trib.rb del-node 192.168.4.51:6351 8278418e60186b58c9129b9484d67543430565ed
+
+	查看集群信息
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6351
+192.168.4.51:6351 (f74216b9...) -> 1 keys | 3096 slots | 0 slaves.
+
+
+
+	        1.2 添加slave角色的Redis服务器
+	诉求：把移除服务器再添加到集群里做slave服务器
+		数据库服务器做如下操作
+		查看服务状态（被移除集群的主机redis服务会停止）
+[root@host55 ~]# ss -utnlp  | grep redis-server
+[root@host55 ~]# 
+[root@host55 ~]# rm -rf /var/lib/redis/6379/*
+[root@host55 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host55 ~]# 
+[root@host55 ~]# ss -utnlp  | grep redis-server
+
+
+		在管理主机如下操作
+查看主服务器的id 
+[root@host57 ~]# redis-trib.rb check 192.168.4.51:6351
+M: f74216b92f9897653cc6e08d3fa0e89ffcd11b8e 192.168.4.51:6351
+   slots:2365-5460 (3096 slots) master
+   0 additional replica(s)
+
+
+通过id 指定做谁的从服务器
+[root@host57 ~]# redis-trib.rb add-node --slave --master-id f74216b92f9897653cc6e08d3fa0e89ffcd11b8e 192.168.4.55:6355 192.168.4.51:6351
+[OK] New node added correctly.
+
+	查看是否添加成功
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6351
+192.168.4.51:6351 (f74216b9...) -> 1 keys | 3096 slots | 1 slaves.
+
+或
+[root@host55 ~]# redis-cli  -c -h 192.168.4.55 -p 6355
+192.168.4.55:6355> info replication
+# Replication
+role:slave
+master_host:192.168.4.51
+master_port:6351
+master_link_status:up
+192.168.4.55:6355> keys *
+1) "sex"
+
+			2.1 移除master角色的Redis服务器
+			在管理主机做如下操作：
+			   1 释放占用的hash slots
+[root@host57 ~]# redis-trib.rb reshard 192.168.4.51:6351
+问题1  移出hash槽个数    
+问题2  接收hash槽主机ID  
+问题3   #1  移出hash槽主机ID  
+        #2   done
+问题4  同意配置yes
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6351
+192.168.4.51:6351 (f74216b9...) -> 6 keys | 8192 slots | 1 slaves.
+192.168.4.50:6379 (fd1059c5...) -> 0 keys | 0 slots | 0 slaves.
+			   2 移除主机
+[root@host57 ~]# redis-trib.rb check 192.168.4.51:6351  查看id
+[root@host57 ~]# redis-trib.rb del-node 192.168.4.51:6351  f74216b92f9897653cc6e08d3fa0e89ffcd11b8e  通过id移除主机
+
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6351 查看集群信息
+
