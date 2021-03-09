@@ -7,9 +7,50 @@ NOSQL_DAY02 redis集群
 192.168.4.55  6355   无   无
 192.168.4.56  6356   五   无
 
+NOSQL_DAY02 redis集群
+	   集群：多台服务器一起提供相同的服务
+为什么要搭建redis集群提供数据存储服务呢？
+	实现服务的高可用 实现数据的自动备份 数据的分布式存储
+
+  bind	      port  密码 内存数据
+192.168.4.51  6351   无   无
+192.168.4.52  6352   无   无
+192.168.4.53  6353   无   无
+192.168.4.54  6354   无   无
+192.168.4.55  6355   无   无
+192.168.4.56  6356   无   无
+检查所有主机的firewalld 和 selinux 是否关闭
+
 管理主机  192.168.4.57   不需要运行redis服务
 
-管理集群
-bind	      port  密码 内存数据
-192.168.4.58  6358
-192.168.4.59  6359
+		配置Redis集群，具体操作如下：
+			1 配置管理主机57
+				1.1 创建管理集群的ruby脚本
+   
+    2  yum -y install ruby rubygems
+   
+    4  gem install redis-3.2.1.gem 
+  
+    6  mkdir /root/bin
+    7  tar -zxvf redis-4.0.8.tar.gz 
+    8  cd redis-4.0.8/
+  
+   11  cp src/redis-trib.rb /root/bin/
+   12  chmod +x /root/bin/redis-trib.rb 
+   
+   15  redis-trib.rb  help
+
+		配置6台数据库服务器
+		       1  都要运行redis服务 要设置ip和端口
+		       2  分别启用集群功能
+]# vim /etc/redis/6379.conf
+cluster-enabled yes
+cluster-config-file nodes-6379.conf
+cluster-node-timeout 5000
+:wq
+]#redis-cli  -h ip地址 -p 端口 shutdown
+]#/etc/init.d/redis_6379 start
+]# ls /var/lib/redis/6379/*.conf
+]#ss -utnlp  | grep redis-server
+]#redis-cli  -h 192.168.4.51 -p 6351
+> cluster info 查看集群功能是否开启
