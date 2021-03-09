@@ -108,6 +108,21 @@ list
 
 3 配置文件解析
 
+    内存管理
+     内存清除策略？向redis服务的内存里存储数据时，空间不足，删除已有存储数据的方式。
+     软件开发者，写好8种删除已经存储数据的方式
+
+     LRU 最近最少使用（volatile-lru   allkeys-lru）
+     LFU 使用频率最少（volatile-LFU   allkeys-LFU）
+     RANDOM 随机删除（volatile-RAADOM   allkeys-RANDOM）
+     TTL 移除最近过期的key
+     noeviction 不删除 直接给出报错信息
+   
+     内存参数
+maxmemory  		//最大内存
+maxmemory-policy 	//定义使用策略
+maxmemory-samples 	//选取key模板的个数 (针对lru 和 ttl 和 LFU 
+
 
 修改50主机的redis服务的主配置文件定义服务使用的IP地址、端口号 、连接密码
 
