@@ -109,3 +109,58 @@ master_link_status:up
 role:master
 connected_slaves:1
 slave0:ip=192.168.4.52,port=6352,state=online,offset=6802,lag=0
+
+
+
+	1.4 哨兵服务：
+	    哨兵服务的功能：服务运行后，监视配置文件中指定的主数据库服务器，发现主服务器监视不到时，把对应的从 升级为主数据库服务器。
+         
+           诉求：57主机的哨兵服务运行后 ，监视 51 和 52 中的主数据库服务器 51 。
+		
+***如果主从结构中的主服务器设置了连接密码，也要设置一样的连接密码***
+ 
+     配置从服务器52的连接密码和51一样
+[root@host52 ~]# redis-cli  -h 192.168.4.52 -p 6352 
+192.168.4.52:6352> config get requirepass 查看
+1) "requirepass"
+2) ""
+192.168.4.52:6352> config set requirepass 123456 设置
+192.168.4.52:6352> auth 123456  输入密码
+192.168.4.52:6352> config rewrite  报错
+192.168.4.52:6352> exit
+[root@host52 ~]# tail -1 /etc/redis/6379.conf       
+     在57主机配置哨兵服务，具体操作如下：
+	1  安装源码redis软件
+   61  yum -y install gcc
+   62  tar -zxvf /var/ftp/pub/redis-4.0.8.tar.gz 
+   63  cd redis-4.0.8/
+   64  make && make install  
+	
+	2 创建并编辑主配置文件 
+	  vim /etc/sentinel.conf
+bind 192.168.4.57
+port 26379
+sentinel monitor   myserver  192.168.4.51 6351  1
+sentinel auth-pass myserver  123456    
+:wq
+
+        3 启动哨兵服务
+***关闭所有主机的防火墙和seLinux***
+	]# redis-sentinel /etc/sentinel.conf 
+
+
+	4 测试
+	   4.1  停止51主机的redis服务 
+[root@host51 ~]# redis-cli  -h 192.168.4.51 -p 6351 -a 123456 shutdown
+
+	   4.2 查看52主机的角色
+192.168.4.52:6352> info replication
+# Replication
+role:master
+connected_slaves:0
+
+	   4.3 哨兵服务会自动监视新的主服务器52
+	]# cat /etc/sentinel.conf 
+.....
+sentinel monitor myserver 192.168.4.52 6352 1
+sentinel known-slave myserver 192.168.4.51 6351
