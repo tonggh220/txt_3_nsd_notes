@@ -1,0 +1,72 @@
+NOsql_day03
+
+1主从复制 （功能类似于MySQL服务的主从同步结构）
+	Redis提供存储数据的服务结构，分为主/从 2种角色
+	主服务器 接收客户端访问
+	从服务器 与主服务器保持数据一致
+        支持的服务结构有：一主一从  一主多从 主从从
+
+命令行配置命令（临时配置）
+ >slaveof  主服务器Ip   端口号
+ 
+永久配置（永久配置）
+]#vim /etc/redis/6379.conf
+ slaveof  主服务器Ip   端口号
+:wq
+
+ 
+ > info  replication  查看服务器的角色
+ >  slaveof no one 反客为主(临时恢复为 主数据库服务器)
+ 
+*****每台redis服务器默认都是主（master）角色*****
+配置一主一从   51 master  52 slave
+	具体操作如下：
+           51和52 主机都要运行redis服务，并且firewalld 、selinux 关闭
+	   在51主机存储并查看数据
+	      51> mset x 1 y 2 z 4 j  3
+           在52主机指定主服务器的信息
+                > slaveof 192.168.4.51 6351
+	   在2台主机分别查看复制信息
+192.168.4.52:6352> info replication
+# Replication
+role:slave
+master_host:192.168.4.51
+master_port:6351
+master_link_status:up
+
+192.168.4.51:6351> info replication
+# Replication
+role:master
+connected_slaves:1
+slave0:ip=192.168.4.52,port=6352,state=online,offset=84,lag=1
+
+
+配置一主多从 诉求：Redis服务器53 也配置为51的slave 服务器 
+	     在53主机做如下配置：
+		1 要运行redis服务，并且firewalld 、selinux 关闭
+
+		2 在53主机指定主服务器
+		> slaveof  192.168.4.51 6351
+		> keys *
+
+3 在51 查看复制信息
+192.168.4.51:6351> info replication 
+# Replication
+role:master
+connected_slaves:2
+slave0:ip=192.168.4.52,port=6352,state=online,offset=1522,lag=1
+slave1:ip=192.168.4.53,port=6353,state=online,offset=1522,lag=1
+
+配置主从从 诉求：把Redis服务器 54 配置为 53的 slave服务器。
+	   在54主机做如下配置：
+		1  要运行redis服务，并且firewalld 、selinux 关闭	
+		2  永久配置
+		   vim /etc/redis/6379.conf
+			    bind  192.168.4.54
+			    port  6379
+		        282 slaveof  192.168.4.51 6351
+		   :wq
+		   ]#redis-cli -h 192.168.4.54 -p 6379 shutdown
+		   ]#/etc/init.d/redis_6379 start
+		   ]#redis-cli -h 192.168.4.54 -p 6379
+		   > info  replication
