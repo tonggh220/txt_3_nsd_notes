@@ -164,3 +164,192 @@ connected_slaves:0
 .....
 sentinel monitor myserver 192.168.4.52 6352 1
 sentinel known-slave myserver 192.168.4.51 6351
+
+
+二、明天上午讲  50  51 
+
+三 数据类型
+3数据类型 （命令的使用）
+	type 变量名    //数据的类型
+	3.1 对字符类型数据管理的命令
+set 命令 
+ 
+> set y 8  ex 20  过期时间20秒
+> set z 11 px 20  过期时间20秒
+> set k 3         永不过期
+
+192.168.4.53:6353> set name 99 xx 覆盖赋值，反之不存储变量
+192.168.4.53:6353> set name 99 nx 避免重复赋值
+> keys *
+> get name 
+
+setrange 命令  修改  
+192.168.4.53:6353> get tel
+"123DEF"
+
+192.168.4.53:6353> SETRANGE tel 0 ABCw
+(integer) 6
+
+192.168.4.53:6353> get tel
+"ABCwEF"
+
+strlen 命令
+> get name
+"panglijing"
+
+> strlen name
+(integer) 10
+  
+
+append 命令  追加
+192.168.4.53:6353> get name
+"panglijing"
+192.168.4.53:6353> APPEND name TARENA
+(integer) 16
+192.168.4.53:6353> get name
+"panglijingTARENA"
+
+
+
+  
+decr 自减1   
+192.168.4.53:6353> set x 11
+192.168.4.53:6353> decr x
+192.168.4.53:6353> decr x
+192.168.4.53:6353> get x
+
+decrby 自定义自减的数字  
+192.168.4.53:6353> get x
+"9"
+192.168.4.53:6353> decrby x 5
+(integer) 4
+192.168.4.53:6353> decrby x 2
+(integer) 2
+192.168.4.53:6353> get x
+"2"
+192.168.4.53:6353>
+
+
+incr 自加1
+ 192.168.4.53:6353> set y 3
+192.168.4.53:6353> incr y
+192.168.4.53:6353> incr y
+192.168.4.53:6353> get y
+192.168.4.53:6353> 
+incrby 自定义自加的数字 
+192.168.4.53:6353> get y
+192.168.4.53:6353> INCRBY y 7
+192.168.4.53:6353> incrby y 10
+192.168.4.53:6353> get y
+192.168.4.53:6353>
+incrbyfloat 可以自己小数
+192.168.4.53:6353> get y
+192.168.4.53:6353> INCRBYFLOAT y 1.5
+192.168.4.53:6353> INCRBYFLOAT y 0.5
+192.168.4.53:6353> get y
+192.168.4.53:6353>
+
+
+setbit 位存储 （使用二进制数给变量赋值）节省内存存储空间
+	二进制 0 或 1
+
+setbit 变量名  第几位  值   
+
+ 1年 365 天     有1M的内存存储空间 能存下牛犇几年的登录信息
+ 
+ setbit nb  1 1
+ setbit nb  2 0               
+ setbit nb  3 0        
+ 。。。。
+ setbit nb 365 1
+ 
+nb=10011100101........1  (1年365位)
+
+计算机的换算进制
+位0|1    字节    1K   1M  1G
+
+8位=1byte    365/8=45字节  （1年占45字节存储）
+1024字节=1K  1024/45=22 (1K 存储 22年的登录信息)
+1024K=1M     1024*22=22528 （1M可以存储22528年的登录信息）
+1024M=1G      1G内存可以存储多少年    
+
+bitcount  统计二进制数里1的个数
+192.168.4.52:6352> bitcount nb
+
+
+	3.2 对列表类型list 数据管理的命令
+            列表类型list  使用一个变量名 存储多个值，一个字符队列 ，数据先进后出
+
+lpush  存储数据
+lrange 输出数据
+llen   查看数据值个数
+192.168.4.52:6352> EXISTS tea
+192.168.4.52:6352> lpush tea A B C D E 
+192.168.4.52:6352> EXISTS tea
+192.168.4.52:6352> keys *
+192.168.4.52:6352> type tea  查看类型
+list
+192.168.4.52:6352> lrange tea 0 -1
+192.168.4.52:6352> lpush tea I J K
+192.168.4.52:6352> lrange tea 0 -1
+192.168.4.52:6352> llen tea
+(integer) 8
+
+
+lpop
+rpop
+> lpop tea  删除列表中的第1个值
+> lrange tea 0  -1
+> rpop tea  删除列表中的末尾的个值
+> lrange tea 0  -1
+
+lpush
+rpush
+> lpush  tea   W F  插入在列表头部
+> lrange tea 0  -1
+> rpush tea J K   追加在列表末尾
+> lrange tea 0  -1
+
+lrange 输出连续范围内的值
+192.168.4.52:6352> lrange tea 0  -1
+192.168.4.52:6352> lrange tea -2  -1
+192.168.4.52:6352> lrange tea 0 1
+192.168.4.52:6352> lrange tea 2 4
+
+lindex  把列表中指定的某1个值输出
+
+192.168.4.52:6352> LINDEX tea 0
+192.168.4.52:6352> LINDEX tea -1
+192.168.4.52:6352> LINDEX tea 2
+
+lset   修改列表的值
+192.168.4.52:6352> lrange tea 0 -1
+
+192.168.4.52:6352> Lset tea 0 tarena
+192.168.4.52:6352> Lset tea -2 school
+
+192.168.4.52:6352> lrange tea 0 -1     
+
+       休息到 17:25 
+ 
+	3.3 对hash表类型数据管理的命令
+	    一个变量 可以存储多个列 每列对应一个值
+hset  一次存储1列
+> hset site tarena  www.tedu.cn
+> hset site baidu www.baidu.com
+> keys *
+> type site
+hmset 一起存储多列 hmset site jd www.jd.com  163 www.163.com
+
+hkeys 显示列名  192.168.4.52:6352> hkeys site
+hvals 显示值   192.168.4.52:6352> hvals site
+
+hgetall 显示列名+值 192.168.4.52:6352> hgetall site
+
+hget  仅显示指定列的值 192.168.4.52:6352> hget site jd 
+                       192.168.4.52:6352> hget site 163
+hmget 一起显示多列的值hmget site jd 163 tarena 
+hdel 删除列
+192.168.4.52:6352> hdel site jd
+192.168.4.52:6352> hdel site 163 baidu
+192.168.4.52:6352> hkeys site
