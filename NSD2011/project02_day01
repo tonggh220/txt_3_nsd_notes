@@ -164,3 +164,15 @@ tcp    LISTEN     0      128      :::4006                 :::*                  
 [root@maxscale77 ~]# ss -utnlp  | grep 4016
 tcp    LISTEN     0      128      :::4016                 :::*                   users:(("maxscale",pid=38897,fd=12))
 [root@maxscale77 ~]# 
+
+
+[root@maxscale77 ~]# maxadmin -uadmin -pmariadb -P4016
+MaxScale> list servers
+Servers.
+-------------------+-----------------+-------+-------------+--------------------
+Server             | Address         | Port  | Connections | Status              
+-------------------+-----------------+-------+-------------+--------------------
+server1            | 192.168.4.11    |  3306 |           0 | Master, Running
+server2            | 192.168.4.22    |  3306 |           0 | Slave, Running
+-------------------+-----------------+-------+-------------+--------------------
+MaxScale> exit                                                 
