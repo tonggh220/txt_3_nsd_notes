@@ -1,0 +1,14 @@
+一、配置mysql数据库服务  到14:56 
+	1.1  配置LV
+   33  fdisk -l /dev/sdc
+   34  fdisk -l /dev/sdb
+   33  fdisk  /dev/sdc
+   34  fdisk  /dev/sdb
+   35  rpm -q lvm2
+   36  pvcreate  /dev/sdb1 /dev/sdc1
+   37  vgcreate vg0 /dev/sdb1 /dev/sdc1
+   38  vgdisplay vg0
+   39  lvcreate -n lv0 -L 9.99G vg0
+   40  lvscan 
+   41  mkfs.xfs /dev/vg0/lv0 
+   42  blkid /dev/vg0/lv0 
