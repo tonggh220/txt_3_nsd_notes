@@ -164,9 +164,130 @@ connected_slaves:0
 .....
 sentinel monitor myserver 192.168.4.52 6352 1
 sentinel known-slave myserver 192.168.4.51 6351
+###########################################################################################################
+
+持久化 把数据永久保存，实现方式有2种
+	1 RDB  指定的就是数据库目录下的 dump.rdb 文件
+]#grep -i "dbfilename" /etc/redis/6379.conf
+dbfilename dump.rdb
+
+]# ls /var/lib/redis/6379/
+dump.rdb
+
+从内存保存数据到硬盘的频率
+save  900  1
+save  300  10
+save  60   10000
+
+使用备份的dump.rdb文件恢复数据
+  备份文件
+	> keys *
+	> save
+	> exit
+]# cp  /var/lib/redis/6379/dump.rdb  /root/  备份
+]# ls /root/*.rdb
+   恢复数据
+	> keys *
+	> flushall
+        > exit
+[root@host50 ~]# redis-cli -h 192.168.4.50 -p端口 shutdown
+[root@host50 ~]# cp /root/dump.rdb  /var/lib/redis/6379/
+cp：是否覆盖"/var/lib/redis/6379/dump.rdb"？ y
+
+[root@host50 ~]# /etc/init.d/redis_6379 start
+[root@host50 ~]# redis-cli -h 192.168.4.50 -p端口
+> keys *  可以看到数据
+
+其他也可以使用50的备份文件恢复数据，具体操作如下：
+[root@host50 ~]# scp /root/*.rdb  root@192.168.4.51:/opt/
+
+[root@host51 ~]# 做如下操作
+]# redis-cli -h 192.168.4.50 -p端口 shutdown
+]# cp /opt/dump.rdb  /var/lib/redis/6379/
+cp：是否覆盖"/var/lib/redis/6379/dump.rdb"？ y  覆盖
+
+]# /etc/init.d/redis_6379 start
+]# redis-cli -h 192.168.4.51 -p端口
+> keys *  可以看到数据	
+
+验证存盘频率：设置存盘间隔为120秒且10个key改变数据自动存盘
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6379   shutdown
+[root@host50 ~]# rm -rf  /var/lib/redis/6379/dump.rdb
+[root@host50 ~]# vim /etc/redis/6379.conf 
+save 900 1
+#save 300 10
+save 120 10
+save 60 10000
+:wq
+[root@host50 ~]# /etc/init.d/redis_6379 start
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6379 
+> 在2分钟内存储 》= 10个变量
+> exit
+[root@host50 ~]# ls  /var/lib/redis/6379/dump.rdb
+
+RDB的优缺点？
 
 
-二、明天上午讲  50  51 
+	2 AOF Append  Only  File（类似于mysql服务的binlog日志文件）
+
+启用线上服务器的Aof 文件
+> config  set  appendonly  yes    	//启用
+> config  rewrite 
+> mset  v1  2  v2 88  v3 5   
+> keys *
+
+使用备份的aof文件恢复数据
+]# ls   /var/lib/redis/6379/
+]# wc -l  /var/lib/redis/6379/appendonly.aof
+]# cp  /var/lib/redis/6379/appendonly.aof  /root/
+]# ls /root/*.aof
+
+51主机使用AOF文件恢复数据
+
+[root@host50 6379]# scp /root/appendonly.aof  root@192.168.4.51:/var/lib/redis/6379/
+
+]# redis-cli -h 192.168.4.51 -p 6351 -a 123456 shutdown
+192.168.4.51~]# vim /etc/redis/6379.conf
+appendonly yes
+:wq
+]#/etc/init.d/redis_6379 start
+]#redis-cli -h 192.168.4.51 -p 6351 -a 123456 
+> keys *
+
+与aof文件相关的配置项  6379.conf
+ 
+       AOF文件记录写操作的方式?
+# appendfsync always    set name bob --->.aof   name=bob--> .rdb 
+appendfsync everysec set name bob --->.aof   name=bob--> .rdb
+# appendfsync no   set name bob --->.aof  使用存储频率保存到.rdb
+
+      日志重写（合并雷同的命令）
+       auto-aof-rewrite-min-size 64mb 触发首次合并	
+       auto-aof-rewrite-percentage 100 触发再次合并	
+
+     修复AOF文件
+redis-cli  -h 192.168.4.50 -p端口 shutdown
+     vim  appendonly.aof
+	dfajlfaj;fa
+     :wq
+ /etc/init.d/redis_6379 start
+ ss  -utnlp  | grep  redis-server
+ tail /var/log/redis_6379.log 
+
+    ]#redis-check-aof --fix /var/lib/redis/6379/appendonly.aof
+      按y
+    rm -rf /var/run/redis_6379.pid 
+
+  /etc/init.d/redis_6379 start
+  redis-cli  -h 192.168.4.50 -p端口
+
+  aof 的优缺点 ？
+ 
+ 工作 中 aof（记录数据对应命令） 和  rdb（存储命令对应的数据） 同时启用
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 三 数据类型
 3数据类型 （命令的使用）
