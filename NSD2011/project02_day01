@@ -80,7 +80,7 @@ mysql> show slave status \G
 
 ]# yum -y install maxscale-2.1.2-1.x86_64.rpm
 
-
+]#  vim /etc/maxscale.cnf
 [maxscale]
 threads=auto
 
