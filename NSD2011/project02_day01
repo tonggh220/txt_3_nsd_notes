@@ -175,4 +175,21 @@ Server             | Address         | Port  | Connections | Status
 server1            | 192.168.4.11    |  3306 |           0 | Master, Running
 server2            | 192.168.4.22    |  3306 |           0 | Slave, Running
 -------------------+-----------------+-------+-------------+--------------------
-MaxScale> exit                                                 
+MaxScale> exit     
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+二、配置共享存储服务NFS 192.168.4.30
+	2.1 准备磁盘
+		分区 格式化 挂载
+    2  fdisk /dev/sdb
+    3  fdisk -l /dev/sdb
+    4  mkfs.xfs /dev/sdb1
+    5  mkdir /sitedir
+    6  chmod o+w /sitedir/
+    7  ls -ld /sitedir/
+    8  vim /etc/fstab 
+	/dev/sdb1  /sitedir  xfs  defaults 0 0
+       :wq
+    9  mount -a
+   10  mount | grep  "/sitedir"                                         
