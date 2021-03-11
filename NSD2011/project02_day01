@@ -12,3 +12,20 @@
    40  lvscan 
    41  mkfs.xfs /dev/vg0/lv0 
    42  blkid /dev/vg0/lv0 
+
+   #########################################################
+   1.2  搭建MySQL服务器并挂载LV
+]# tar -xvf mysql-5.7.17.tar
+]# yum -y install mysql*.rpm
+]# vim  /etc/fstab 
+/dev/vg0/lv0  /var/lib/mysql  xfs defaults        0 0
+:wq
+]# mount -a
+]# mount | grep "/var/lib/mysql"
+]# systemctl  start mysqld	   
+]# systemctl  enable mysqld
+]# grep -i "password" /var/log/mysqld.log | tail -1
+]# mysql -uroot -p'o7acL5tkl4(R'
+mysql> alter user root@"localhost" identified by "123qqq...A";
+MySQL> exit
+]# mysql -uroot -p123qqq...A
