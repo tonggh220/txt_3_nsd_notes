@@ -144,3 +144,15 @@ protocol=maxscaled
 socket=default
 port=4016
 :wq
+
+
+[root@mysql11 ~]# mysql -uroot -p123qqq...A 
+
+mysql> grant replication slave , replication client on  *.* to mysqla@"%" identified by "123qqq...A;
+
+mysql> grant select on  mysql.* to mysqlb@"%" identified by "123qqq...A";
+
+
+[root@mysql22 ~]# mysql -uroot -p123qqq...A 
+mysql> show grants for mysqla@"%";
+mysql> show grants for mysqlb@"%";
