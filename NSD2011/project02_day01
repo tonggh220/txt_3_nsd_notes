@@ -156,3 +156,11 @@ mysql> grant select on  mysql.* to mysqlb@"%" identified by "123qqq...A";
 [root@mysql22 ~]# mysql -uroot -p123qqq...A 
 mysql> show grants for mysqla@"%";
 mysql> show grants for mysqlb@"%";
+
+[root@maxscale77 ~]# maxscale -f  /etc/maxscale.cnf
+[root@maxscale77 ~]# ss -utnlp  | grep 4006
+tcp    LISTEN     0      128      :::4006                 :::*                   users:(("maxscale",pid=38897,fd=11))
+[root@maxscale77 ~]# 
+[root@maxscale77 ~]# ss -utnlp  | grep 4016
+tcp    LISTEN     0      128      :::4016                 :::*                   users:(("maxscale",pid=38897,fd=12))
+[root@maxscale77 ~]# 
