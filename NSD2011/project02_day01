@@ -192,4 +192,25 @@ MaxScale> exit
 	/dev/sdb1  /sitedir  xfs  defaults 0 0
        :wq
     9  mount -a
-   10  mount | grep  "/sitedir"                                         
+   10  mount | grep  "/sitedir" 
+
+   2.2 配置nfs服务，共享挂载目录 ,具体操作如下
+		1 安装服务软件
+		2 修改主配文件共享目录
+		3 启动服务
+		4 在本机查看共享
+[root@nfs30 ~]# yum -y install  nfs-utils  rpcbind
+[root@nfs30 ~]# vim /etc/exports
+/sitedir  *(rw)
+:wq
+[root@nfs30 ~]# exportfs  -r
+
+[root@nfs30 ~]# systemctl  start rpcbind
+[root@nfs30 ~]# systemctl  start nfs
+.
+[root@nfs30 ~]# systemctl  enable nfs
+[root@nfs30 ~]# systemctl  enable rpcbind
+[root@nfs30 ~]# showmount  -e localhost
+Export list for localhost:
+/sitedir *
+[root@nfs30 ~]#                                        
