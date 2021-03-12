@@ -134,3 +134,65 @@ Installing shared extensions:     /usr/lib64/php/modules/
         3、查看支持的模块
 [root@web33 redis-4.3.0]# php -m  | grep -i redis
 redis
+
+测试配置，具体操作如下
+	在nfs30主机编写存储数据到集群里的PHP 脚本
+		vim  /sitedir/a.php 存储数据的php脚本
+		<?php 
+$redis_list = ['192.168.4.51:6351','192.168.4.52:6352','192.168.4.53:6353','192.168.4.54:6354','192.168.4.55:6355','192.168.4.56:6356'];
+
+$client = new RedisCluster(NUll,$redis_list);
+
+$client->set("i","tarenaA ");
+$client->set("j","tarenaB ");
+$client->set("k","tarenaC ");
+  
+echo "save data ok";             
+
+                 ?>
+		vim  /sitedir/b.php 查询数据的PHP脚本
+		<?php
+$redis_list = ['192.168.4.51:6351','192.168.4.52:6352','192.168.4.53:6353','192.168.4.54:6354','192.168.4.55:6355','192.168.4.56:6356'];
+
+$client = new RedisCluster(NUll,$redis_list);
+
+echo $client->get("i");
+echo $client->get("j");
+echo $client->get("k");
+		
+		?>
+
+
+
+	客户端访问网站web33 执行php脚本
+[root@web33 ~]# ls /usr/local/nginx/html/
+a.php  b.php  test2.php  test.html
+[root@web33 ~]#
+
+[root@nfs30 ~]# curl http://192.168.4.33/a.php
+save data ok
+
+[root@host51 ~]# curl  http://192.168.4.33/b.php
+tarenaA tarenaB tarenaC 
+
+        在Redis服务器本机命令行连接服务查看数据 
+[root@host51 ~]# redis-cli -c -h 192.168.4.51 -p 6351
+192.168.4.51:6351> keys *
+1) "j"
+192.168.4.51:6351> get j
+"tarenaB "
+192.168.4.51:6351>
+
+[root@host51 ~]# redis-cli -c -h 192.168.4.52 -p 6352
+192.168.4.52:6352> keys *
+1) "k"
+192.168.4.52:6352> get k
+"tarenaC "
+192.168.4.52:6352> 
+
+[root@host51 ~]# redis-cli -c -h 192.168.4.53 -p 6353
+192.168.4.53:6353> keys *
+1) "i"
+192.168.4.53:6353> get i
+"tarenaA "
+192.168.4.53:6353>
