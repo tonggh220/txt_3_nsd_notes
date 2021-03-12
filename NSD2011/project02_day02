@@ -309,3 +309,25 @@ server-id=66
 mysql> grant all on *.* to sstuser@"localhost" identified by "123qqq...A";
 mysql> show status like  "%wsrep%";
 wsrep_incoming_addresses         | 192.168.4.66:3306 
+
+            
+	       5 修改10主机的集群配置文件 并启动服务
+[root@host10 pxc]# vim /etc/percona-xtradb-cluster.conf.d/mysqld.cnf
+[mysqld]
+server-id=10
+:wq
+[root@host10 pxc]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf
+ 8 wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.10
+25 wsrep_node_address=192.168.4.10
+27 wsrep_cluster_name=pxc-cluster
+30 wsrep_node_name=pxc-cluster-node-10	
+39 wsrep_sst_auth="sstuser:123qqq...A"
+:wq
+[root@host10 pxc]# systemctl  start mysql
+[root@host10 pxc]# ss -utnlp  | grep 3306
+[root@host10 pxc]# ss -utnlp  | grep 4567
+[root@host10 pxc]# mysql -uroot -p123qqq...A
+MySQL> select  * from db1.user;
+mysql> show  status like  "%wsrep%";
+wsrep_incoming_addresses         | 192.168.4.66:3306,192.168.4.10:3306
+
