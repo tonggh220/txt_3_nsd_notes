@@ -196,3 +196,37 @@ tarenaA tarenaB tarenaC
 192.168.4.53:6353> get i
 "tarenaA "
 192.168.4.53:6353>
+
+
+三 数据迁移：把存储在读写分离结构里的数据 在线复制的搭建PXC集群里
+   具体操作如下：
+   3.1 把66主机配置为 mysql11的slave服务器，具体操作如下：
+	    	安装软件mysql-5.7.17.tar  
+[root@host66 ~]# tar -xvf /var/ftp/pub/mysql-5.7.17.tar	
+[root@host66 ~]# yum -y install mysql-community-*.rpm
+		
+		修改配置文件 （指定server_id=66）
+]# vim /etc/my.cnf
+[mysqld]
+server_id=66
+:wq
+		启动mysqld服务 
+[root@host66 ~]# systemctl  start mysqld
+
+		使用初始密码登录并修改登录密码
+[root@host66 ~]#grep -i password /var/log/mysqld.log 
+[root@host66 ~]#mysql -uroot -p'e8ViLdI6Wy-r'
+mysql> alter user root@"localhost" identified by "123qqq...A";
+mysql> exit;
+
+		确保数据一致 (使用innobackupex命令)
+			1 在mysql11主机做如下操作
+[root@mysql11 ~]# yum -y install libev-4.15-1.el6.rf.x86_64.rpm
+[root@mysql11 ~]# yum -y install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm
+
+[root@mysql11 ~]# innobackupex -u root -p 123qqq...A /allbak --no-timestamp
+
+[root@mysql11 ~]# scp -r /allbak/  root@192.168.4.66:/opt/
+
+休息到 16:10
+		       2 在66主机做如下操作
