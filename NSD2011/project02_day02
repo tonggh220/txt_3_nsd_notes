@@ -230,3 +230,33 @@ mysql> exit;
 
 休息到 16:10
 		       2 在66主机做如下操作
+                        			      使用备份文件恢复数据
+    2  which innobackupex
+    3  yum -y install /var/ftp/pub/libev-4.15-1.el6.rf.x86_64.rpm 
+    4  yum -y install /var/ftp/pub/percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+    5  which innobackupex
+    6  systemctl  stop mysqld
+    7  rm -rf /var/lib/mysql/*
+    8  innobackupex --apply-log /opt/allbak/
+    10  innobackupex --copy-back /opt/allbak/
+   11  ls  /var/lib/mysql
+   12  chown -R mysql:mysql  /var/lib/mysql
+   13  systemctl  start mysqld
+   14  mysql -uroot -p123qqq...A
+mysql> show databases;
+mysql> select user from mysql.user;
+
+
+			      指定主服务器
+[root@host66 ~]# grep master11 /opt/allbak/xtrabackup_info 
+binlog_pos = filename 'master11.000002', position '1583'
+
+[root@host66 ~]# mysql -uroot -p123qqq...A
+mysql> change master to master_host="192.168.4.11",master_user="repluser",master_password="123qqq...A",master_log_file="master11.000002",master_log_pos=1583;	
+mysql> start slave;
+	
+                              查看状态信息  show  slave  status\G;
+mysql> show slave status \G
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+mysql> select  * from db1.user;
