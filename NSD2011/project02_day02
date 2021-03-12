@@ -61,3 +61,45 @@ test.html
 [root@web33 ~]# systemctl  enable php-fpm
 [root@web33 ~]# echo "/usr/local/nginx/sbin/nginx" >> /etc/rc.local 
 [root@web33 ~]# chmod +x  /etc/rc.local
+
+测试配置
+[root@mysql11 ~]# curl  http://192.168.4.33/test.html
+my web page 
+
+[root@web33 ~]# vim /usr/local/nginx/html/test2.php
+<?php
+$school="tarena";
+echo $school;
+?>
+:wq
+[root@nfs30 ~]# ls /sitedir/
+test2.php  test.html
+[root@localhost ~]#  
+
+[root@mysql11 ~]# curl http://192.168.4.33/test2.php
+tarena
+    
+
+二 部署缓存服务： 目的实现网站访问加速
+
+   配置Redis集群
+   2.1 准备redis服务器
+	  安装软件
+          初始化配置
+
+   2.2 启用Redis服务器的集群功能
+	  停止服务
+          修改配置文件，启用集群配置
+          启动服务
+
+   2.3 配置管理主机
+	  部署ruby脚本运行环境
+          创建管理脚本
+
+
+   2.4 创建集群
+[root@host57 /]# redis-trib.rb create --replicas 1 192.168.4.51:6351 192.168.4.52:6352 192.168.4.53:6353 192.168.4.54:6354 192.168.4.55:6355 192.168.4.56:6356
+
+
+   2.5 集群信息
+[root@host57 /]# redis-trib.rb  info  192.168.4.52:6352
