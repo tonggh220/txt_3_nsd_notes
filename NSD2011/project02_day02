@@ -260,3 +260,33 @@ mysql> show slave status \G
             Slave_IO_Running: Yes
             Slave_SQL_Running: Yes
 mysql> select  * from db1.user;
+
+
+   3.2 配置pxc集群，具体操作如下：
+		1  在66主机安装PXC软件包
+]# systemctl stop mysqld
+]# rpm -qa | grep  -i mysql
+
+[root@host66 pxc]# rpm -e --nodeps mysql-community-libs mysql-community-embedded mysql-community-embedded-devel mysql-community-common  mysql-community-client mysql-community-devel mysql-community-test mysql-community-libs-compat mysql-community-minimal-debuginfo mysql-community-server mysql-community-embedded-compat
+
+]# cd pxc
+]# yum -y install percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm 
+]# yum -y install qpress-1.1-14.11.x86_64.rpm
+]# tar -zvf Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar
+]# yum -y install Percona-XtraDB-Cluster-*.rpm
+
+		2  在10主机安装PXC软件包
+[root@pxc10 ~]# cd pxc
+[root@pxc10 ~]# yum -y install libev-4.15-1.el6.rf.x86_64.rpm
+[root@pxc10 ~]# yum -y install percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm 
+[root@pxc10 ~]# yum -y install qpress-1.1-14.11.x86_64.rpm
+[root@pxc10 ~]# tar -zvf Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar
+[root@pxc10 ~]# yum -y install Percona-XtraDB-Cluster-*.rpm
+
+  	    	3  在88主机安装PXC软件包
+[root@pxc88 ~]# cd pxc
+[root@pxc88 ~]# yum -y install libev-4.15-1.el6.rf.x86_64.rpm
+[root@pxc88 ~]# yum -y install percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm 
+[root@pxc88 ~]# yum -y install qpress-1.1-14.11.x86_64.rpm
+[root@pxc88 ~]# tar -zvf Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar
+[root@pxc88 ~]# yum -y install Percona-XtraDB-Cluster-*.rpm   
