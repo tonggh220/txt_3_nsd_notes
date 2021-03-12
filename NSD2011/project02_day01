@@ -247,4 +247,46 @@ Export list for 192.168.4.30:
 	5 启动77服务器和服务
 
 四、测试配置：
+	4.1 测试nfs共享服务，具体操作如下：
+		在nfs30的/sitedir目录下编写网页文件
+[root@localhost ~]# vim /sitedir/test.html
+my web page 
+:wq 
+[root@web33 ~]# ls /var/www/html/   在网站服务器查看网页文件
+test.html
+[root@web33 ~]# 
+		客户端连接网站服务 访问网页文件
+[root@maxscale77 ~]# curl http://192.168.4.33/test.html
+my web page 
+
+	4.2 测试读写分离服务77主机的配置，具体操作如下
+		1 在master服务器创建存储数据的库、表、添加用户
+		
+[root@mysql11 ~]# mysql -uroot -p123qqq...A -e 'create database db1'
+ 
+[root@mysql11 ~]# mysql -uroot -p123qqq...A -e 'create table db1.user(name char(10),password char(6))'
+
+[root@mysql11 ~]# mysql -uroot -p123qqq...A -e 'grant select,insert,update,delete on db1.* to yaya99@"%" identified by "123qqq...A"'
+
+		2 在slave 服务器查看是否同步master主机的操作
+[root@mysql22 ~]# mysql -uroot -p123qqq...A -e 'desc db1.user'
+[root@mysql22 ~]# mysql -uroot -p123qqq...A -e 'show grants for yaya99@"%"'
+
+		3 在web33 主机连接 77 访问数据库服务
+[root@web33 ~]# which  mysql || yum -y install mariadb
+[root@web33 ~]# mysql -h192.168.4.77 -P4006 -uyaya99 -p123qqq...A
+MySQL [(none)]> insert into db1.user values("plj","123abc");
+MySQL [(none)]> select  * from db1.user;
+
+		4 测试读写分离，具体操作如下：
+			在slave服务器本机向表里添加行
+[root@mysql22 ~]# mysql -uroot -p123qqq...A -e 'insert into db1.user values("AAA","AAAA")'
+
+			在master服务器本机查看不到slave 添加的行
+[root@mysql11 ~]# mysql -uroot -p123qqq...A -e 'select * from db1.user'
+
+			在web33 主机连接 77 访问数据库服务
+[root@web33 ~]# mysql -h192.168.4.77 -P4006 -uyaya99 -p123qqq...A
+insert into db1.user values("BBB","BBB");
+select  * from db1.user;执行select
                                   
