@@ -401,3 +401,46 @@ wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.10,192.168.
 
 [root@web33 ~]# mysql -h192.168.4.66 -uyaya99 -p123qqq...A -e 'select  * from db1.user'
 
+
+#######################################################3
+
+四 部署集群 : 
+	4.1 实现 MySQL数据库存储服务的负载均衡
+            把访问数据的请求平均的分发给PXC集群的3台服务器
+	    具体配置如下：
+	    4.1.1 配置调度器（77=99）
+]# rpm -q haproxy || yum -y install
+]# vim /etc/haproxy/haproxy.cfg 
+listen mylb *:3306
+    mode    tcp
+    option  tcpka
+    balance roundrobin
+    server  mysqla 192.168.4.66:3306 check
+    server  mysqlb 192.168.4.10:3306 check
+    server  mysqlc 192.168.4.88:3306 check
+listen status
+        mode http
+        bind *:80
+        stats enable
+        stats uri /admin
+        stats auth plj:123456
+:wq
+]# systemctl  start haproxy
+
+]# ss -utnlp  | grep 3306
+tcp    LISTEN     0      128       *:3306                  *:*                   users:(("haproxy",pid=129008,fd=7))
+[root@maxscale77 ~]# 
+
+
+	    4.1.2 网站web33主机 连接调度器主机访问mysql服务
+[root@web33 ~]# mysql -h192.168.4.77 -uyaya99 -p123qqq...A -e 'select @@hostname'
+
+[root@web33 ~]# mysql -h192.168.4.77 -uyaya99 -p123qqq...A -e 'select @@hostname'
+
+[root@web33 ~]# mysql -h192.168.4.77 -uyaya99 -p123qqq...A -e 'select @@hostname'
+
+	    4.1.3 打开真机的浏览器输入网址
+http://192.168.4.77/admin
+	用户 plj
+	密码 123456
+
