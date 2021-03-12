@@ -291,7 +291,8 @@ mysql> select  * from db1.user;
 [root@pxc88 ~]# tar -zvf Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar
 [root@pxc88 ~]# yum -y install Percona-XtraDB-Cluster-*.rpm
 
-            4  修改66主机的集群配置文件 并启动服务
+            
+ 4 修改66主机的集群配置文件 并启动服务
 [root@host66 pxc]# vim /etc/percona-xtradb-cluster.conf.d/mysqld.cnf
 [mysqld]
 server-id=66
@@ -306,11 +307,16 @@ server-id=66
 [root@host66 pxc]# systemctl  start mysql
 [root@host66 pxc]# ss -utnlp  | grep 3306
 [root@host66 pxc]# ss -utnlp  | grep 4567
+[root@host66 pxc]# mysql -uroot -p123qqq...A
 mysql> grant all on *.* to sstuser@"localhost" identified by "123qqq...A";
 mysql> show status like  "%wsrep%";
 wsrep_incoming_addresses         | 192.168.4.66:3306 
+mysql> show slave status \G
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
 
-            
+
+
 	       5 修改10主机的集群配置文件 并启动服务
 [root@host10 pxc]# vim /etc/percona-xtradb-cluster.conf.d/mysqld.cnf
 [mysqld]
@@ -330,7 +336,30 @@ server-id=10
 MySQL> select  * from db1.user;
 mysql> show  status like  "%wsrep%";
 wsrep_incoming_addresses         | 192.168.4.66:3306,192.168.4.10:3306
+ 
+	       6 修改88主机的集群配置文件 并启动服务 
 
+[root@host88 pxc]# vim /etc/percona-xtradb-cluster.conf.d/mysqld.cnf
+[mysqld]
+server-id=88
+:wq
+[root@host88 pxc]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf
+ 8 wsrep_cluster_address=gcomm://192.168.4.66
+25 wsrep_node_address=192.168.4.88
+27 wsrep_cluster_name=pxc-cluster
+30 wsrep_node_name=pxc-cluster-node-88	
+39 wsrep_sst_auth="sstuser:123qqq...A"
+:wq
+[root@host88 pxc]# systemctl  start mysql
+[root@host88 pxc]# ss -utnlp  | grep 3306
+[root@host10 pxc]# ss -utnlp  | grep 4567
+[root@host10 pxc]# mysql -uroot -p123qqq...A
+MySQL> select  * from db1.user;
+mysql> show  status like  "%wsrep%";
+wsrep_incoming_addresses         | 192.168.4.66:3306,192.168.4.10:3306,192.168.4.88:3306
+
+
+				
 	       7 在10 88  66 任意主机查看集群状态
 
 mysql> show status like "%wsrep%";
@@ -371,5 +400,4 @@ wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.10,192.168.
 [root@web33 ~]# 
 
 [root@web33 ~]# mysql -h192.168.4.66 -uyaya99 -p123qqq...A -e 'select  * from db1.user'
-
 
