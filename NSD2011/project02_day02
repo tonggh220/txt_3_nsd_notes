@@ -331,3 +331,45 @@ MySQL> select  * from db1.user;
 mysql> show  status like  "%wsrep%";
 wsrep_incoming_addresses         | 192.168.4.66:3306,192.168.4.10:3306
 
+	       7 在10 88  66 任意主机查看集群状态
+
+mysql> show status like "%wsrep%";
+ wsrep_incoming_addresses         | 192.168.4.10:3306,192.168.4.88:3306,192.168.4.66:3306 
+
+	       8 测试配置
+		   在MySQL11主机存储了新数据，在66  10  88 主机都查看到。
+mysql11]# mysql -uroot  -p123qqq...A
+  mysql> insert into db1.user values("w","w");
+  mysql> insert into db1.user values("w","w");
+ 
+[root@host66 ~]# mysql -uroot -p123qqq...A -e 'select * from db1.user'
+
+[root@host10 ~]# mysql -uroot -p123qqq...A -e 'select * from db1.user'
+
+[root@host88 ~]# mysql -uroot -p123qqq...A -e 'select * from db1.user'
+
+		9 在66  10  88 主机都做如下配置
+]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf
+wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.10,192.168.
+4.88
+:wq
+
+	       
+
+		10 使用66  10  88 主机管理员root登录 给表添加主键
+              [root@host66 ~]# mysql -uroot -p123qqq...A -e 'alter table db1.user add id int primary key auto_increment first'
+
+		11 在网站访问少的时候把php脚本中的连接数据库的ip地址修改为pxc集群主机的Ip地址
+
+[root@web33 ~]# mysql -h192.168.4.88 -uyaya99 -p123qqq...A
+ -e 'insert into db1.user(name,password) values("z","z")'
+
+[root@web33 ~]# mysql -h192.168.4.66 -uyaya99 -p123qqq...A -e 'select  * from db1.user'
+
+
+[root@web33 ~]# mysql -h192.168.4.10 -uyaya99 -p123qqq...A -e 'insert into db1.user(name,password)values("YYY","YYY")'
+[root@web33 ~]# 
+
+[root@web33 ~]# mysql -h192.168.4.66 -uyaya99 -p123qqq...A -e 'select  * from db1.user'
+
+
