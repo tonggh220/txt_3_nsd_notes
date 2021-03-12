@@ -444,3 +444,86 @@ http://192.168.4.77/admin
 	用户 plj
 	密码 123456
 
+
+
+    4.2.2 配置HA集群 ，具体配置如下
+		  1 安装keepalived 软件
+[root@nfs30 ~]# yum -y install keepalived
+[root@nfs77 ~]# yum -y install keepalived
+
+		  2 修改主调度器的配置文件
+
+]# vim /etc/keepalived/keepalived.conf （36行以后的数据全删除）
+vrrp_iptables
+}  
+
+vrrp_instance VI_1 {
+    state MASTER
+    interface ens33
+    virtual_router_id 51
+    priority 150
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }   
+    virtual_ipaddress {
+192.168.4.100 
+    }   
+}   
+：wq
+
+]# scp /etc/keepalived/keepalived.conf root@192.168.4.30:/etc/keepalived/
+
+		  3 修改备用调度器的配置文件
+]# vim /etc/keepalived/keepalived.conf 
+ state BACKUP
+ priority 100
+:wq
+		  4 启动主调度器的keepalived服务
+
+[root@maxscale77 ~]# systemctl  start keepalived
+[root@maxscale77 ~]# 
+[root@maxscale77 ~]# ip addr show | grep 192.168.4.100
+    inet 192.168.4.100/32 scope global ens33
+[root@maxscale77 ~]#
+
+		  5 启动备用调度器的keepalived服务
+[root@nfs30 ~]# systemctl  start keepalived
+[root@nfs30 ~]# ip addr show | grep 192.168.4.100
+[root@nfs30 ~]# 
+		  
+		  6 测试配置
+			6.1 停止主调度器的keepalived服务
+[root@maxscale77 ~]# systemctl  stop keepalived
+[root@maxscale77 ~]# ip addr show | grep 192.168.4.100
+[root@maxscale77 ~]# 
+
+			6.2 在备用调度器可以看到vip地址
+[root@nfs30 ~]# ip addr show | grep 192.168.4.100
+    inet 192.168.4.100/32 scope global ens33
+[root@nfs30 ~]#
+			
+                       6.3 网站web33连接vip地址可以访问mysql服务并能实现负载均衡
+
+			[root@web33 ~]# mysql -h192.168.4.100 -uyaya99 -p123qqq...A -e 'select @@hostname'
+
+[root@web33 ~]# mysql -h192.168.4.100 -uyaya99 -p123qqq...A -e 'select @@hostname'
+
+[root@web33 ~]# mysql -h192.168.4.100 -uyaya99 -p123qqq...A -e 'select @@hostname'
+
+		      6.4 主调度修复会自动抢占vip
+[root@maxscale77 ~]# systemctl  start keepalived
+
+[root@maxscale77 ~]# ip addr show | grep 192.168.4.100
+    inet 192.168.4.100/32 scope global ens33
+[root@maxscale77 ~]# 
+
+
+[root@web33 ~]# mysql -h192.168.4.100 -uyaya99 -p123qqq...A -e 'select @@hostname'
+
+[root@web33 ~]# mysql -h192.168.4.100 -uyaya99 -p123qqq...A -e 'select @@hostname'
+
+[root@web33 ~]# mysql -h192.168.4.100 -uyaya99 -p123qqq...A -e 'select @@hostname'
+
+
