@@ -101,5 +101,36 @@ tarena
 [root@host57 /]# redis-trib.rb create --replicas 1 192.168.4.51:6351 192.168.4.52:6352 192.168.4.53:6353 192.168.4.54:6354 192.168.4.55:6355 192.168.4.56:6356
 
 
-   2.5 集群信息
-[root@host57 /]# redis-trib.rb  info  192.168.4.52:6352
+
+2.5 集群信息
+[root@host57 /]# redis-trib.rb info 192.168.4.52:6352
+192.168.4.52:6352 (de7f7af5...) -> 0 keys | 5462 slots | 1 slaves.
+192.168.4.51:6351 (70ab9a4b...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.4.53:6353 (1cb9f4e9...) -> 0 keys | 5461 slots | 1 slaves.
+[OK] 0 keys in 3 masters.
+0.00 keys per slot on average.
+[root@host57 /]# 2
+
+  配置网站服务 配置NGINX执行php脚本可以把数据存储在redis集群里
+    具体操作如下：
+	1、安装软件提供连接Redis集群的模块redis.so
+   70  tar -zxvf redis-cluster-4.3.0.tgz 
+   72  cd redis-4.3.0/
+   74  phpize 
+   78  ./configure --with-php-config=/usr/bin/php-config
+[root@web33 redis-4.3.0]# make
+[root@web33 redis-4.3.0]# make install
+Installing shared extensions:     /usr/lib64/php/modules/
+[root@web33 redis-4.3.0]# 
+[root@web33 redis-4.3.0]# ls /usr/lib64/php/modules/
+
+        2、调用模块 
+         vim /etc/php.ini
+720 extension_dir = "/usr/lib64/php/modules/"
+730 extension = "redis.so"
+：wq
+]# systemctl  restart php-fpm
+
+        3、查看支持的模块
+[root@web33 redis-4.3.0]# php -m  | grep -i redis
+redis
