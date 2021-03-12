@@ -1,0 +1,63 @@
+project02_day02（升级day01的网络架构）
+一 升级网站运行平台 LNMP
+
+	动态网站 开发语言 PHP  JAVA  根据登录用户的不同显示不同的页面信息和数据信息。
+ 
+	静态网站 开发语言 html CSS   任何用户登录网站显示的内容和数据都一样
+
+       1.1 清除当前配置
+		1.1.1 卸载挂载的共享
+[root@web33 ~]# umount /var/www/html/
+[root@web33 ~]# mount | grep "/var/www/html"
+ 
+[root@web33 ~]# vim /etc/fstab
+#192.168.4.30:/sitedir  /var/www/html  nfs  defaults 0 0
+:wq
+               1.1.2 停止httpd服务，并设置开机不运行
+[root@web33 ~]# systemctl  stop httpd
+[root@web33 ~]# systemctl  disable httpd
+		
+       1.2 部署LNMP 
+		安装源码的Nginx 
+]# yum  -y install gcc pcre-devel  zlib-devel
+]# tar -zxvf nginx-x.x.tar.gz
+]# cd nginx.x.x
+]# ./configure  && make && make install
+
+]# yum -y install php php-devel	 安装php
+ 
+]# yum -y install php-fpm   安装php-fpm	
+
+]# yum -y install php-mysql 安装php-mysql（提供php脚本连接mysql服务连接命令）		
+   
+                修改nginx配置文件
+]# vim +65 /usr/local/nginx/conf/nginx.conf
+    location ~ \.php$ {
+            root           html;
+            fastcgi_pass   127.0.0.1:9000;
+            fastcgi_index  index.php;
+            include        fastcgi.conf;
+        }
+:wq
+[root@web33 ~]# /usr/local/nginx/sbin/nginx -t
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+
+		挂载NFS30的共享目录/sitedir
+[root@web33 ~]# rm -rf  /usr/local/nginx/html/*
+[root@web33 ~]# vim /etc/fstab 
+192.168.4.30:/sitedir   /usr/local/nginx/html nfs  defaults 0 0
+:wq
+[root@web33 ~]# mount -a
+[root@web33 ~]# mount  | grep "/usr/local/nginx/html"
+[root@web33 ~]# ls /usr/local/nginx/html/
+test.html
+		启动nginx 服务 和 php-fpm服务
+[root@web33 ~]# /usr/local/nginx/sbin/nginx
+[root@web33 ~]# systemctl  start php-fpm
+[root@web33 ~]# ss -utnlp  | grep 80
+[root@web33 ~]# ss -utnlp  | grep 9000
+[root@web33 ~]#
+[root@web33 ~]# systemctl  enable php-fpm
+[root@web33 ~]# echo "/usr/local/nginx/sbin/nginx" >> /etc/rc.local 
+[root@web33 ~]# chmod +x  /etc/rc.local
