@@ -111,6 +111,54 @@ show  variables like  "validate_password_length"; 查看密码长度
 			8 修改密码策略
 			9 设置新密码为tarena
 			10 配置策略永久有效
+
+
+二、MySQL服务的基本管理
+	2.1 连接数据库服务的连接方式？
+			1 python/java/php 脚本连接  
+			2 图形工具 （需要安装图形软件）
+			
+			3 命令行连接  mysql命令
+]# mysql  --help 
+]# man  mysql
+
+]# mysql  [-h数据库服务器Ip地址或主机名] -u用户名 	-p密码	[数据库名]
+			
+]# mysql  -uroot -ptarena  sys  连接服务直接进入sys库里
+mysql> select  database();  显示当前所在的库 
+mysql> show  tables ； 显示所在库已有的表
+
+-e  在系统命令行下执行 mysql 命令 			
+]# mysql -uroot -ptarena  -e 'show databases'
+			
+			一起执行多个mysql命令使用；间隔命令
+]# mysql -uroot -ptarena  -e 'show databases ;use mysql ; show tables'
+			
+[root@host50 ~]# mysql -uroot -p			
+Enter password: 输入密码（不会显示出来）
+
+	2.2 客户端把数据存储到数据库服务器的过程
+		 1 连接数据库服务器
+		 2 创建数据库（/var/lib/mysql/目录）
+			create database  库名；
+			create database 123a;
+			show  databases;
+			]# ls /var/lib/mysql/
+			]# mkdir  /var/lib/mysql/gamedb
+			show databases
+					
+		 3 创建表 (表就是数据目录下的文件，文件必须使用mysql命令创建,
+表必须要创建在库里，库必须要事先创建好	 )
+		   create table  库名.表名(表头名 数据类型，表头名 数据类型 ....);
+		   
+		   create table 123a.stuinfo(姓名 char(5), 性别  char(1), 
+		   年龄 int, 班级 char(7) ); 
+		   
+		   use  123a;
+		   show tables;
+		   desc  stuinfo; 查看已有表的表头
+		   		   
+		   ]# ls /var/lib/mysql/123a/stuinfo.*
 			
 			
 	
