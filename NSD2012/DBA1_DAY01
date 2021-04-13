@@ -147,18 +147,73 @@ Enter password: 输入密码（不会显示出来）
 			]# mkdir  /var/lib/mysql/gamedb
 			show databases
 					
-		 3 创建表 (表就是数据目录下的文件，文件必须使用mysql命令创建,
+ 3 创建表 (表就是数据目录下的文件，文件必须使用mysql命令创建,
 表必须要创建在库里，库必须要事先创建好	 )
 		   create table  库名.表名(表头名 数据类型，表头名 数据类型 ....);
 		   
-		   create table 123a.stuinfo(姓名 char(5), 性别  char(1), 
+		  
+		 5 断开连接 exit ;
+		 
+	库的相关管理命令
+	    库名的命名规则（背诵）
+		建库  create database bbsdb;
+		查看已有的库名  show databases;
+		进入到库bbsdb库里   use  bbsdb;
+		显示库里已有的表  show tables;
+		查看当前所在的库 select database();
+		查看当前登录的用户名和客户端  select user();
+		删除已有的库  drop database  bbsdb;
+			
+		表的相关管理命令
+		    use  mysql;
+		   显示库里已有的表  show tables;
+		   查看表头  desc  mysql.user;
+				   
+		记录的相关管理命令	
+			插入记录 insert into  库.表 values(值列表);
+			查询记录 select  表头名  from  库.表
+			修改记录 update  库.表 set  表头名=值； 
+			删除记录 delete from  库.表;
+			
+ create table 123a.stuinfo(姓名 char(5), 性别  char(1), 
 		   年龄 int, 班级 char(7) ); 
 		   
 		   use  123a;
-		   show tables;
+		   show tables;  查看已有表
 		   desc  stuinfo; 查看已有表的表头
-		   		   
 		   ]# ls /var/lib/mysql/123a/stuinfo.*
+		   
+]# chown  mysql.mysql /var/lib/mysql/gamedb		   
+create table gamedb.stuinfo(姓名 char(5), 性别  char(1), 
+		   年龄 int, 班级 char(7) );
+		   
+		 4 存储数据  insert into 
+		    insert into 库.表  values (值列表) ;
+		    insert into  123a.stuinfo values("bob" ,"m",21,"nsd2012" );
+			
+			insert into  123a.stuinfo values("tom" ,"m",21,"nsd2012" ),
+			("jim" ,"m",21,"nsd2012")；
+			
+			查看行（查看表记录）
+			select  表头名称  from 库.表;
+			
+			select  *  from 123a.stuinfo;    * 表示所有表头名
+			select  姓名，年龄  from 123a.stuinfo;  查看指定表名 
+			
+			修改
+			update 库.表 set 表头名=值，表头名=值；
+			mysql> update 123a.stuinfo set 年龄=25 ;
+			select  姓名，年龄  from 123a.stuinfo;
+			
+			删除所有行  delete from 库.表;
+			delete from 123a.stuinfo;
+		
+			use  123a；
+			show  tables；  只看到表名
+			select  *  from 123a.stuinfo; 没有行
+			
+			删除已有的表 drop  table 123a.stuinfo;
+			                           库.表	
 			
 			
 	
