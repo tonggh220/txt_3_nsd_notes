@@ -215,7 +215,65 @@ create table gamedb.stuinfo(姓名 char(5), 性别  char(1),
 			删除已有的表 drop  table 123a.stuinfo;
 			                           库.表	
 			
-			
+ 名词：对MySQL命令的分类（背诵）
+     使用SQL（结构化查询语言）的使用规则（背诵）
+
+三、mysql 数据类型 （建表时合理的设置标头使用的数据类型）
+           mysql> desc mysql.user;
+		   休息到 17:25
+		  每种类型规定要使用固定的命令表示
+		  
+		  字符类型  char  varchar  text  blob
+		  
+		  数值类型
+		         整型类型    例如 12  20  -11 
+				 
+				 浮点类型：有小数点的数 例如 1.88  0.34 
+			   
+		  日期时间类型
+			  年   year   YYYY  2021   
+			  日期 date   YYYYMMSS   20210413
+			  时间 time   HHMMSS 175048
+			  
+			  日期时间  datetime或timestamp
+						 YYYYMMDDHHMMSS
+						 
+		  枚举类型：表头的值，必须在列举的范围内选择
+				enum 单选：列举的值里只能选择1个
+		        set  多选：列举的值里能选择1个或多个
+########日期类型的使用##############
+create table  db1.t2(
+csnf  year,  sksj  time ,  birthday  date  , party datetime  );
+
+desc  db1.t2;
+
+insert into  db1.t2  values( 2021 , 090000 , 20211120 , 20210501103000);
+		
+select  * from  db1.t2;
+
+		
+########枚举类型的使用##############
+create database db1;
+
+create table  db1.t1(
+ sex  enum("man","woman","no"),  
+ loves  set("music","eat","sleep","game","money")
+);
+
+desc  db1.t1;
+
+insert into  db1.t1 values ("man","book,eat"); 报错
+mysql> insert into  db1.t1 values ("man","sleep,eat"); 正确
+
+select  * from  db1.t1;
+	
+课后练习题：考点 MySQL数据类型的使用
+            创建前任信息表（思考存储前任的那些信息）
+	                
+                    
+            设置1张用来存储游戏人物的信息。
+
+有时间吧后边使用的数据库服务器51-55 都搭建出来。			
 	
 	
 
