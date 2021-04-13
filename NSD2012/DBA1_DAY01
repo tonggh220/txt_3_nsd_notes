@@ -1,0 +1,123 @@
+数据库课程 13天 + 2天 = 15天
+DBA1  数据库基础 5天
+DBA2  进阶       5天
+NoSQL 			 3天
+
+工作岗位  数据库管理员  DBA
+
+庞丽静  静静   panglj@tedu.cn
++++++++++++++++++++++
+day01
+一 搭建数据服务器
+	1.1 相关的概念？
+		    数据库？
+    服务的一种
+	存储数据的仓库
+	
+	1.2 数据都包括那些？
+	
+	1.3 提供数据库服务的软件？
+	关系型数据库服务软件
+	MySQL  Oracle  SQL server
+
+	非关系型数据库服务软件
+	 Redis  memcached  mongodb
+	
+	开源软件 不等于 免费  
+	商业软件
+	
+	是否跨平台（操作系统）
+	windows  linux  Unix
+	
+	mysql 软件历史？
+	
+	MySQL特点及应用场景
+	
+	专业术语？(行话)
+	 DB  DBMS  DBS 
+	1.2 搭建数据库服务器
+	诉求：在50主机使用mysql软件
+	搭建数据库服务器，设置管理员root
+	密码为tarena
+		具体操作如下：
+			1 解压软件
+			tar  -xvf   ....
+			2 安装软件
+			yum -y install  .rpm
+			3 启动服务
+			4 查看初始密码
+]# grep -i "password" /var/log/mysqld.log			
+			
+			5 使用初始密码登录
+	]# mysql  -hlocalhost 	-uroot  -p'密码'
+	
+			6 查看原始数据
+
+强制修改登录密码
+mysql> alter user root@"localhost" identified by "123qqq...A";			
+mysql> show databases; 查看原始数据
+			
+			7 断开连接  mysql> exit;
+			
+			使用修改的密码123qqq...A 登录
+[root@host50 ~]# mysql -hlocalhost -uroot -p123qqq...A			
+			
+			8 修改密码策略   休息到11:20 
+				  8.1 查看密码策略
+			show  variables;	 查看所有变量
+            show  variables like "%password%"; 只查看包含
+			password 字样的变量
+			   
+show  variables like  "validate_password_policy";查看指定变量
+show  variables like  "validate_password_length"; 查看密码长度
+				  
+				  8.2 修改密码策略
+					   8.2.1  命令行临时有效
+	set  global  validate_password_policy=0; 修改密码策略				   
+	set  global  validate_password_length=6；修改密码长度为>=6个字符
+	
+					   
+						  
+			9 修改登录密码
+	alter user root@"localhost" identified by "123456";
+	alter user root@"localhost" identified by "tarena";
+	exit;
+	
+			
+			10 使用新密码登录
+	]#mysql  -hlocalhost -uroot  -ptarena
+	mysql> show databases;
+	
+	
+	        8.2.2  修改配置文件永久生效
+				      ]# vim /etc/my.cnf
+						     [mysqld]
+							  validate_password_policy=0
+						      validate_password_length=6
+			               :wq
+					  ]#systemctl restart mysqld  重启成功说明改对了 
+
+巩固练习搭建数据库服务器
+诉求：在51主机使用mysql软件
+      搭建数据库服务器，设置管理员root  密码为tarena
+	   具体操作如下：
+			1 解压软件
+			2 安装软件
+			3 启动服务
+			4 查看初始密码
+			5 使用初始密码登录
+			6 修改登录密码并查看原始数据
+			7 断开连接
+			8 修改密码策略
+			9 设置新密码为tarena
+			10 配置策略永久有效
+			
+			
+	
+	
+
+
+ 
+
+ 
+
