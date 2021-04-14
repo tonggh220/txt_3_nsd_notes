@@ -101,3 +101,48 @@ mysql> alter table db1.t10 rename db1.teacher;
 二、 MySQL键值 （标签）每种都有各自的功能和约束条件
           种类： 普通索引index   全文索引fulltext  主键 primary key  
                  唯一索引unique  外键 foreign key 
+
+3.1  普通索引  index
+		 3.1.1 普通索引  类似于书的目录  
+		                 给表头下存储的数据生成排队信息。目的是加快查询数据的
+					     速度（优点）。
+						 
+				索引的缺点：1 索引会占用物理存储空间   
+				            2 降低写数据的速度(update insert delete) 
+			
+    新华字典  5000页
+	    1 ~ 300页
+		目录 （给汉字生成排序信息） 汉字的解释改变  2 
+		      拼音排序
+		      部首排序
+			  笔画排序   
+		 
+		 3.1.2  使用规则 （背诵）
+		 3.1.3 使用索引
+					1 创建索引
+						  1.1 在已有表里添加索引
+						      create index 名 on 库.表(列名);
+							  
+						      create index  yyy  on  db1.t1(sex);
+							  create index  zzz  on  db1.t1(loves);
+							  
+						  1.2 创建表时设置索引
+						  
+					2 查看索引
+						  2.1 查看是否有索引  desc  库.表 
+						  
+						  2.2 查看索引的详细信息show index from 库.表  \G
+						      
+							  show index from db1.t1 \G
+							   Table: t1 表名
+                               Column_name: sex	 表头名		 			   
+                               Null: YES 允许空
+							   Index_type: BTREE  算法
+							   Key_name: zzz 索引名
+						
+                    支持3种算法 Btree（默认） B+tree 、hash	
+							    二叉树
+			        3 删除索引
+					  drop index  名 on 库.表;
+					  mysql> drop index zzz on db1.t1;
+						     show index from db1.t1 \G
