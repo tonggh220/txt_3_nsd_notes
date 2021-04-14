@@ -146,3 +146,37 @@ mysql> alter table db1.t10 rename db1.teacher;
 					  drop index  名 on 库.表;
 					  mysql> drop index zzz on db1.t1;
 						     show index from db1.t1 \G
+
+ explain  select命令；  explain命令验证索引的效果 
+	
+	3.2  主键      primary key  核心功能 不允许给表头存储重复的值和NULL值
+				   各种证件信息 都不能重复的值和NULL值
+	               （身份证号  考试编号    学历证书编号）
+		 
+		 主键的使用规则（背诵）
+		 
+		1  1个表头做主键
+			   建表时创建主键
+			   create table 库.表（字段名列表 ， primary key(字段名) ）；
+create table db1.t16( name  char(10) , age int , stu_num  int , 
+primary key(stu_num) );			   
+			   
+mysql> insert into db1.t16 values("x",19,null);
+ERROR 1048 (23000): Column 'stu_num' cannot be null
+
+mysql> insert into db1.t16 values("y",21,7);
+
+
+mysql> insert into db1.t16 values("y",21,7);
+ERROR 1062 (23000): Duplicate entry '7' for key 'PRIMARY'
+
+mysql> insert into db1.t16 values("y",21,5);
+		
+			删除主键
+			alter table  库.表 drop  primary key ;
+mysql> alter table db1.t16 drop primary key;
+mysql> desc db1.t16 ;
+mysql> insert into db1.t16 values("y",21,7);
+
+mysql> insert into db1.t16 values("y",21,null);
+ERROR 1048 (23000): Column 'stu_num' cannot be null
