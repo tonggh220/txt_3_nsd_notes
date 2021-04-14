@@ -1,0 +1,103 @@
+###########DBA1_DAY02#################
+一、 修改表结构
+		2.1  字段（表头）约束条件，作用限制如何给表头赋值
+			  查看表头的约束条件  desc  库.表； (后4列统称为约束条件)
+			  desc mysql.user;
+			  desc mysql.db;
+			  desc db1.t1;
+			  
+		 Null  是否允许为空 默认允许  使用 not null 指定不允许
+		 
+		 Key  MySQL键值 （标签）每种都有各自的功能和约束条件 
+		 
+		 Default  定义表头的默认值，向表里添加新行时，如果不给表头赋值
+                  使用默认值赋值。MySQL默认设置的默认值都是NULL
+				  定义默认值 default  值   （值要与表头的类型匹配）
+		 
+		 Extra   额外设置 指的是 表头的值可以自增长  i++  
+		 
+例子
+create table db1.t11(
+name char(4) not  null ,
+sex  enum("boy","girl") not null default  "boy", 
+age  int   
+);
+desc  db1.t11;
+
+insert into db1.t11(name,age) values ("jim",21);  sex表头使用默认值赋值
+insert into db1.t11 values ("tom","girl",18); 不使用默认值赋值，自己给值
+select  * from  db1.t11;
+ 
+mysql> insert into db1.t11 values (null , null , null);
+ERROR 1048 (23000): Column 'name' cannot be null
+mysql> 
+mysql> insert into db1.t11 values ("null" , null , null);
+ERROR 1048 (23000): Column 'sex' cannot be null
+mysql> 
+mysql> insert into db1.t11 values ("null" , "boy" , null);
+Query OK, 1 row affected (0.03 sec)
+
+mysql> select  * from db1.t11
+
+mysql> insert into db1.t11 values ("" , "boy" , 23);
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into db1.t11 values (" " , "boy" , 29);
+Query OK, 1 row affected (0.03 sec)
+
+create table db1.t12(
+name char(4) not  null  default "",   把默认值设置为0个字符
+sex  enum("boy","girl") not null default  "boy", 
+age  int   
+);
+
+		2.2  修改表结构 ：表结构指的使用  desc 库.表； 看到的信息
+		
+				 命令格式： alter  table   库.表  执行操作；
+				 
+				 对应的操作：
+					添加表头 add  表头  类型  [约束条件];
+
+alter table db1.t12  add  tel char(11) not null default "119";	
+alter table db1.t12 add class char(7) default "nsd2012"  first ;	
+alter table db1.t12 add mail varchar(15) after name;
+
+select  * from db1.t12;
+desc  db1.t12;		
+					删除表头 drop  表头；
+mysql> alter table db1.t6 drop pay;
+select  * from  db1.t6;
+					
+mysql> alter table db1.t12 drop name , drop sex ;
+select  * from  db1.t12;
+					
+					修改表头类型及约束条件 modify
+						*修改的新类型和约束条件不能与已经存储的数据矛盾
+						* 不 修改的要原样写上，不写就还原了 
+select  * from db1.t12;
+delete from  db1.t12;
+alalter table db1.t12 modify mail varchar(15) not null default  "stu@tedu.cn";
+alter table db1.t12 modify mail char(10) not null default  "stu@tedu.cn";				
+						
+					修改表头名 change  源表头名  新表头名 类型及约束条件； 
+						
+						类型及约束条件原样不变，是只改表头名，反之就是
+						即改类型又改约束条件
+mysql> desc db1.t12;
+mysql> alter  table  db1.t12 
+change email  xxx varchar(50) not null  default  "stu@163.com";
+		
+	
+											
+					修改表名 rename 
+
+mysql> alter table db1.t10 rename db1.teacher;
+>use db1;
+>show  tables;
+									 
+			
+	 休息到 16:05 
+	 
+二、 MySQL键值 （标签）每种都有各自的功能和约束条件
+          种类： 普通索引index   全文索引fulltext  主键 primary key  
+                 唯一索引unique  外键 foreign key 
