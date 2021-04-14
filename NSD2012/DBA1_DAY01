@@ -223,13 +223,61 @@ create table gamedb.stuinfo(姓名 char(5), 性别  char(1),
 		   休息到 17:25
 		  每种类型规定要使用固定的命令表示
 		  
-		  字符类型  char  varchar  text  blob
-		  
+		  字符类型  char定长  255   
+		            varchar变长   65532  
+		 
+		            text  blob  大文本    
+create  table db1.t8(name  char(3) ,  class  char(7) ,  mail  varchar(15) );
+desc  db1.t7;
+
+insert into  db1.t8 values ("lucy","nsd2012","jim@163.com"); 报错 
+insert into  db1.t8 values ("jim","nsd2012","jim@163.com"); 正常
+
+select  * from  db1.t8;
+
+     
 		  数值类型
-		         整型类型    例如 12  20  -11 
-				 
+		         整型类型    例如  12  20  -11   
+								     正数  负数 
+                  tinyint  smallint mediumint  int  bigint					
+已tinyint类型为例演示整数类型的使用
+
+create table  db1.t5(level  tinyint unsigned ,  age  tinyint  );
+desc  db1.t5;
+
+mysql> insert into db1.t5 values (255,127); 在存储范围内都可以存储
+
+mysql> insert into db1.t5 values (28.8 , 17.41); 四舍五入存储整数位
+				
 				 浮点类型：有小数点的数 例如 1.88  0.34 
-			   
+                         单精度 float
+						 双精度 double
+mysql> insert into db1.t6 values(35000.88 , 3.1415926);
+mysql> insert into db1.t6 values(35000.88 , 35000.88);
+mysql> insert into db1.t6 values(8888,9999);			   
+	
+		休息 到 11:20
+		
+小数的组成  总位数
+整数.小数
+188.88        5
+
+
+           
+float(总位数,小数位的位数)	
+	                  999.99
+                      xxx.xx
+create table db1.t7( pay  float(5,2) );
+mysql> insert into db1.t7 values (88.23);
+mysql> insert into db1.t7 values (88.56);
+mysql> insert into db1.t7 values (22);
+
+mysql> insert into db1.t7 values (1088);
+ERROR 1264 (22003): Out of range value for column 'pay' at row 1
+
+mysql> insert into db1.t7 values (-999.99);
+mysql> insert into db1.t7 values (1000);	
+	
 		  日期时间类型
 			  年   year   YYYY  2021   
 			  日期 date   YYYYMMSS   20210413
@@ -251,7 +299,48 @@ insert into  db1.t2  values( 2021 , 090000 , 20211120 , 20210501103000);
 		
 select  * from  db1.t2;
 
-		
+####时间函数的使用##################
+MySQL服务软件安装之后提供的命令 格式  名(), 获取系统时间的相关函数
+可以使用函数获取到的数据给日期时间类型的表头赋值
+
+时间函数的使用
+mysql> select curtime(); 时间 
+mysql> select date();    日期 
+mysql> select now();        日期时间
+mysql> select hour(now());  日期+时间
+mysql> select time(now());  时间 
+mysql> select day(now());   天（几号） 
+mysql> select month(now()); 月
+mysql> select year(now());  年 
+mysql> select date(now());  日期
+
+使用时间函数赋值
+mysql> use  db1;
+mysql> insert into t2 values(year(now()) , curtime() , date(now()) , now() );
+mysql> select  * from  t2;
+
+year 类型表头的赋值 默认要求4位数值 ，也可以使用2位数赋值，但会自动补全4位，
+具体如下：
+当使用2位数赋值时：
+01~69视为2001~2069
+70~99视为1970~1999
+
+
+ 	
+datetime和timestamp 区别 
+	1 存储范围
+	2 赋值方式不同：
+	当未给timestamp字段赋值时，自动以当前系统时间赋值，而datetime 值为 NULL (空)
+例子
+
+create  table   db1.t3(meetting  datetime ,  party  timestamp );
+
+insert into  db1.t3  values (20210418183000 , 20210501095021);
+insert into  db1.t3(meetting)  values (20221120084518);
+insert into  db1.t3(party)  values (20231120084518);
+
+select  * from db1.t3;
+
 ########枚举类型的使用##############
 create database db1;
 
@@ -265,15 +354,7 @@ desc  db1.t1;
 insert into  db1.t1 values ("man","book,eat"); 报错
 mysql> insert into  db1.t1 values ("man","sleep,eat"); 正确
 
-select  * from  db1.t1;
-	
-课后练习题：考点 MySQL数据类型的使用
-            创建前任信息表（思考存储前任的那些信息）
-	                
-                    
-            设置1张用来存储游戏人物的信息。
-
-有时间吧后边使用的数据库服务器51-55 都搭建出来。			
+select  * from  db1.t1;		
 	
 	
 
