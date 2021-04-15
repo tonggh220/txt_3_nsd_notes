@@ -19,3 +19,51 @@ secure_file_priv="/myload"
 
 [root@host50 ~]# systemctl  start mysqld
 [root@host50 ~]# mysql -uroot -p123qqq...A  -e 'show variables like "secure_file_priv"'	
+
+
+1.2 数据导入： 把系统文件的内容存储到数据库的表里
+	               具体操作
+						1 创建存储数据库的库和表（要根据存储的数据创建表结构）
+						2 把系统文件拷贝到检索目录下
+						3 执行导入数据的命令
+load  data  infile   "/目录名/文件名" into   table  库名.表名
+fields terminated   by   "分隔符" lines  terminated  by   "\n";
+ 
+						4 查看数据并做优化配置
+					导入数据的注意事项（背诵）
+					
+	
+
+例子 ：在db3库下 创建user表（自己设计表结构）存储 /etc/passwd文件里的用户信息。
+mysql> create database db3; 
+mysql> use db3;
+mysql> show tables;
+mysql> create table db3.user(
+name char(50) , password char(1) , uid int , gid int,
+comment  varchar(200) , homedir char(60) , shell char(50),
+index(name) , primary key(uid)
+);
+mysql> desc db3.user;
+
+
+]# cp  /etc/passwd   /myload/
+]#  ls  /myload/passwd
+ 
+
+mysql> system  wc -l  /myload/passwd
+
+mysql> #执行导入数据的命令
+mysql> load data infile "/myload/passwd" into table
+       db3.user fields terminated by ":"  lines terminated by "\n" ;
+
+       # 查看数据 
+mysql> select  * from db3.user;
+
+       优化配置(添加行号便于查找数据)
+       alter table db3.user drop  primary key ;
+	   
+	   alter table  db3.user add   id  int auto_increment first, 
+       add primary key(id,uid);
+	   
+	   desc  db3.user;
+	   select  * from  db3.user;
