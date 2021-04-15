@@ -241,3 +241,57 @@ select  * from db1.t18;
 insert into db1.t18(name,age,sex,class)values("jonh",19,"m","nsd2012");
 
 select  * from db1.t18;
+
+3.3  外键      foreign key
+		 定义：让当前表表头的值 必须在另1张表的主键表头值里选择。
+	     外键的使用规则（背诵）
+		 命令格式：
+		 create table 库.表(表头列表，foreign key(表头名) 
+		 references 库.表(表头名)  on  update cascade  on delete cascade
+		 )engine=innodb;
+          
+    
+	员工信息表ygtab（存储员工信息）
+	  PRI
+	员工编号  姓名
+	 yg_id    name 
+        1      bob
+      	2	   bob  
+	    3      tom 
+create table db1.ygtab(yg_id int primary key auto_increment
+  , name char(10) )engine=innodb;
+
+insert into db1.ygtab(name) values("bob");
+insert into db1.ygtab(name) values("bob");	
+insert into db1.ygtab(name) values("tom");
+
+select  * from db1.ygtab;
+	
+	工资表 gztab（存储工资）
+	  外键
+	员工编号 工资 
+     gz_id   pay
+         1    50000
+		 2    25000
+		 3    30000
+		 
+create table db1.gztab(gz_id int , pay float(7,2),
+foreign key(gz_id)  references   db1.ygtab(yg_id) 
+on update cascade    on delete cascade
+ )engine=innodb;		 
+		 
+mysql> insert into db1.gztab values(4,20000); 报错 
+mysql> insert into db1.gztab values(1,50000);
+mysql> insert into db1.gztab values(2,25000);
+mysql> insert into db1.gztab values(3,30000);
+select  * from db1.gztab;
+
+验证on update cascade
+update  db1.ygtab  set  yg_id=8 where name="tom";
+select  * from  db1.ygtab;
+select  * from  db1.gztab;
+
+验证 on delete cascade
+delete from  db1.ygtab where yg_id=2 ;
+mysql> select  * from db1.ygtab;
+mysql> select  * from db1.gztab;
