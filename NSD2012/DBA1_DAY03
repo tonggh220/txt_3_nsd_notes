@@ -121,4 +121,43 @@ insert  into  db3.user(name,password,uid,gid,comment,homedir,shell)
 values("a","x",4000,4000,"test","/a","xxx");
 
 
+四、MySQL图形管理工具的使用之phpmyadmin
+     在数据库服务器安装图形软件，让用户访问图形软件，通过图形软件
+	 对数据库服务器做管理和使用。
+	 
+	 诉求： 在数据库服务器50主机安装图形软件phpmyadmin 提供图形界面
+让用户访问 管理数据库服务器。
+			配置步骤如下：
+				1 准备软件的运行环境：lamp或LNMP
+  ]# yum  -y install httpd  php  php-mysql
+  ]#  systemctl start httpd
+  ]#  ss -utnlp  | grep  80
+  
+				2 安装图形软件phpmyadmin
+  ]#  tar -zxvf phpMyAdmin-2.11.11-all-languages.tar.gz 
+  ]#  mv phpMyAdmin-2.11.11-all-languages /var/www/html/
+  ]#  cd /var/www/html/
+  ]#  mv phpMyAdmin-2.11.11-all-languages/ admin
+  ]#  ls /var/www/html/admin/index.php 			
+
+				3 修改软件的主配置文件，定义连接的数据库服务器
+					  #创建主配置文件
+]# cd /var/www/html/admin/
+]# cp config.sample.inc.php   config.inc.php 
+ 
+					  
+					   #在配置文件里指定管理的数据库服务器
+					  ]# vim config.inc.php
+	17 $cfg['blowfish_secret'] = 'plj123';				  
+	31 $cfg['Servers'][$i]['host'] = 'localhost';
+	                  :wq
+					  
+				4 客户端打开浏览器 ,在地址栏里输入访问网址
+				   http://192.168.4.50/admin
+				   输入连接的用户  root
+				   输入连接密码  123qqq...A
+				   
+	            5 对数据做管理
+
+
 
