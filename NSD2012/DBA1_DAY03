@@ -97,5 +97,28 @@ mysql> select name , uid , shell from db3.user where id <= 2
 mysql> system ls   /myload/*.txt		
 mysql> system vim  /myload/a.txt
 
+二、表记录的基本管理（记录就是表里的行）
+     （增）添加新行 insert into (新行都追加在末尾)
+		   
+		  添加1条记录给所有列赋值
+		   insert into  库.表   values (值列表);
+
+insert into db3.user values 
+(30,"bob","x",2000,2000,"test user","/home/bob","/bin/bash");
+
+
+		  添加多条记录给所有列赋值
+		  insert into  库.表   values (值列表),(值列表),(值列表)....;
+insert into db3.user values
+(40,"bob2","x",3000,2000,"test user","/home/bob","/bin/bash"),
+(50,"bob3","x",3001,2000,"test user","/home/bob","/bin/bash");		  
+
+          添加1条记录只给指定的列赋值
+		  insert into  库.表(列名列表)   values (值列表);
+insert  into  db3.user(name,uid,shell) values("tom",2001,"/sbin/nologin");
+		   
+insert  into  db3.user(name,password,uid,gid,comment,homedir,shell) 
+values("a","x",4000,4000,"test","/a","xxx");
+
 
 
