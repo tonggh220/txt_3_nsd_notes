@@ -192,6 +192,8 @@ create table db1.t17(
 cip char(15) , port smallint , status enum("deny","allow"),
 primary key(cip,port)  );
  
+mysql> alter table db1.gztab add primary key(gz_id);
+
 desc  db1.t17;
 insert into db1.t17 values ("1.1.1.1",22,"deny");
 insert into db1.t17 values ("1.1.1.1",80,"allow");
@@ -241,6 +243,15 @@ select  * from db1.t18;
 insert into db1.t18(name,age,sex,class)values("jonh",19,"m","nsd2012");
 
 select  * from db1.t18;
+
+查看外键  mysql> show create table db1.gztab \G
+
+删除外键  alter table db1.gztab  drop foreign key gztab_ibfk_1;
+                       库.表                      外键名
+
+添加外键 alter table db1.gztab  add  foreign key(gz_id)  
+references   db1.ygtab(yg_id) on update cascade    on delete cascade;
+
 
 3.3  外键      foreign key
 		 定义：让当前表表头的值 必须在另1张表的主键表头值里选择。
