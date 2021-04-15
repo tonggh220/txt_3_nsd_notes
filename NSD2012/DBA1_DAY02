@@ -180,3 +180,64 @@ mysql> insert into db1.t16 values("y",21,7);
 
 mysql> insert into db1.t16 values("y",21,null);
 ERROR 1048 (23000): Column 'stu_num' cannot be null
+
+2 复合主键（多个表头一起做主键）复合主键的值不同时相同即可
+		    PRI        PRI
+		客户端地址   服务端口号   访问状态
+		  cip         port        status
+		  1.1.1.1     22           deny 
+		  1.1.1.1     80           allow
+		  2.1.1.1     80           deny
+create table db1.t17(
+cip char(15) , port smallint , status enum("deny","allow"),
+primary key(cip,port)  );
+ 
+desc  db1.t17;
+insert into db1.t17 values ("1.1.1.1",22,"deny");
+insert into db1.t17 values ("1.1.1.1",80,"allow");
+insert into db1.t17 values ("2.1.1.1",80,"deny");
+select  * from db1.t17;
+insert into db1.t17 values ("2.1.1.1",80,"allow"); 报错
+		
+            在已有表添加主键（被设置为主键表头下的数据
+			不能违反主键的使用规则）		
+			命令 ： alter  table  库.表 add  primary key(表头名);
+			
+			delete  from db1.t16;
+			select  * from db1.t16;
+			desc  db1.t16;
+			alter table  db1.t16 add primary key (stu_num);
+			desc  db1.t16;
+			
+		
+		3  主键与auto_increment 连用
+	             让表头通过自加1的计算结果赋值
+   id 	name  age  sex  class
+   1	bob    19   boy  nsd2012
+   2	bob    19   boy  nsd2012
+   3	bob    19   boy  nsd2012
+   4    bob    19   boy  nsd2012
+
+select  * from  student where 行号>=2 ；
+
+create  table db1.t18(
+id  int primary key  auto_increment , 
+name char(10)  , age tinyint unsigned ,sex enum("m","w") ,
+class char(7) );
+
+desc  db1.t18;
+
+insert into db1.t18(name,age,sex,class)values("tom",19,"m","nsd2012");
+insert into db1.t18(name,age,sex,class)values("tom",19,"m","nsd2012");
+insert into db1.t18(name,age,sex,class)values("tom",19,"m","nsd2012");
+
+ select  * from db1.t18;
+ select  * from db1.t18 where  id = 1 ; 
+ select  * from db1.t18 where  id = 2 ;
+  
+ insert into db1.t18 values(11,"tom",19,"m","nsd2012");
+
+select  * from db1.t18;
+insert into db1.t18(name,age,sex,class)values("jonh",19,"m","nsd2012");
+
+select  * from db1.t18;
