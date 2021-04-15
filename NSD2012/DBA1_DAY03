@@ -1,0 +1,21 @@
+###DBA1_DAY03
+一、数据导入导出
+	1.1 数据导入导出检索目录：（导入导出时存放数据的文件 保存的目录）
+	    查看默认检索目录的位置
+	mysql> show variables like  "secure_file_priv";
+	[root@host50 ~]# ls -ld /var/lib/mysql-files/
+drwxr-x--- 2 mysql mysql 6 11\u6708 29 2016 /var/lib/mysql-files/
+         
+	    修改检索目录的位置
+[root@host50 ~]# systemctl  stop mysqld
+[root@host50 ~]# vim /etc/my.cnf
+[mysqld]
+secure_file_priv="/myload"
+:wq
+	
+]# mkdir /myload
+]# chown mysql  /myload
+]# setenforce  0
+
+[root@host50 ~]# systemctl  start mysqld
+[root@host50 ~]# mysql -uroot -p123qqq...A  -e 'show variables like "secure_file_priv"'	
