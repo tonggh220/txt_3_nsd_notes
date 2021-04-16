@@ -1,0 +1,67 @@
+#######DBA1_DAY04######
+一 用户授权
+   1.1 用户授权介绍（啥是用户授权）添加用户给客户端连接使用。默认只有root
+   能从本机连接MySQL服务。
+  
+   1.2 用户授权的命令格式？
+   ]#mysql -uroot -p密码
+   mysql>  grant  权限列表 on 库名  to   用户名@“客户端地址”  
+           identified by "密码"  [with grant option] ; 
+
+    权限列表 的表示方式 ：
+	         all 		   
+             select , insert , update 
+			 insert(name),update(age,uid)
+			 usage 
+	库名的表示方式 ：
+			*.*
+			库名.* 
+			库名.表        
+	客户端地址的表示方式 ：	
+			localhost
+			%
+			192.168.4.%
+			192.168.4.200
+	密码 要符合服务器的密码策略		
+	
+	with grant option 可选项，让添加的用户可以使用grant命令 再填用户		
+	
+授权练习
+host50]# 添加root用户
+mysql> grant all on *.* to root@"192.168.4.51"
+       identified by "123qqq...A" with grant option;
+	  
+	  测试添加的root 用户
+host51]# mysql -h192.168.4.50 -uroot -p123qqq...A
+mysql> 可以执行所有的sql命令
+mysql> grant all on *.*  to mydba@"%" 
+identified by "123qqq...A" with grant option;
+mysql> exit
+
+测试 添加的mydba用户
+[root@host50 ~]# mysql -umydba -p123qqq...A
+[root@host51 ~]# mysql -h192.168.4.50  -umydba -p123qqq...A
+	
+	
+	在host50 添加 admin用户 
+MySQL> grant  select on  db3.user to admin@"192.168.4.%"
+identified by "123qqq...A";
+
+    在51主机测试
+host51]# mysql -h192.168.4.50 -uadmin -p123qqq...A
+mysql> show databases;
+mysql> use db3;
+mysql> delete from db3.user; 报错
+mysql> select  * from  db3.user; 正确
+
+   在host50 添加 admin2用户
+ MySQL> grant  select,insert,update,delete on db1.*  to admin2@"localhost"
+ identified by "123qqq...A";
+ 
+   在51主机测试
+host51]# mysql -h192.168.4.50 -uadmin2 -p123qqq...A  报错
+    
+   在50主机测试
+host50]# mysql  -uadmin2 -p123qqq...A  成功
+mysql> create table db1.t30(id int);  报错
+mysql> select  * from db1.t2; 可以
