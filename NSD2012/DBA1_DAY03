@@ -159,5 +159,176 @@ values("a","x",4000,4000,"test","/a","xxx");
 				   
 	            5 对数据做管理
 
+###################################################
+#######DBA1_DAY03#######
+匹配条件 db3.user 做练习
+		基本匹配条件 （适合 select  update  delete 的条件 ）
+			数值比较  符号2边都得是数值
+			        比较符号  >  >=  < <= = !=
+					
+			select  * from  db3.user where uid = 10;
+			select  name,uid  from  db3.user where uid = 10;
+			select  name,uid,gid  from  db3.user where uid = gid;
+            select  name,uid,gid  from  db3.user where uid != gid;
+			select  * from  db3.user where id <= 3;
+			
+
+			
+			字符比较  符号2边都得是字符
+					  比较符号  =   !=
+			
+select name from  db3.user where  shell="/sbin/nologin";
+select name , shell from  db3.user where  shell="/sbin/nologin";
+select name , shell from  db3.user where  shell!="/sbin/nologin";
+
+select  name from db3.user where name="apache";
+	
+
+			范围内匹配
+				   in 
+				   not in 
+				   between 数字1 and 数字2 
+				   
+select name from db3.user where  name in ("root","mysql","bin","apache");				   
+select name,uid from db3.user where uid in (3,7,9,12);
+
+select name from db3.user 
+where shell not in ("/bin/bash","/sbin/nologin");
+
+select name,shell from db3.user 
+where shell not in ("/bin/bash","/sbin/nologin");
+
+select * from  db3.user where id  between 1  and 10 ;
+
+select name,uid from  db3.user where uid 	between 20  and 30 ;	
+		   
+			匹配空 is null
+			非空   is not null
+select id  from db3.user  where  uid is null ;			
+select id  from db3.user  where  gid is null ;			
+mysql> select id,uid,gid from db3.user;
+
+select name , shell from db3.user where shell is not null ;
+
+insert into db3.user(name,uid,id) 
+values("",6001,51),("null",6002,53),(" ",6003,56),(null,6004,59);
+mysql> select name,uid,id from db3.user where id>=51;
++------+------+----+
+| name | uid  | id |
++------+------+----+
+|      | 6001 | 51 |select name,uid,id from db3.user where name="";
+| null | 6002 | 53 |select name,uid,id from db3.user where name="null";
+|      | 6003 | 56 |select name,uid,id from db3.user where name="";
+| NULL | 6004 | 59 |select name,uid,id from db3.user where name is null;  
++------+------+----+
+思考 使用name 字段做查询条件 分别把每行单独查询出来
+ 
+			
+			
+	    高级匹配条件
+			模糊匹配  where 字段名  like  ‘表达式’ ;
+				_ ：表示1个字符
+                 %：表示0~n个字符
+select name from  db3.user  where name like '_ _ _' ;
+select name from  db3.user  where name like	'%a%';			                
+select name from  db3.user  where name like	'a%';
+
+select name from  db3.user  where name like '_%_' ;
+select name from  db3.user  where name like '_ _ %_ _' ;
+
+select id,name from  db3.user where name like '%';
+
+alues("",6001,51),(" ",6003,56),(null,6004,59);
+
+			正则匹配  where  字段名 regexp '正则表达式'
+			        元字符 ^  $  .  |  []  
+					* (匹配前边正则表达式出现的次数 0次或多次)
+			
+			insert into db3.user(name,uid)
+			values("9yaya",6304),("yaya8",6305),("ya3ya",6302),("y5aya",6301);
+			
+			select  name  from  db3.user where  name regexp '[0-9]';
+			select  name  from  db3.user where  name regexp '^[0-9]';                                   
+			
+			select  name  from  db3.user where  name regexp '[^0-9]';
+			
+			select  name  from  db3.user where  name regexp '^r|f$';
+			
+			select  name  from  db3.user where  name regexp '^r.*t$';
+			
+			select  name,uid from  db3.user where  uid regexp '...';
+			
+			select  name,uid from  db3.user where  uid regexp '^...$';
+				
+			数学计算  符号2边都得是数字
+					  + - * / %    
+					  () 提供执行的优先级
+mysql> update db3.user set gid = gid + 1 where id <= 5;
+mysql> update db3.user set gid = gid - 1 where id <= 5;					  
+	
+select  id  from  db3.user where  id % 2  = 0 ;
+select  id  from  db3.user where  id % 2  != 0 ;	
+
+select  name , uid , gid ,  uid+gid  zcj  , (uid+gid)/2 pjf  from 
+db3.user  where name = "mysql" ;
+       
+alter table db3.user add age int  default 18 after name;
+	
+mysql> select name , age , 2021-age csnf from db3.user 
+    -> where name = "root";	
+	
+		逻辑匹配（有多个判断条件）
+		       and 或 &&   逻辑与   多个条件必须同时成立
+	            or 或 ||   逻辑或   多个条件是某1个条件成立即可
+                ！ 或 not  逻辑非   取反
+ 
+性别 = 女   and  学历  = 本科  and  英语水平 >= 四级  and  颜值=高  (与)
+性别 = 女   or  学历  = 本科  or  英语水平 >= 四级  or  颜值=高  （或）
+
+select name from db3.user 
+where   name="root" and uid=10 and  shell="/sbin/nologin";
+
+
+mysql> select name from db3.user  
+where   name="root" and uid=0 and  shell="/bin/bash";
+
+
+select name,uid,shell from db3.user 
+where   name="root" or uid=10 or  shell="/sbin/nologin";
+
+select name , uid  from db3.user 
+where name="root" or name="bin" and uid=1;
+
+
+root 0
+bin  1
+
+select name , uid  from db3.user 
+where (name="root" or name="bin") and uid=1;
+bin  1
+
+        操作查询结果 (对select命令查询出来的数据 ，再做处理)
+			 聚集函数：MySQL服务自带的对数据做统计的命令
+				sum(字段名 )
+				avg(字段名 )
+				max(字段名 )
+				min(字段名 )
+				count(字段名 )
+select name from  db3.user where shell!="/bin/bash";
+mysql> select count(name) from  db3.user where shell!				
+
+mysql> select * from  db3.user ;
+mysql> select count(*) from  db3.user ;		
+select max(uid) zdz , min(uid) zxzhi , sum(uid) zonghe, avg(uid) pjf 
+from db3.user;
+	
+			 排序  select 查询  order by 字段名 asc|desc 
+select name , uid  from  db3.user where uid between 10 and 100;
+			 
+mysql> select name , uid  from  db3.user 
+where uid between 10 and 100  order by  uid;
+
+mysql> select name , uid  from  db3.user 
+where uid between 10 and 100  order by  uid desc;
 
 
