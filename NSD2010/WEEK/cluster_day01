@@ -136,13 +136,13 @@ ONBOOT=yes
 
 给所有的real-server  绑定vip地址 192.168.4.15
               把vip地址绑定在lo上  
-web11 ]# ifconfig lo:0 192.168.4.15
-web22 ]# ifconfig lo:0 192.168.4.15		
+web11 ]# ifconfig lo:0 192.168.4.15/32
+web22 ]# ifconfig lo:0 192.168.4.15/32		
 
-web22 ]# echo  "ifconfig lo:0 192.168.4.15" >> /etc/rc.local
+web22 ]# echo  "ifconfig lo:0 192.168.4.15/32" >> /etc/rc.local
 web22 ]# chmod  +x  /etc/rc.local
 
-web11 ]# echo  "ifconfig lo:0 192.168.4.15" >> /etc/rc.local
+web11 ]# echo  "ifconfig lo:0 192.168.4.15/32" >> /etc/rc.local
 web22 ]# chmod  +x /etc/rc.local
 
 			  并让eth0口帮lo收发数据包
@@ -181,3 +181,22 @@ TCP  192.168.4.15:80                     0      0        0    0        0
   -> 192.168.4.11:80                     0      0        0    0        0
   -> 192.168.4.22:80                     0     0        0    0        0
 [root@host10 ~]# 
+
+
+排错的思路 ：
+		1 检查做实验所有机器的firewalld服务是否关闭
+		2 检测调度是否配置了vip地址  ]# ifconfig  eth0:0
+		3 分别检测  2台网站服务器的 是否绑定了vip地址  ifconfig lo:0
+		4 分别检测  2台网站服务器的网卡的内核参数是否休息了 
+		]# echo 1 > /proc/sys/net/ipv4/conf/all/arp_ignore
+		]# cat  /proc/sys/net/ipv4/conf/all/arp_ignore
+		 1
+		 ]# echo 1 > /proc/sys/net/ipv4/conf/lo/arp_ignore
+		 ]# cat  /proc/sys/net/ipv4/conf/lo/arp_ignore
+		 1
+		 
+]# echo 2 > /proc/sys/net/ipv4/conf/lo/arp_announce
+]# cat /proc/sys/net/ipv4/conf/lo/arp_announce
+2
+ ]# echo  2 >   /proc/sys/net/ipv4/conf/all/arp_announce
+]#cat /proc/sys/net/ipv4/conf/all/arp_announce
