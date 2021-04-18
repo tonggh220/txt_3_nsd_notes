@@ -98,3 +98,64 @@ web22
 [root@teacher ~]# curl http://192.168.2.5
 web22
 [root@teacher ~]# 
+
+
+#######################LVS/DR 模式的实验###########################################
+
+																            (web) 192.168.4.11
+                                      
+	    客户端    ----> 调度器192.168.4.10
+										
+										                                      (web) 192.168.4.22
+
+准备环境(清除 LVS/NAT 模式的配置)											
+[root@web11 ~]# route del  default gw 192.168.4.10
+[root@web22 ~]# route del  default gw 192.168.4.10
+[root@host10 ~]# ifconfig eth1
+[root@host10 ~]# ipvsadm -C
+[root@host10 ~]# ipvsadm -Ln --stats
+
+LVS/DR模式配置如下：
+root@host10 ~]#  rpm   -q ipvsadm  ||  yum  -y  install  ipvsadm
+
+[root@host10 ~]# ifconfig  eth0:0 192.168.4.15  命令行绑定vip地址
+                                      
+									  永久配置vip  地址
+[root@host10 ~]# cd /etc/sysconfig/network-scripts/   
+[root@host10 network-scripts]# ls ifcfg-eth0
+ifcfg-eth0
+[root@host10 network-scripts]# cp ifcfg-eth0    ifcfg-eth0:0
+[root@host10 network-scripts]# vim    ifcfg-eth0:0
+TYPE=Ethernet
+BOOTPROTO=none
+IPADDR=192.168.4.15
+NAME=eth0:0
+DEVICE=eth0:0
+ONBOOT=yes
+:wq
+
+给所有的real-server  绑定vip地址 192.168.4.15
+              把vip地址绑定在lo上  
+web11 ]# ifconfig lo:0 192.168.4.15
+web22 ]# ifconfig lo:0 192.168.4.15		
+
+web22 ]# echo  "ifconfig lo:0 192.168.4.15" >> /etc/rc.local
+web22 ]# chmod  +x  /etc/rc.local
+
+web11 ]# echo  "ifconfig lo:0 192.168.4.15" >> /etc/rc.local
+web22 ]# chmod  +x /etc/rc.local
+
+			  并让eth0口帮lo收发数据包
+[root@web22 ~]# cat /etc/sysctl.conf 
+net.ipv4.conf.all.arp_ignore = 1
+net.ipv4.conf.lo.arp_ignore = 1
+net.ipv4.conf.all.arp_announce = 2
+net.ipv4.conf.lo.arp_announce = 2
+[root@web22 ~]# sysctl  -p
+
+[root@web11 ~]# cat /etc/sysctl.conf 
+net.ipv4.conf.all.arp_ignore = 1
+net.ipv4.conf.lo.arp_ignore = 1
+net.ipv4.conf.all.arp_announce = 2
+net.ipv4.conf.lo.arp_announce = 2
+[root@web11~]# sysctl  -p
