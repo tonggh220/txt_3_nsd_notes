@@ -1,0 +1,100 @@
+4月18 号  接班 第1天  
+
+集群： 把多台服务器通过网络链接在一起
+提供相同的服务。
+集群分类:
+负载均衡集群LB：多台服务器平均分摊
+客户端的多次访问
+ 
+高可用集群 HA :  主  备模式
+                                  主无法提供服务时 备用
+								  主机会自动接替功能。
+
+高性能计算集群HPC:
+                  航天 航空  勘探  气象 
+
+实现集群服务的软件有那些？ 
+                 
+LB软件:  LVS  、 Haproxy、 Nginx 
+HA软件:Keepalived 
+  
+
+案例1  诉求  让2台网站服务器 192.168.4.11
+和192.168.4.22  做LB集群，
+			   操作步骤：
+							 1  准备2台主机配置ip 地址 
+							 2  2台主机运行网站服务
+							 3  2台网站分别编写网页文件
+							      2台网站主机把网关地址设置为 192.168.4.10
+							 4  准备做调度器的主机
+							                eth0    192.168.4.10
+											eth1    192.168.2.5
+											配置调度器的具体步骤：
+											 1   LVS介绍 ？
+											 2   LVS工作模式
+										     3  调度算法(10种)
+											  4 配置调度器
+												           4.1 安装软件ipvsadm
+			    ]# rpm -q ipvsadm || yum -y install ipvsadm
+                ]# which  ipvsadm   查看命令
+				]# man   ipvsadm     查看帮助信息
+														   4.2  指定集群使用的vip地址
+				]# ipvsadm -A -t 192.168.2.5:80 -s rr
+                                                            4.3 添加网站服务器
+				]# ipvsadm -a -t 192.168.2.5:80 -r 192.168.4.11:80  -m
+				]# ipvsadm -a -t 192.168.2.5:80 -r 192.168.4.22:80  -m
+                                                            4.4 查看配置
+				]# ipvsadm -Ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  192.168.2.5:80 rr
+  -> 192.168.4.11:80              Masq    1      0          0         
+  -> 192.168.4.22:80              Masq    1      0          0         
+[root@host10 ~]# 
+															4.5 开启调度器的内核路由转发功能
+															]#vim /etc/sysctl.conf
+															net.ipv4.ip_forward = 1
+															:wq
+														  [root@host10 ~]# sysctl -p
+                                                            net.ipv4.ip_forward = 1
+
+                                               5 测试: 客户端链接vip地址访问网站服务	
+[root@teacher ~]# curl http://192.168.2.5
+web22
+[root@teacher ~]# curl http://192.168.2.5
+web11
+[root@teacher ~]# 
+[root@teacher ~]# curl http://192.168.2.5
+web22
+[root@teacher ~]# curl http://192.168.2.5
+web11
+[root@teacher ~]# 
+
+清除当前的配置，重新创建集群指定调度算法是wrr
+  323  ipvsadm -C
+  324  ipvsadm -Ln
+  325  ipvsadm -A -t 192.168.2.5:80 -s wrr
+  327  ipvsadm -a -t 192.168.2.5:80 -r 192.168.4.11:80 -m 
+  330  ipvsadm -a -t 192.168.2.5:80 -r 192.168.4.22:80 -m -w 3
+  331  ipvsadm -Ln
+  
+  
+[root@host10 ~]# ipvsadm -Ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  192.168.2.5:80 wrr
+  -> 192.168.4.11:80              Masq    1      0          0         
+  -> 192.168.4.22:80              Masq    3      0          0         
+[root@host10 ~]#										   
+														   
+[root@teacher ~]# curl http://192.168.2.5
+web22
+[root@teacher ~]# curl http://192.168.2.5
+web11
+[root@teacher ~]# curl http://192.168.2.5
+web22
+[root@teacher ~]# curl http://192.168.2.5
+web22
+[root@teacher ~]# 
