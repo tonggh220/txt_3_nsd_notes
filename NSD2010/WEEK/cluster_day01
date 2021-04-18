@@ -200,3 +200,10 @@ TCP  192.168.4.15:80                     0      0        0    0        0
 2
  ]# echo  2 >   /proc/sys/net/ipv4/conf/all/arp_announce
 ]#cat /proc/sys/net/ipv4/conf/all/arp_announce
+
+
+下次上课 讲  CLUSTER _DAY02+DAY03 
+存储          cluster_day02
+Ceph存储
+
+cluster_day03 综合项目
