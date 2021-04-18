@@ -159,3 +159,25 @@ net.ipv4.conf.lo.arp_ignore = 1
 net.ipv4.conf.all.arp_announce = 2
 net.ipv4.conf.lo.arp_announce = 2
 [root@web11~]# sysctl  -p
+
+创建DR模式的集群
+   ]# ipvsadm -A -t 192.168.4.15:80 -s  rr
+  ]#  ipvsadm -a -t 192.168.4.15:80 -r 192.168.4.11:80  -g
+  ]#  ipvsadm -a -t 192.168.4.15:80 -r 192.168.4.22:80 -g
+]#[root@host10 ~]# ipvsadm -Ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  192.168.4.15:80 rr
+  -> 192.168.4.11:80              Route   1      0          0         
+  -> 192.168.4.22:80              Route   1      0          0         
+[root@host10 ~]#
+							
+[root@host10 ~]# ipvsadm -Ln --stats
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port               Conns   InPkts  OutPkts  InBytes OutBytes
+  -> RemoteAddress:Port
+TCP  192.168.4.15:80                     0      0        0    0        0
+  -> 192.168.4.11:80                     0      0        0    0        0
+  -> 192.168.4.22:80                     0     0        0    0        0
+[root@host10 ~]# 
