@@ -1,0 +1,22 @@
+#####DBA1_DAY05
+一、增量恢复 (学习使用binlog恢复数据)
+
+	1.1  使用日志恢复所有数据
+]# mysqlbinlog  /目录/文件名  |  mysql –uroot  -p密码	
+
+HOST50:
+mysql> select  count(*)  from db3.user;
+mysql> show master status;
+
+]# mysqldump  -uroot -p密码  --flush-logs  db3 user  > /dbbak/user.sql
+mysql> show master status;
+mysql> insert into db3.user(name,uid)values("bob",5001);多存几条uid不能重复
+mysql> show master status;
+mysql> select  count(*)  from db3.user;
+]# scp /dbbak/user.sql root@192.168.4.51:/opt/
+]# scp /mylog/plj.编号  root@192.168.4.51:/opt/
+
+HOST51：
+]# mysql -uroot  -p密码   db3 < /opt/user.sql
+]# mysqlbinlog  /opt/plj.编号  |  mysql -uroot  -p密码
+mysql> select  count(*)  from db3.user;
