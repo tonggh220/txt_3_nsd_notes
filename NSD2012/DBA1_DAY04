@@ -182,5 +182,33 @@ mysql> flush privileges;
 			使用修改的密码登录
 			mysql -uroot -p789...qqqA
 			
+			授权库mysql库的使用
+			    存储grant 命令的执行结果
+			    查看表记录可以获取用户权限；
+				也可以通过更新记录，修改用户权限
+
+user表	记录已有的授权用户及权限    all  *.*
+desc mysql.user;   获取表头的名称和具体存储的数据
+select user,host from  mysql.user； 获取已经添加用户
+show grants for  用户@"客户端" ； 查看详细的权限
+
+db表			记录已有授权用户对数据库的访问权限    db1.*
+desc mysql.db;
+select host,user,db from mysql.db;
+select  * from  mysql.db where  db="db3" \G 
+ 
+tables_priv表	记录已有授权用户对表的访问权限   db1.t20
+desc mysql.tables_priv；
+select host , user, db , table_name  from  mysql.tables_priv;
+select  * from  mysql.tables_priv where table_name="user" \G
+
+columns_priv表	记录已有授权用户对字段的访问权限 insert(name,age) db3.user
+desc mysql.	columns_priv;
+
+mysql> grant insert(age),update(password) on db3.user  to jing8@"192.168.4.51"
+    -> identified by "123qqq...A";
+	
+select  * from  mysql.columns_priv;		
+
 
 
