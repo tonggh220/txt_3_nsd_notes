@@ -346,7 +346,7 @@ mysql> select count(*) from  db3.user ;
 select max(uid) zdz , min(uid) zxzhi , sum(uid) zonghe, avg(uid) pjf 
 from db3.user;
 	
-			 排序  select 查询  order by 字段名 asc|desc 
+			排序  select 查询  order by 字段名 asc|desc 
 select name , uid  from  db3.user where uid between 10 and 100;
 			 
 mysql> select name , uid  from  db3.user 
@@ -354,5 +354,62 @@ where uid between 10 and 100  order by  uid;
 
 mysql> select name , uid  from  db3.user 
 where uid between 10 and 100  order by  uid desc;
+			 
+			 
+			 分组 select 查询  group by 字段名
+select shell from db3.user;			 
+select shell from db3.user group by shell ;
+
+
+select shell from db3.user where  uid <= 500;
+			
+select shell from db3.user where  uid <= 500 group by shell;
+
+select count(shell) from db3.user where  uid <= 500 group by shell;
+
+select   部门 from  员工信息表 where 性别=“女”  group by  部门；
+女员工 在那些部门里
+
+			 distinct     字段名	去重显示
+mysql> select gid from db3.user;
+mysql> select distinct gid from db3.user;
+			 
+			 
+			 
+			 限制显示行数 (默认把所有与查询条件匹配的行都显示出来)
+			 select查询名  limit  数字; #只显示查询结果前几行
+			 
+	select name,uid,gid from db3.user  where id <=10;
+			 
+	select name,uid,gid from db3.user  where id <=10  limit 2 ;  1-2行
+	
+	select name,uid,gid from db3.user  where id <=10  limit 5 ;	 1-5行	 
+	
+     select查询名  limit  数字1,数字2; #显示查询结果指定范围内的行
+	 
+	 数字1 表示 起始行 （数字0表示查询结果的第1行 ） 
+	 数字2 表示 要显示几行
+	 
+	 select name,uid,gid from db3.user  where id <=10 limit 0,3;  1-3行
+	 select name,uid,gid from db3.user  where id <=10 limit 1,2;
+select name,uid,gid from db3.user  where id <=10 limit 5,5;
+
+			 过滤数据  select查询  having 条件 ；
+	         在select命令查询结果里 再查找一遍数据
+mysql> select id,name from  db3.user where name like '%' 
+       having  id in  (51 , 56 );
+	   
+	   mysql> select distinct gid from db3.user having gid=1;
+
+阐述命令的查询结果  #显示uid最大的用户信息    
+select * from db3.user order by uid desc limit 1;  
+
+MySQL服务查询方式： 单表查询 、多表查询（嵌套查询  连接查询）
+                    视图  存储过程  触发器
+	
+通过day01-day03的学习应该掌握的技术： 	
+	搭建数据库服务器  MySQL服务基本管理  数据管理  表管理
+
+
 
 
