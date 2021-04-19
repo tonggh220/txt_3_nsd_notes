@@ -147,3 +147,40 @@ mysql> select host ,user from mysql.user where user="yaya1";
 Enter password: 旧密码
 Enter password: 新密码
 
+破解库管理员root用户本机登录密码，具体操作如下：
+			修改数据库服务运行参数
+			]# vim /etc/my.cnf
+			[mysqld]
+            skip-grant-tables
+			如果修改了密码策略 要注释掉
+			#
+			#
+			:wq
+			
+			重启数据库服务
+			]# systemctl  restart mysqld
+			
+			无密码登录 ]#mysql
+			修改密码
+mysql> update  mysql.user  
+set  authentication_string=password("789...qqqA") 
+where host="localhost" and user="root";
+mysql> flush privileges;
+
+           断开连接mysql> exit
+		
+			注释修改的运行参数
+     ]# vim /etc/my.cnf
+			[mysqld]
+            #skip-grant-tables
+			如果想密码策略 去掉注释掉
+			:wq
+			
+			重启数据库服务
+			]# systemctl  restart mysqld			
+			
+			使用修改的密码登录
+			mysql -uroot -p789...qqqA
+			
+
+
