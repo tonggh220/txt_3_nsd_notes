@@ -298,6 +298,60 @@ mysql> show databases;
 ]# scp  /dbbak/db3.user.sql  root@192.168.4.51:/opt/    #50把备份文件拷贝给51			
 ]# mysql -uroot -p789...qqqA  db3 <  /opt/db3.user.sql  #51主机使用50的备份文件恢复
 
+ 恢复一个库的所有数据
+host51 ~]# mysql -uroot -p789...qqqA db3  -e 'drop database db1'		  
+
+[root@host50 ~]# mysqldump -uroot -p789...qqqA db1 > /dbbak/db1.sql          
+[root@host50 ~]# scp /dbbak/db1.sql  root@192.168.4.51:/root
+
+#51使用备份文件恢复数据
+[root@host51 ~]# mysql -uroot -p789...qqqA  -e 'create database db1'
+[root@host51 ~]# mysql -uroot -p789...qqqA  db1 < /root/db1.sql 
+[root@host51 ~]# mysql -uroot -p789...qqqA  -e 'use db1;show tables'
+
+
+		一起恢复2个库的数据
+[root@host51 ~]# mysql -uroot -p789...qqqA db3  -e 'drop database db1;drop database db3'
+		
+[root@host50 ~]# scp /dbbak/twodb.sql root@192.168.4.51:/opt/ 
+
+#恢复数据
+[root@host51 ~]# mysql -uroot -p789...qqqA < /opt/twodb.sql 
+
+
+
+每周一 晚上18:00 备份 对 db3库做完全备份
+00 18  * * 1  mysqldump -uroot -p789...qqqA -B db3  > /dbbak/`date +%F`_db3.sql &> /dev/null
+
+杭州中心 断网了   14:39 
+		 等10分钟 休息到 14:53 还没有好 。。。。。。。
+		   休息到 16:00   杭州中心不休息 做题
+		 等期间做点练习  用db3.user 表 做练习    
+2 在用户名字段下方添加s_year字段 存放出生年份 默认值是1990
+3 在用户名字段下方添加字段名sex 字段值只能是gril 或boy 默认值是 boy
+4 在sex字段下方添加 age字段  存放年龄 不允许输入负数。默认值 是 21
+5 把uid字段值是10到50之间的用户的性别修改为 girl
+6 统计性别是girl的用户有多少个。
+7 查看性别是girl用户里 uid号 最大的用户名 叫什么。
+select name from user where sex=“girl” order by uid desc  limit 1;
+8 添加一条新记录只给name、uid 字段赋值 值为rtestd  1000
+9 添加一条新记录只给name、uid 字段赋值 值为rtest2d   2000
+10 显示uid 是四位数的用户的用户名和uid值。
+11 显示名字是以字母r 开头 且是以字母d结尾的用户名和uid。
+12 查看是否有 名字以字母a开头 并且是 以字母c结尾的用户。
+13 把gid  在100到500间用户的家目录修改为/root
+14 把用户是  root 、 bin 、  sync 用户的shell 修改为  /sbin/nologin
+15 查看  gid 小于10的用户 都使用那些shell
+16 删除  名字以字母d开头的用户。
+17 查询  gid 最大的前5个用户 使用的 shell
+18 查看那些用户没有家目录
+19 把gid号最小的前5个用户信息保存到/mybak/min5.txt文件里。
+20 使用系统命令useradd 命令添加登录系统的用户 名为lucy		 
+https://gitee.com/panglijing/DataBase/tree/master	题所在的网址
+
+
+
+
 三 增量备份 掌握2种方式 
                       1 启用mysql服务的binlog日志 
 					  2 安装软件提供的命令实现
