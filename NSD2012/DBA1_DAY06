@@ -196,6 +196,42 @@ recover_binlog_info = 0
 	 8 查看数据  mysql > select  * from db3.user;
 
 
+####使用innobackupex 对 数据做差异备份与恢复
+     差异备份的定义：每次判断新数据都和首次的完全备份做比较
+	 
+周一 做完全备份
+]# innobackupex -u root  -p密码  /alldb  --no-timestamp 
+
+周二 差异
+]# innobackupex -u root  -p密码 --incremental  /dir1  --incremental-basedir=/alldb --no-timestamp
+
+周三差异备份
+]# innobackupex -u root  -p密码 --incremental  /dir2  --incremental-basedir=/alldb --no-timestamp
+
+周四差异备份
+]# innobackupex -u root  -p密码 --incremental  /dir3  --incremental-basedir=/alldb --no-timestamp
+	                                           
+scp  -r /alldb  root@192.168.4.51:/root/
+scp  -r  /dir3  root@192.168.4.51:/root/
+	 
+
+在51主机执行恢复
+           systemctl  stop  mysqld
+		   rm  -rf /var/lib/mysql/*
+		  ]# innobackupex  --apply-log --redo-only  /root/alldb
+	   
+     
+	 ]# innobackupex  --apply-log   --redo-only /root/alldb --incremental-dir=/root/dir3
+	 ]# innobackupex  --copy-back /root/alldb
+	 ]# chown -R mysql:mysql  /var/lib/mysql
+	 systemctl  start  mysqld
+	 
+
+DBA2_DAY01
+准备5台MySQL服务器 （最初状态做快照）51  52  53  54  55 
+
+50 做客户端
+
   
 
 
