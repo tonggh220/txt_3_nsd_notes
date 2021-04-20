@@ -93,4 +93,89 @@ mysql> alter  table  db3.tea   import  tablespace;
 			
 			7 查看表记录  select  * from db3.tea;
 
+练习+休息到 15：15 
+        
+    思考： 如果把user表数据删除（delete from db3.user;） 也用备份文件恢复一下user表的数据 
+	
+	1 mysql> alter table db3.user discard  tablespace;
+    2 查看表信息文件 （因为执行过导出表信息的命令，所有有表信息文件）
+[root@host51 db3]# ls /opt/allbak/db3/user*
+/opt/allbak/db3/user.cfg  /opt/allbak/db3/user.frm
+/opt/allbak/db3/user.exp  /opt/allbak/db3/user.ibd
+[root@host51 db3]# 	
+    
+	3 cp  /opt/allbak/db3/user.{ibd,cfg,exp} /var/lib/mysql/db3/
+    4 ]# chown  mysql:mysql /var/lib/mysql/db3/user.*
+    5 mysql> alter table db3.user import  tablespace;
+      mysql> select  * from db3.user;
+	6 ]# rm -rf /var/lib/mysql/db3/user.exp 
+      ]# rm -rf /var/lib/mysql/db3/user.cfg
+	  
+####使用innobackupex 对 数据做增量备份与恢复
+
+    增量备份的定义： 备份上次备份后，所有新数据
+	
+    增量备份命令格式：
+	***要先有1次备份，通常首次备份使用完全备份***
+	
+]# innobackupex -u root  -p 密码  --incremental   /目录名  --incremental-basedir=/目录名 
+  --no-timestamp
+  
+--incremental  新数据存放的目录
+--incremental-basedir 参考目录
+以周为单位做增量备份 在50主机做备份的练习
+
+周一 完全备份
+[root@host50 ~]# innobackupex -u root -p789...qqqA /fullbak --no-timestamp
+[root@host50 ~]# ls /fullbak
+
+#存储新数据insert into db3.user(name,uid) values("F",66); 多写几行
+
+周二 增量备份
+[root@host50 ~]# innobackupex -u root -p789...qqqA  --incremental  /new1dir   
+--incremental-basedir=/fullbak --no-timestamp
+[root@host50 ~]# ls /new1dir/
+#存储新数据insert into db3.user(name,uid) values("zz",77); 多写几行
+ 
+周三 增量备份
+]# innobackupex -u root  -p 789...qqqA --incremental  /new2dir   
+--incremental-basedir=/new1dir  --no-timestamp
+
+]#ls /new2dir 
+#存储新数据insert into db3.user(name,uid) values("yy",77); 多写几行
+
+周四  增量备份
+ ]# innobackupex -u root  -p 789...qqqA --incremental  /new3dir
+ --incremental-basedir=/new2dir  --no-timestamp
+ 
+ ]# ls /new3dir/
+ 
+
+ 
+指定了参考目录 innobackupex怎么就能判断出新数据了呢 ？
+      因为参考目录下有存放 当前目录备份数据的信息文件 
+	  lsn  日志序列号
+[root@host50 ~]# cat /fullbak/xtrabackup_checkpoints 
+backup_type = full-backuped
+from_lsn = 0  备份数据的起始范围
+to_lsn = 3306754 备份数据的结束范围
+last_lsn = 3306763   判断是否有新数据产生 （用last_lsn = 3306763 和 数据库目录下ib_logfile0 ）
+compact = 0
+recover_binlog_info = 0
+[root@host50 ~]#
+
+   增量恢复数据  （在51主机演示数据恢复）
+ 50 把备份文件拷贝给51 主机   
+ scp  -r /fullbak   root@192.168.4.51:/root/ 
+ scp  -r /new1dir   root@192.168.4.51:/root/ 
+ scp  -r /new2dir  root@192.168.4.51:/root/ 
+ scp  -r /new3dir   root@192.168.4.51:/root/ 
+
+  在51主机使用备份文件恢复数据
+  增量恢复命令格式
+  ]#innobackupex   --apply-log   --redo-only   /首次备份目录名   #准备恢复数据
+  ]#innobackupex   --apply-log   --redo-only /首次备份目录名   --incremental-dir=/目录名      #合并数据 （合并的顺序要和备份顺序一致）
+  ]#innobackupex    --copy-back   /目录名 #拷贝数据
+  
+
 
