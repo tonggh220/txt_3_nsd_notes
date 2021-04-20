@@ -68,3 +68,35 @@ mysql> select name,uid,comment from  db3.user where uid>=600;
 ]# mysqlbinlog  /mylog/plj.000003 | grep -i update	
 ]# mysqlbinlog  /mylog/plj.000003 | grep -i delete	
 ]# mysqlbinlog  /mylog/plj.000003 | grep -i select (查的不记)
+
+51主机使用plj.000003文件里记录的命令恢复新存储的数据，操作如下
+		[root@host50 ~]# scp /mylog/plj.000003 root@192.168.4.51:/root/
+
+
+
+]# mysqlbinlog  --start-position=325  --stop-position=788 /root/plj.000003 |
+mysql -uroot -p789...qqqA
+
+***定义的范围一定要包含commit回车，不然不会执行命令。
+***可以重复执行日志恢复数据，但是不能与表结构冲突。
+***当起始时间和结束时间相同时，要自己扩大结束时间的值
+***执行范围到文件的最后1条命令的话 ，不需要写结束位置，因为默认读到文件末尾
+
+]# mysqlbinlog  --start-datetime="2021/05/25 9:49:46"  
+--stop-datetime="2021/05/25 9:50:02" /root/plj.000003 |
+mysql -uroot -p789...qqqA
+
+
+]# mysqlbinlog  --start-datetime="2021/05/25 9:50:02" /root/plj.000003 |
+mysql -uroot -p789...qqqA
+
+
+课后思考：写个脚本 shell 或 python 
+          功能 批量执行binlog日志文件记录的命令恢复数据
+		  
+		  思路：
+		  使用for循环变量binlog日志的索引文件 ，
+		  执行文件里记录的命令，但是需要不遍历最后1个日志文件
+		  因为最后一个文件里记录的删除数据delete命令。
+    
+	休息11：15 
