@@ -61,5 +61,36 @@ recover_binlog_info = 0
 [root@host51 ~]# 
 		   
 		   4 恢复数据
+		   ]# ls /var/lib/mysql/  无数
+]# innobackupex --copy-back /opt/allbak/  拷贝数据
+           ]# ls /var/lib/mysql    有数据了 
 		   5 修改数据库目录的用户和组用户为mysql
+]# chown -R mysql:mysql /var/lib/mysql		   
 		   6 启动服务
+]# systemctl  start mysqld
+]# mysql -uroot -p789...qqqA	（密码和50密码一样,因为此刻加载的是50mysql库）	   
+			
+########使用innobackupex 用完全备份文件，仅恢复1张表的所有数据
+		具体操作如下：（在51主机做练习）
+			1 删除表空间  （ 什么表空间？ 表名.ibd ） 
+mysql> alter  table  db3.tea  discard  tablespace;
+			
+			2 导出表信息 （怎么导？ 都是什么信息？）
+]# innobackupex --apply-log --export /opt/allbak
+
+			3 拷贝表信息文件到数据库目录下
+]cp /opt/allbak/db3/tea.{ibd,cfg,exp} /var/lib/mysql/db3/
+ 			
+			4 修改表信息文件的所有者及组用户为mysql
+]# chown mysql:mysql /var/lib/mysql/db3/tea*	
+		
+			5 导入表空间
+mysql> alter  table  db3.tea   import  tablespace; 
+		
+			6 删除数据库目录下的表信息文件
+]# rm -rf /var/lib/mysql/db3/tea.cfg
+]# rm -rf /var/lib/mysql/db3/tea.exp
+			
+			7 查看表记录  select  * from db3.tea;
+
+
