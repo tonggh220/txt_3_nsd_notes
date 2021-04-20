@@ -176,6 +176,26 @@ recover_binlog_info = 0
   ]#innobackupex   --apply-log   --redo-only   /首次备份目录名   #准备恢复数据
   ]#innobackupex   --apply-log   --redo-only /首次备份目录名   --incremental-dir=/目录名      #合并数据 （合并的顺序要和备份顺序一致）
   ]#innobackupex    --copy-back   /目录名 #拷贝数据
+
+具体步骤：
+	 1 停止服务 systemctl stop  mysqld
+	 2 清空数据库目录 rm  -rf /var/lib/mysql/*
+	 3 准备恢复数据
+	   ]# innobackupex  --apply-log --redo-only  /root/fullbak
+	   
+     4 合并数据 
+	 ]# innobackupex  --apply-log   --redo-only /root/fullbak --incremental-dir=/root/new1dir
+	 ]# innobackupex  --apply-log   --redo-only /root/fullbak --incremental-dir=/root/new2dir
+	 ]# innobackupex  --apply-log   --redo-only /root/fullbak --incremental-dir=/root/new3dir
+	 5 拷贝数据
+	 ]# innobackupex  --copy-back  /root/fullbak
+	 6 修改所有者和组用户为mysql
+	 ]# chown -R mysql:mysql /var/lib/mysql/
+	 7 启动服务  systemctl stop  mysqld 
+	 
+	 8 查看数据  mysql > select  * from db3.user;
+
+
   
 
 
