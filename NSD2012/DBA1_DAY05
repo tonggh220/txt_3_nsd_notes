@@ -20,3 +20,51 @@ HOST51：
 ]# mysql -uroot  -p密码   db3 < /opt/user.sql
 ]# mysqlbinlog  /opt/plj.编号  |  mysql -uroot  -p密码
 mysql> select  count(*)  from db3.user;
+
+1.2  使用日志恢复指定的数据
+命令格式
+]# mysqlbinlog  选项 /目录/文件名  |  mysql –uroot  -p密码	
+
+选项 
+***记录命令执行的时间  和 记录命令执行的偏移量 
+
+指定起始时间 --start-datetime="yyyy/mm/dd hh:mm:ss"
+指定结束时间 --stop-datetime="yyyy/mm/dd hh:mm:ss"
+
+指定起始偏移量--start-position=偏移量的值
+指定结束偏移量--stop-position=偏移量的值
+
+]# mysqlbinlog  /mylog/plj.000001  # 查看文件内容确定偏移量和时间
+
+	修改binlog日志格式
+	默认格式是 ROW
+	
+	vim /etc/my.cnf
+	[mysqld]
+	binlog_format="mixed"
+	:wq
+	]# systemctl  restart  mysqld
+	
+
+	mysql> show variables like "binlog_format";
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| binlog_format | MIXED |
++---------------+-------+
+1 row in set (0.00 sec)
+
+mysql> show  master status;
+
+mysql> insert into db3.user(name,uid) values("A",601);
+mysql> insert into db3.user(name,uid) values("B",606);
+mysql> update db3.user set comment="test user";
+mysql> delete from  db3.user where id<=5;
+mysql> insert into db3.user(name,uid) values("C",609);	
+mysql> insert into db3.user(name,uid) values("D",619);
+mysql> select name,uid,comment from  db3.user where uid>=600;
+
+]# mysqlbinlog  /mylog/plj.000003 | grep -i insert	
+]# mysqlbinlog  /mylog/plj.000003 | grep -i update	
+]# mysqlbinlog  /mylog/plj.000003 | grep -i delete	
+]# mysqlbinlog  /mylog/plj.000003 | grep -i select (查的不记)
