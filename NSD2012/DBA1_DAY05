@@ -129,4 +129,51 @@ select name,uid from db3.user where uid >= 1000;
 														大锤 
 														
 		2 多表查询 
-select   库名.表名.列名 , 库名.表名.列名    from  库名.表名 , 库名.表   where 条件;	
+select   库名.表名.列名 , 库名.表名.列名   
+from  库名.表名 , 库名.表   where 条件;
+	
+mysql> select  *  from user2,user3 where user2.uid = user3.uid;
+mysql> select  name  from user2,user3 where user2.uid = user3.uid;
+mysql> select  user2.name  from user2,user3 where user2.uid = user3.uid;
+	
+		
+		
+		3 嵌套查询  把内层的查询结果作为外层的查询条件
+select 字段名列表 from  库.表  where  条件判断符号 （select 查询）；		
+
+mysql> select name from db4.user2 where  
+name in (select name from db3.user where uid <=5);
+
+
+mysql> select name,成绩 from 成绩表 where 成绩=90 and 
+name in (select name from 信息表 where addess="上海")
+
+把UID 小于uid字段平均值的用户名和uid显示出来。
+select name,uid from db3.user where uid < (select avg(uid) from db3.user);
+
+
+		
+		4 连接查询 
+			左连接 left join ... on 
+			执行结果：
+			显示左表的所有记录，右表只显示与条件匹配的记录，比左表少的记录使用null 填充
+	select 库名.表名.字段名 from 表名A left  join 表名B on 条件；
+	
+select db3.student.* , db3.score.* from db3.student left join db3.score 
+on db3.student.numbers=db3.score.numbers; 
+
+mysql> select  student.name,score.* from   student left join  score 
+on student.numbers = score.numbers; 找没有成绩的学生
+
+
+	
+			右连接 right join .... on 
+	        执行结果
+			显示右表的所有记录，左表只显示与条件匹配的记录 比右表少的记录使用null 填充
+    select 库名.表名.字段名 from 表名z right  join 表名f on 条件；
+
+use db3;
+select * from db3.student right join db3.score 
+on db3.student.numbers=db3.score.numbers; 找没有信息的学生。
+		
+
