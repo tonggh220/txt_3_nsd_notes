@@ -175,5 +175,70 @@ on student.numbers = score.numbers; 找没有成绩的学生
 use db3;
 select * from db3.student right join db3.score 
 on db3.student.numbers=db3.score.numbers; 找没有信息的学生。
+
+
+	 1.3 MySQL视图
+				视图介绍(背诵)
+				视图的优点?
+				视图使用：
+						创建视图 create view 
+mysql> use db3;
+mysql> create view v_user as select id,name,uid from user;
+mysql> show tables;
+mysql> desc v_user;
+
+自定义视图中表头的名称
+mysql> create view db3.user(A,B,C) as select id,name,uid from user;
+
+mysql> grant select,insert,update,delete on db3.v_user to 
+vuser@"localhost" identified by "123qqq...A";
+
+mysql> grant select on db3.v_user to 
+vuser2@"localhost" identified by "123qqq...A";
+		查看视图: 
+              #查看已有的表那些是视图表
+mysql> show table status where comment="view" \G
+			  
+			  
+			  #如何知道视图表中的数据，是哪个真实表里的数据
+mysql> show create view db3.usera \G
+			  
+
+			  删除视图
+			  mysql> drop view db3.v_user;
+
+		1.4 mysql 存储过程（就是MySQL服务里脚本功能 ,已代码的形式存储在
+		库下的表）
+		查看数据服务在工作过程中 都调用了那些存储 过程   CALL 调用命令
+		 mysql>  show  procedure  status;
+		 
+		 
+		 
+		查看数据库服务器已有的存储过程？
+        desc mysql.proc \G		 name 表头存放 存储过程名
+		                         body 表头存放 功能代码
+								 db   表头存放 库名 
+		select name from mysql.proc;   
 		
+		查看存储过程的具体功能是什么？
+		select body  from mysql.proc where name="list_add" \G
+		
+		自定义存储过程
+ mysql> delimiter //
+ 
+ mysql> create procedure db3.say()
+ begin
+ select * from db3.user where id % 2  = 0 ;
+ end
+ //
+ mysql> delimiter ;
+
+ mysql> select  db,name  from  mysql.proc where name="say";
+ mysql> select  db,name,body  from  mysql.proc where name="say" \G
+ 
+		调用存储过程
+		call  db3.say();  可以调用多次
+	
+		删除已有的存储过程
+		drop  procedure say；	
 
