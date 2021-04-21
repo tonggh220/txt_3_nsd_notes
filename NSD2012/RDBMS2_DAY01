@@ -63,3 +63,66 @@ mysql> change master to master_host="192.168.4.51" ,
 master_user="repluser" , master_password="123qqq...A" , 
 master_log_file="master51.000001",master_log_pos=441 ;          休息到17:15 
 
+					3 启动slave进程
+					start slave;
+					
+					
+					4 查看状态信息
+			mysql> show slave status \G		
+			Slave_IO_Running:  Yes      IO线程
+            Slave_SQL_Running: Yes     SQL线程
+			
+			
+				验证配置：
+				结果：客户端连接主服务器存储的数据，连接从服务器时也可以访问到
+				具体步骤：	
+					1 在主服务器添加用户（给客户端连接使用）
+mysql> grant all on *.* to jingyaya@"%" identified by "123qqq...A";	
+				
+					2 客户端连接主服务器存储数据
+host50 ~]# mysql -h192.168.4.51 -ujingyaya -p123qqq...A
+mysql> create database bbs;
+mysql> create table bbs.a(id int);
+mysql> insert into bbs.a values(119);
+mysql> insert into bbs.a values(114);
+MySQL>  insert into db3.user(name,uid)values("xdd",0);
+				
+				3 客户端连接从服务器时也可以访问同样的数据
+50]# mysql  -h192.168.4.52 -ujingyaya -p123qqq...A	
+mysql> 	select * from db3.user	 where name="xdd";
+mysql> select * from bbs.a ;
+
+		  统一排错时间
+		  show  slave status \G
+		  Last_SQL_Error: SQL线程的报错信息
+		  Last_IO_Error:  IO线程的报错信息
+
+Last_IO_Error: Fatal error: The slave I/O thread stops because master and slave have equal MySQL server UUIDs; these UUIDs must be different for replication to work.
+host52: systemctl stop mysqld				
+	   
+vim /var/lib/mysql/auto.cnf 
+[auto]
+server-uuid=c62bdcf5-a245-11eb-ab96-52540055a1f7
+   :wq
+   systemctl start mysqld
+   
+   show  slave status；
+   
+   
+ Got fatal error 1236 from master when reading data from binary log: 
+ 'Could not find first log file name in binary log index file'  
+   
+ 在主服务器查看当前使用的binlog日志信息
+ show master  status；
+
+ 在从服务器
+ stop slave ;
+ change master to  master_log_file="查看日志名",master_log_pos=偏移量;
+ start slave ;
+ show slave status \G
+ 
+  Last_IO_Error: error connecting to master 'repluser@192.168.4.51:3306' - retry-time: 60  retries: 1
+  检查主从服务器的防火墙是否关闭
+  在从服务器的命令行测试授权 
+  [root@host52 ~]# mysql -h192.168.4.51 -urepluser -p123qqq...A 能连接是对的
+
