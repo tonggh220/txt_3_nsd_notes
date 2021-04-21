@@ -7,3 +7,59 @@ DAY04  MySQL高可集群（MHA）
 DAY04  MySQL高可集群（PXC）MySQL存储引擎	
 DAY01  MySQL主从同步
 
+############DAY01  MySQL主从同步
+一、MySQL主从同步
+	   1.1 主从同步介绍（他是什么）
+	       存储数据的服务结构。结构中有2种角色，主数据库服务器master 
+												从数据库服务器slave 
+		   能够实现数据的自动备份，从角色数据库服务器 自动同步主角色数据库服务器
+		   的数据存放到本机的数据库里。
+           
+		   被访问的数据库服务器做master ,其他的都做slave 
+  			
+	   1.2 工作过程 (需要掌握)
+	   
+	   1.3 怎么做（配置MySQL主从同步）
+			***没有配置为slave角色之前要保证和主数据库服务器数据一致包括授权用户
+
+	   
+	   
+	       1.3.1 配置mysql一主一从同步结构
+				诉求 51 (master )  52(slave)
+				配置主服务器,具体配置如下：
+						1 启用binlog日志
+						vim /etc/my.cnf
+						    [mysqld]
+						     log_bin=master51
+							 server_id=51
+						:wq
+						systemctl  restart mysqld
+						
+						ls /var/lib/mysql/master51*
+						
+						2 用户授权
+[root@host51 ~]# mysql -uroot -p789...qqqA 
+mysql> grant replication slave on *.*  to repluser@"%" identified by "123qqq...A";
+						
+						3 查看日志信息
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master51.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+						
+				配置从服务器,具体步骤如下：
+					1 指定server_id
+					vim /etc/my.cnf
+					[mysqld]
+                    server_id=52
+				 :wq
+]# systemctl restart mysqld
+
+				    2 指定主服务器信息
+					]# mysql -uroot -p密码 
+mysql> change master to master_host="192.168.4.51" , 
+master_user="repluser" , master_password="123qqq...A" , 
+master_log_file="master51.000001",master_log_pos=441 ;          休息到17:15 
+
