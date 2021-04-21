@@ -99,4 +99,34 @@ mysql -uroot -p789...qqqA
 		  执行文件里记录的命令，但是需要不遍历最后1个日志文件
 		  因为最后一个文件里记录的删除数据delete命令。
     
-	休息11：15 
+DBA1_DAY05  数据查询扩展  50  db3.user 
+	1.复制表
+	   命令格式 create  table 库.表 select 查询 ；
+		1.1  只复制表结构
+	create  table 库.表 select * from 库.表 where  1 = 2 ；
+mysql> create table db4.user4 
+select *  from db3.user where 1 = 2  ;	
+	
+mysql> create table db4.user5 
+select name,uid,shell  from db3.user where 1 = 2  ;	
+	
+		1.2  复制整张表（表结构+数据）
+	create  table 库.表 select * from 库.表；		 
+			 
+creat database  db4;
+create  table   db4.user select  * from   db3.user;
+
+select  count(*) from  db4.user ;
+			 
+mysql> create  table db4.user2 select name,uid from db3.user;
+mysql>select  * from  db4.user2;
+
+mysql> create  table db4.user3 
+select name,uid from db3.user where uid >= 1000;
+
+工作中不可能使用1张表存储所有业务的数据
+		银行都有哪些业务：储蓄业务  贷款业务  理财业务  用户信息 
+														大锤 
+														
+		2 多表查询 
+select   库名.表名.列名 , 库名.表名.列名    from  库名.表名 , 库名.表   where 条件;	
