@@ -268,5 +268,27 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 mysql: [Warning] Using a password on the command line interface can be insecure.
                   Master_Host: 192.168.4.53
 [root@host54 ~]#
+
+ 配置从服务器55 （把55配置为54的slave服务器）
+				#指定server_id
+				#指定主服务器信息
+				#启动进程
+				#查看状态
+[root@host55 ~]# vim /etc/my.cnf
+[root@host55 ~]# systemctl  restart mysqld
+[root@host55 ~]# mysql -uroot -p123qqq...A 
+-e 'change master to master_host="192.168.4.54",master_user="repluser",
+master_password="123qqq...A",master_log_file="master54.000001",master_log_pos=441'
+			 
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'start slave'
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'show slave status \G' | grep -i yes
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@host55 ~]# 
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'show slave status \G' | grep -i 192.168.4.54
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.54
+[root@host55 ~]#	
                 
 
