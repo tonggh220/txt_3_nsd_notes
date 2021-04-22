@@ -227,5 +227,46 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +-----------------+----------+--------------+------------------+-------------------+
 | master53.000001 |      441 |              |                  |                   |
 +-----------------+----------+--------------+------------------+-------------------+
-[root@host53 ~]#                   
+[root@host53 ~]#  
+
+
+ 配置数据服务器54：（因为54既做master服务器又做slave服务器，所以
+					2种角色的配置都要有）
+				    #做主服务器的配置
+					]# vim /etc/my.cnf
+					[mysqld]
+
+					log_bin=master54
+				     server_id=54
+					:wq
+[root@host54 ~]# systemctl  restart mysqld
+[root@host54 ~]# mysql -uroot -p123qqq...A 
+-e 'grant replication slave on *.* to repluser@"%" identified by "123qqq...A"'
+
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master54.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@host54 ~]# 
+
+					#做从服务器的配置
+[root@host54 ~]# mysql -uroot -p123qqq...A 
+-e 'change master to master_host="192.168.4.53",master_user="repluser",
+master_password="123qqq...A",master_log_file="master53.000001",master_log_pos=441'
+
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'start slave'
+					
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'show slave status \G' | grep -i yes
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@host54 ~]# 
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'show slave status \G' | grep -i "master_host"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.53
+[root@host54 ~]#
+                
 
