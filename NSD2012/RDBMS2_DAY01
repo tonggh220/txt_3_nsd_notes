@@ -202,5 +202,30 @@ mysql> flush privileges;
 				 53-->54--->55
 		         主   从   从
 				 
-				 配置master 服务器 53 
+				 配置master 服务器 53
+ #启用binlog日志
+[root@host53 ~]# vim /etc/my.cnf
+			[mysqld]
+			server_id=53
+			log_bin=master53
+			:wq
+[root@host53 ~]# systemctl  restart mysqld
+[root@host53 ~]# ls /var/lib/mysql/master53.*
+/var/lib/mysql/master53.000001
+/var/lib/mysql/master53.index
+[root@host53 ~]#	
+			 
+				 #用户授权
+[root@host53 ~]# mysql -uroot -p789...qqqA 
+-e 'grant replication slave on  *.* to  repluser@"%" identified by "123qqq...A"'
+				 
+				 #查看日志信息
+[root@host53 ~]# mysql -uroot -p789...qqqA -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master53.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@host53 ~]#                   
 
