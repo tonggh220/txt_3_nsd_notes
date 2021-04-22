@@ -314,6 +314,76 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
                              56和57 都启用的binlog日志
 							 
 二、主从同步模式
+	2.1 主从同步结构模式： 一主一从  一主多从  主从从  主主结构
+	2.2 主从同步复制数据模式：
+			异步复制模式（默认）
+					
+			半同步复制模式
+	
+  tmooc网址故障 ，线上同学看不到直播视频了。 要小小休息一下 到 16:50
+  还不能讲课  。。。。。
+  
+    配置半同步功能 192.168.4.50
+	命令安装模块（优点马上 生效） 
+	 #安装master模块
+install  plugin  rpl_semi_sync_master   SONAME   "semisync_master.so";
+  	    
+		 
+		 #安装slave模块
+install  plugin  rpl_semi_sync_slave   SONAME   "semisync_slave.so";
+    
+	    查看模块是否安装	
+mysql> select  plugin_name, plugin_status from  information_schema.plugins;
+
+mysql> select  plugin_name, plugin_status from  information_schema.plugins
+where  plugin_name like "%semi%";
+
+		
+
+
+	
+	命令启用模块（优点马上 生效）
+			#启用master模块
+	mysql> set global rpl_semi_sync_master_enabled = 1 ;
+		
+			
+			#启用slave模块
+	mysql> set global rpl_semi_sync_slave_enabled = 1 ;
+		
+	查看模块是否启用
+show  variables  like  "rpl_semi_sync_%_enabled";
++------------------------------+-------+
+| Variable_name                | Value |
++------------------------------+-------+
+| rpl_semi_sync_master_enabled | ON    |
+| rpl_semi_sync_slave_enabled  | ON    |
++------------------------------+-------+
+2 rows in set (0.00 sec)
+	
+	
+	永久配置 
+	vim /etc/my.cnf
+	[mysqld]
+	#安装模块
+plugin-load = "rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"	
+	#启用模块
+	rpl_semi_sync_slave_enabled = 1
+	rpl_semi_sync_master_enabled =1
+	:wq
+	]# systemctl restart mysqld
+	mysql>
+show  variables  like  "rpl_semi_sync_%_enabled";
++------------------------------+-------+
+| Variable_name                | Value |
++------------------------------+-------+
+| rpl_semi_sync_master_enabled | ON    |
+| rpl_semi_sync_slave_enabled  | ON    |
++------------------------------+-------+	
+
+
+
+
+
 ####RDBMS2_DAY02
 一、数据读写分离
 	1.1 环境准备 (一主一从结构)
