@@ -149,3 +149,17 @@ mysql>
 tcp6       0      0 :::4006                 :::*                    LISTEN      1150/maxscale       
 tcp6       0      0 :::4016                 :::*                    LISTEN      1150/maxscale       
 [root@host57 ~]# 
+
+                    5 测试配置
+			5.1 在57本机访问管理服务查看监控状态
+[root@host57 ~]# maxadmin -uadmin -pmariadb -P4016
+MaxScale> list servers
+MaxScale> list servers
+Servers.
+-------------------+-----------------+-------+-------------+--------------------
+Server             | Address         | Port  | Connections | Status              
+-------------------+-----------------+-------+-------------+--------------------
+server1            | 192.168.4.51    |  3306 |           0 | Master, Running
+server2            | 192.168.4.52    |  3306 |           0 | Slave, Running
+-------------------+-----------------+-------+-------------+--------------------
+MaxScale> 	
