@@ -1,0 +1,56 @@
+#####RDBMS2_DAY03 MySQL分库分表
+购物账户  京东  淘宝
+14亿  网民接近5亿   至少有3亿用户有购物账户  3亿的注册账户会用一张表来存储吗 ？
+
+		一 相关概念？  见PPT
+
+
+		二、配置mycat服务器56，步骤如下：
+			2.1 安装软件
+[root@host56 ~]# yum  -y   install  java-1.8.0-openjdk.x86_64	 安装运行环境包	
+[root@host56 ~]#tar -zxvf Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz
+[root@host56 ~]# mv  mycat /usr/local/
+[root@host56 ~]# ls /usr/local/mycat/
+bin  catlet  conf  lib  logs  version.txt
+[root@host56 ~]# 
+设置PATH变量
+[root@host56 mycat]# vim /etc/bashrc 
+export  PATH=/usr/local/mycat/bin:$PATH  添加在最后1行
+:wq
+[root@host56 mycat]# source /etc/bashrc 
+[root@host56 mycat]# which  mycat
+/usr/local/mycat/bin/mycat
+[root@host56 mycat]# 
+
+		    安装文件说明（背诵）
+bin（命令目录）  catlet  conf（配置文件目录）  lib  logs（日志文件）  version.txt	
+
+		    配置文件说明
+					mycat服务的配置文件 ls /usr/local/mycat/conf/*.xml
+					    schema.xml（指定表使用的分片规则）  
+					    rule.xml(分片规则)   
+					    server.xml （定义用户名密码逻辑库）
+					分片规则的配置文件
+		             ]# ls *.properties   
+					 ]# ls *.txt
+					 
+		    2.2 修改配置文件192.168.4.56
+			注释 <!--     -->
+			xml 扩展标记语言 标签要成对出现  单标签要使用 / 闭合
+			
+			vim  server.xml(使用默认配置)  定义用户 密码  和 逻辑库
+			<user 配置项>
+			      配置项
+			</user>
+]# vim  server.xml			
+<user name="root">
+                <property name="password">123456</property>
+                <property name="schemas">TESTDB</property>
+        </user>
+
+        <user name="user">
+                <property name="password">user</property>
+                <property name="schemas">TESTDB</property>
+                <property name="readOnly">true</property>
+        </user> 			
+:wq
