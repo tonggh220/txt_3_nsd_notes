@@ -62,3 +62,90 @@ monitor_interval=10000
 #user=myuser
 #passwd=mypwd
 #router_options=slave
+
+[Read-Write Service]  定义读写分离服务
+type=service
+router=readwritesplit
+servers=server1,server2  处理读写分离的服务器是server1  server2
+user=mysqlb 路由用户
+passwd=123qqq...A 密码
+max_slave_connections=100%
+
+[MaxAdmin Service]  管理服务 不用做任何修改
+type=service
+router=cli
+
+#[Read-Only Listener]    不需要指定只读服务使用的端口号（因为没有启用只读服务）
+#type=listener
+#service=Read-Only Service
+#protocol=MySQLClient
+#port=4008
+
+[Read-Write Listener]  定义读写分离服务使用的端口
+type=listener
+service=Read-Write Service
+protocol=MySQLClient
+port=4006  端口号
+
+[MaxAdmin Listener] 定义管理服务使用的端口号
+type=listener
+service=MaxAdmin Service
+protocol=maxscaled
+socket=default
+port=4016 端口号
+:wq
+
+			  3 配置数据库服务器52/51（根据配置文件设置配置数据库服务器）
+					
+					
+					#添加mysqla 监控用户（监视server1和server2 连接 使用的用户）
+					#添加mysqlb 路由用户（57检查server2/server1已有授权用户的连接账户）
+					
+只需要在主51服务器添加用户 从服务器52 会自动同步				
+mysql> grant replication client , replication slave  
+on  *.* to mysqla@"%" identified by "123qqq...A";
+
+replication client  获取数据库服务mysqld的状态 （运行的 还是停止的 ）
+replication slave   获取主从角色 （谁是master  谁是 slave）
+
+mysql> grant select  on mysql.* to mysqlb@"%" identified by "123qqq...A";
+
+#在52主机查看用户
+mysql> select user from mysql.user where user in ("mysqla","mysqlb");
++--------+
+| user   |
++--------+
+| mysqla |
+| mysqlb |
++--------+
+2 rows in set (0.00 sec)
+
+mysql> 
+			
+					
+			  4 启动读写服务 (在57主机操作)
+					4.1 测试数据库服务器添加的授权用户mysqla和mysqlb
+[root@host57 ~]# which mysql || yum -y install mariadb					
+[root@host57 ~]# mysql -h192.168.4.51 -umysqla -p123qqq...A
+[root@host57 ~]# mysql -h192.168.4.52 -umysqla -p123qqq...A
+[root@host57 ~]# mysql -h192.168.4.51 -umysqlb -p123qqq...A					
+[root@host57 ~]# mysql -h192.168.4.52 -umysqlb -p123qqq...A	
+
+					4.2 启动服务
+						[root@host57 ~]# maxscale /etc/maxscale.cnf
+
+						#日志文件，如果服务没启动可以查看日志内容获取报错信息
+						[root@host57 ~]# vim /var/log/maxscale/
+						maxscale.log
+						
+			  5 查看服务信息
+					#查看进程
+					[root@host57 ~]# ps -C maxscale
+  PID TTY          TIME CMD
+ 1150 ?        00:00:00 maxscale
+[root@host57 ~]# 
+					#查看服务端口
+[root@host57 ~]# netstat -utnlp  | grep maxscale
+tcp6       0      0 :::4006                 :::*                    LISTEN      1150/maxscale       
+tcp6       0      0 :::4016                 :::*                    LISTEN      1150/maxscale       
+[root@host57 ~]# 
