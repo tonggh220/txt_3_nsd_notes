@@ -162,4 +162,71 @@ Server             | Address         | Port  | Connections | Status
 server1            | 192.168.4.51    |  3306 |           0 | Master, Running
 server2            | 192.168.4.52    |  3306 |           0 | Slave, Running
 -------------------+-----------------+-------+-------------+--------------------
-MaxScale> 	
+MaxScale> exit  退出连接
+
+			5.2  测试配置（验证57主机是否能实现数据的读写分离）
+			     5.2.1 在数据库服务器添加用户，给客户端连接使用）	
+				       #在master 51 添加
+mysql> grant select,insert on db5.*
+    -> to plj@"%" identified by "123qqq...A";
+mysql> create database db5;
+mysql> create table db5.a(id int);
+mysql> select  * from db5.a;
+					 
+					  #在 slave 52 查看是否同步
+mysql> desc db5.a;
++-------+---------+------+-----+---------+-------+
+| Field | Type    | Null | Key | Default | Extra |
++-------+---------+------+-----+---------+-------+
+| id    | int(11) | YES  |     | NULL    |       |
++-------+---------+------+-----+---------+-------+
+1 row in set (0.00 sec)
+
+mysql> select user from mysql.user where user="plj";
++------+
+| user |
++------+
+| plj  |
++------+
+1 row in set (0.00 sec)
+
+mysql> 				   
+		    
+			#连接57主机访问数据
+			host50]# mysql -h192.168.4.57 -P4006  -uplj  -p123qqq...A
+mysql> insert into db5.a values(666); 能存储数据
+mysql> select  * from db5.a ； 能查询数据
+
+            # 测试是否实现了读写分离
+
+			在从服务器本机添加1条记录 
+			mysql> insert into db5.a values(999)
+ 
+[root@host50 ~]# mysql -h192.168.4.57 -P4006 -uplj -p123qqq...A
+mysql> select  * from db5.a;
++------+
+| id   |
++------+
+|  666 |
+|  777 |
++------+
+2 rows in set (0.00 sec)
+
+mysql> 	insert into db5.a vaules(999); (记录被存储在51主机 52 才会同步)   
+
+mysql> insert into db5.a values(999);
+mysql> select  * from db5.a; 可以查看都999的记录
++------+
+| id   |
++------+
+|  666 |
+|  777 |
+|  999 |
++------+
+3 rows in set (0.00 sec)
+
+mysql>
+	   6 统一排查
+
+
+
