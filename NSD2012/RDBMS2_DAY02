@@ -228,5 +228,110 @@ mysql> select  * from db5.a; 可以查看都999的记录
 mysql>
 	   6 统一排查
 
+二、MySQL多实例
+	    在一台物理主机上运行多个MySQL服务（其实就运行多个mysqld进程）
+	
+	  	
+
+    克隆新的虚拟机配置ip地址为192.168.4.58 配置好yum源 
+	
+	安装软件源码的mysql软件
+	]# yum –y  install  libaio  #安装依赖
+    ]# useradd  mysql #添加mysql 用户
+    ]# tar  -zxvf  mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz 解包
+    ]# mv  mysql-5.7.20-linux-glibc2.12-x86_64 /usr/local/mysql  移动安装目录
+    ]# ls  /usr/local/mysql/
+	#把源码软件命令路径添加到系统环境变量PATH,就向使用系统自带的命令一样
+	]# PATH=/usr/local/mysql/bin:$PATH
+    ]# vim /etc/bashrc
+    export  PATH=/usr/local/mysql/bin:$PATH
+   :wq
+   
+    ]# which mysql
+	
+    2 编辑主配置文件，定义多实例
+	]# rm -rf /etc/my.cnf  如果有要删除
+	]# vim  /etc/my.cnf  创建并编辑多实例服务的配置文件
+	   [mysqld_multi]  #多实例服务的运行配置
+	   user = root  
+	   mysqld = /usr/local/mysql/bin/mysqld_safe
+	   mysqladmin = /usr/local/mysql/bin/mysqladmin
+	   
+       [mysqld1]  #定义实例1
+           #数据库目录
+		   #端口号
+		   #错误日志文件
+		   #pid文件
+		   #socket文件
+
+       [mysqld2]  #定义实例2
+       	   #数据库目录
+		   #端口号
+		   #错误日志文件
+		   #pid文件
+		   #socket文件
+]vim /etc/my.cnf
+[mysqld_multi]
+user = root
+mysqld = /usr/local/mysql/bin/mysqld_safe
+mysqladmin = /usr/local/mysql/bin/mysqladmin
+
+[mysqld1]
+datadir=/dir1
+port=3307
+log-error=/dir1/mysqld1.err
+pid-file=/dir1/mysqld1.pid
+socket=/dir1/mysqld1.sock
+
+[mysqld2]
+datadir=/dir2
+port=3308
+log-error=/dir2/mysqld2.err
+pid-file=/dir2/mysqld2.pid
+socket=/dir2/mysqld2.sock
+:wq
+	
+mysql服务自己连接自己的时候，通过socket文件建立连接
+启动mysqld服务时 会自动创建socket文件，停止mysqld服务时，会自动删除文件
+		启动实例
+[root@host58 ~]# mysqld_multi start 1
+
+
+Installing new database in /dir1
+
+2021-04-23T07:41:19.352754Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2021-04-23T07:41:21.242037Z 0 [Warning] InnoDB: New log files created, LSN=45790
+2021-04-23T07:41:21.598045Z 0 [Warning] InnoDB: Creating foreign key constraint system tables.
+2021-04-23T07:41:21.718082Z 0 [Warning] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: 4c533840-a407-11eb-8995-52540013ca5d.
+2021-04-23T07:41:21.741744Z 0 [Warning] Gtid table is not ready to be used. Table 'mysql.gtid_executed' cannot be opened.
+2021-04-23T07:41:21.742409Z 1 [Note] A temporary password is generated for root@localhost: CS.82IrE9iM!
+[root@host58 ~]# ls /dir1
+auto.cnf        ib_logfile0  mysql        mysqld1.sock        sys
+ib_buffer_pool  ib_logfile1  mysqld1.err  mysqld1.sock.lock
+ibdata1         ibtmp1       mysqld1.pid  performance_schema
+[root@host58 ~]# 
+[root@host58 ~]# ss -urntlp  | grep 3307
+tcp    LISTEN     0      80       :::3307                 :::*                   users:(("mysqld",pid=1586,fd=20))
+[root@host58 ~]# 
+		
+[root@host58 ~]# mysql -uroot -p'CS.82IrE9iM!' -S /dir1/mysqld1.sock	 连接实例1
+mysql> alter user user() identified by "654321";
+	
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql> exit；
+[root@host58 ~]# mysql -uroot -p654321 -S /dir1/mysqld1.sock
+MySQL>  休息到 16:02 
+		
+
 
 
