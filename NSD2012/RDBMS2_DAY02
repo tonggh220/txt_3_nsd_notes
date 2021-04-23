@@ -18,12 +18,47 @@
 		3 提供数据读写分离服务的软件（开源）	 
 			mysql-proxy   MyCat  Maxscale
 			
+4 配置数据读写分离服务器
 		
-	1.1 环境准备 (一主一从结构)
-	    保证51(master)和52（slave）的一主一从结构能够正常同步数据
+	      4.1 环境准备 (一主一从结构)
+	          保证51(master)和52（slave）的一主一从结构能够正常同步数据
 	
-	1.2 准备提供读写分离服务主机 57
-        把57 从主主结构摘出来。成为独立的数据库服务器。   	
-		maxscale-2.1.2-1.rhel.7.x86_64.rpm	拷贝给57主机
+	      4.2 准备提供读写分离服务主机 57
+              (把57 从主主结构摘出来。成为独立的数据库服务器)  
+			  具体步骤如下：
+			  1 安装软件
+	[root@host57 ~]# yum -y install maxscale-2.1.2-1.rhel.7.x86_64.rpm 
 
-   1.3 配置读写分离服务器 57 明天讲
+
+              2 修改配置文件（根据环境修改配置）
+			   vim /etc/maxscale.cnf
+			   [maxscale]  服务启动后，开启线程的数据
+               threads=auto
+
+[server1]   定义第1台数据库服务器 
+type=server
+address=192.168.4.51
+port=3306
+protocol=MySQLBackend
+
+[server2]  定义第2台数据库服务器
+type=server
+address=192.168.4.52
+port=3306
+protocol=MySQLBackend
+
+[MySQL Monitor] 监视数据库服务器server1 server2 
+type=monitor
+module=mysqlmon
+servers=server1,server2
+user=mysqla  监控用户
+passwd=123qqq...A 连接密码
+monitor_interval=10000
+
+#[Read-Only Service]  不提供只读服务（要提供的是读写分离服务）
+#type=service
+#router=readconnroute
+#servers=server1
+#user=myuser
+#passwd=mypwd
+#router_options=slave
