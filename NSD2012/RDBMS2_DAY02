@@ -330,7 +330,46 @@ mysql> show databases;
 
 mysql> exit；
 [root@host58 ~]# mysql -uroot -p654321 -S /dir1/mysqld1.sock
-MySQL>  休息到 16:02 
+MySQL> 
+
+停止实例服务
+					]# mysqld_multi  --user=root --password=密码  stop  编号
+					
+[root@host58 ~]# mysqld_multi  --user=root --password=654321 stop 1
+[root@host58 ~]# ss -utnlp  | grep  mysqld
+tcp    LISTEN     0      80       :::3308      :::*     users:(("mysqld",pid=1347,fd=20))
+[root@host58 ~]# 
+[root@host58 ~]# ls /dir1/mysqld1.sock  查看不到socket文件了
+
+[root@host58 ~]# 
+
+			再添加实例使其运行并存储数据
+			在主配置文件里添加如下内容
+			]# vim /etc/my.cnf
+[mysqld3]
+datadir=/dir3
+port=3309
+log-error=/dir3/mysqld3.err
+pid-file=/dir3/mysqld3.pid
+socket=/dir3/mysqld3.sock
+:wq
+[root@host58 ~]# mysqld_multi  start 3
+
+[root@host58 ~]# mysql -uroot -p'lfj&ppD(.4<l'  -S /dir3/mysqld3.sock
+mysql> alter user user() identified by "668899";
+mysql> exit
+[root@host58 ~]# mysql -uroot -p668899 -S /dir3/mysqld3.sock
+
+		实例启动失败的配置步骤：
+				1 检查/etc/my.cnf文件中 实例配置
+				2 pkill -9 mysqld
+				3 rm -rf 实例对应的数据库目录   
+				4 再次执行启动实例的命令  mysqld_multi   start  实例编号
+
+        使用多实例技术存储数据有什么风险！！！！
+
+
+
 		
 
 
