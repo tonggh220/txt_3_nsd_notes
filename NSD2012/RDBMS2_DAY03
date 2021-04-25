@@ -163,3 +163,102 @@ tcp6       0      0 :::8066                 :::*         LISTEN      2666/java
 mycat.log（mycat服务访问日志）  mycat.pid（存pid号）  wrapper.log(错误日志)
 [root@host56 ~]# 
 
+
+三、连接Mycat服务 查看库和表	
+		host50   -h192.168.4.56 -uroot  -p123456
+		select 
+		
+统一拍错时间  
+    方法查看日志 	[root@host56 ~]# vim /usr/local/mycat/logs/wrapper.log 
+
+      检查 schema.xml 
+	  检查 数据库的配置 
+	  检查内存和 主机名 是否设置
+	  
+	  检查jdk版本 (要把多余的版本 rpe -e  --force  卸载)
+[root@host56 ~]# rpm -qa  | grep -i jdk
+java-1.8.0-openjdk-headless-1.8.0.161-2.b14.el7.x86_64
+copy-jdk-configs-3.3-2.el7.noarch
+java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64  正确版本
+[root@host56 ~]# 	  
+	  
+	以上都改对了 重启mycat服务
+	  mycat stop  停止服务
+	  mycat start 启动
+	  mycat status 查状态
+	  nsetstat  -utnlp  | grep  8066 看端口
+    休息到 11:10 上课   	  
+		
+		     3.2  测试配置
+				  #客户端连接mycat服务查看定义的库和表，能够查看到库和表就是成功的
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456				  
+mysql> show databases;
+mysql> use TESTDB;
+mysql> show tables;
+
+		
+		四、分片规则的使用(根据表使用的分片规则建表 并存储数据)
+							
+		4.1 sharding-by-intfile 枚举法 
+给分片字段赋值时，值必须在规则文件定义的值里选择,值会往固定的数据库服务器里存储
+ 
+        查看使用 sharding-by-intfile 枚举法 分片规则，要求表中必须有的表头名
+	vim  rule.xml
+	   <tableRule name="sharding-by-intfile"> 分片规则名
+                <rule>
+                        <columns>sharding_id</columns> 分片字段名
+                        <algorithm>hash-int</algorithm> 算法名
+                </rule>
+        </tableRule>
+		
+		#查看算法
+		<function name="hash-int"
+                class="io.mycat.route.function.PartitionByFileMap"> 调用的java程序
+                <property name="mapFile">partition-hash-int.txt</property> 分片规则配置文件
+        </function>
+
+		#修改分片规则的配置文件，定义分片字段的值
+[root@host56 ~]# vim  /usr/local/mycat/conf/partition-hash-int.txt
+分片表头的值=数据库服务器编号
+10000=0  # 0 对应 dn1 ---> mysql53 -----> 192.168.4.53   db1
+10010=1  # 1 对应 dn2 ---> mysql54 -----> 192.168.4.54   db2
+10020=2  # 2 对应 dn3 ---> mysql55 -----> 192.168.4.55   db3
+:wq
+		 #重启mycat服务 让添加生效
+   339  mycat  stop
+   340  mycat  start
+   341  mycat  status
+		 
+				查看使用枚举分片规则的表，
+			vim /usr/local/mycat/conf/schema.xml	
+ <table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+
+                并根据规则建表
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> use  TESTDB
+create table employee(
+sharding_id int, ID int primary key  auto_increment,
+name char(10),age int , addir char(15));
+
+mysql> desc employee;
++-------------+----------+------+-----+---------+----------------+
+| Field       | Type     | Null | Key | Default | Extra          |
++-------------+----------+------+-----+---------+----------------+
+| sharding_id | int(11)  | YES  |     | NULL    |                |
+| ID          | int(11)  | NO   | PRI | NULL    | auto_increment |
+| name        | char(10) | YES  |     | NULL    |                |
+| age         | int(11)  | YES  |     | NULL    |                |
+| addir       | char(15) | YES  |     | NULL    |                |
++-------------+----------+------+-----+---------+----------------+
+5 rows in set (0.02 sec)
+
+
+
+总结：建表存储数据的思路：
+	  1  通过 rule.xml 文件 确定表中必须要有的表头名
+	  2  确定分片规则使用的算法，来确定分片规则对应的配置文件
+	  3  在配置文件里定义分片字段的值
+	  4  查看使用分片规则的表
+	  5  根据分片规则建表
+
