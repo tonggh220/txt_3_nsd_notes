@@ -262,3 +262,81 @@ mysql> desc employee;
 	  4  查看使用分片规则的表
 	  5  根据分片规则建表
 
+	mod-long 求模法 ：根据 分片字段值 与 设定的数字 求模结果  存储数据
+			1 找出使用mod-long分片规则存储数据时，表中必须创建的表头名称
+			  ]#vim  rule.xml
+              <tableRule name="mod-long">  分片规则名
+                  <rule>
+                        <columns>id</columns>  表头名
+                        <algorithm>mod-long</algorithm>  使用的算法
+                  </rule>
+              </tableRule>		
+			 
+		<function name="mod-long" class="io.mycat.route.function.PartitionByMod">
+                <!-- how many data nodes -->
+                <property name="count">3</property> 与数字3做取余计算（数字就是数据库服务器的台数）
+        </function>
+
+          2 查看使用mod-long分片规则存储数据的表
+		    
+			]# vim schema.xml  (删除了主键和自增长设置)
+<table name="hotnews" dataNode="dn1,dn2,dn3"  rule="mod-long" />
+            :wq
+		  3 修改了配置文件 要重启服务使其生效
+		 [root@host56 ~]# mycat  stop
+Stopping Mycat-server...
+Stopped Mycat-server.
+[root@host56 ~]# mycat  start
+Starting Mycat-server...
+[root@host56 ~]# mycat  status
+Mycat-server is running (3741).
+[root@host56 ~]#    
+	  
+	     4 客户端连接56服务器建表
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> use TESTDB;
+mysql> create table hotnews(id int , 
+title char(10),worker char(10),comment varchar(200));
+         5 存储数据
+mysql>insert into hotnews(id ,title,worker,comment)
+values
+(9,"a","a","AA"),(9,"abc","abc","abc"),(9,"cc","cc","cc"),(9,"dd","dd","dd");
+
+mysql>insert into hotnews(id ,title,worker,comment)
+values
+(11,"a","a","AA"),(11,"abc","abc","abc"),(11,"cc","cc","cc"),(11,"dd","dd","dd");
+		 
+mysql>insert into hotnews(id ,title,worker,comment)
+values
+(10,"a","a","AA"),(10,"abc","abc","abc");
+
+mysql> select  * from  hotnews;
+
+查看表结构 
+[root@host53 ~]# mysql -uroot -p789...qqqA -e 'desc db1.hotnews'
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'desc db2.hotnews'
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'desc db3.hotnews'
+	 
+	 6 在数据库服务器53 54  55 本机查看数据
+       查看数据 每台服务器只存储了部分数据而不是所有行
+[root@host55 ~]# mysql -uroot -p123qqq...A  -e 'select * from  db3.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+--------+---------+
+| id   | title | worker | comment |
++------+-------+--------+---------+
+|   11 | a     | a      | AA      |
+|   11 | abc   | abc    | abc     |
+|   11 | cc    | cc     | cc      |
+|   11 | dd    | dd     | dd      |
++------+-------+--------+---------+
+[root@host54 ~]# mysql -uroot -p123qqq...A  -e 'select * from  db2.hotnews' 
+[root@host53 ~]# mysql -uroot -p123qqq...A  -e 'select * from  db1.hotnews'	
+		
+		 
+		 
+总结：	
+分片规则 是mycat 软件自带的 。要把表中的记录，存储在不同数据库服务器的表里，
+需要指定表使用的分片规则，存储数据时，会根据分片规则的计算结果存储到指定
+的数据库器表里。
+
+
