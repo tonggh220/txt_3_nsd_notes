@@ -54,3 +54,76 @@ bin（命令目录）  catlet  conf（配置文件目录）  lib  logs（日志�
                 <property name="readOnly">true</property>
         </user> 			
 :wq
+
+
+			修改schema.xml  (定义使用分片规则存储数据的表)
+[root@host56 ~]# cp /usr/local/mycat/conf/schema.xml /root/			
+
+[root@host56 ~]# wc -l /usr/local/mycat/conf/schema.xml 
+77 /usr/local/mycat/conf/schema.xml
+			
+[root@host56 ~]# sed -i '56,77d'  /usr/local/mycat/conf/schema.xml	
+
+[root@host56 ~]# vim  /usr/local/mycat/conf/schema.xml	
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema .....>
+	  <schema .....>  定义表名
+			 指定表名
+			<table ...>  </table>  双标签
+	        <table .... /> 单标签
+	  </schema>
+		
+	  <dataNode ....  />  指定数据库服务器的主机名
+
+      <dataHost> 数据库服务器的ip地址
+			.....
+			.....
+      </dataHost>  
+</mycat:schema>
+:wq
+
+<table name="goods" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+
+<table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                        rule="sharding-by-intfile" />
+						   
+<table name="customer" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                        rule="sharding-by-intfile">
+
+
+
+36  <dataNode name="dn1" dataHost="mysql53" database="db1" />
+37  <dataNode name="dn2" dataHost="mysql54" database="db2" />
+38  <dataNode name="dn3" dataHost="mysql55" database="db3" />
+
+<dataHost name="mysql53" maxCon="1000" minCon="10" balance="0"writeType="0" 
+           dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+
+                <heartbeat>select user()</heartbeat>
+				
+                <writeHost host="hostM1" url="192.168.4.53:3306" user="pljadmin"
+                                   password="123qqq...A">
+                </writeHost>
+</dataHost>
+
+<dataHost name="mysql54" maxCon="1000" minCon="10" balance="0"writeType="0" 
+           dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+
+                <heartbeat>select user()</heartbeat>
+				
+                <writeHost host="hostM2" url="192.168.4.54:3306" user="pljadmin"
+                                   password="123qqq...A">
+                </writeHost>
+</dataHost>
+
+<dataHost name="mysql55" maxCon="1000" minCon="10" balance="0"writeType="0" 
+           dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+
+                <heartbeat>select user()</heartbeat>
+				
+                <writeHost host="hostM3" url="192.168.4.55:3306" user="pljadmin"
+                                   password="123qqq...A">
+                </writeHost>
+</dataHost>
+:wq
