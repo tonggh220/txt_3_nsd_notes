@@ -339,4 +339,58 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 需要指定表使用的分片规则，存储数据时，会根据分片规则的计算结果存储到指定
 的数据库器表里。
 
+五、添加新库新表
+				5.1 添加新库GAMEDB
+				 vim server.xml
+        <user name="root">
+                <property name="password">123456</property>
+                <property name="schemas">TESTDB,GAMEDB</property>
+        </user>
+
+        <user name="user">
+                <property name="password">user</property>
+                <property name="schemas">TESTDB,GAMEDB</property>
+                <property name="readOnly">true</property>
+        </user>
+				:wq
+				
+				5.2 添加表 (表名自定义 但必须唯一)
+		vim  schema.xml
+		在原有<schema> 标签上方添加如下行
+		
+<schema name="GAMEDB" checkSQLschema="false" sqlMaxLimit="100">
+     <table name="user" dataNode="dn1,dn2,dn3" rule="mod-long" />
+     <table name="reg" dataNode="dn1,dn2,dn3" type="global" />
+</schema>
+		:wq
+			
+				5.3 重启mycat 服务
+[root@host56 ~]# mycat stop 				
+[root@host56 ~]# mycat start
+Starting Mycat-server...
+[root@host56 ~]# mycat status
+Mycat-server is running (4031).
+[root@host56 ~]# 
+				
+				5.4 连接mycat服务 查看新库新表
+[root@host50 ~]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| GAMEDB   |
+| TESTDB   |
++----------+
+2 rows in set (0.00 sec)
+
+mysql> use GAMEDB;
+mysql> show tables;
++------------------+
+| Tables in GAMEDB |
++------------------+
+| reg              |
+| user             |
++------------------+
+2 rows in set (0.00 sec)
+
 
