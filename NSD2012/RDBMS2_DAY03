@@ -127,3 +127,39 @@ bin（命令目录）  catlet  conf（配置文件目录）  lib  logs（日志�
                 </writeHost>
 </dataHost>
 :wq
+
+			2.3 配置3台数据库服务器
+				  #创建存储数据的库  
+				  #添加对应的授权用户
+[root@host53 ~]# mysql -uroot -p789...qqqA -e 'create database db1'				  
+[root@host53 ~]# mysql -uroot -p789...qqqA -e 
+'grant all on *.* to pljadmin@"%" identified by "123qqq...A"'
+				  
+[root@host54 ~]# mysql -uroot -p789...qqqA -e 'create database db2'				  
+[root@host54 ~]# mysql -uroot -p789...qqqA -e 
+'grant all on *.* to pljadmin@"%" identified by "123qqq...A"'
+			
+[root@host55 ~]# mysql -uroot -p789...qqqA -e 'create database db3'				  
+[root@host55 ~]# mysql -uroot -p789...qqqA -e 
+'grant all on *.* to pljadmin@"%" identified by "123qqq...A"'
+
+			2.4 启动56主机mycat服务
+				把主机内存调到2G
+				hostname mycat56
+				
+[root@host56 ~]# mycat start
+Starting Mycat-server...
+[root@host56 ~]# 		
+		
+			
+			2.5 查看服务状态
+[root@host56 ~]# mycat status
+Mycat-server is running (2664).
+[root@host56 ~]# 
+[root@host56 ~]# netstat  -utnlp  | grep  8066
+tcp6       0      0 :::8066                 :::*         LISTEN      2666/java           
+[root@host56 ~]# 
+[root@host56 ~]# ls /usr/local/mycat/logs/
+mycat.log（mycat服务访问日志）  mycat.pid（存pid号）  wrapper.log(错误日志)
+[root@host56 ~]# 
+
