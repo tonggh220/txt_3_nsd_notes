@@ -1,0 +1,132 @@
+#####RDBMS2_DAY04 MySQL_MHA集群
+		知识回顾：
+		集群介绍：多台服务器通过网络连接在一起提供相同的服务
+		
+		集群分类： 
+		    LB 负载均衡集群： 多台服务器一起分摊客户端的访问
+   				
+			HA 高可用集群： 主备模式，主坏掉了 备用服务器自动接替主提供服务 
+			
+			HPC高性能计算集群  多台服务器一起提供计算服务，应用的专业领域
+			
+		LB 负载均衡集群 软件有那些？LVS  Haproxy  Nginx
+        HA 高可用集群  软件有那些？ keepalived Nginx
+
+使用MHA软件配置MySQL服务的高可用集群 （MHA集群）		
+	   1  相关观念（见PPT）
+       2  准备实验用的虚拟机 （见ppt ）
+	   
+	      50 客户端 有mysql命令即可
+		  新的数据库服务器 51 52  53  
+		  57 管理主机  （把之前实验的服务关闭即可）
+		  VIP地址  192.168.4.100
+具体步骤如下：		  
+		一、环境准备
+		1.1 安装依赖的软件(  51 52 53 57 )
+			#系统光盘有的依赖根据提示安装
+			#安装系统光盘没有的perl软件包
+			]# cd mha-soft-student
+			]# yum -y install perl-*.rpm
+		
+		1.2 配置SSH免密登录
+			1.2.1 数据库服务器51 52 53 之间彼此免密登录
+[root@host51 ~]# ssh-keygen
+[root@host51 ~]# ssh-copy-id  root@192.168.4.52
+[root@host51 ~]# ssh-copy-id  root@192.168.4.53	
+[root@host51 ~]# ssh root@192.168.4.52
+[root@host51 ~]# ssh root@192.168.4.53
+
+[root@host52 ~]# ssh-keygen
+[root@host52 ~]# ssh-copy-id  root@192.168.4.51
+[root@host52 ~]# ssh-copy-id  root@192.168.4.53	
+[root@host52 ~]# ssh root@192.168.4.51
+[root@host52 ~]# ssh root@192.168.4.53
+
+[root@host53 ~]# ssh-keygen
+[root@host53 ~]# ssh-copy-id  root@192.168.4.51
+[root@host53 ~]# ssh-copy-id  root@192.168.4.52	
+[root@host53 ~]# ssh root@192.168.4.51
+[root@host53 ~]# ssh root@192.168.4.52	
+	
+			1.2.2 管理主机57可以SSH免密登录51 52 53
+[root@host57 ~]# ssh-keygen
+[root@host57 ~]# ssh-copy-id  root@192.168.4.51
+[root@host57 ~]# ssh-copy-id  root@192.168.4.52
+[root@host57 ~]# ssh-copy-id  root@192.168.4.53	
+[root@host57 ~]# ssh root@192.168.4.51
+[root@host57 ~]# ssh root@192.168.4.52
+[root@host57 ~]# ssh root@192.168.4.53
+
+	1.3 数据库服务器的公共配置（51 52 53）	
+         1.3.1  都要启用binlog日志文件
+		 1.3.2  都要授权同步数据的连接账户
+		 1.3.3  都要启用半同步复制模式
+		 1.3.4  都禁止删除本机的中级日志文件
+[root@host51 ~]# vim /etc/my.cnf
+[mysqld]
+log_bin=master51
+server_id=51
+
+relay_log_purge=0		 
+plugin-load = "rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+
+rpl_semi_sync_slave_enabled = 1
+rpl_semi_sync_master_enabled =1
+:wq
+
+[root@host51 ~]# systemctl restart mysqld
+
+[root@host51 ~]# mysql -uroot -p789...qqqA 
+-e 'grant replication slave on *.*  to  repluser@"%" identified by "123qqq...A"'
+
+		 
+[root@host52 ~]# vim /etc/my.cnf
+[mysqld]
+log_bin=master52
+server_id=52
+
+relay_log_purge=0		 
+plugin-load = "rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+
+rpl_semi_sync_slave_enabled = 1
+rpl_semi_sync_master_enabled =1
+:wq
+
+[root@host52 ~]# systemctl restart mysqld
+
+[root@host52 ~]# mysql -uroot -p789...qqqA 
+-e 'grant replication slave on *.*  to  repluser@"%" identified by "123qqq...A"'		 
+
+
+[root@host53 ~]# vim /etc/my.cnf
+[mysqld]
+log_bin=master53
+server_id=53
+
+relay_log_purge=0
+		 
+plugin-load = "rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+
+rpl_semi_sync_slave_enabled = 1
+rpl_semi_sync_master_enabled =1
+:wq
+
+[root@host53 ~]# systemctl restart mysqld
+
+[root@host53 ~]# mysql -uroot -p789...qqqA 
+-e 'grant replication slave on *.*  to  repluser@"%" identified by "123qqq...A"'
+
+	1.4 配置1主2从同步结构
+			 1.4.1 把51 配置为 master 服务器
+			 
+			 1.4.2 把 53 和 53 分别配置为 51 的slave 服务器 
+			 
+	启动 数据库服务完全的顺序  先启动51的系统  再 启动 52 和 53 的系统 
+	系统都启动后， 保证52 和 53  slave 正常 
+	
+		二、配置管理主机
+		三、配置数据库服务器
+		四、测试配置
+		五、启动管理服务
+		六、测试集群
+		七、修复宕机的服务器
