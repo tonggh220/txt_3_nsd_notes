@@ -393,4 +393,68 @@ mysql> show tables;
 +------------------+
 2 rows in set (0.00 sec)
 
+5.5 建表并存储数据
+mysql> use GAMEDB;
+mysql> create table reg( name char(5), password char(6));
+mysql>  insert into reg values("a","123"),("b","123");
+
+mysql> create table user( id  int , name char(5) , addr char(10));
+mysql> insert into user(id ,name,addr) 
+values(11,"a","bj"),(12,"b","sh"),(13,"c","gz");
+			
+				5.6 在数据库服务器本机查看数据
+[root@host53 ~]# mysql -uroot -p789...qqqA -e 'select * from  db1.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+------+
+| id   | name | addr |
++------+------+------+
+|   12 | b    | sh   |
++------+------+------+
+[root@host53 ~]#
+
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'select  * from  db2.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+------+
+| id   | name | addr |
++------+------+------+
+|   13 | c    | gz   |
++------+------+------+
+[root@host54 ~]# 
+
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+------+------+
+| id   | name | addr |
++------+------+------+
+|   11 | a    | bj   |
++------+------+------+
+[root@host55 ~]#
+				
+[root@host53 ~]# mysql -uroot -p789...qqqA -e 'select * from  db1.reg'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+----------+
+| name | password |
++------+----------+
+| a    | 123      |
+| b    | 123      |
++------+----------+
+
+[root@host54 ~]# mysql -uroot -p789...qqqA -e 'select * from  db2.reg'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+----------+
+| name | password |
++------+----------+
+| a    | 123      |
+| b    | 123      |
++------+----------+
+[root@host53 ~]# 
+[root@host55 ~]# mysql -uroot -p789...qqqA -e 'select * from  db3.reg'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+----------+
+| name | password |
++------+----------+
+| a    | 123      |
+| b    | 123      |
++------+----------+
+[root@host53 ~]# 
+
 
