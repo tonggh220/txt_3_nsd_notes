@@ -223,11 +223,86 @@ port=3306
 candidate_master=1
 :wq
 
+			
+			2.3 创建故障切换脚本并指定vip地址
+]# cp mha-soft-student/master_ip_failover  /etc/mha/
+]# vim +35 
+my $vip = '192.168.4.100/24';  # Virtual IP 
+my $key = "1";
+my $ssh_start_vip = "/sbin/ifconfig eth0:$key $vip";
+my $ssh_stop_vip = "/sbin/ifconfig eth0:$key down";
+:wq
+[root@host57 ~]# chmod +x  /etc/mha/master_ip_failover 	
+	
+			2.4 把vip地址配置在当前的主数据库服务器51主机上
+[root@host51 ~]# which ifconfig 
+/usr/sbin/ifconfig
+[root@host51 ~]# rpm -qf /usr/sbin/ifconfig 
+net-tools-2.0-0.22.20131004git.el7.x86_64
+[root@host51 ~]# 
+[root@host51 ~]# ifconfig  eth0:1 192.168.4.100  命令行配置的ip 
+[root@host51 ~]# ifconfig  eth0:1 | head -2 查看
+eth0:1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.4.100  netmask 255.255.255.0  broadcast 192.168.4.255
+
+[root@host51 ~]# ifconfig  eth0 | head -2   配置文件里定义的ip地址
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.4.51  netmask 255.255.255.0  broadcast 192.168.4.255
+[root@host51 ~]# 				 
+				
+		三、配置数据库服务器（根据管理主机的主配置文件的设置 ，做具体的配置）
+			3.1  3台数据库服务器 都要有repluser 用户 和plj用户
+		
+		     #在51主机添加监控用户plj  2台从53 52 会自动同步
+[root@host51 ~]# mysql -uroot -p789...qqqA -e 
+'grant all on *.* to plj@"%" identified by "123qqq...A"'
+
+[root@host51 ~]# mysql -uroot -p789...qqqA -e 'select user from mysql.user where user in  ("plj","repluser")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| user     |
++----------+
+| plj      |
+| repluser |
++----------+
+[root@host51 ~]#
+			 
+			 #3台数据库服务器检查是否有repluser 和 plj
+[root@host53 ~]# mysql -uroot -p789...qqqA -e 'select user from mysql.user where user in ("plj","repluser")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| user     |
++----------+
+| plj      |
+| repluser |
++----------+
+[root@host53 ~]#
+[root@host52 ~]# mysql -uroot -p789...qqqA -e 'select user from mysql.user where user in ("plj","repluser")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------+
+| user     |
++----------+
+| plj      |
+| repluser |
++----------+
+[root@host52 ~]#	
+
+			 3.2 在3台数据库服务器 安装 mha_node 软件
+[root@host51 ~]# cd mha-soft-student/	
+]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm	
+
+[root@host52 ~]# cd mha-soft-student/	
+]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+
+[root@host53 ~]# cd mha-soft-student/	
+]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm
+
+		四、测试配置 （192.168.4.57）
+			4.1 测试ssh配置
+[root@host57 ~]# masterha_check_ssh --conf=/etc/mha/app1.cnf
+Mon Apr 26 10:54:15 2021 - [info] All SSH connection tests passed successfully.
 
 	
-		二、配置管理主机
-		三、配置数据库服务器
-		四、测试配置
-		五、启动管理服务
-		六、测试集群
-		七、修复宕机的服务器
+			4.2 测试主从配置 （*** 出现在app1.cnf文件里ip地址的主机之间必须是主从关系）
+[root@host57 ~]# masterha_check_repl --conf=/etc/mha/app1.cnf	
+MySQL Replication Health is OK.
