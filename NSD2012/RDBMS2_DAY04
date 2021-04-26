@@ -434,3 +434,19 @@ app1 (pid:5563) is running(0:PING_OK), master:192.168.4.52
 | xxhh |
 +------+
 [root@host50 ~]# 
+
+		七、修复宕机的服务器 
+			7.1  配置数据库服务器51
+				 启动mysqld服务 systemctl  start mysqld
+			     确保与52数据一致（使用innobackupex完全备份完全恢复）
+			     配置为当前主52的slave
+mysql> change master to 
+    master_host="192.168.4.52",master_user="repluser",
+    master_password="123qqq...A",
+	master_log_file="master52.000001",master_log_pos=696;
+# 日志名和偏移量要在52 本机查看当前正在使用的
+
+mysql> start slave ;
+mysql> show slave status \G 查看从的状态信息
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes				 
