@@ -470,4 +470,68 @@ mysql> change master to
 mysql>start slave ;
 mysql> show slave status \G 查看从的状态信息
             Slave_IO_Running: Yes
-            Slave_SQL_Running: Yes						 
+            Slave_SQL_Running: Yes	
+
+
+7.2  配置管理主机57
+				 7.2.1  把51主机添加进 app1.cnf文件
+[root@host57 ~]# vim /etc/mha/app1.cnf 
+				 
+[server1]
+hostname=192.168.4.51
+port=3306
+candidate_master=1
+：wq
+	
+	
+				 7.2.2  测试ssh 和 主从 
+[root@host57 ~]# masterha_check_ssh --conf=/etc/mha/app1.cnf				 
+Mon Apr 26 16:19:53 2021 - [info] All SSH connection tests passed successfully.
+
+[root@host57 ~]# masterha_check_repl --conf=/etc/mha/app1.cnf
+MySQL Replication Health is OK.
+				 
+				 
+				 7.2.3 重启管理服务
+[root@host57 ~]# jobs
+[1]+  运行中   nohup masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf --ignore_last_failover &
+[root@host57 ~]# 
+[root@host57 ~]# kill -9 %1
+[root@host57 ~]# 
+[1]+  已杀死     nohup masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf --ignore_last_failover
+[root@host57 ~]# 
+
+[root@host57 ~]# nohup  masterha_manager --conf=/etc/mha/app1.cnf  --remove_dead_master_conf --ignore_last_failover &
+[root@host57 ~]# jobs
+[1]+  运行中  nohup masterha_manager --conf=/etc/mha/app1.cnf --remove_dead_master_conf --ignore_last_failover &
+[root@host57 ~]# 
+[root@host57 ~]# masterha_check_status  --conf=/etc/mha/app1.cnf
+app1 (pid:7968) is running(0:PING_OK), master:192.168.4.52
+[root@host57 ~]# 				 
+				 7.2.4 测试 （当前52 坏掉  51 和 53 都有可能成为新的主服务器）
+[root@host50 ~]# mysql -h192.168.4.100 -uyaya99 -p123qqq...A 
+-e 'insert into bbsdb.user  values("plj")'
+
+[root@host52 ~]# systemctl  stop mysqld 停止52 的服务
+
+#50 主机Ping   192.168.4.100
+[root@host50 ~]# ping  192.168.4.100
+PING 192.168.4.100 (192.168.4.100) 56(84) bytes of data.
+64 bytes from 192.168.4.100: icmp_seq=1 ttl=255 time=0.248 ms
+64 bytes from 192.168.4.100: icmp_seq=2 ttl=255 time=0.391 ms
+
+[root@host50 ~]# mysql -h192.168.4.100 -uyaya99 -p123qqq...A 
+-e 'insert into bbsdb.user  values("yaya")'
+			
+[root@host50 ~]# mysql -h192.168.4.100 -uyaya99 -p123qqq...A -e 
+'select  * from bbsdb.user  where  user="yaya"'
+		
+[root@host51 ~]# ip a s | grep 192
+    inet 192.168.4.51/24 brd 192.168.4.255 scope global noprefixroute eth0
+    inet 192.168.4.100/24 brd 192.168.4.255 scope global secondary eth0:1
+[root@host51 ~]# 
+		
+[root@host53 ~]# mysql -uroot -p789...qqqA -e 'show  slave status \G' | grep -i "master_host"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.51
+[root@host53 ~]# 						 
