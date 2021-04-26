@@ -306,3 +306,25 @@ Mon Apr 26 10:54:15 2021 - [info] All SSH connection tests passed successfully.
 			4.2 测试主从配置 （*** 出现在app1.cnf文件里ip地址的主机之间必须是主从关系）
 [root@host57 ~]# masterha_check_repl --conf=/etc/mha/app1.cnf	
 MySQL Replication Health is OK.
+
+
+五、启动管理服务
+[root@host57 ~]# masterha_manager --conf=/etc/mha/app1.cnf
+Mon Apr 26 11:19:01 2021 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
+Mon Apr 26 11:19:01 2021 - [info] Reading application default configuration from /etc/mha/app1.cnf..
+Mon Apr 26 11:19:01 2021 - [info] Reading server configuration from /etc/mha/app1.cnf..
+	
+	
+	
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf
+app1 (pid:4113) is running(0:PING_OK), master:192.168.4.51
+[root@host57 ~]#
+[root@host51 mha-soft-student]# ip addr show | grep  192
+    inet 192.168.4.51/24 brd 192.168.4.255 scope global noprefixroute eth0
+    inet 192.168.4.100/24 brd 192.168.4.255 scope global secondary eth0:1
+
+停止管理服务的命令
+[root@host57 ~]# masterha_stop  --conf=/etc/mha/app1.cnf
+[root@host57 ~]# masterha_check_status --conf=/etc/mha/app1.cnf
+app1 is stopped(2:NOT_RUNNING).
+[root@host57 ~]# 
