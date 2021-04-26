@@ -194,7 +194,18 @@ Writing MYMETA.yml and MYMETA.json
 [server default]
 manager_workdir=/etc/mha
 manager_log=/etc/mha/manager.log
+master_ip_failover_script=/etc/mha/master_ip_failover  指定故障切换脚本
+#ssh配置
+ssh_user=root
+ssh_port=22
 
+#slave服务器 连接 mater 主机拷贝sql命令时的连接用户
+repl_user=repluser
+repl_password=123qqq...A
+
+#监控数据库服务器时连接数据库服务器的用户
+user=plj
+password=123qqq...A
 
 [server1]
 hostname=192.168.4.51
