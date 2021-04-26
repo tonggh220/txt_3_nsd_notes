@@ -435,18 +435,39 @@ app1 (pid:5563) is running(0:PING_OK), master:192.168.4.52
 +------+
 [root@host50 ~]# 
 
-		七、修复宕机的服务器 
+七、修复宕机的服务器 
 			7.1  配置数据库服务器51
 				 启动mysqld服务 systemctl  start mysqld
 			     确保与52数据一致（使用innobackupex完全备份完全恢复）
+						#在52主机使用innobackupex完全备份
+  352  yum -y install libev-4.15-1.el6.rf.x86_64.rpm
+  353  yum -y install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+  354  innobackupex -u root -p 789...qqqA /allbak --no-timestamp
+  355  scp -r /allbak/  root@192.168.4.51:/root/ #把备份文件拷贝给51 
+					
+						#在51主机执行完全恢复
+   352  yum -y install libev-4.15-1.el6.rf.x86_64.rpm
+   353  yum -y install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 				 
+   535  systemctl  stop mysqld
+  536  rm -rf /var/lib/mysql/*
+  537  innobackupex --apply-log allbak/
+  538  innobackupex --copy-backl allbak/
+  539  innobackupex --copy-back allbak/
+  540  chown  -R mysql:mysql /var/lib/mysql
+  541  systemctl  start mysqld
+  542  mysql -uroot -p789...qqqA
+
+				 
 			     配置为当前主52的slave
+[root@host51 ~]# grep -i master52 allbak/xtrabackup_info 
+binlog_pos = filename 'master52.000001', position '696'  备份完成后对应日志名和便宜量
+[root@host51 ~]# 				 
+				 
 mysql> change master to 
     master_host="192.168.4.52",master_user="repluser",
     master_password="123qqq...A",
 	master_log_file="master52.000001",master_log_pos=696;
-# 日志名和偏移量要在52 本机查看当前正在使用的
-
-mysql> start slave ;
+mysql>start slave ;
 mysql> show slave status \G 查看从的状态信息
             Slave_IO_Running: Yes
-            Slave_SQL_Running: Yes				 
+            Slave_SQL_Running: Yes						 
