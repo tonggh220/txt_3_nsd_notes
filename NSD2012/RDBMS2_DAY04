@@ -115,14 +115,104 @@ rpl_semi_sync_master_enabled =1
 
 [root@host53 ~]# mysql -uroot -p789...qqqA 
 -e 'grant replication slave on *.*  to  repluser@"%" identified by "123qqq...A"'
+1.4 配置1主2从同步结构
+			 1.4.1 把51 配置为 master 服务器,具体配置如下：
+					启用binlog日志  用户授权repluser 查看日志信息
+[root@host51 ~]# mysql -uroot -p789...qqqA -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master51.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@host51 ~]# 					
+					
+			 
+			 1.4.2 把 52 和 53 分别配置为 51 的slave 服务器 
+					配置52主机 （指定server_id）
+mysql> change master to  master_host="192.168.4.51",
+master_user="repluser",master_password="123qqq...A",
+master_log_file="master51.000001",master_log_pos=441;
+					
+mysql> start slave ;
+Query OK, 0 rows affected (0.03 sec)
 
-	1.4 配置1主2从同步结构
-			 1.4.1 把51 配置为 master 服务器
-			 
-			 1.4.2 把 53 和 53 分别配置为 51 的slave 服务器 
-			 
-	启动 数据库服务完全的顺序  先启动51的系统  再 启动 52 和 53 的系统 
-	系统都启动后， 保证52 和 53  slave 正常 
+mysql> show slave status \G
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+					
+					配置53主机 （指定server_id）
+mysql> change master to  master_host="192.168.4.51",
+master_user="repluser",master_password="123qqq...A",
+master_log_file="master51.000001",master_log_pos=441;
+					
+mysql> start slave ;
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> show slave status \G
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes			 
+
+		二、配置管理主机 192.168.4.57
+			2.1 安装软件
+[root@host57 ~]# cd mha-soft-student/
+]# yum -y install mha4mysql-node-0.56-0.el6.noarch.rpm   安装依赖
+]# yum -y install perl-ExtUtils-*	perl-CPAN*   安装依赖
+]#tar -zxvf mha4mysql-manager-0.56.tar.gz  解包
+]#cd mha4mysql-manager-0.56/
+]# perl Makefile.PL   配置
+*** Module::AutoInstall version 1.03
+*** Checking for Perl dependencies...
+[Core Features]                          配置的正确输出信息
+- DBI                   ...loaded. (1.627)
+- DBD::mysql            ...loaded. (4.023)
+- Time::HiRes           ...loaded. (1.9725)
+- Config::Tiny          ...loaded. (2.14)
+- Log::Dispatch         ...loaded. (2.41)
+- Parallel::ForkManager ...loaded. (1.18)
+- MHA::NodeConst        ...loaded. (0.56)
+*** Module::AutoInstall configuration finished.
+Writing Makefile for mha4mysql::manager
+Writing MYMETA.yml and MYMETA.json
+[root@host57 mha4mysql-manager-0.56]# 
+[root@host57 mha4mysql-manager-0.56]# make && make install 	 编译并安装
+
+	
+			2.2 创建并修改主配置文件
+				]# mkdir  /etc/mha    存放与管理服务相关文件
+				
+]# cp mha4mysql-manager-0.56/samples/conf/app1.cnf  /etc/mha/
+]# vim /etc/mha/app1.cnf
+[server default]  # 管理服务的配置
+
+[server数字] 定义被管理的数据库服务器 有几台数据库服务器就要指定几个[server]
+
+:wq
+
+]# vim /etc/mha/app1.cnf
+[server default]
+manager_workdir=/etc/mha
+manager_log=/etc/mha/manager.log
+
+
+[server1]
+hostname=192.168.4.51
+port=3306
+candidate_master=1
+
+[server2]
+hostname=192.168.4.52
+port=3306
+candidate_master=1
+
+[server3]
+hostname=192.168.4.53
+port=3306
+candidate_master=1
+:wq
+
+
 	
 		二、配置管理主机
 		三、配置数据库服务器
