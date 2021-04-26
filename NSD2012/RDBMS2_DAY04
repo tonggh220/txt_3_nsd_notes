@@ -451,7 +451,7 @@ app1 (pid:5563) is running(0:PING_OK), master:192.168.4.52
    535  systemctl  stop mysqld
   536  rm -rf /var/lib/mysql/*
   537  innobackupex --apply-log allbak/
-  538  innobackupex --copy-backl allbak/
+
   539  innobackupex --copy-back allbak/
   540  chown  -R mysql:mysql /var/lib/mysql
   541  systemctl  start mysqld
