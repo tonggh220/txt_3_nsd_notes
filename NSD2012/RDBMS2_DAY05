@@ -426,7 +426,124 @@ mysql> create table db4.t7( name char(5) )engine=memory;
 /var/lib/mysql/db4/t7.frm
 [root@host50 ~]#
 
+	常用存储引擎特点介绍
+		myisam存储引擎特点：
+			每张有3个文件：
+			      表名.frm  desc 表名; 
+				 
+				  表名.MYI  存放index信息 
+				  
+				  表名.MYD  select * from 表名
+			 
+			 支持表级锁：无论访问的是表里1行还是多行都会把1张表锁上
+			 
+			 不支持事务、事务回滚、外键foreigin key
+			 
+		innodb存储引擎特点：
+			每张有3个文件： 
+			     表名.frm  desc 表名; 
+				 表名.ibd  index+select
+				 
+			支持行级锁：仅仅对被访问的行分别加锁 
+			
+			支持事务、事务回滚、外键foreigin key
 
+		锁：解决并发访问数据库写操作的冲突问题
+		
+		14：11
+		client1   ----> 50  update  db3.user set name="bob" id=1;
+							
+		client2   ----> 50  update  db3.user set name="tom" id=1;
+
+		加上锁后，锁没有释放期间不允许对表做访问。当前访问完成后，会
+		自动释放锁。其他客户端的访问才被允许。
+		
+		
+		锁类型：根据访问数据的操作类型加锁
+		        操作类型：查询数据select  存储数据insert update  delete
+		
+		读锁(共享锁) 对表做查询访问时，给表的加的是读锁
+			 select * from  db4.user where id <= 5 ; 
+		     select * from  db4.user where id >= 3  ;
+			 
+		**加了读锁的表，只处理再来的访问里的查询访问。
+		
+		
+		写锁（排它锁或互斥锁） 对表做写访问时，给表的加的是写锁
+		     update  db4.user set  age=19 where id <=3；
+		**加了写锁的表， 在写锁没有释放之前，不允许做任何访问
+		
+		****表使用的存储引擎决定了表加锁的范围。
+		
+		事务：连接服务器后         到断开连接之前，执行操作称为事务
+		
+		事务回滚 : 在事务没有完成的情况下可以回滚操作。
+		
+		innodb存储引擎的表有事务日志文件记录操作。所有可以做事务回滚。
+		
+		事务日志文件是首次启动mysqld的时候就自动创建的。ib_logfile0
+														ib_logfile1
+		
+		事务特性：ACID
+
+连接1  :
+mysql -uroot -p密码
+mysql> create table db4.t31(id int)engine=innodb;
+mysql> set autocommit=0;
+mysql> show variables like "autocommit"; 
+
+连接2  :   
+mysql -uroot -p密码
+mysql> show variables like "autocommit"; 		
+	
+连接1  :	
+insert into db4.t30 values(666);
+insert into db4.t30 values(677);
+select  * from db4.t30; 自己可以看到
+
+
+连接2  : 	
+select  * from db4.t30;		看不到
+
+连接1  :
+commit; 提交
+
+连接2  : 	
+select  * from db4.t30;		可以看到了
+
+
+连接1  :
+delete  from  db4.30 where id=666;
+select  * from db4.t30;	  666的记录没有了 
+
+连接2  : 	
+select  * from db4.t30;		依然可以看到666记录
+
+连接1  :
+commit; 提交完成
+
+连接2  : 	
+select  * from db4.t30;		也看不到666记录了
+
+连接1  :
+mysql> delete from db4.t30;
+mysql> insert into db4.t30 values(999);
+mysql> update db4.t30 set id=0;
+mysql> select  * from db4.t30;
+
+连接2  : 	
+select  * from db4.t30;	 没有影响，依然是原先的数据
+
+连接1  :
+rollback;  回滚 还原了所有的操作
+select  * from db4.t30; 数据还原到 删除之前的状态
+
+
+
+     思考：建表是如何决定表使用那种存储引擎。
+	 select 查询访问多的表，适合使用myisam存储引擎?节省硬件资源
+	 
+	 insert/update/delete写访问多的表，适合使用innodb存储引擎? 并发访问量大
 
 
 +++++++++++++++++++++++++++++++++++++++++
