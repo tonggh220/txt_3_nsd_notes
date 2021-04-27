@@ -105,6 +105,198 @@ wsrep_node_address=192.168.4.73
 wsrep_node_name=pxc-cluster-node-73
 
 
+1.5数据库服务初始化（在任何1台数据库服务器都可以执行，但只需要执行一次）
+		   统一在71主机执行初始化操作
+[root@node71 ~]# systemctl  start mysql@bootstrap.service
+[root@node71 ~]# ls /var/lib/mysql
+auto.cnf         ibdata1            node71-bin.000002
+ca-key.pem       ib_logfile0        node71-bin.index
+ca.pem           ib_logfile1        performance_schema
+client-cert.pem  ibtmp1             private_key.pem
+client-key.pem   mysql              public_key.pem
+galera.cache     mysqld_safe.pid    server-cert.pem
+grastate.dat     mysql.sock         server-key.pem
+gvwstate.dat     mysql.sock.lock    sys
+ib_buffer_pool   node71-bin.000001  xb_doublewrite
+[root@node71 ~]# 
+[root@node71 ~]# netstat  -utnlp  | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      5944/mysqld         
+[root@node71 ~]# 
+[root@node71 ~]# netstat  -utnlp  | grep 4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      5944/mysqld         
+[root@node71 ~]# 	
+
+[root@node71 ~]# grep password /var/log/mysqld.log  查看日志找随机密码
+2021-04-27T01:16:45.433065Z 1 [Note] A temporary password is generated for root@localhost: Ukrgyq2-V.,q
+[root@node71 ~]# 	
+
+[root@node71 ~]# mysql -uroot -p'Ukrgyq2-V.,q' 使用随机密码登录
+mysql> show databases;
+ERROR 1820 (HY000): You must reset your password using ALTER USER statement before executing this statement.
+mysql> 
+mysql> alter user root@"localhost" identified by "123456"; 强制修改密码，没有策略要求
+Query OK, 0 rows affected (0.10 sec)
+
+mysql> show databases; 查看数据 
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql> grant  all on  *.*  to  sstuser@"localhost" identified by "123qqq...A"; 
+添加配置文件中定义的sstuser 用户
+mysql>exit
+]# mysql  -uroot  -p123456 #使用修改的密码登录
+mysql>create database game;
+mysql>show databases;
+
+	在71 执行初始化失败的统一
+     1 pkill -9 mysqld (多执行几遍)
+	 2 rm  -rf  /var/lib/mysql/*
+	 3 检查修改的 mysqld.cnf   和  wsrep.cnf  文件
+     4 再次执行初始化数据库服务的操作
+	 
+
+		
+	1.6 分别启动 72 he  73 主机的mysql服务（2台主机服务启动顺序无所谓）
+								服务名称没有d 就叫 mysql
+								
+	72 73 同步数据失败
+      1 pkill -9 mysqld (多执行几遍)
+	  2 rm  -rf  /var/lib/mysql/*	
+	  3 再次执行 systemctl  start mysql
+	  
+	***确保71/72/73  三台主机的firewalld  selinux 都是关闭
+	第1次启动数据库服务会自动到集群中的其他主做首次的全量同步数据
+[root@node72 ~]# ls /var/lib/mysql
+[root@node72 ~]# systemctl  start mysql
+[root@node72 ~]# ls /var/lib/mysql
+auto.cnf                mysql
+ca-key.pem              mysql.sock
+ca.pem                  mysql.sock.lock
+client-cert.pem         node72-bin.000001
+client-key.pem          node72-bin.index
+galera.cache            performance_schema
+game                    private_key.pem
+grastate.dat            public_key.pem
+gvwstate.dat            server-cert.pem
+ib_buffer_pool          server-key.pem
+ibdata1                 sys
+ib_logfile0             xb_doublewrite
+ib_logfile1             xtrabackup_binlog_pos_innodb
+ibtmp1                  xtrabackup_galera_info
+innobackup.move.log     xtrabackup_info
+innobackup.prepare.log  xtrabackup_master_key_id
+[root@node72 ~]#  
+[root@node72 ~]# netstat -utnlp  | grep  3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      2083/mysqld         
+[root@node72 ~]# netstat -utnlp  | grep  4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      2083/mysqld         
+[root@node72 ~]# 	
+[root@node72 ~]# mysql -uroot -p123456 -e 'show databases'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| game               |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+[root@node72 ~]# mysql -uroot -p123456 -e 'create database bbsdb'
+[root@node71 ~]# mysql -uroot -p123456 -e 'show databases'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| bbsdb              |
+| game               |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+[root@node71 ~]# 
+
+[root@node73 ~]# ls /var/lib/mysql
+[root@node73 ~]# systemctl  start mysql
+[root@node73 ~]# ls /var/lib/mysql
+auto.cnf                mysql
+bbsdb                   mysql.sock
+ca-key.pem              mysql.sock.lock
+ca.pem                  node73-bin.000001
+client-cert.pem         node73-bin.index
+client-key.pem          performance_schema
+galera.cache            private_key.pem
+game                    public_key.pem
+grastate.dat            server-cert.pem
+gvwstate.dat            server-key.pem
+ib_buffer_pool          sys
+ibdata1                 xb_doublewrite
+ib_logfile0             xtrabackup_binlog_pos_innodb
+ib_logfile1             xtrabackup_galera_info
+ibtmp1                  xtrabackup_info
+innobackup.move.log     xtrabackup_master_key_id
+innobackup.prepare.log
+[root@node73 ~]# 
+[root@node73 ~]# netstat  -utnlp  | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      2086/mysqld         
+[root@node73 ~]# netstat  -utnlp  | grep 4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      2086/mysqld         
+[root@node73 ~]#
+[root@node73 ~]# mysql -uroot -p123456  -e 'show databases'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| bbsdb              |
+| game               |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+[root@node73 ~]# 
+[root@node73 ~]# mysql -uroot -p123456  -e 'create database buydb'
+
+[root@node71 ~]# mysql -uroot -p123456 -e 'show databases'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| bbsdb              |
+| buydb              |
+| game               |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+[root@node71 ~]# 
+[root@node72 ~]# mysql -uroot -p123456 -e 'show databases'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| bbsdb              |
+| buydb              |
+| game               |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+[root@node72 ~]# 	
+
+
+
+
 二 mysql 存储引擎 
 
 +++++++++++++++++++++++++++++++++++++++++
