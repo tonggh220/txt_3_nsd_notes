@@ -122,3 +122,91 @@ OK
 2) "z"
 3) "y"
 127.0.0.1:6379[2]> select  0 
+
+127.0.0.1:6379[2]> flushdb  清空当前所在库的所有数据
+OK
+127.0.0.1:6379[2]> keys *
+(empty list or set)
+
+127.0.0.1:6379[2]> flushall   清空内存
+
+三 配置文件解析
+
+四 LNMP+Redis
+   把nginx网站的数据存储在50主机的内存里
+   4.1  配置网站服务器51 环境LNMP
+   56  yum -y install gcc zlib-devel openssl-devel
+  558  tar -zxvf nginx-1.12.2.tar.gz 
+  560  cd nginx-1.12.2/
+  562  ./configure 
+  563  make
+  564  make install
+  566  ls /usr/local/nginx/
+[root@host51 ~]# yum -y install php php-devel php-mysql php-fpm
+[root@host51 ~]# rpm -qa | grep -i mysql  安装的是 mysql-5.7.17
+[root@host51 ~]# systemctl  start php-fpm
+[root@host51 ~]# systemctl  enable php-fpm
+Created symlink from /etc/systemd/system/multi-user.target.wants/php-fpm.service to /usr/lib/systemd/system/php-fpm.service.
+[root@host51 ~]# netstat -utnlp  | grep  9000
+tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      15745/php-fpm: mast 
+[root@host51 ~]# 
+
+[root@host51 ~]# vim +65 /usr/local/nginx/conf/nginx.conf       
+65         location ~ \.php$ {
+ 66             root           html;
+ 67             fastcgi_pass   127.0.0.1:9000;
+ 68             fastcgi_index  index.php;
+ 69         #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi    _script_name;
+ 70             include        fastcgi.conf;
+ 71         }
+:wq
+[root@host51 ~]# /usr/local/nginx/sbin/nginx -t
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+[root@host51 ~]# 
+
+[root@host51 ~]# systemctl stop httpd  如果有httpd 的话
+[root@host51 ~]# systemctl disable httpd
+
+[root@host51 ~]# netstat  -utnlp  | grep  80
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      15834/nginx: master 
+[root@host51 ~]# 
+
+		#设置服务开机运行
+[root@host51 ~]# echo "/usr/local/nginx/sbin/nginx" >> /etc/rc.local 
+[root@host51 ~]# chmod +x  /etc/rc.local 
+
+
+		#编写php脚本
+[root@host51 ~]# vim /usr/local/nginx/html/test.php	
+<?php
+  echo  "hello world";
+?>
+:wq
+
+打开浏览器输入网址  http://192.168.4.51/test.php
+            hello world
+		
+   4.2  准备redis服务器 192.168.4.50
+		1 安装软件
+		2 初始化配置
+		3 查看服务状态
+[root@host50 ~]# netstat -utnlp | grep redis-server
+tcp        0      0 127.0.0.1:6379          0.0.0.0:*               LISTEN      17529/redis-server  
+[root@host50 ~]#		
+        
+		4 修改服务使用的IP地址为eth0网卡的地址
+[root@host50 ~]# /etc/init.d/redis_6379  stop
+Stopping ...
+Redis stopped
+[root@host50 ~]# vim  +70 /etc/redis/6379.conf
+bind 192.168.4.50
+:wq
+[root@host50 ~]# /etc/init.d/redis_6379  start
+Starting Redis server...
+[root@host50 ~]# 
+[root@host50 ~]# netstat -utnlp | grep redis-server
+tcp        0      0 192.168.4.50:6379       0.0.0.0:*               LISTEN      17610/redis-server  
+[root@host50 ~]#
+
+
