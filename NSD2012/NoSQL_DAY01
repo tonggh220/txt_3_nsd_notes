@@ -209,4 +209,30 @@ Starting Redis server...
 tcp        0      0 192.168.4.50:6379       0.0.0.0:*               LISTEN      17610/redis-server  
 [root@host50 ~]#
 
+ 4.3  配置网站192.168.4.51 可以把存储在50服务器的内存里
+		   4.3.1 安装软件提供redis模块
+		         ]# tar -zxvf  php-redis-2.2.4.tar.gz
+				 ]# cd phpredis-2.2.4
+[root@host51 phpredis-2.2.4]# phpize    #安装软件才有命令 yum -y install php-devel
+Configuring for:
+PHP Api Version:         20100412
+Zend Module Api No:      20100525
+Zend Extension Api No:   220100525
+[root@host51 phpredis-2.2.4]#./configure --with-php-config=/usr/bin/php-config	
+[root@host51 phpredis-2.2.4]# make  &&  make install 
+Installing shared extensions:     /usr/lib64/php/modules/
+
+[root@host51 phpredis-2.2.4]# ls /usr/lib64/php/modules/redis.so 
+/usr/lib64/php/modules/redis.so
+		 
+		   4.3.2 调用模块
+   
+           4.3.3 查看支持的模块 
+
+   4.4  测试配置
+
+		   
+		   
+nosql_day02 redis集群
+准备6台Redis服务器 51 ~ 56  都要运行redis服务  修改服务的IP地址  bind eth0 
 
