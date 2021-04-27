@@ -294,6 +294,68 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +--------------------+
 [root@node72 ~]# 	
 
+在集群中的任意1台上都可以查看集群的状态信息
+[root@node73 ~]# mysql -uroot -p123456  -e 'show status like "%wsrep%"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------------------------------+-------------------------------------------------------+
+|Variable_name                    | Value                                                 |
+|wsrep_incoming_addresses          | 192.168.4.71:3306,192.168.4.72:3306,192.168.4.73:3306 |	
+|wsrep_cluster_status               | Primary                                               |
+| wsrep_connected                  | ON       
+
+客户端连接集群中的任意1台服务器都可以读写数据，并且会互相同步彼此的数据
+[root@node73 ~]# mysql -uroot -p123456  
+-e 'grant all on game.* to yaya@"%" identified by "123qqq...A"'
+
+[root@host50 ~]# mysql -h192.168.4.71 -uyaya -p123qqq...A
+mysql> create table  game.user( id int primary key auto_increment,name char(10));
+mysql> exit;
+
+[root@host50 ~]# mysql -h192.168.4.72 -uyaya -p123qqq...A -e 'insert into game.user(name)values("a"),("b")'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+
+[root@host50 ~]# mysql -h192.168.4.73 -uyaya -p123qqq...A -e 'select * from game.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+------+
+| id | name |
++----+------+
+|  2 | a    |
+|  5 | b    |
++----+------+
+[root@host50 ~]#
+
+测试任何1台坏掉都不影响另外2台 ，坏掉的集群会自动加入集群，并自动同步宕机期间的数据
+[root@node71 ~]# systemctl  stop mysql@bootstrap.service
+
+[root@node73 ~]# mysql -uroot -p123456  -e 'show status like "%wsrep%"'
+wsrep_incoming_addresses         | 192.168.4.72:3306,192.168.4.73:3306  |
+
+[root@host50 ~]# mysql -h192.168.4.72 -uyaya -p123qqq...A -e 'insert into game.user(name)values("aaa"),("bbbb")'
+
+[root@host50 ~]# mysql -h192.168.4.72 -uyaya -p123qqq...A -e 'insert into game.user(name)values("cccc"),("ccc")'
+
+
+[root@node71 ~]# systemctl  start mysql
+[root@node71 ~]# systemctl  start mysql
+[root@node71 ~]# netstat  -utnlp  | grep 4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      7514/mysqld         
+[root@node71 ~]# netstat  -utnlp  | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      7514/mysqld         
+[root@node71 ~]# 
+[root@node71 ~]# mysql -uroot -p123456 -e 'select  * from game.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+------+
+| id | name |
++----+------+
+|  2 | a    |
+|  5 | b    |
+|  9 | aaa  |
+| 11 | bbbb |
+| 13 | cccc |
+| 15 | ccc  |
++----+------+
+[root@node71 ~]#
+
 
 
 
