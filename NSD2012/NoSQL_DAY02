@@ -1,0 +1,44 @@
+nosql_day02 redis集群高可用集群
+			功能：1 数据分布式存储
+				  2 解决服务单点故障
+				  3 实现数据的自动备份
+			准备做集群的服务器 
+			51 -56 （都运行redis服务） 且内存里要没有数据
+		    
+			启用每台机器的集群功能 815  823 829
+			cluster-enabled yes 启用集群功能
+			cluster-config-file nodes-6379.conf 存储集群信息文件
+			cluster-node-timeout 15000	  通信超时时间
+			
+[root@host52 ~]# netstat -utnlp  | grep redis-server
+tcp        0      0 192.168.4.52:6379       0.0.0.0:*               LISTEN      13094/redis-server  
+tcp        0      0 192.168.4.52:16379      0.0.0.0:*               LISTEN      13094/redis-server  			
+
+[root@host52 ~]# redis-cli -h 192.168.4.52
+192.168.4.52:6379> cluster info  查看集群信息
+cluster_state:fail
+cluster_slots_assigned:0
+cluster_slots_ok:0
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:1
+cluster_size:0
+cluster_current_epoch:0
+cluster_my_epoch:0
+cluster_stats_messages_sent:0
+cluster_stats_messages_received:0
+192.168.4.52:6379> 
+			准备管理主机(管理redis集群)ip 192.168.4.57
+			配置如下:
+			1 准备ruby脚本的运行环境
+			]# yum -y install ruby
+			]# which gem || yum -y install rubygems
+			]# gem install redis-3.2.1.gem
+        
+			2 创建ruby脚本
+[root@host57 ~]# tar -zxvf redis-4.0.8.tar.gz
+[root@host57 ~]# cd redis-4.0.8/
+]# tar -zxvf redis-4.0.8.tar.gz 
+]# mkdir /root/bin
+]# cp src/redis-trib.rb /root/bin/
+]# redis-trib.rb  help   可以查看到命令的帮助信息
