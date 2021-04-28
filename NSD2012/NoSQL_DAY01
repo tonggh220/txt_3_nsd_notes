@@ -333,7 +333,34 @@ echo $redis->get("sex");
 daemonize yes   			//守护进程方式运行
 
 
+		databases 16  			//数据库个数
+        logfile /var/log/redis_6379.log  	//日志文件
+        maxclients 10000  			//并发连接数量
+        dir /var/lib/redis/6379   		//数据库目录
+		
+内存清除策略：LRU   LFU   random  ttl    noeviction
+	向内存存储数据时，若空间不足，Redis服务删除已经存储数据的方式。
+lru 	//最近最少使用 
+# volatile-lru -> Evict using approximated LRU among the keys with an expire set.
+# allkeys-lru -> Evict any key using approximated LRU.
 
+lfu 使用频率最少
+# volatile-lfu -> Evict using approximated LFU among the keys with an expire set.
+# allkeys-lfu -> Evict any key using approximated LFU.
+
+random 随机删除
+# volatile-random -> Remove a random key among the ones with an expire set.
+# allkeys-random -> Remove a random key, any key.
+ttl  仅仅删除快要过期的
+# volatile-ttl -> Remove the key with the nearest expire time (minor TTL)
+
+noeviction 空间不足也不删除数据，返回报错信息
+# noeviction -> Don't evict anything, just return an error on write operations.
+   
+	与内存相关的配置项？
+		maxmemory  	//最大内存   
+        maxmemory-policy 	//定义使用策略
+  
 
 		   
 		   
