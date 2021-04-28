@@ -364,6 +364,10 @@ noeviction 空间不足也不删除数据，返回报错信息
 											做比较时要有参考才行
      
 		   
+
+           
+
+
 		   
 nosql_day02 redis集群
 准备6台Redis服务器 51 ~ 56  都要运行redis服务  修改服务的IP地址  bind eth0 
