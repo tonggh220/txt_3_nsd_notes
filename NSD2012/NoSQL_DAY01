@@ -360,8 +360,9 @@ noeviction 空间不足也不删除数据，返回报错信息
 	与内存相关的配置项？
 		maxmemory  	//最大内存   
         maxmemory-policy 	//定义使用策略
-  
-
+       maxmemory-samples 5 //选取key模板的个数 (针对lru、 lfu 、ttl 策略）
+											做比较时要有参考才行
+     
 		   
 		   
 nosql_day02 redis集群
