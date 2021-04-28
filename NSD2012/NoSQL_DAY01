@@ -265,6 +265,76 @@ tarenansd2012
 1) "nsd2012"
 2) "tarena"
 192.168.4.50:6379>
+
+三 配置文件解析  /etc/redis/6379.conf  修改了配置后要重启服务才能生效
+
+
+]# vim /etc/redis/6379.conf
+93 port  6350
+501 requirepass 123456
+:wq
+[root@host50 ~]# redis-cli  -h 192.168.4.50 shutdown
+
+[root@host50 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host50 ~]# 
+[root@host50 ~]# netstat  -utnlp  | grep redis-server
+tcp        0      0 192.168.4.50:6350       0.0.0.0:*               LISTEN      18229/redis-server  
+[root@host50 ~]# 
+  
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350
+192.168.4.50:6350> keys *
+(error) NOAUTH Authentication required.
+
+192.168.4.50:6350> 
+192.168.4.50:6350> auth 123456
+OK
+192.168.4.50:6350> keys *
+1) "school"
+2) "class"
+192.168.4.50:6350> exit
+
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350 -a 123456
+192.168.4.50:6350> keys *
+1) "school"
+2) "class"
+192.168.4.50:6350> 
+
+[root@host51 ~]# vim /usr/local/nginx/html/linkdb.php
+<?php
+$redis = new redis();
+$redis->connect("192.168.4.50","6350");
+$redis->auth("123456");
+$redis->set("name","plj"); 
+$redis->set("sex","girl");
+ 
+echo $redis->get("name");   
+echo $redis->get("sex");
+?>
+[root@host51 ~]# 
+
+
+
+
+
+#停止服务的命令
+[root@host50 ~]# redis-cli  -h 192.168.4.50 -p 6350 -a 123456 shutdown
+	
+修改脚本 软脚本调用命令去停止	
+]# vim  /etc/init.d/redis_6379 
+43   $CLIEXEC -h 192.168.4.50 -p 6350 -a  123456  shutdown
+:wq
+
+
+服务启动后，运行的方式有2种
+		  守护进程方式运行（进程常驻内存）   常驻部队  
+		非守护进程方式运行（进程不常驻内存） 机动部队
+		
+daemonize yes   			//守护进程方式运行
+
+
+
+
 		   
 		   
 nosql_day02 redis集群
