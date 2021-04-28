@@ -42,3 +42,259 @@ cluster_stats_messages_received:0
 ]# mkdir /root/bin
 ]# cp src/redis-trib.rb /root/bin/
 ]# redis-trib.rb  help   可以查看到命令的帮助信息
+
+
+3 创建集群
+***务必在51-56 做如下检查
+1 必须保证内存里没有数据
+2 必须没有连接密码
+3 必须关闭firewalld
+4 必须启用了集群功能
+[root@host57 ~]# redis-trib.rb create  --replicas 1  192.168.4.51:6379 
+192.168.4.52:6379 192.168.4.53:6379 192.168.4.54:6379 192.168.4.55:6379 
+192.168.4.56:6379
+Adding replica 192.168.4.55:6379 to 192.168.4.51:6379
+Adding replica 192.168.4.56:6379 to 192.168.4.52:6379
+Adding replica 192.168.4.54:6379 to 192.168.4.53:6379
+M: 25b9c9fd991b859c23935bedba3e7b22565aefe0 192.168.4.51:6379
+   slots:0-5460 (5461 slots) master
+M: eed58010ef711bdb313a8ceadcbc6bff5d8b8278 192.168.4.52:6379
+   slots:5461-10922 (5462 slots) master
+M: 196a0e98868d7b6fb08c548730f28f6a729eef62 192.168.4.53:6379
+   slots:10923-16383 (5461 slots) master
+S: 8feff919774986515289bb656831ee9e5d4d8d93 192.168.4.54:6379
+   replicates 196a0e98868d7b6fb08c548730f28f6a729eef62
+S: d6e866731303ffe8cf7eb48ff924e3493bceb8f2 192.168.4.55:6379
+   replicates 25b9c9fd991b859c23935bedba3e7b22565aefe0
+S: a48a379acebf34b736eb5f2b1f67c55180b96d95 192.168.4.56:6379
+   replicates eed58010ef711bdb313a8ceadcbc6bff5d8b8278
+Can I set the above configuration? (type 'yes' to accept): yes 同意
+>>> Nodes configuration updated
+>>> Assign a different config epoch to each node
+>>> Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join...
+>>> Performing Cluster Check (using node 192.168.4.51:6379)
+M: 25b9c9fd991b859c23935bedba3e7b22565aefe0 192.168.4.51:6379
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+S: a48a379acebf34b736eb5f2b1f67c55180b96d95 192.168.4.56:6379
+   slots: (0 slots) slave
+   replicates eed58010ef711bdb313a8ceadcbc6bff5d8b8278
+S: d6e866731303ffe8cf7eb48ff924e3493bceb8f2 192.168.4.55:6379
+   slots: (0 slots) slave
+   replicates 25b9c9fd991b859c23935bedba3e7b22565aefe0
+S: 8feff919774986515289bb656831ee9e5d4d8d93 192.168.4.54:6379
+   slots: (0 slots) slave
+   replicates 196a0e98868d7b6fb08c548730f28f6a729eef62
+M: eed58010ef711bdb313a8ceadcbc6bff5d8b8278 192.168.4.52:6379
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+M: 196a0e98868d7b6fb08c548730f28f6a729eef62 192.168.4.53:6379
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.  成功的提示
+[root@host57 ~]# 
+
+创建集群失败的统一解决办法，在6台主机分别执行如下操作
+	1 停止redis服务
+	2 rm  -rf /var/lib/redis/6379/*
+	3 启动redis服务
+	4 在管理主机再次执行创建集群的命令
+
+			4 查看集群信息
+				 4.1 在管理主机查看
+						#查看统计信息
+[root@host57 ~]# redis-trib.rb info 192.168.4.54:6379
+192.168.4.52:6379 (eed58010...) -> 0 keys | 5462 slots | 1 slaves.
+192.168.4.53:6379 (196a0e98...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.4.51:6379 (25b9c9fd...) -> 0 keys | 5461 slots | 1 slaves.
+[OK] 0 keys in 3 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+								
+						#查看详细信息
+[root@host57 ~]# redis-trib.rb check  192.168.4.54:6379						
+	
+
+	
+				 4.2 在Redis服务器本机查看
+[root@host51 ~]# redis-cli  -h 192.168.4.51
+192.168.4.51:6379> cluster info
+cluster_state:ok
+cluster_known_nodes:6
+cluster_size:3
+
+192.168.4.51:6379> cluster nodes
+a48a379acebf34b736eb5f2b1f67c55180b96d95 192.168.4.56:6379@16379 slave eed58010ef711bdb313a8ceadcbc6bff5d8b8278 0 1619596304204 6 connected
+d6e866731303ffe8cf7eb48ff924e3493bceb8f2 192.168.4.55:6379@16379 slave 25b9c9fd991b859c23935bedba3e7b22565aefe0 0 1619596305707 5 connected
+8feff919774986515289bb656831ee9e5d4d8d93 192.168.4.54:6379@16379 slave 196a0e98868d7b6fb08c548730f28f6a729eef62 0 1619596308212 4 connected
+25b9c9fd991b859c23935bedba3e7b22565aefe0 192.168.4.51:6379@16379 myself,master - 0 1619596303000 1 connected 0-5460
+eed58010ef711bdb313a8ceadcbc6bff5d8b8278 192.168.4.52:6379@16379 master - 0 1619596307209 2 connected 5461-10922
+196a0e98868d7b6fb08c548730f28f6a729eef62 192.168.4.53:6379@16379 master - 0 1619596305207 3 connected 10923-16383
+192.168.4.51:6379> 
+
+
+三 在客户端连接集群
+***连接集群中的任意主机51-56都可以查看数据和存储数据
+host50]# redis-cli  -c  -h 192.168.4.53  -p 6379 
+192.168.4.53:6379> info replication  查看角色
+# Replication
+role:master
+connected_slaves:1
+slave0:ip=192.168.4.54,port=6379,state=online,offset=4914,lag=1
+192.168.4.53:6379> set name plj
+-> Redirected to slot [5798] located at 192.168.4.52:6379
+OK
+192.168.4.52:6379> keys *
+1) "name"
+192.168.4.52:6379> set age 19
+-> Redirected to slot [741] located at 192.168.4.51:6379
+OK
+192.168.4.51:6379>
+
+
+				 
+存储数据的工作过程				 
+	16384 slots	 0 ~ 16383 平均的分配给3台master服务器
+存储数据的机会
+
+	测试服务的高可用
+		master 角色的服务器宕机后 对应的slave 会自动升级为master 
+		并接收hash slot
+		
+		宕机的master恢复后，自动加入集群 自动做当前master的slvae服务器
+		同步数据
+	
+二 管理集群 准备主机  运行Redis服务并启用集群功能
+		192.168.4.58   
+		192.168.4.59
+		
+		2.1 向集群添加新主机
+					1 添加master角色主机（场景：提高集群处理性能 、扩大内存空间）
+					   把58主机添加到集群里做master服务器
+					    58主机必须运行Redis服务并启用集群功能
+					   在管理主机57 做如下操作：
+							1 添加主机到集群
+[root@host57 ~]# redis-trib.rb add-node 192.168.4.58:6379 192.168.4.52:6379
+							
+>>> Send CLUSTER MEET to node 192.168.4.58:6379 to make it join the cluster.
+[OK] New node added correctly.
+[root@host57 ~]# 
+
+
+
+							2 重新分片 (给新的master服务器分配hash slot)
+[root@host57 ~]# redis-trib.rb reshard 192.168.4.52:6379							
+							  回答问题
+							   1
+How many slots do you want to move (from 1 to 16384)?4096  
+
+
+							   2
+What is the receiving node ID?	1cb19e8b2746996da3c3eca7eb7f4246699b2f24
+
+						   
+							   3
+							   all
+							   
+							   4
+Do you want to proceed with the proposed reshard plan (yes/no)? yes							   
+							   
+							   
+							3 查看集群信息 
+[root@host57 ~]# redis-trib.rb info 192.168.4.52:6379
+192.168.4.52:6379 (eed58010...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.53:6379 (196a0e98...) -> 1 keys | 4096 slots | 1 slaves.
+192.168.4.58:6379 (1cb19e8b...) -> 3 keys | 4096 slots | 0 slaves.
+192.168.4.55:6379 (d6e86673...) -> 2 keys | 4096 slots | 1 slaves.
+[OK] 8 keys in 4 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 	
+
+[root@host57 ~]# redis-trib.rb check 192.168.4.52:6379
+M: 1cb19e8b2746996da3c3eca7eb7f4246699b2f24 192.168.4.58:6379
+   slots:0-1364,5461-6826,10923-12287 (4096 slots) master
+   0 additional replica(s)
+
+	
+					2 添加slave角色主机
+	把59主机添加到集群里做 58 的 slave 
+					59主机必须运行Redis服务并启用集群功能
+				    在管理主机57 做如下操作：
+					        1 添加slave角色主机（因为slave角色主机的数据是在主服务器
+							同步的，所以不需要分配hash slost）
+[root@host57 ~]# redis-trib.rb add-node --slave 192.168.4.59:6379 192.168.4.55:6379
+							
+>>> Configure node as replica of 192.168.4.58:6379.
+[OK] New node added correctly.
+	
+[root@host57 ~]# redis-trib.rb info 192.168.4.58:6379
+192.168.4.58:6379 (1cb19e8b...) -> 3 keys | 4096 slots | 1 slaves.
+192.168.4.55:6379 (d6e86673...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.52:6379 (eed58010...) -> 3 keys | 4096 slots | 1 slaves.
+192.168.4.53:6379 (196a0e98...) -> 2 keys | 4096 slots | 1 slaves.
+[OK] 10 keys in 4 masters.
+0.00 keys per slot on average.
+[root@host57 ~]#	
+	
+	 
+	
+	
+	   2.2 从集群中移除主机
+					1 移除master角色主机
+					
+					2 移除slave角色主机(不占用hash slot 直接执行命令删除就可以)
+在管理主机执行删除命令
+         #查看被移除主机的id 
+[root@host57 ~]# redis-trib.rb check 192.168.4.58:6379 | grep 192.168.4.59
+S: 524f73686be65ffb3422a36c5f3566d150ed9ba9 192.168.4.59:6379
+
+		#删除主机
+[root@host57 ~]# redis-trib.rb del-node 192.168.4.55:6379 524f73686be65ffb3422a36c5f3566d150ed9ba9
+
+>>> Removing node 524f73686be65ffb3422a36c5f3566d150ed9ba9 from cluster 192.168.4.55:6379
+>>> Sending CLUSTER FORGET messages to the cluster...
+>>> SHUTDOWN the node.
+[root@host57 ~]# 
+
+[root@host57 ~]# redis-trib.rb info 192.168.4.58:6379
+192.168.4.58:6379 (1cb19e8b...) -> 3 keys | 4096 slots | 0 slaves.
+192.168.4.55:6379 (d6e86673...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.52:6379 (eed58010...) -> 3 keys | 4096 slots | 1 slaves.
+192.168.4.53:6379 (196a0e98...) -> 2 keys | 4096 slots | 1 slaves.
+[OK] 10 keys in 4 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+	
+
+
+
+[root@host59 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host59 ~]# redis-cli -h 192.168.4.59
+192.168.4.59:6379> cluster reset  清除前世的记忆
+192.168.4.59:6379>	exit
+
+本次添加做指定master 服务器的 slave 
+[root@host57 ~]# redis-trib.rb check 192.168.4.58:6379 | grep  192.168.4.55
+M: d6e866731303ffe8cf7eb48ff924e3493bceb8f2 192.168.4.55:6379
+[root@host57 ~]# 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
