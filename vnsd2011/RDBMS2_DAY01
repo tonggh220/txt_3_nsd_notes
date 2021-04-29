@@ -1,0 +1,157 @@
+RDBMS1   
+搭建mysql数据库服务器
+库表记录的管理
+掌握mysql的数据类型
+记录的增删改查    （删改查匹配条件）
+数据备份与恢复 
+mysqldump  binlog   innobackupex
+
+RDBMS2  各种数据存储架构部署
+mysql  主从同步
+mysql数据读写分离
+mysql 分库分表
+mysql高可用集群的（MHA  PXC）
+mysql存储引擎 
+ 
+ RDBMS2_DAY01
+ 主从结构介绍：
+ 
+ 主从同步 是存储数据的服务结构 实现的功能时数据自动备份，分为2种角色
+  主  master ：客户端存储数据时，连接的主机做master服务器
+  从  slave ：  从角色服务器会自动连接master服务器 同步数据
+ 
+ 主从同步结构的工作过程：
+ 
+ 
+ 主从同步的结构模式
+ 一主一从
+ 一主多从
+ 主从从
+ 主主结构（互为主从）
+ 
+ 配置 一主一从 同步结构
+	  准备2台数据库服务器：  时间到 20:20 
+           192.168.4.51      运行mysql服务 管理员root本机登录 密码123qqq...A
+ 
+           192.168.4.52       运行mysql服务 管理员root 本机登录密码123qqq...A
+		   
+    配置主数据库服务器 192.168.4.51
+	      # 启用binlog日志文件
+[root@host51 ~]# vim /etc/my.cnf
+[mysqld]
+server_id=51
+log_bin=master51
+:wq
+[root@host51 ~]# systemctl  restart mysqld
+[root@host51 ~]# 
+[root@host51 ~]# ls /var/lib/mysql/master51.*
+/var/lib/mysql/master51.000001  /var/lib/mysql/master51.index
+	  
+          # 用户授权
+]# mysql  -uroot -p密码
+mysql> grant replication slave on *.* to  repluser@"%"  identified by "123qqq...A";
+		  
+         # 查看binlog日志信息
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master51.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 		
+		
+			配置slave服务器192.168.4.52
+			****从服务器上的数据要>= master 主机的数据（通过完全备份与恢复的方式实现）			    
+				#指定server_id
+[root@host52 ~]# vim /etc/my.cnf
+[mysqld]
+server_id=52
+:wq
+root@host52 ~]# systemctl  restart mysqld		 
+			     #指定主服务器信息
+[root@host52 ~]# mysql -uroot -p123qqq...A	
+			  # ip地址  连接用户  连接密码  binlog 日志名  偏移量
+mysql> change master to master_host="192.168.4.51",master_user="repluser",master_password="123qqq...A",
+master_log_file=" master51.000001",master_log_pos=441;			 
+			     #启动slave进程    mysql> start slave			 
+			    #查看状态信息
+	mysql> show slave status \G
+		    Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+																				
+			测试配置
+			在主服务器创建新库表添加记录
+[root@host51 ~]# mysql -uroot -p123qqq...A	
+mysql> create database gamedb;
+mysql> create table  gamedb.user(name char(10));
+mysql> insert into gamedb.user values("panglj");
+		
+			在从服务器也可以查看到同样的数据
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'select * from gamedb.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------+
+| name   |
++--------+
+| panglj |
++--------+			
+			
+			
+			检查51 和 52 防火墙服务器关闭了吗 ？ systemctl  stop firewalld
+			在52主机测试51的授权用户repluser 
+			[root@host52 ~]# mysql -h192.168.4.51 -urepluser -p123qqq...A  能连接才是对的 
+			
+			Last_SQL_Error: SQL线程的报错信息
+			Last_IO_Error:  IO线程的报错信息
+			
+ Last_IO_Error: Got fatal error 1236 from master when reading data from binary log: 'Could not find first log file name in binary log index file'
+			
+			第二实验：升级为一主多从，目的解决从服务器单点故障 09:32
+			诉求：把数据库服务器53 也配置为 51 的 slave服务器 
+			在53主做如下配置：
+			        1 运行mysql服务 且管理员root本机登录
+					2 确保与主数据库数据一致
+[root@host51 ~]# mysqldump -uroot -p123qqq...A  -B gamedb > /root/gamedb.sql 
+[root@host51 ~]# scp /root/gamedb.sql   192.168.4.53:/opt/
+
+[root@host53 ~]# mysql -uroot -p123qqq...A  < /opt/gamedb.sql 					
+[root@host53 ~]# mysql -uroot -p123qqq...A  -e    'select * from gamedb.user'					
+					3 指定server_id 
+		vim  /etc/my.cnf
+		[mysqld]
+		server_id=53
+		:wq
+		systemctl  restart mysqld
+					4 指定主服务器信息
+	mysql> change master to  master_host="192.168.4.51",
+    -> master_user="repluser" , master_password="123qqq...A",
+    -> master_log_file="master51.000001",master_log_pos=1297;
+		
+					5 启动slave进程  mysql> start slave;
+					6 查看进程状态
+					mysql> show slave status \G
+					   Slave_IO_Running: Yes
+                       Slave_SQL_Running: Yes
+
+			        7 测试配置
+					      #在51主机存储信息数据
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'insert into gamedb.user values("xdd")'
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'insert into gamedb.user values("pmm")						  
+						  #在52和53主机都可以查看到同样的数据
+
+				实验3  配置主从从结构
+			    诉求把一主多从的结构 升级为  主   从  从  结构
+                                                                51  52  53
+				把53恢复为独立的数据库服务器，
+		  cd /var/lib/mysql/
+   283  rm -rf  master.info 
+   285  rm -rf  *-relay-bin*
+   287  rm -rf relay-log.info 
+	[root@host53 mysql]# systemctl  restart mysqld
+	
+[root@host53 mysql]# mysql -uroot -p123qqq...A			
+mysql> show slave status \G
+Empty set (0.00 sec)
+			
+				再把53配置为52的从数据库服务器，
