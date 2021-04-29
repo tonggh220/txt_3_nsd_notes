@@ -231,4 +231,92 @@ dump.rdb
 [root@host50 ~]# /etc/init.d/redis_6379 start
 Starting Redis server...
 [root@host50 ~]# 
+
+验证存盘频率实验
+[root@host50 ~]# redis-cli -h 192.168.4.50 -p 6350 -a 123456 shutdown
+[root@host50 ~]# ls /var/lib/redis/6379/
+dump.rdb
+[root@host50 ~]# rm -rf /var/lib/redis/6379/dump.rdb 
+[root@host50 ~]# 
+[root@host50 ~]# ls /var/lib/redis/6379/
+[root@host50 ~]# 
+[root@host50 ~]# vim /etc/redis/6379.conf
+save 900 1
+#save 300 10
+save 120 10
+save 60 10000
+:wq
+
+
+> 在存储频率时间内存储数据
+
+[root@host50 ~]# ls /var/lib/redis/6379/ -l
+-rw-r--r-- 1 root root 165 6   3 17:18 dump.rdb
+[root@host50 ~]#	
+  
+	  AOF 默认没有启用，记录对数据做写操作命令的文件
+	      以追加的方式 记录命令 记录频率是每隔1秒记录1次
+appendonly no	  
+appendfilename "appendonly.aof"
+	  
+	  
+192.168.4.50:6350> config set  appendonly yes
+OK
+192.168.4.50:6350> config rewrite
+ 
+[root@host50 ~]# ls /var/lib/redis/6379/
+appendonly.aof  dump.rdb
+[root@host50 ~]# wc -l /var/lib/redis/6379/appendonly.aof 
+82 /var/lib/redis/6379/appendonly.aof
+
+	通过备份的aof文件恢复数据
+[root@host50 ~]# cp /var/lib/redis/6379/appendonly.aof /opt/	
+	
+[root@host50 ~]# scp  /opt/appendonly.aof  192.168.4.51:/root/
+
+ 在51主机使用aof文件恢复数据，具体操作如下：
+[root@host51 ~]# redis-cli  -h 192.168.4.51 -a 123456 shutdown
+[root@host51 ~]# vim /etc/redis/6379.conf 
+673 appendonly yes
+677 appendfilename "appendonly.aof"
+:wq
+[root@host51 ~]# cp /root/appendonly.aof /var/lib/redis/6379/
+[root@host51 ~]# ls /var/lib/redis/6379/
+appendonly.aof  dump.rdb
+[root@host51 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host51 ~]#		
+[root@host51 ~]# redis-cli  -h 192.168.4.51 -a 123456 
+192.168.4.51:6379> keys *
+
+	与AOF相关的配置
+			#aof记录命令的方式             
+			    # appendfsync always     时时记录
+			      appendfsync everysec    1秒=1000毫秒
+                # appendfsync no
+
+		    #对aof文件做瘦身计划
+			auto-aof-rewrite-percentage 100  再次对文件做瘦身的比例值
+            auto-aof-rewrite-min-size 64mb  首次瘦身的最大值
+
+   修复损坏aof文件
+ 
+ echo “范德萨发卡戴珊解放军拉斯法”  >> /var/lib/redis/6379/appendonly.aof
+  794  redis-cli -h 192.168.4.50 -p 6350 -a 123456 shutdown
+ 
+  796  /etc/init.d/redis_6379 start
+
+]# tail  /var/log/redis_6379.log
+
+ 19483:M 03 Jun 17:55:34.218 # Bad file format reading the append only file: 
+ make a backup of your AOF file, then use ./redis-check-aof --fix <filename>
+ 
+[root@host50 ~]# redis-check-aof --fix /var/lib/redis/6379/appendonly.aof 
+0x             1a2: Expected prefix '*', got: 'i'
+AOF analyzed: size=463, ok_up_to=418, diff=45
+This will shrink the AOF from 463 bytes, with 45 bytes, to 418 bytes
+Continue? [y/N]: y
+Successfully truncated AOF
+[root@host50 ~]#
+
            
