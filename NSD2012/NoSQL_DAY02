@@ -283,6 +283,86 @@ Starting Redis server...
 M: d6e866731303ffe8cf7eb48ff924e3493bceb8f2 192.168.4.55:6379
 [root@host57 ~]# 
 
+[root@host57 ~]# 
+[root@host57 ~]# redis-trib.rb add-node --slave 
+--master-id d6e866731303ffe8cf7eb48ff924e3493bceb8f2 192.168.4.59:6379  192.168.4.55:6379
+
+[OK] New node added correctly.
+
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6379  | grep  192.168.4.55
+192.168.4.55:6379 (d6e86673...) -> 2 keys | 4096 slots | 2 slaves.
+[root@host57 ~]#
+
+
+				把master角色的主机移除集群
+			    在管理主机做如下操作：
+					1 释放hash slot 
+					
+问题1 释放槽的个数
+How many slots do you want to move (from 1 to 16384)? 4096	
+
+问题2 接收槽主机的id
+What is the receiving node ID? 196a0e98868d7b6fb08c548730f28f6a729eef62	
+
+问题3 释放槽主机的id
+Source node #1:1cb19e8b2746996da3c3eca7eb7f4246699b2f24
+Source node #2:done 槽的个数已经够了 结束ID指定
+
+Do you want to proceed with the proposed reshard plan (yes/no)?	yes 同意
+
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6379 
+192.168.4.58:6379 (1cb19e8b...) -> 0 keys | 0 slots | 0 slaves.
+192.168.4.53:6379 (196a0e98...) -> 5 keys | 8192 slots | 1 slaves.
+192.168.4.52:6379 (eed58010...) -> 3 keys | 4096 slots | 1 slaves.
+192.168.4.55:6379 (d6e86673...) -> 2 keys | 4096 slots | 2 slaves.
+[OK] 10 keys in 4 masters.
+0.00 keys per slot on average.
+[root@host57 ~]#		
+					2 移除集群
+						#查看主机ID
+[root@host57 ~]# redis-trib.rb check 192.168.4.51:6379 | grep 192.168.4.58 
+M: 1cb19e8b2746996da3c3eca7eb7f4246699b2f24 192.168.4.58:6379
+[root@host57 ~]# 						
+						#删除主机
+[root@host57 ~]# redis-trib.rb del-node 192.168.4.51:6379 1cb19e8b2746996da3c3eca7eb7f4246699b2f24 
+>>> Removing node 1cb19e8b2746996da3c3eca7eb7f4246699b2f24 from cluster 192.168.4.51:6379
+>>> Sending CLUSTER FORGET messages to the cluster...
+>>> SHUTDOWN the node.
+[root@host57 ~]#					
+					3 查看集群状态
+[root@host57 ~]# redis-trib.rb info 192.168.4.51:6379 
+192.168.4.53:6379 (196a0e98...) -> 5 keys | 8192 slots | 1 slaves.
+192.168.4.52:6379 (eed58010...) -> 3 keys | 4096 slots | 1 slaves.
+192.168.4.55:6379 (d6e86673...) -> 2 keys | 4096 slots | 2 slaves.
+[OK] 10 keys in 3 masters.
+0.00 keys per slot on average.
+[root@host57 ~]#					
+				
+					4 清除redis服务器的集群信息
+[root@host58 ~]# /etc/init.d/redis_6379 start
+
+[root@host58 ~]# redis-cli -h 192.168.4.58
+192.168.4.58:6379> cluster reset
+
+	     调试所有的主平均占用hash slot 				
+[root@host57 ~]# redis-trib.rb rebalance 192.168.4.51:6379 
+					
+把集群中的主机恢复为独立的Redis服务器
+[root@host51 ~]# redis-cli  -h 192.168.4.51 shutdown
+[root@host51 ~]# rm -rf /var/lib/redis/6379/*
+[root@host51 ~]# sed -i '815s/^/#/' /etc/redis/6379.conf 
+[root@host51 ~]# sed -i '823s/^/#/' /etc/redis/6379.conf 
+[root@host51 ~]# sed -i '829s/^/#/' /etc/redis/6379.conf 
+[root@host51 ~]# sed -n '815p;823p;829p' /etc/redis/6379.conf 
+#cluster-enabled yes
+#cluster-config-file nodes-6379.conf
+#cluster-node-timeout 15000
+[root@host51 ~]# 
+[root@host51 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host51 ~]# netstat  -utnlp | grep redis-server
+tcp        0      0 192.168.4.51:6379       0.0.0.0:*               LISTEN      26170/redis-server  
+[root@host51 ~]# 
 
 
 
