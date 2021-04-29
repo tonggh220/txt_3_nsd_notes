@@ -69,3 +69,82 @@ slave0:ip=192.168.4.52,port=6379,state=online,offset=261,lag=0
 		>config  rewrite  #把命令保存到文件的最后1行
 		
 		]#tail -1 /etc/redis/6379.conf
+
+1.2 带验证的主从复制 
+（master服务器设置了连接密码 slave主机必须指定连接密码才能同步数据）
+   在51主机设置连接密码 （在命令行并让其永久有效）
+   192.168.4.51:6379> config set requirepass 123456
+   192.168.4.51:6379> auth 123456
+   192.168.4.51:6379> config rewrite
+   OK
+   
+
+  在slave设置连接master主机的密码 （在命令行并让其永久有效）
+ [root@host52 ~]# redis-cli  -h 192.168.4.52
+192.168.4.52:6379> config get masterauth
+1) "masterauth"
+2) ""
+192.168.4.52:6379> config set masterauth 123456
+OK
+
+192.168.4.52:6379> config get masterauth
+1) "masterauth"
+2) "123456"
+192.168.4.52:6379> config rewrite
+OK
+    
+ 53主机通过修改配置文件
+ 393  redis-cli  -h 192.168.4.53  shutdown
+ 
+ ]#vim /etc/redis/6379.conf
+ masterauth  123456
+ :wq
+ ]# /etc/init.d/redis_6379 start
+  
+]# /etc/init.d/redis_6379 start
+
+
+1.3 哨兵服务 ： 
+服务运行后监视 master 主机，master宕机后 把对应slave 升级为master
+	准备redis主从结构 （如果主服务器设置了连接密码 slave也设置连接密码且密码要和master服务器一样）
+    主    从    
+    51    52 
+    配置哨兵服务器57
+    具体操作如下：
+		1 安装redis 软件 
+  503  rpm -q gcc  || yum -y install gcc
+  504  tar -zxvf redis-4.0.8.tar.gz 
+  505  cd redis-4.0.8/
+  506  ls
+  507  make && make install
+		
+	    2 创建并编写哨兵服务的主配置文件
+]# vim /etc/sentinel.conf
+bind 192.168.4.57 #哨兵服务使用的ip地址
+port 26379 #服务端口号
+sentinel monitor  plj  192.168.4.51 6379  1  #监视的主服务器是谁
+sentinel auth-pass  plj 123456  #指定主服务器的连接密码
+:wq		
+        3 启动哨兵服务
+]#redis-sentinel  /etc/sentinel.conf  (启动信息占用终端显示)
+
+		4 测试配置
+			4.1 停止主服务器51 的redis服务 
+]# redis-cli  -h 192.168.4.51 -a  123456 shutdown
+
+			4.2 哨兵服务终端 查看监视信息 
+				有监视的信息输出
+				
+			4.3 原先slave角色的主机，角色变为master 
+				192.168.4.51：6379> info replicaiton 
+				Role:Master
+			
+			4.4 查看哨兵服务的主配置文件，会自动监视新的主服务器
+			    cat /etc/sentinel.conf
+				
+			4.5 宕机master 启动后，自动配置为 当前master 的slave 
+				需要手动指定连接当前master 主机的连接密码
+			192.168.4.51:6379> config set masterauth 123456	
+            192.168.4.51:6379> config rewirte
+			192.168.4.51：6379> info replicaiton
+			Role:slave
