@@ -148,3 +148,45 @@ sentinel auth-pass  plj 123456  #指定主服务器的连接密码
             192.168.4.51:6379> config rewirte
 			192.168.4.51：6379> info replicaiton
 			Role:slave
+
+
+ 三 数据类型 :    
+       字符类型数据的管理命令  
+set  getrange   strlen   append  setbit   bitcount 
+decr   decrby  incr   incrby    incrbyfloat
+
+计算机的进制  G   M    K   byte  bit 
+		
+					1K的内存空间可以存下多少位
+					
+					1k = 1024字节   * 8  = 8192   
+
+					8192位 包含多少个 365（存一年的信息 占内存365位）
+				  
+setbit  使用 二进制数 给变量赋值
+192.168.4.50:6350> setbit nb 1 1
+(integer) 0
+192.168.4.50:6350> setbit nb 2 0
+(integer) 0
+192.168.4.50:6350> setbit nb 3 0
+(integer) 0
+192.168.4.50:6350> setbit nb 4 1
+(integer) 0
+192.168.4.50:6350> setbit nb 5 1
+(integer) 0
+192.168.4.50:6350> setbit nb 6 1
+(integer) 0
+192.168.4.50:6350> setbit nb 7 0
+(integer) 0
+192.168.4.50:6350> setbit nb 8 0
+(integer) 0
+192.168.4.50:6350> bitcount nb
+(integer) 4
+ 
+	   
+	   列表类型数据的管理命令  
+lpush   llen      lrange   lpop  lindex  lset   rpush     rpop
+   
+	   hash表类型数据的管理命令
+hset  hmset  hgetall hkeys  hvals  hget  hmget  hdel
+           
