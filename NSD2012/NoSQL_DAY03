@@ -189,4 +189,46 @@ lpush   llen      lrange   lpop  lindex  lset   rpush     rpop
    
 	   hash表类型数据的管理命令
 hset  hmset  hgetall hkeys  hvals  hget  hmget  hdel
+
+
+二持久化:
+  redis支持数据的永久存储，在服务运行过程中，会定期的内存了的数据复制到硬盘文件里存储。
+  有2种方式
+      RDB（默认） 指的是 数据库目录下的dump.rdb 文件
+	  对应的配置项 
+254:dbfilename dump.rdb 
+	
+#存盘频率 
+219:save 900 1
+220:save 300 10
+221:save 60 10000
+         
+	  使用备份的dump.rdb文件恢复数据
+192.168.4.50:6350> keys *
+1) "teaname"
+2) "str"
+3) "student"
+4) "nb"
+5) "y"
+6) "z"
+7) "x"
+192.168.4.50:6350> save
+OK
+192.168.4.50:6350> exit
+[root@host50 ~]# cp /var/lib/redis/6379/dump.rdb 
+[root@host50 ~]# ls /opt/
+dump.rdb  mysql.bak  mysql.tar.gz
+[root@host50 ~]#
+
+> flushall  #数据误删除
+
+[root@host50 ~]# redis-cli -h 192.168.4.50 -p 6350 -a 123456 shutdown
+[root@host50 ~]# ls /var/lib/redis/6379/
+dump.rdb
+[root@host50 ~]# rm -rf /var/lib/redis/6379/dump.rdb 
+[root@host50 ~]# 
+[root@host50 ~]# cp /opt/dump.rdb  /var/lib/redis/6379/
+[root@host50 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host50 ~]# 
            
