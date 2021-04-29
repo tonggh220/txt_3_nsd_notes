@@ -1,0 +1,71 @@
+#####NoSQL_DAY03 
+一Redis主从复制  ：功能：实现数据自动备份
+
+		master角色：客户存储查询数据连接的主机  
+         slave角色： 到主服务器拷贝数据到本机
+
+主从结构：
+	一主一从
+	一主多从
+	主从从
+
+相关命令：
+	#默认都是master角色
+	查看当前主机的角色 info  replication 
+	
+	命令行配置 好处 马上生效  slaveof  主服务器Ip   服务端口
+
+    永久配置  vim /etc/redis/6379.conf
+			  slaveof  主服务器Ip   服务端口
+			  masterauth  密码   #如果主服务器有连接密码要指定连接密码
+
+    #反客为主 （临时恢复为master 服务器）
+    > slaveof no one 
+	
+	永久恢复为独立的服务器
+	 注释文件中的 slaveof  主服务器Ip   服务端口 然后把服务重启
+	 
+实验:把52配置为 51 的 slave  
+	 52主机做如下配置：
+		 #命令行配置
+		 > slaveof  192.168.4.51   6379
+		
+		 #查看角色
+192.168.4.52:6379> info replication
+# Replication
+role:slave
+master_host:192.168.4.51
+master_port:6379
+master_link_status:up
+ 
+		 
+		 # 永久配置
+		 [root@host52 ~]# vim /etc/redis/6379.conf 
+	     282 slaveof  192.168.4.51   6379
+		 :wq
+
+#在51主机查看复制信息
+192.168.4.51:6379> info replication
+# Replication
+role:master
+connected_slaves:1
+slave0:ip=192.168.4.52,port=6379,state=online,offset=261,lag=0
+		 
+实验2 ：一主多从
+       把主机53 也配置为 51的slave 通过修改文件配置
+
+[root@host53 ~]# vim /etc/redis/6379.conf 
+	     282 slaveof  192.168.4.51   6379
+		 :wq
+[root@host53 ~]#redis-cli -h 192.168.4.53 shutdown	   
+[root@host53 ~]# /etc/init.d/redis_6379 start
+
+实验3 ：主从从结构
+		把54 配置为 53的slave 主机
+		
+		在54主机做如下配置：
+				#在命令行指定 且让他永久生效
+		>slaveof  192.168.4.53  6379
+		>config  rewrite  #把命令保存到文件的最后1行
+		
+		]#tail -1 /etc/redis/6379.conf
