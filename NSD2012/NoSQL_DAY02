@@ -297,7 +297,8 @@ M: d6e866731303ffe8cf7eb48ff924e3493bceb8f2 192.168.4.55:6379
 				把master角色的主机移除集群
 			    在管理主机做如下操作：
 					1 释放hash slot 
-					
+host57~]# redis-trib.rb  reshard  192.168.4.51:6379					
+
 问题1 释放槽的个数
 How many slots do you want to move (from 1 to 16384)? 4096	
 
