@@ -246,7 +246,34 @@ Export list for localhost:
 tcp6       0      0 :::8080                 :::*                    LISTEN      1789/java           
 [root@host33 ~]# 
 
+4 测试配置
+		4.1 测试NFS服务
+				4.1.1 在30主机共享目录下创建网页文件
+[root@host30 ~]# vim /sitedir/test.html
+my webpage 192.168.4.33
+:wq
 
+[root@host30 ~]# ls /sitedir/
+test.html
+[root@host30 ~]#	
+
+				#在33网站本机查看网页目录下的文件
+[root@host33 ~]# echo "aaaaa" >  /usr/local/tomcat/webapps/ROOT/a.html
+[root@host33 ~]# ls /usr/local/tomcat/webapps/ROOT/
+a.html  test.html
+[root@host33 ~]#				
+				#33网站本机编写网页文件，也是存储在30主机共享里的
+[root@host30 ~]# ls /sitedir/
+a.html  test.html
+[root@host30 ~]# 				
+			
+				4.1.2  在客户端连接33网站访问网页
+[root@localhost ~]# curl  http://192.168.4.33:8080/test.html
+my webpage 192.168.4.33
+[root@localhost ~]# 
+[root@localhost ~]# curl  http://192.168.4.33:8080/a.html
+aaaaa
+[root@localhost ~]#	
 
 
 
