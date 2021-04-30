@@ -231,7 +231,20 @@ Export list for localhost:
   324  mv apache-tomcat-8.0.30 /usr/local/tomcat
   325  ls /usr/local/tomcat/
 
-
+#挂载共享
+]# rm -rf  /usr/local/tomcat/webapps/ROOT/*	
+[root@host33 ~]# vim /etc/fstab 
+192.168.4.30:/sitedir  /usr/local/tomcat/webapps/ROOT nfs defaults 0 0
+:wq
+[root@host33 ~]# mount -a
+[root@host33 ~]# mount | grep "/sitedir"
+192.168.4.30:/sitedir on /usr/local/tomcat/webapps/ROOT type nfs4 (rw,relatime,vers=4.1,rsize=262144,wsize=262144,namlen=255,hard,proto=tcp,port=0,timeo=600,retrans=2,sec=sys,clientaddr=192.168.4.33,local_lock=none,addr=192.168.4.30)
+[root@host33 ~]# 
+		#启动tomcat服务
+[root@host33 ~]# /usr/local/tomcat/bin/startup.sh 
+[root@host33 ~]# netstat  -utnlp  | grep  8080
+tcp6       0      0 :::8080                 :::*                    LISTEN      1789/java           
+[root@host33 ~]# 
 
 
 
