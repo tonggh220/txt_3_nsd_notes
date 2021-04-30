@@ -275,6 +275,30 @@ my webpage 192.168.4.33
 aaaaa
 [root@localhost ~]#	
 
+4.2 测试读写分离服务
+			 4.2.1  在master 数据库服务器添加用户plj，给客户端连接使用
+[root@host11 ~]# mysql -uroot -p123qqq...A 
+mysql> create database gamedb;
+mysql> create table gamedb.user( name char(10),password char(6) );
+mysql> grant select,insert on gamedb.*  to plj@"%" identified by "123qqq...A"
+			
+			
+			 4.2.2  在slave  数据库服务器查看添加用户plj
+[root@host22 ~]# mysql -uroot -p123qqq...A -e 'desc gamedb.user'
+[root@host22 ~]# mysql -uroot -p123qqq...A -e ' select user from mysql.user'
+
+ 			 4.2.3  在网站服务器33的命令行下连接读写分离服务器77，存储数据和查询数据
+[root@host33 ~]# which  mysql || yum -y install mariadb	
+[root@host33 ~]# mysql -h192.168.4.77 -P4006 -uplj -p123qqq...A
+MySQL [(none)]> insert into gamedb.user values("panglj","666888");
+MySQL [(none)]> select * from gamedb.user;
++--------+----------+
+| name   | password |
++--------+----------+
+| panglj | 666888   |
++--------+----------+
+MySQL [(none)]> exit
+
 
 
 
