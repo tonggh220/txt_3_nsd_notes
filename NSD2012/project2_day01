@@ -357,7 +357,56 @@ MySQL [(none)]> exit
 | panglj | 666888   |
 | bbb    | 123      |
 +--------+----------+
+[root@host11 ~]# 	
+
+4.3 测试Tomcat服务（测试网站能否把数据存储到数据库服务器里）
+		
+			# tomcat服务 必须有连接mysql服务的连接工具
+		
+[root@host33 ~]# yum -y install mysql-connector-java
+[root@host33 ~]# cp /usr/share/java/mysql-connector-java.jar  /usr/local/tomcat/lib/ 			
+[root@host33 ~]# /usr/local/tomcat/bin/shutdown.sh 
+[root@host33 ~]# /usr/local/tomcat/bin/startup.sh 			
+			
+			4.3.1 编写网站脚本
+				   在30主机的共享目录下编写网站Java脚本  
+[root@nfs30 ~]# vim /sitedir/linkdb.jsp
+<%@ page language="java" import="java.util.*" pageEncoding="gbk"%>
+<%@ page import="java.naming.*" %>
+<%@ page import="java.sql.*" %>
+<html>
+     <body>
+          <%
+          Class.forName("com.mysql.jdbc.Driver");
+Connection con=DriverManager.getConnection("jdbc:mysql://192.168.4.11:3306/gamedb","plj","123qqq...A");
+
+Statement state=con.createStatement();
+
+String sql="insert into user values('ccc','456')";
+state.executeUpdate(sql);
+           %>
+           <h1>data save ok</h1>
+     </body>
+</html>
+[root@nfs30 ~]#
+				   
+			
+			4.3.2 访问网站执行脚本
+			打开真机的浏览器 输入网址 http://192.168.4.33:8080/linkdb.jsp			
+			        data save ok
+			
+			4.3.3 在数据库服务器本机查看数据
+[root@host11 ~]# mysql -uroot -p123qqq...A  -e 'select * from gamedb.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------+----------+
+| name   | password |
++--------+----------+
+| panglj | 666888   |
+| bbb    | 123      |
+| CCC    | 456      |
++--------+----------+
 [root@host11 ~]# 			
+
 
 
 
