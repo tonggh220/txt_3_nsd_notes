@@ -216,7 +216,22 @@ MaxScale> exit
 [root@host30 ~]# showmount  -e localhost
 Export list for localhost:
 /sitedir *
-[root@host30 ~]# 	 
+[root@host30 ~]# 
+
+三、 配置网站服务 
+	 实验要求：在ip地址是192.168.4.33主机运行tomcat服务
+      具体操作如下：
+		#安装JDK
+		#安装Tomcat
+]# yum -y install java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64		
+  313  cd /linux-soft/2
+  317  tar -zxvf lnmp_soft.tar.gz 
+  319  cd lnmp_soft/
+  321  tar -zxvf apache-tomcat-8.0.30.tar.gz -C /root/
+  324  mv apache-tomcat-8.0.30 /usr/local/tomcat
+  325  ls /usr/local/tomcat/
+
+
 
 
 
