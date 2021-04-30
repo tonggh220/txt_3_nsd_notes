@@ -1,4 +1,5 @@
-day01	
+day01 准备的虚拟机
+
     ip地址	角色	主机名	安装软件	启动服务	备注
 	
     192.168.4.33	网站服务器	web33	tomcat	否	无
@@ -9,7 +10,193 @@ day01
 	192.168.4.77	数据读写分离服务器	maxscale77	maxscale	否	无
 						
 	192.168.4.30	NFS服务器	nfs30	nfs-utlis   rpcbind	否	添加1块5G磁盘(如果硬件配置低，可以在77主机配置)
-						
+
+1 部署数据库服务mysql（给网站提供数据存储空间）
+1.1 分别在2台数据库服务器上创建逻辑卷lv0
+   41  fdisk  -l   #查看系统所有识别的磁盘
+   42  fdisk  /dev/vdb  给vdb分区  
+   44  fdisk  /dev/vdc   给vdb分区
+   46  fdisk  -l  /dev/vdb 查看vdb分区
+   47  fdisk  -l  /dev/vdc 查看vdc分区 
+   48  pvcreate /dev/vdb1 /dev/vdc1  创建物理卷
+   49  vgcreate vg0 /dev/vdb1 /dev/vdc1  创建卷组 
+   51  lvcreate -n lv0  -L 9.99G vg0  创建逻辑卷
+   54  lvscan  查看已有的逻辑卷
+   56  mkfs.xfs /dev/vg0/lv0  格式化逻辑卷
+   57  blkid /dev/vg0/lv0 查看格式化信息
+练习到 09:55 休息到 10:10
+
+1.2 分别在2台数据库服务器挂载逻辑卷lv0 到/var/lib/mysql
+]# vim  /etc/fstab  配置开机挂载
+/dev/vg0/lv0  /var/lib/mysql       xfs    defaults        0 0
+:wq
+
+]# mount -a  挂载/etc/fstab文件里没有加载的设备
+
+]# mount | grep  "/var/lib/mysql"  查看挂载信息
+
+]# df -h /var/lib/mysql   查看数据库目录容量
+ 
+1.3  分别启动2台主机的mysql服务，并设置数据库管理员root密码为123qqq...A
+ 
+1.4  配置MySQL一主一从同步结构
+	  1.4.1 配置主数据库服务器 192.168.4.11
+			#启用binlog日志
+			#用户授权
+			#查看日志信息
+ 
+	  1.4.2 配置从数据库服务器 192.168.4.22
+		    #指定server_id
+			#指定主服务器信息
+			#启动slave进程
+			#查看状态(IO线程和SQL线程状态是YES 为成功)
+	1.5 配置读写分离服务器192.168.4.77
+		实现功能：
+		     把接收到的查询请求给slave 数据库服务器22
+			 把接收到的存储数据的请求给master数据库服务器11
+			 
+		在服务器192.168.4.77 做如下配置：
+			1 安装软件
+[root@host77 ~]# yum -y install maxscale-2.1.2-1.rhel.7.x86_64.rpm
+			
+			2 修改主配置文件
+[root@host77 ~]# vim /etc/maxscale.cnf
+
+[maxscale]
+threads=auto
+			
+			
+[server1]
+type=server
+address=192.168.4.11
+port=3306
+protocol=MySQLBackend
+
+
+[server2]
+type=server
+address=192.168.4.22
+port=3306
+protocol=MySQLBackend
+
+
+[MySQL Monitor]
+type=monitor
+module=mysqlmon
+servers=server1,server2
+user=mysqla
+passwd=123qqq...A
+monitor_interval=10000
+
+
+
+
+
+[Read-Write Service]
+type=service
+router=readwritesplit
+servers=server1,server2
+user=mysqlb
+passwd=123qqq...A
+max_slave_connections=100%
+
+
+[MaxAdmin Service]
+type=service
+router=cli
+
+
+
+[Read-Write Listener]
+type=listener
+service=Read-Write Service
+protocol=MySQLClient
+port=4006
+
+[MaxAdmin Listener]
+type=listener
+service=MaxAdmin Service
+protocol=maxscaled
+socket=default
+port=4016
+:wq
+		
+			3 配置数据库服务器
+				#在主服务器添加用户
+[root@host11 ~]# mysql -uroot -p123qqq...A 
+-e 'grant replication slave ,replication client on *.* to mysqla@"%" identified by "123qqq...A"'				
+				
+[root@host11 ~]# mysql -uroot -p123qqq...A 
+-e 'grant select on mysql.* to mysqlb@"%" identified by "123qqq...A"'
+				
+				
+				#在从服务器查看是否同步添加的用户到本机
+[root@host22 ~]# mysql -uroot -p123qqq...A -e 'select user from mysql.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------+
+| user      |
++-----------+
+| mysqla    |
+| mysqlb    |
+| mysql.sys |
+| root      |
++-----------+
+[root@host22 ~]# 
+
+			4 启动maxscale服务
+				#测试数据库服务器授权的mysqla  和 mysqlb用户
+				[root@host77 ~]# mysql -h192.168.4.22 -umysqla -p123qqq...A
+				[root@host77 ~]# mysql -h192.168.4.11 -umysqla -p123qqq...A
+				[root@host77 ~]# mysql -h192.168.4.11 -umysqlb -p123qqq...A
+				[root@host77 ~]# mysql -h192.168.4.22 -umysqlb -p123qqq...A
+				
+				#启动maxscale 服务
+[root@host77 ~]# maxscale  -f /etc/maxscale.cnf				
+				
+				# 查看服务状态
+[root@host77 ~]# ls /var/log/maxscale/
+maxscale.log
+[root@host77 ~]# ps -C maxscale
+  PID TTY          TIME CMD
+ 1151 ?        00:00:00 maxscale
+[root@host77 ~]# 
+[root@host77 ~]# netstat -utnlp  | grep maxscale
+tcp6       0      0 :::4006                 :::*         LISTEN      1151/maxscale       
+tcp6       0      0 :::4016                 :::*         LISTEN      1151/maxscale       
+[root@host77 ~]# 				
+				
+			5 查看监控信息（能够看到2台数据库服务器的状态就对了）
+[root@host77 ~]# maxadmin  -uadmin -pmariadb  -P4016			
+MaxScale> list servers
+Servers.
+-------------------+-----------------+-------+-------------+--------------------
+Server             | Address         | Port  | Connections | Status              
+-------------------+-----------------+-------+-------------+--------------------
+server1            | 192.168.4.11    |  3306 |           0 | Master, Running
+server2            | 192.168.4.22    |  3306 |           0 | Slave, Running
+-------------------+-----------------+-------+-------------+--------------------
+MaxScale> exit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 day02
     192.168.4.51	redis服务器	redisA	redis	是	启用集群功能 不需要设置连接密码 使用6351端口
 	192.168.4.52	redis服务器	redisB	redis	是	启用集群功能 不需要设置连接密码 使用6352端口
