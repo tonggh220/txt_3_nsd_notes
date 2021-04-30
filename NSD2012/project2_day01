@@ -178,6 +178,47 @@ server2            | 192.168.4.22    |  3306 |           0 | Slave, Running
 MaxScale> exit
 
 
+二、 部署共享存储（使用nfs共享存储空间 来存储所有网站的网页文件）
+	2.1  准备服务器 ： 在IP地址是192.168.4.30的主机添加1块磁盘（3G或5G）
+	在192.168.4.30做如下配置：
+			#格式化添加磁盘
+			#挂载磁盘
+  272  fdisk /dev/vdb  磁盘分区
+  273  fdisk -l  查看分区信息
+  274  mkdir /sitedir  创建目录
+  275  chmod o+w /sitedir/ 让其他用户可以在目录下建文件
+  
+  277  mkfs.xfs /dev/vdb1 格式化分区
+  278  blkid /dev/vdb1 查看分区信息
+  279  vim /etc/fstab  设置开机挂载
+       /dev/vdb1   /sitedir   xfs   defaults  0 0
+	   :wq
+  280  mount -a 挂载新设备
+  281  mount | grep  -i "/sitedir" 查看挂载
+  282  df -h /sitedir/  查看目录大小
+  			
+			
+			#安装软件		
+			#修改配置文件
+			#启动服务
+			#在本机查看共享信息
+  286  yum -y install nfs-utils rpcbind
+ 
+  289  vim /etc/exports
+       /sitedir  *(rw)
+	   :wq
+  290  exportfs -r
+  291  systemctl  start rpcbind
+  292  systemctl  start nfs
+  293  systemctl  enable rpcbind
+  294  systemctl  enable nfs
+			
+[root@host30 ~]# showmount  -e localhost
+Export list for localhost:
+/sitedir *
+[root@host30 ~]# 	 
+
+
 
 
 
