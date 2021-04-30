@@ -407,25 +407,24 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +--------+----------+
 [root@host11 ~]# 			
 
+[root@host30 ~]# vim /sitedir/tx.html
+		 
+<html>
+        <body>
+                <form action="reg.php" method="post" >
+                        username:<input type="text" name="username" size="20" maxlength="15" /> <br/> <br/>
+                        password:<input type="password" name="password" size="20" maxlength="15" />
+        <br/><br/>
+             <input type="submit" name="submit" value="zhuche" />
+             <input type="reset" name="cancel"  value="quxiao" />
 
 
+                </form>
+        </body>
+</html>
+:wq
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-day02
+day02 准备的虚拟机
     192.168.4.51	redis服务器	redisA	redis	是	启用集群功能 不需要设置连接密码 使用6351端口
 	192.168.4.52	redis服务器	redisB	redis	是	启用集群功能 不需要设置连接密码 使用6352端口
 	192.168.4.53	redis服务器	redisC	redis	是	启用集群功能 不需要设置连接密码 使用6353端口
