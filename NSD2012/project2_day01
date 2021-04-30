@@ -300,6 +300,65 @@ MySQL [(none)]> select * from gamedb.user;
 MySQL [(none)]> exit
 
 
+4.2.4  测试77主机的读写分离功能
+					 4.2.4.1  在slave服务器本机存储新数据，主服务器不会有新数据
+[root@host22 ~]# mysql -uroot -p123qqq...A -e 'insert into gamedb.user values("AAA","888")'
+
+[root@host22 ~]# mysql -uroot -p123qqq...A 
+-e 'select * from gamedb.user'
++--------+----------+
+| name   | password |
++--------+----------+
+| panglj | 666888   |
+| AAA    | 888      |
++--------+----------+
+[root@host22 ~]#
+ 	
+[root@host11 ~]# mysql -uroot -p123qqq...A  
+-e 'select * from gamedb.user'
++--------+----------+
+| name   | password |
++--------+----------+
+| panglj | 666888   |
++--------+----------+
+[root@host11 ~]# 
+	
+					 4.2.4.2   网站连接读写分离服务器测试
+[root@host33 ~]# mysql -h192.168.4.77 -P4006 -uplj -p123qqq...A 
+-e  'select * from gamedb.user'
++--------+----------+
+| name   | password |
++--------+----------+
+| panglj | 666888   |
+| AAA    | 888      |
++--------+----------+
+[root@host33 ~]#
+ 
+[root@host33 ~]# mysql -h192.168.4.77 -P4006 -uplj -p123qqq...A 
+-e  'insert into gamedb.user values("bbb","123")'
+			 
+[root@host33 ~]# mysql -h192.168.4.77 -P4006 -uplj -p123qqq...A 
+-e  'select * from gamedb.user'
++--------+----------+
+| name   | password |
++--------+----------+
+| panglj | 666888   |
+| AAA    | 888      |
+| bbb    | 123      |
++--------+----------+
+[root@host33 ~]# 
+
+			#在master服务器本机只能查看到2条记录
+[root@host11 ~]# mysql -uroot -p123qqq...A  
+-e 'select * from gamedb.user'
++--------+----------+
+| name   | password |
++--------+----------+
+| panglj | 666888   |
+| bbb    | 123      |
++--------+----------+
+[root@host11 ~]# 			
+
 
 
 
