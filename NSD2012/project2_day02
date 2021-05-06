@@ -16,7 +16,7 @@ project2_day02之数据库项目（重点）
 	时间 到 09:32 		
 	1.3 测试配置 
 		1.3.1 在30主机 编写PHP脚本连接11 存储数据
-[root@nfs30 ~]#  vim  /sitedir/linkdb2.php 
+[root@nfs30 ~]#  vim  /sitedir/test2.php 
 <?php
 $conn=mysql_connect("192.168.4.11","plj","123qqq...A");
 mysql_select_db(“gamedb");
