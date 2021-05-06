@@ -73,3 +73,11 @@ mysql_query($sql,$conn);
 
 echo "save ok" ;
 ?>	   
+
+在客户端访问网站 33	
+http://192.168.4.33/tx.html
+	 plja
+	 123456
+
+在 数据库服务器本机查看图形界面输入的用户和密码
+[root@mysql11 ~]# mysql -uroot -p123qqq...A -e 'select * from gamedb.user'
