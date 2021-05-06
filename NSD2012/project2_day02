@@ -233,3 +233,199 @@ mysql-community-client mysql-community-libs-compat
 ]# tar -xvf Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar
 ]# yum -y install Percona-XtraDB-Cluster-*.rpm
 
+
+修改配置文件
+[root@host66 pxc]# cd /etc/percona-xtradb-cluster.conf.d/
+
+		]# vim  mysqld.cnf
+[mysqld]
+server-id=66
+:wq
+		
+		]# vim  wsrep.cnf
+wsrep_cluster_address=gcomm://
+wsrep_node_address=192.168.4.66
+wsrep_cluster_name=pxc-cluster
+wsrep_node_name=pxc-cluster-node-66
+wsrep_sst_auth="sstuser:123qqq...A" 
+:wq
+		
+启动mysql服务
+]# ls /var/lib/mysql/
+[root@host66 ~]# systemctl  start mysql
+[root@host66 ~]# netstat -utnlp  | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      3342/mysqld         
+[root@host66 ~]# 
+[root@host66 ~]# netstat -utnlp  | grep 4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      3342/mysqld         
+[root@host66 ~]# 
+
+数据库管理员登录
+[root@host66 ~]# mysql -uroot -p123qqq...A
+用户授权
+mysql> grant all on *.* to sstuser@"localhost" identified by "123qqq...A";
+
+查看状态信息
+[root@host66 ~]# mysql -uroot -p123qqq...A
+mysql> show slave status \G
+            Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+			
+mysql> show status like "%wsrep%" ;
+wsrep_incoming_addresses         | 192.168.4.66:3306 		
+wsrep_cluster_status             | Primary	
+	
+测试66主机：
+		1 网站主机在命令行连接11 主机存储数据
+[root@web33 ~]# mysql -h192.168.4.11 -uplj -p123qqq...A 
+-e ' insert into gamedb.user values("lili","120120")'
+[root@web33 ~]# 
+		
+		2 网站主机在命令行连接66 主机 也可以查看到存储的数据
+[root@web33 ~]# mysql -h192.168.4.66 -uplj -p123qqq...A 
+-e 'select * from gamedb.user where name="lili"'
++------+----------+
+| name | password |
++------+----------+
+| lili | 120120   |
++------+----------+
+[root@web33 ~]# 
+		
+
+		3.2.2 配置 88主机，如下配置：
+			1 安装pxc软件
+]# cd pxc
+]# rpm -q libev || yum -y install  libev-4.15-1.el6.rf.x86_64.rpm
+]# yum -y install percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm
+]# yum -y install qpress-1.1-14.11.x86_64.rpm
+]# tar -xvf Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar
+]# yum -y install Percona-XtraDB-Cluster-*.rpm			
+			2 修改配置文件
+[root@host88 pxc]# cd /etc/percona-xtradb-cluster.conf.d/
+
+		]# vim  mysqld.cnf
+[mysqld]
+server-id=88
+:wq
+		
+		]# vim  wsrep.cnf
+wsrep_cluster_address=gcomm://192.168.4.66
+wsrep_node_address=192.168.4.88
+wsrep_cluster_name=pxc-cluster
+wsrep_node_name=pxc-cluster-node-88
+wsrep_sst_auth="sstuser:123qqq...A" 
+:wq
+		
+启动mysql服务
+]# ls /var/lib/mysql/
+[root@host88 ~]# systemctl  start mysql			
+[root@host88 ~]# netstat -utnlp  | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      3342/mysqld         
+
+[root@host88 ~]# netstat -utnlp  | grep 4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      3342/mysqld         
+ 				
+
+管理员root 本机登录查看数据			
+mysql> select  * from gamedb.user;
+mysql> mysql> show status like "%wsrep%";
+wsrep_incoming_addresses | 192.168.4.88:3306,192.168.4.66:3306 |
+
+测试88主机：
+		1 网站主机在命令行连接11 主机存储数据
+[root@web33 ~]# mysql -h192.168.4.11 -uplj -p123qqq...A 
+-e ' insert into gamedb.user values("lucy","120120")'
+[root@web33 ~]# 
+		
+		2 网站主机在命令行连接66和88 主机 也可以查看到存储的数据
+[root@web33 ~]# mysql -h192.168.4.66 -uplj -p123qqq...A 
+-e 'select * from gamedb.user where name="lcuy"'
++------+----------+
+| name | password |
++------+----------+
+| lcuy | 120120   |
++------+----------+
+[root@web33 ~]# 
+[root@web33 ~]# mysql -h192.168.4.66 -uplj -p123qqq...A 
+-e 'select * from gamedb.user where name="lcuy"'
++------+----------+
+| name | password |
++------+----------+
+| lcuy | 120120   |
++------+----------+
+[root@web33 ~]#
+
+		
+		3.2.3 配置 10主机
+			1 安装pxc软件
+]# cd pxc
+]# rpm -q libev || yum -y install  libev-4.15-1.el6.rf.x86_64.rpm
+]# yum -y install percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm
+]# yum -y install qpress-1.1-14.11.x86_64.rpm
+]# tar -xvf Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar
+]# yum -y install Percona-XtraDB-Cluster-*.rpm	
+
+2 修改配置文件
+[root@host10 pxc]# cd /etc/percona-xtradb-cluster.conf.d/
+
+		]# vim  mysqld.cnf
+[mysqld]
+server-id=10
+:wq
+		
+		]# vim  wsrep.cnf
+wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.88
+wsrep_node_address=192.168.4.10
+wsrep_cluster_name=pxc-cluster
+wsrep_node_name=pxc-cluster-node-10
+wsrep_sst_auth="sstuser:123qqq...A" 
+:wq
+		
+启动mysql服务
+]# ls /var/lib/mysql/
+[root@host10 ~]# systemctl  start mysql			
+[root@host10 ~]# netstat -utnlp  | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN      3342/mysqld         
+
+[root@host18 ~]# netstat -utnlp  | grep 4567
+tcp        0      0 0.0.0.0:4567            0.0.0.0:*               LISTEN      3342/mysqld         
+ 				
+
+管理员root 本机登录查看数据			
+mysql> select  * from gamedb.user;
+mysql> mysql> show status like "%wsrep%";
+wsrep_incoming_addresses | 192.168.4.88:3306,192.168.4.66:3306,192.168.4.10:3306 |
+
+测试88主机：
+		1 网站主机在命令行连接11 主机存储数据
+[root@web33 ~]# mysql -h192.168.4.11 -uplj -p123qqq...A 
+-e ' insert into gamedb.user values("lilei","120120")'
+[root@web33 ~]# 
+		
+		2 网站主机在命令行连接66和88及10 主机 也可以查看到存储的数据
+[root@web33 ~]# mysql -h192.168.4.66 -uplj -p123qqq...A 
+-e 'select * from gamedb.user where name="lilei"'
++------+----------+
+| name | password |
++------+----------+
+| lilei | 120120   |
++------+----------+
+[root@web33 ~]# 
+[root@web33 ~]# mysql -h192.168.4.10 -uplj -p123qqq...A 
+-e 'select * from gamedb.user where name="lilei"'
++------+----------+
+| name | password |
++------+----------+
+| lilei | 120120   |
++------+----------+
+[root@web33 ~]#
+
+[root@web33 ~]# mysql -h192.168.4.88 -uplj -p123qqq...A 
+-e 'select * from gamedb.user where name="lilei"'
++------+----------+
+| name | password |
++------+----------+
+| lilei | 120120   |
++------+----------+
+[root@web33 ~]#				  
+		  
