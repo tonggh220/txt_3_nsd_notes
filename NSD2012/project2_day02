@@ -211,5 +211,25 @@ mysql> start slave;
 [root@web33 ~]# mysql -h192.168.4.66 -uplj -p123qqq...A 
 -e 'select * from gamedb.user where user="jerry"'
 
-    3.2 。。。。。。。
+    3.2  创建PXC集群
+		3.2.1  在pxcnode66主机,做如下配置：
+停止mysqld服务 systemctl stop mysqld
+
+卸载mysqld服务软件
+]# rpm -qa  | grep  mysql
+
+]# rpm -e --nodeps mysql-community-common mysql-community-devel 
+mysql-community-test mysql-community-minimal-debuginfo 
+mysql-community-libs mysql-community-server 
+mysql-community-embedded mysql-community-embedded-devel 
+mysql-community-embedded-compat 
+mysql-community-client mysql-community-libs-compat
+
+安装PXC软件
+]# cd pxc
+]# rpm -q libev || yum -y install  libev-4.15-1.el6.rf.x86_64.rpm
+]# yum -y install percona-xtrabackup-24-2.4.13-1.el7.x86_64.rpm
+]# yum -y install qpress-1.1-14.11.x86_64.rpm
+]# tar -xvf Percona-XtraDB-Cluster-5.7.25-31.35-r463-el7-x86_64-bundle.tar
+]# yum -y install Percona-XtraDB-Cluster-*.rpm
 
