@@ -159,3 +159,57 @@ echo  $client->get("school");
 "tarenaC "
 192.168.4.52:6379> 
 
+三、数据迁移 （在线迁移）
+	3.1  把66主机配置为11的slave 服务器，具体操作如下：		
+		    1 安装软件mysql-5.7.17.tar  			
+            2 修改配置文件 （指定server_id=66）
+            3 启动mysqld服务 
+            4 确保数据一致 (使用innobackupex命令)
+				4.1  配置11主机
+						 具体操作如下 ：
+]# rpm -ivh libev-4.15-1.el6.rf.x86_64.rpm
+]# yum -y  install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm
+]# innobackupex  --user root --password 123qqq...A  --slave-info  /allbak --no-timestamp   //--slave-info 记录日志信息
+]# scp -r /allbak  root@192.168.4.66:/root/
+
+				4.2 配置66主机，具体操作如下 ：
+]# rpm -ivh libev-4.15-1.el6.rf.x86_64.rpm
+]# yum -y  install percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm				
+				#使用备份文件恢复数据
+325  innobackupex  --apply-log /root/allbak
+  326  innobackupex  --copy-back /root/allbak
+  327  ls /var/lib/mysql
+  328  ls /var/lib/mysql -l
+  329  chown -R mysql:mysql /var/lib/mysql 
+  330  ls /var/lib/mysql -l
+  331  systemctl  start mysqld
+  332  mysql -uroot -p123qqq...A
+mysql> select  * from gamedb.user;
+mysql> select user from mysql.user;
+
+			 5 指定主服务器 (change master  to)
+[root@host66 ~]# grep "master11" /root/allbak1/xtrabackup_info 
+binlog_pos = filename 'master11.000003', position '966'			 
+	
+]#mysql -uroot  -p123qqq...A
+mysql> change mater to  master_host="192.168.4.11",
+master_user="repluser",master_password="123qqq...A",
+master_log_file="master11.000003",master_log_pos=966;
+
+mysql> start slave;
+	
+		  6 查看状态信息  show  slave  status\G;
+			Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+			Master_Host: 192.168.4.11
+			
+		  7 在33主机，命令行连接11 存储数据
+[root@web33 ~]# mysql -h192.168.4.11 -uplj -p123qqq...A 
+-e ' insert into gamedb.user values("jerry","787878")'
+		  
+		  8 在66主机可以查看到同样的数据
+[root@web33 ~]# mysql -h192.168.4.66 -uplj -p123qqq...A 
+-e 'select * from gamedb.user where user="jerry"'
+
+    3.2 。。。。。。。
+
