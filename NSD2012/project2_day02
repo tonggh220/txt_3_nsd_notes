@@ -81,3 +81,81 @@ http://192.168.4.33/tx.html
 
 在 数据库服务器本机查看图形界面输入的用户和密码
 [root@mysql11 ~]# mysql -uroot -p123qqq...A -e 'select * from gamedb.user'
+
+
+二、部署内存存储服务 （实现网站加速，把网站的热点数据，事先存储在内存服务服务器里）
+	2.1 创建redis集群
+		   1 准备6台redis服务器
+		   2 分别启用6台服务的集群功能
+		   3 配置管理主机
+		   4 创建集群 （6台集群都不允许有数据和连接密码）
+		   5 查看集群信息
+		 时间到11：50 
+		   
+	2.2 配置网站可以连接redis集群
+		  1 安装软件提供模块   redis-cluster-4.3.0.tgz
+ 		  2 调用模块
+		  3 查看Redis模块
+		  
+	2.3 测试集群
+		2.3.1  在 30主机的共享目录下编写php脚本
+			   #编写存储数据的脚本
+]#vim /sitedir/set.php
+
+<?php
+$redis_list = ['192.168.4.51:6379','192.168.4.52:6379','192.168.4.53:6379','192.168.4.54:6379','192.168.4.55:6379','192.168.4.56:6379'];
+$client = new RedisCluster(NUll,$redis_list);
+$client->set("i","tarenaA ");
+$client->set("j","tarenaB ");
+$client->set("k","tarenaC ");
+echo "save data over"
+?>
+:wq
+
+			   
+			   #查询数据脚本
+]# vim  /sitedir/get.php			   
+<?php
+$redis_list = ['192.168.4.51:6379','192.168.4.52:6379','192.168.4.53:6379','192.168.4.54:6379','192.168.4.55:6379','192.168.4.56:6379'];
+
+$client = new RedisCluster(NUll,$redis_list);
+
+echo $client->get("i");
+echo $client->get("j");
+echo $client->get("k");
+
+?>
+:wq
+
+		存储+查询
+]# vim  /sitedir/sg.php			   
+<?php
+$redis_list = ['192.168.4.51:6379','192.168.4.52:6379','192.168.4.53:6379','192.168.4.54:6379','192.168.4.55:6379','192.168.4.56:6379'];
+
+$client = new RedisCluster(NUll,$redis_list);
+
+$client->set("school","tarena");
+echo  $client->get("school");
+?>
+:wq
+
+			   
+		2.3.2 在客户端访问33网站服务器执行脚本
+]# curl http://192.168.4.33/set.php
+
+]# curl http://192.168.4.33/get.php		
+		
+
+        2.3.3 在命令行连接集群中的主机查看 脚本存储的数据
+
+[root@mysql56 ~]# redis-cli  -c -h 192.168.4.51 -p 6379
+192.168.4.51:6379> keys *
+1) "j"
+192.168.4.51:6379> get i
+-> Redirected to slot [15759] located at 192.168.4.53:6379
+"tarenaA "
+192.168.4.53:6379> get k
+-> Redirected to slot [7629] located at 192.168.4.52:6379
+"tarenaC "
+192.168.4.52:6379> 
+
