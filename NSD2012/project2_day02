@@ -427,5 +427,202 @@ wsrep_incoming_addresses | 192.168.4.88:3306,192.168.4.66:3306,192.168.4.10:3306
 +------+----------+
 | lilei | 120120   |
 +------+----------+
-[root@web33 ~]#				  
+[root@web33 ~]#		
+
+
+休息到 17:12
+
+	3.2.4 三台数据库服务器的公共配置
+	host66]# vim wsrep.cnf
+wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.88,192.168.4.10
+
+	host88]# vim wsrep.cnf
+wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.88,192.168.4.10
+
+	host10]# vim wsrep.cnf
+wsrep_cluster_address=gcomm://192.168.4.66,192.168.4.88,192.168.4.10
+		
+	3.2.5 给表添加主键字段
+mysql_11]# mysql -uroot  -p123qqq...A
+	mysql> alter table gamedb.user add
+	id  int  primary key auto_increment first;
+	
+	mysql> select  * from gamedb.user;
+	
+	3.2.6 网站服务器连接集群中的任意1台服务器存储数据，
+	      另外2台服务器会自动同步数据。
+web33]# mysql -h192.168.4.66 -uplj -p123qqq...A -e 
+'insert into gamedb.user(name,password)values("a","a")'
+
+web33]# mysql -h192.168.4.88 -uplj -p123qqq...A -e 
+'select  * from  gamedb.user'
+
+web33]# mysql -h192.168.4.10 -uplj -p123qqq...A -e 
+'insert into gamedb.user(name,password)values("b","b")'		  
+		
+web33]# mysql -h192.168.4.66 -uplj -p123qqq...A -e 
+'select  * from  gamedb.user'	
+		
+四、部署集群
+	4.1 LB集群(带健康检查的LB集群)
+		使用IP地址ip  192.168.4.99 做调度器 把请求
+		平均分发给PXC集群中的主机 66  10   88
+		192.168.4.99做如下配置：
+				1 安装haproxy软件
+				yum -y install haproxy
+				
+				2 修改配置文件
+[root@haproxy99 ~]# vim /etc/haproxy/haproxy.cfg 
+listen mysql_3306 *:3306
+    mode    tcp         			//mysql 使用 tcp 协议
+    option  tcpka      			//使用长连接
+    balance roundrobin    		//调度算法
+    server  mysql_01 192.168.4.66:3306 check 
+    server  mysql_02 192.168.4.10:3306 check 
+    server  mysql_03 192.168.4.88:3306 check 
+
+				
+				3 启动haproxy服务
+[root@haproxy99 ~]# systemctl  start haproxy
+[root@haproxy99 ~]# netstat -utnlp  | grep  3306
+tcp        0      0 0.0.0.0:3306            0.0.0.0:*    LISTEN      1271/haproxy  				
+				
+				4 web33 连接调度器99 访问mysql服务
+		
+[root@web33 ~]# mysql -h192.168.4.99 -uplj -p123qqq...A -e 'select @@hostname'
++------------+
+| @@hostname |
++------------+
+| pxc10      |
++------------+
+[root@web33 ~]# mysql -h192.168.4.99 -uplj -p123qqq...A -e 'select @@hostname'
++------------+
+| @@hostname |
++------------+
+| pxc88      |
++------------+
+[root@web33 ~]# mysql -h192.168.4.99 -uplj -p123qqq...A -e 'select @@hostname'
++------------+
+| @@hostname |
++------------+
+| host66     |
++------------+
+[root@web33 ~]# 
+		
+	
+	4.2 HA集群 (解决调度器99 主机的 单点故障问题)
+	让192.168.4.98 主机做备用的调度器，具体配置如下：
+			1. 安装haproxy软件
+			yum -y install hapxory
+			2. 修改配置文件
+host99]# scp /etc/haproxy/haproxy.conf  root@!92.168.4.98:/etc/haproxy/			
+			3. 启动haprxoy服务
+			systemctl  start  haproxy
+			netstat -utnlp  | grep 3306
+			
+测试备用的调度器98
+[root@web33 ~]# mysql -h192.168.4.98 -uplj -p123qqq...A -e 'select @@hostname'
++------------+
+| @@hostname |
++------------+
+| pxc10      |
++------------+
+[root@web33 ~]# mysql -h192.168.4.98 -uplj -p123qqq...A -e 'select @@hostname'
++------------+
+| @@hostname |
++------------+
+| pxc88      |
++------------+
+[root@web33 ~]# mysql -h192.168.4.98 -uplj -p123qqq...A -e 'select @@hostname'
++------------+
+| @@hostname |
++------------+
+| host66     |
++------------+
+
+
+			
+			4. 配置ha集群
+				4.1 分别在 99 和 98 主机 安装kepalived软件
+				]# yum -y install keepalived
+				
+				4.2 分别修改99 和 98 主机 配置文件目录）
+host99]# ]# vim /etc/keepalived/keepalived.conf 
+
+#删除文件中37行开始的下方所有行
+
+vrrp_iptables
+}
+
+vrrp_instance VI_1 {
+    state MASTER  角色
+    interface eth0  vip 部署的网卡口
+    virtual_router_id 51
+    priority 150  优先级
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }   
+    virtual_ipaddress {
+        192.168.4.100 vip地址
+    }   
+}
+:wq
+
+[root@haproxy99 ~]# scp /etc/keepalived/keepalived.conf root@192.168.4.98:/etc/keepalived/
+
+host98]#  vim /etc/keepalived/keepalived.conf 
+
+ vrrp_iptables
+}
+
+vrrp_instance VI_1 {
+    state BACKUP 角色
+    interface eth0
+    virtual_router_id 51
+    priority 100 优先级 
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }
+    virtual_ipaddress {
+        192.168.4.100
+    }
+}
+				
+				
+				4.3 分别启动99 和 98 主机keepalived服务
+[root@haproxy99 ~]# systemctl  start keepalived				
+[root@haproxy98 ~]# systemctl  start keepalived				
+				
+				4.4 查看vip 地址
+[root@haproxy99 ~]# ip addr show | grep  192.168.4.100
+    inet 192.168.4.100/32 scope global eth0
+				
+			5.测试高可用集群
+				 5.1 在99主机停止keepalived服务 
+				 5.2 在98 可以查看到 Vip 地址
+
+			6 网站33主机 连接vip地址 访问数据库服务 
+[root@web33 ~]# mysql -h192.168.4.100 -uplj -p123qqq...A -e 'select @@hostname'
++------------+
+| @@hostname |
++------------+
+| pxc10      |
++------------+
+[root@web33 ~]# mysql -h192.168.4.100 -uplj -p123qqq...A -e 'select @@hostname'
++------------+
+| @@hostname |
++------------+
+| pxc88      |
++------------+
+[root@web33 ~]# mysql -h192.168.4.100 -uplj -p123qqq...A -e 'select @@hostname'
++------------+
+| @@hostname |
++------------+
+| host66     |
++------------+
+[root@web33 ~]#		  
 		  
