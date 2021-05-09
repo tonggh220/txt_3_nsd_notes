@@ -1,0 +1,471 @@
+
+			  
+尹贺  金翊   张亚运   海森   石磊   郑春兰     薛迪
+
+线上的同学也报一下名字    王佳新    刘心    郭大稀
+
+5/9   cluster_day03    security_day01
+
+准备1台虚拟机 要求如下  
+IP地址  192.168.4.51    (LNMP)
+root
+123456
+
+
+ifconfig
+
+eth0  eth1  eth2  eth3
+
+cd  /etc/sysconfig/network-scripts/
+ls
+ifcfg-eth0   ifcfg-eth1   ifcfg-eth2  ifcfg-eth3
+
+vim  ifcfg-eth0
+IPADDR=192.168.4.51
+:wq
+
+ifdown  eth0
+ifup  eth0
+
+ifconfig  eth0
+
+]# ssh 192.168.4.51
+hostname   host51
+echo  host51  > /etc/hostname
+exit
+]# ssh 192.168.4.51
+
+yum repolist
+setenforce 0
+systemctl stop firewalld
+
+]# scp /linux-soft/2/lnmp_soft.tar.gz  192.168.4.51:/root/
+
+项目的最终目标： 搭建网站集群
+
+部署网站服务器  192.168.4.51  (LNMP)
+L   Linux操作系统
+N  nginx   提供网站服务的软件
+M mysql  提供数据库服务的软件
+P  php      动态网站开发语言  
+                 静态网站   html  css
+			 
+linux  tomcat   nginx   apache
+            JAVA            PHP
+部署LNMP 环境的步骤;
+		1 安装源码的nginx软件
+280  tar -zxvf nginx-1.12.2.tar.gz 
+  281  ls
+  282  cd nginx-1.12.2/
+  283  ls
+  284  ./configure --help
+  285  ./configure 
+  286  yum -y install gcc openssl-devel zlib-devel
+  287  ./configure 
+  288  make
+  289  make install
+          ls /usr/local/nginx/	
+		  
+		2 安装mysql软件
+]# yum -y install mariadb-server  mariadb
+	休息到 11:20 
+		3 安装 php 软件
+]# yum -y install php php-devel php-mysql  php-fpm		
+		4 启动服务
+			   4.1 启动 nginx 服务
+]# vim +65 /usr/local/nginx/conf/nginx.conf	
+ 65         location ~ \.php$ {
+ 66             root           html;
+ 67              fastcgi_pass   127.0.0.1:9000;
+ 68             fastcgi_index  index.php;
+ 69         #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_s    cript_name;
+ 70             include        fastcgi.conf;
+ 71         }
+:wq
+[root@host51 ~]# /usr/local/nginx/sbin/nginx -t
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+[root@host51 ~]# 
+[root@host51 ~]# /usr/local/nginx/sbin/nginx
+[root@host51 ~]# 
+[root@host51 ~]# ps -C nginx
+  PID TTY          TIME CMD
+ 3737 ?        00:00:00 nginx
+ 3738 ?        00:00:00 nginx
+[root@host51 ~]# 
+[root@host51 ~]# netstat  -utnlp  | grep nginx
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      3737/nginx: master  
+[root@host51 ~]# 
+		   
+			   4.2 启动mysql服务
+[root@host51 ~]# systemctl  start mariadb
+
+[root@host51 ~]# ls /var/lib/mysql/
+aria_log.00000001  ib_logfile0  mysql.sock
+aria_log_control   ib_logfile1  performance_schema
+ibdata1            mysql        test
+[root@host51 ~]# 
+[root@host51 ~]# netstat  -utnlp  | grep  3306
+tcp        0      0 0.0.0.0:3306            0.0.0.0:*               LISTEN      4004/mysqld         
+[root@host51 ~]# 
+[root@host51 ~]# ps -C mysqld
+  PID TTY          TIME CMD
+ 4004 ?        00:00:00 mysqld
+[root@host51 ~]# 
+			   
+			   4.3 启动php-fpm服务
+[root@host51 ~]# systemctl  start php-fpm
+[root@host51 ~]# netstat  -utnlp  | grep 9000
+tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      4055/php-fpm: maste 
+[root@host51 ~]# 
+			   
+			   4.4 把服务设置为开机运行
+			   ]# systemctl  enable mariadb
+               ]# systemctl  enable  php-fpm
+			   ]# echo  "/usr/local/nginx/sbin/nginx" >> /etc/rc.local
+			   ]# chmod  +x /etc/rc.local
+			   
+		5 测试配置
+			  连接mysql服务
+			  [root@host51 ~]# mysql
+			  MariaDB [(none)]> exit
+             Bye
+             [root@host51 ~]#
+
+			  编写php脚本
+]# vim /usr/local/nginx/html/index.php
+ <?php
+ echo  "welcome to school " ;
+?>
+:wq
+
+		修改网站的首页文件名为  index.php
+		]# vim /usr/local/nginx/conf/nginx.conf
+         location / { 
+            root   html;
+            index  index.php;
+        }    
+        :wq
+		]# /usr/local/nginx/sbin/nginx  -s stop
+        ]# /usr/local/nginx/sbin/nginx 
+  		
+		
+			  客户端连接nginx服务 访问php脚本
+[root@host52 ~]# curl  http://192.168.4.51
+welcome to school 			  
+			  
+			  
+			 配置负载均衡集群，解决服务的性能问题
+			 1  准备第2台网站服务器  192.168.4.52 ，具体操作如下 
+			      1.1 部署LNMP环境
+			      1.2 把51主机的网页文件拷贝到本机
+[root@host52 ~]# scp 192.168.4.51:/usr/local/nginx/html/index.php  /usr/local/nginx/html/
+
+[root@host52 ~]# ls /usr/local/nginx/html/
+50x.html  index.php
+[root@host52 ~]# 
+
+				 1.3 访问网站52 能看到和 51 一样的网页内容
+[root@host52 ~]# curl  http://192.168.4.52
+welcome to school 
+[root@host52 ~]# 
+[root@host52 ~]# curl  http://192.168.4.51
+welcome to school 
+				 
+				 
+				  
+			 2  创建1台新的虚拟机做调度器  ip  192.168.4.53 （做负载均衡集群的调度器）
+			 
+			 3  使用haproxy 软件 ，配置负载均衡集群
+			     在53主机做如下配置：
+				 3.1 安装软件
+	                   ]# yum -y install haproxy
+			 
+				 3.2 修改配置文件
+[root@host53 ~]# vim /etc/haproxy/haproxy.cfg  （添加在文件的末尾）
+listen mylb  *:80
+        balance     roundrobin
+        server  web1 192.168.4.51:80 check
+        server  web2 192.168.4.52:80 check
+:wq
+			 
+				 3.3 启动服务
+[root@host53 ~]# systemctl  start haproxy	
+[root@host53 ~]# systemctl  enable haproxy
+[root@host53 ~]# netstat -utnlp  | grep  80
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      1133/haproxy        
+[root@host53 ~]#			 
+		    4 测试配置
+			#客户端把网站的访问请求发给53主机，能够出现网站页面
+[root@teacher ~]# curl  http://192.168.4.53
+welcome to school 			 
+			
+			#修改网站页面内容 ，测试负载均衡
+[root@host52 ~]# echo "666" > /usr/local/nginx/html/a.html			
+[root@host51 ~]# echo  "777" > /usr/local/nginx/html/a.html
+		   #客户端访问 页面内容是交替出现 
+			curl  http://192.168.4.53/a.html
+			
+[root@teacher ~]# curl  http://192.168.4.53/a.html
+777
+[root@teacher ~]# curl  http://192.168.4.53/a.html
+666
+[root@teacher ~]# 
+[root@teacher ~]# curl  http://192.168.4.53/a.html
+777
+[root@teacher ~]# curl  http://192.168.4.53/a.html
+666
+[root@teacher ~]#			
+			  
+			  #测试健康检查功能
+			  停止某台 网站主机的 nginx 服务，53 就不会把访问网站请求
+			  分发给坏掉的网站主机了 
+[root@host52 ~]# /usr/local/nginx/sbin/nginx  -s stop
+[root@teacher ~]# curl  http://192.168.4.53/a.html
+777
+[root@teacher ~]# curl  http://192.168.4.53/a.html
+777
+[root@teacher ~]# curl  http://192.168.4.53/a.html
+777
+[root@teacher ~]# 			  
+			 
+			#定义访问健康检查页面的路径
+[root@host53 ~]# vim /etc/haproxy/haproxy.cfg  （添加在文件的末尾）			
+listen status  0.0.0.0:1080
+       stats auth admin:123456
+       stats uri  /status	
+:wq
+[root@host53 ~]# systemctl  restart haproxy	   
+		
+            打开真机的浏览器 在地址栏里输入
+http://192.168.4.53:1080/status	
+			用户 admin
+		    密码 123456
+			
+			使用keepalived软件部署 HA 集群
+诉求：当53主机坏掉时，54主机能自动接替53 继续提高网站服务
+		    实现步骤：
+			1 准备1台新的虚拟机，配置ip地址 192.168.4.54
+
+			2 配置54 也能够提供haproxy 服务 把接收到的访问网站的请求平均分发给
+			主机 51 和 52 ，在54主机做如下配置
+			   1 安装haproxy软件
+[root@host54 ~]#	 yum  -y  install haproxy		   
+			   2 拷贝53主机的 haproxy.conf文件
+[root@host54 ~]# scp 192.168.4.53:/etc/haproxy/haproxy.cfg /etc/haproxy/	
+		   
+			   3 启动haproxy 服务 
+[root@host54 ~]# systemctl  start haproxy
+			
+[root@host54 ~]# netstat  -utnlp  | grep  80
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      866/haproxy         
+tcp        0      0 0.0.0.0:1080            0.0.0.0:*               LISTEN      866/haproxy         
+[root@host54 ~]# 			
+			  
+			  测试54 能否提供网站的负载均衡服务
+[root@teacher ~]# curl  http://192.168.4.54/a.html
+777
+[root@teacher ~]# curl  http://192.168.4.54/a.html
+666
+[root@teacher ~]# curl  http://192.168.4.54/a.html
+777
+[root@teacher ~]# curl  http://192.168.4.54/a.html
+666
+[root@teacher ~]#			  
+			  
+			  在 主备2台调度器上都要安装keepalived 软件
+[root@host53 ~]# yum -y install keepalived			  
+[root@host54 ~]# yum -y install keepalived			  
+			  
+			  修改做主调度器53的keepalived.conf
+			  vim /etc/keepalived/keepalived.conf
+		       *** 自己删除35行以下的所有行
+! Configuration File for keepalived
+
+global_defs {
+   notification_email {
+     acassen@firewall.loc
+     failover@firewall.loc
+     sysadmin@firewall.loc
+   }
+   notification_email_from Alexandre.Cassen@firewall.loc
+   smtp_server 192.168.200.1
+   smtp_connect_timeout 30
+   router_id LVS_DEVEL
+   vrrp_skip_check_adv_addr
+   vrrp_strict
+   vrrp_garp_interval 0
+   vrrp_gna_interval 0
+   vrrp_iptables  #禁用iptables 模块
+}
+
+vrrp_instance VI_1 {
+    state MASTER   角色说明
+    interface eth0     本机使用的网卡名称
+    virtual_router_id 51
+    priority 150  #优先级
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }
+    virtual_ipaddress {
+        192.168.4.100    #VIP地址
+    }
+			   
+
+           把文件拷贝给备用的54主机
+[root@host53 ~]# scp /etc/keepalived/keepalived.conf  192.168.4.54:/etc/keepalived/	
+
+		  修改备用的54主机 的keepalived.conf  文件
+[root@host54 ~]# vim /etc/keepalived/keepalived.conf		 
+      #其他配置项不需要动 
+		  state BACKUP
+		  priority 100
+:wq		  
+
+			启动keepalived服务（先启动那台主机的keepalived服务都可以）
+ [root@host53 ~]# systemctl  start keepalived
+[root@host53 ~]# 
+[root@host53 ~]# ip addr show  | grep  192.168.4
+    inet 192.168.4.53/24 brd 192.168.4.255 scope global noprefixroute eth0
+    inet 192.168.4.100/32 scope global eth0    #VIP地址
+[root@host53 ~]# 
+                   
+[root@host54 ~]# systemctl  start keepalived
+[root@host54 ~]# 
+[root@host54 ~]# ip addr show  | grep  192.168.4
+    inet 192.168.4.54/24 brd 192.168.4.255 scope global noprefixroute eth0
+[root@host54 ~]# 			
+
+				把53主机的keepalived服务停止，在54主机可以查看到vip地址
+[root@host53 ~]# systemctl  stop keepalived
+[root@host53 ~]# ip addr show  | grep  192.168.4
+    inet 192.168.4.53/24 brd 192.168.4.255 scope global noprefixroute eth0
+[root@host53 ~]# 
+				
+[root@host54 ~]# ip addr show  | grep  192.168.4
+    inet 192.168.4.54/24 brd 192.168.4.255 scope global noprefixroute eth0
+    inet 192.168.4.100/32 scope global eth0  #VIP地址
+[root@host54 ~]# 
+				
+				
+				客户端连接vip地址可以访问到网页文件
+[root@teacher ~]# curl  http://192.168.4.100/a.html
+777
+[root@teacher ~]# curl  http://192.168.4.100/a.html
+666
+[root@teacher ~]# curl  http://192.168.4.100/a.html
+777
+[root@teacher ~]# curl  http://192.168.4.100/a.html
+666
+[root@teacher ~]#				
+
+		共享存储(实现共享存储的服务有哪些：ISCSI   nfs    Ceph  )    
+			  在ip地址192.168.4.55的主机配置NFS服务，来存储网站集群中
+			  所有主机的网页文件。具体操作如下：
+			  1 创建新的虚拟机ip地址配置为 192.168.4.55
+			  
+			  2 安装软件
+[root@host55 ~]# yum -y install nfs-utils rpcbind
+			  
+			  3 在55主机添加1块5G 磁盘，然后把5G 磁盘空间共享给网站服务器使用
+			  
+			  4   把添加的5G 磁盘 分区->格式->挂载
+[root@host55 ~]#fdisk  /dev/vdb	  
+
+[root@host55 ~]# mkfs.xfs  /dev/vdb1 
+
+[root@host55 ~]# blkid /dev/vdb1
+/dev/vdb1: UUID="9fa20881-456c-4b4e-96bb-25741d7c70c9" TYPE="xfs" 
+[root@host55 ~]# 
+
+[root@host55 ~]# mkdir /share
+[root@host55 ~]# chmod o+w /share
+			  
+[root@host55 ~]# vim /etc/fstab	 添加在最后1行
+/dev/vdb1		/share     xfs   defaults  0  0
+:wq
+
+[root@host55 ~]# mount -a
+[root@host55 ~]# 
+[root@host55 ~]# mount  | grep  "/dev/vdb1"
+/dev/vdb1 on /share type xfs (rw,relatime,attr2,inode64,noquota)
+[root@host55 ~]# 
+[root@host55 ~]# df -h /share/
+/dev/vdb1       5.0G   33M  5.0G    1% /share
+[root@host55 ~]# 	
+
+				修改NFS配置文件共享/share 目录
+[root@host55 ~]# vim  /etc/exports
+/share			 *（rw）
+:wq
+				 启动服务
+[root@host55 ~]# systemctl  restart rpcbind
+[root@host55 ~]# systemctl  restart nfs
+[root@host55 ~]# systemctl  enable nfs				 
+[root@host55 ~]# systemctl  enable rpcbind
+				 
+				 查看共享
+[root@host55 ~]# showmount -e localhost
+Export list for localhost:
+/share *
+[root@host55 ~]#				 
+				 
+				分别配置web集群中所有主机： 
+					 把已有的网页文件 移动到NFS共享目录里
+[root@host51 ~]# scp /usr/local/nginx/html/*.html 192.168.4.55:/share/				 
+[root@host51 ~]# scp /usr/local/nginx/html/*.php  192.168.4.55:/share/	
+
+						网站服务器 删除目录下的网页文件
+						~]# rm -rf  /usr/local/nginx/html/*
+
+						停止网站服务
+						]# /usr/local/nginx/sbin/nginx  -s stop
+						
+						挂载nfs共享目录
+						]# which showmount || yum -y install nfs-utils
+						]# showmount -e  192.168.4.55
+Export list for 192.168.4.55:
+/share *
+					    ]#vim /etc/fstab
+ 192.168.4.55:/share     /usr/local/nginx/html   nfs  defaults        0 0
+ :wq
+					]# mount -a
+
+                    ]# mount | grep  "/share"
+192.168.4.55:/share on /usr/local/nginx/html type nfs4 (rw,relatime,vers=4.1,rsize=262144,wsize=262144,namlen=255,hard,proto=tcp,port=0,timeo=600,retrans=2,sec=sys,clientaddr=192.168.4.51,local_lock=none,addr=192.168.4.55)
+
+                       ]# ls /usr/local/nginx/html/
+50x.html  a.html  index.php
+
+                       测试： 在55的共享目录/share下编写新的网页文件
+[root@host55 ~]# echo "test web page"  > /share/c.html
+[root@host55 ~]# ls /share/
+50x.html  a.html  c.html  index.php
+[root@host55 ~]#					   
+[root@host52 ~]# ls /usr/local/nginx/html/c.html 
+/usr/local/nginx/html/c.html
+[root@host52 ~]# 
+[root@host51 ~]# ls /usr/local/nginx/html/c.html 
+/usr/local/nginx/html/c.html
+[root@host52 ~]# 
+					   
+								   客户端连接vip 访问网站服务可以访问的页面内容
+[root@host54 ~]# curl  http://192.168.4.100/c.html
+test web page
+[root@host54 ~]# curl  http://192.168.4.100/c.html
+test web page
+								   
+								   
+
+
+
+			  业务分离 （把数据分离出来） 
+
+
+			  DNS 主机名解析
+	www.wzj.com   A   192.168.4.100 		
+
+
+    5/16  security_day01+day02+day03   着重讲  day03  的 防火墙服务 iptables 
