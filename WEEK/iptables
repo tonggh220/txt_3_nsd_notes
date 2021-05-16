@@ -1,0 +1,223 @@
+security_day03  iptables防火墙服务    firewalld (RHEL7+)
+1  iptables防火墙服务介绍
+]# rpm -q iptables-services || yum -y install  iptables-services
+]# systemctl  start iptables
+]# systemctl  enable iptables
+
+2 iptables 组成： 由4张表   5条链组成
+		表：防火墙服务的功能分类
+        filter表（默认表）  对到达防火墙主机的Ip包做过虑
+		nat表    对到达防火墙主机的Ip包中的源Ip地址或目标ip地址做转换
+		mangle表    对到达防火墙主机的Ip包打标记
+		raw表   对ip包的状态做跟踪
+	
+		链：用来匹配ip包传输的方向（参照物 防火墙服务器）
+		INPUT            处理进入防火墙主机的ip包
+		OUTPUT        处理从防火墙主机出去的ip包
+		FORWARD    处理经过防火墙主机的ip包
+		PREROUTING      路由前处理
+		POSTROUTING   路由后处理
+
+表---->链 ---->规则
+		
+iptables命令使用格式		
+	    iptables  -t  表名   选项   链    匹配条件   -j 处理动作
+		
+2 		 iptables  -t filter   -A    -s   192.168.4.10/24    -j   ACCEPT	
+1  iptables  -t filter   -A    -s   192.168.4.0/24    -j  DROP
+
+
+		
+		
+3 iptables 基本使用(命令和选项的使用)
+选项   
+iptables  -L
+iptables  -L --line-numbers
+iptables  -nL --line-numbers
+iptables -t filter  -nL --line-numbers
+
+]# iptables -t nat  -nL --line-numbers
+]# iptables -t mangle  -nL --line-numbers
+]# iptables -t raw  -nL --line-numbers
+
+]# iptables -t filter -nL  INPUT
+
+]# iptables -t nat -nL  INPUT
+]# iptables -t filter -nL  INPUT --line-numbers 
+
+]# iptables -t filter -D  INPUT 5
+]# iptables -t filter -D  INPUT 1
+]# iptables -t filter -F  INPUT 
+]# iptables -t filter -F
+]# iptables -t nat -F
+
+匹配条件
+     
+
+
+处理动作
+ACCPET
+DROP   丢弃 （不给任何回应）
+REJECT 拒绝  （会给出提示）
+LOG
+
+filter表的使用  
+       主机型防火墙（启动防火墙服务保护的本机）
+      
+iptables  -t filter  -F  
+iptables -t filter  -A INPUT   -p  tcp  --dport  22  -j  ACCEPT
+iptables  -t filter  -P INPUT  DROP
+iptables -t filter  -nL  INPUT --line-numbers 
+]# iptables -t filter  -I INPUT  -p icmp  -j  ACCEPT
+]# iptables -t filter -I INPUT 2 -p tcp --dport 80 -j ACCEPT
+]# iptables -t filter  -I INPUT -p icmp -s 192.168.4.53 -j REJECT
+]# iptables -t filter  -I INPUT -p icmp -s 192.168.4.54 -j DROP
+
+]# iptables -t filter  -D INPUT 5
+
+]# iptables   -t  filter   -A  INPUT  -p  tcp  --drop  22  -s  192.168.4.54 -j  ACCEPT
+
+]# iptables   -t  filter   -D  INPUT 3
+]# iptables   -t  filter   -D  INPUT 2
+]# iptables   -t  filter   -D  INPUT 1
+]# iptables -t filter  -I INPUT -p icmp --icmp-type echo-reply -j ACCEPT
+
+
+]# iptables-save > /etc/sysconfig/iptables
+
+       网络型防火墙（防火墙服务假设在不同的网络之间，通常就是 私有网络和公网，目的现在2个网络的通信）
+
+192/168.2.10 模拟公网主机
+把 192.168.4.10 的ip改成  192.168.2.10 然后systemctl  stop   iptables 
+]# route  add default gw  192.168.2.20
+]# route -n
+
+
+网络型防火墙的主机 要有2个网段的Ip  并且 要启用内核的路由转发功能
+eth1  192.168.2.20
+eth0  192.168.4.20
+
+]# rpm -q iptables-services  ||  yum  -y install  iptables-services 
+]# systemctl   start iptables
+]# iptables -F
+]# iptables-save >  /etc/sysconfig/iptables
+
+]# echo  "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+]# sysctl  -p
+
+192.168.4.30 模拟私网主机
+ip192.168.4.30
+  ]# route add default gw  192.168.4.20
+
+[root@host30 ~]# rpm -q httpd || yum -y install httpd
+[root@host30 ~]# echo  "xxxhhh"  > /var/www/html/index.html
+
+
+ 检查是否全网互通
+ [root@host20 ~]# tcpdump  -p icmp
+ [root@host10 ~]# ping -c 2 192.168.4.30
+
+
+在网络防火墙主机20上写防火墙规则
+没有写防火墙规则前的效果
+host10]#  ssh   root@192.168.4.30
+host10]# curl  http://192.168.4.30
+
+[root@host20 ~]# iptables -t filter  -P FORWARD DROP
+[root@host20 ~]# iptables -t filter  -A FORWARD -p tcp  --dport 80     -j  ACCEPT
+[root@host20 ~]# iptables -t filter  -A FORWARD -p tcp  --sport 80     -j  ACCEPT
+
+[root@host20 ~]# iptables -t filter  -A FORWARD -p tcp  --dport 22     -j  ACCEPT
+[root@host20 ~]# iptables -t filter  -A FORWARD -p tcp  --sport 22     -j  ACCEPT
+
+
+扩展匹配
+
+[root@host20 ~]# iptables -t filter  -A FORWARD -p tcp -m  multiport --sports 22,80  -j ACCEPT
+
+[root@host20 ~]# iptables -t filter  -A FORWARD -p tcp -m  multiport --dports 22,80  -j ACCEPT
+
+[root@host20 ~]# iptables -t filter  -D FORWARD  4
+[root@host20 ~]# iptables -t filter  -D FORWARD  3
+[root@host20 ~]# iptables -t filter  -D FORWARD  2
+[root@host20 ~]# iptables -t filter  -D FORWARD  1
+
+
+[root@host20 ~]# iptables -t filter  -I FORWARD -p icmp -m iprange  --src-range 192.168.2.9-192.168.2.25  -j DROP
+
+]#iptables -t filter -I FORWARD -p icmp -j ACCEPT
+
+[root@host30 ~]# ping 192.168.2.10
+PING 192.168.2.10 (192.168.2.10) 56(84) bytes of data.
+64 bytes from 192.168.2.10: icmp_seq=1 ttl=254 time=0.357 ms
+
+]#iptables -t filter -I FORWARD -p icmp -m mac  --mac-source 52:54:00:34:3f:95 -j DROP
+
+[root@host30 ~]# ping 192.168.2.10
+PING 192.168.2.10 (192.168.2.10) 56(84) bytes of data.
+
+nat 表的使用: 所有私有地址的主机共享同一个公网ip地址  上网。
+
+20主机准备如下：
+    [root@host20 ~]# iptables -t filter -P FORWARD ACCEPT
+[root@host20 ~]# iptables -t filter -F FORWARD 
+[root@host20 ~]# iptables-save  > /etc/sysconfig/iptables
+[root@host20 ~]# 
+[root@host20 ~]# iptables -t nat -nL
+Chain PREROUTING (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain POSTROUTING (policy ACCEPT)
+target     prot opt source               destination         
+[root@host20 ~]# 
+
+10主机充当公网的网站服务器
+     systemctl   start httpd
+	 echo  "xxxhhh"  > /var/www/html/index.html
+	 
+[root@host10 ~]# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+0.0.0.0         192.168.2.20    0.0.0.0         UG    0      0        0 eth1
+192.168.2.0     0.0.0.0         255.255.255.0   U     101    0        0 eth1
+[root@host10 ~]# 
+[root@host10 ~]# route del default gw 192.168.2.20
+[root@host10 ~]# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.2.0     0.0.0.0         255.255.255.0   U     101    0        0 eth1
+[root@host10 ~]#
+
+在防火墙主机20的nat表的链里写规则
+
+[root@host20 ~]# iptables -t nat -A POSTROUTING -s 192.168.4.0/24 -p tcp --dport 80 -j 
+SNAT --to-source 192.168.2.20
+
+[root@host20 ~]# iptables-save  > /etc/sysconfig/iptables
+
+[root@host30 ~]# curl  http://192.168.2.10
+xxxxhhhh
+[root@host30 ~]# 
+
+
+[root@host10 ~]# tail  -1 /etc/httpd/logs/access_log 
+192.168.2.20 - - [16/May/2021:17:07:17 +0800] "GET / HTTP/1.1" 200 9 "-" "curl/7.29.0"
+
+公网地址是动态分配的，规则的写法
+]# iptables  -t  nat   -A   POSTROUTING  -s 192.168.4.0/24  -o  eth1  -j MASQUERADE
+
+
+
+
+
+ 
+
+
+
+
