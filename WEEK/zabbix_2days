@@ -1,0 +1,311 @@
+一  搭建zabbix 监控服务器
+	1.1 部署运行环境  LNMP
+		安装源码nginx软件
+		安装mysql服务软件
+		安装php 软件	
+		启动网站服务
+		启动数据库服务
+		启动PHP进程的服务
+		测试lnmp环境
+
+  274  yum -y install gcc openssl-devel zlib-devel
+  275  ls
+  276  tar -zxvf nginx-1.12.2.tar.gz 
+  277  cd nginx-1.12.2/
+  278  ls
+  279  ./configure 
+  280  make 
+  281  make  install
+  282  ls /usr/local/
+  283  ls /usr/local/nginx/
+conf  html  logs  sbin
+
+  287  yum -y install mariadb-server  mariadb
+  288  rpm -q mariadb-server 
+  289  rpm -q mariadb 
+  290  yum -y install php  php-fpm  php-mysql
+  291  rpm -q  php  php-fpm  php-mysql
+
+]# vim +65 /usr/local/nginx/conf/nginx.conf
+ 65         location ~ \.php$ {
+ 66             root           html;
+ 67             fastcgi_pass   127.0.0.1:9000;
+ 68             fastcgi_index  index.php;
+ 69         #    fastcgi_param  SCRIPT_FILENAME  /scripts$fast    cgi_script_name;
+ 70             include        fastcgi.conf;
+ 71         }
+:wq
+[root@zabbix-server ~]# netstat -utnlp | grep 80
+[root@zabbix-server ~]# /usr/local/nginx/sbin/nginx 
+[root@zabbix-server ~]# netstat -utnlp | grep 80
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      3436/nginx: master  
+[root@zabbix-server ~]# 
+
+[root@zabbix-server ~]# systemctl  start php-fpm
+[root@zabbix-server ~]# netstat -utnlp | grep 9000
+tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      3447/php-fpm: maste 
+[root@zabbix-server ~]#
+
+[root@zabbix-server ~]# netstat -utnlp | grep 3306
+[root@zabbix-server ~]# 
+[root@zabbix-server ~]# systemctl  start mariadb
+[root@zabbix-server ~]# 
+[root@zabbix-server ~]# netstat -utnlp | grep 3306
+tcp        0      0 0.0.0.0:3306            0.0.0.0:*               LISTEN      3704/mysqld         
+[root@zabbix-server ~]# 
+
+[root@zabbix-server ~]# vim  /usr/local/nginx/html/test.php
+<?php
+echo "hello world";
+?>
+[root@zabbix-server ~]# 
+
+[root@zabbix-server ~]# curl  http://localhost/test.php
+hello world[
+
+		1.2  安装源码的zabbix 软件
+  ]# yum -y install net-snmp-devel \
+  curl-devel libevent-devel mariadb-devel		
+		
+  ]# tar -zxvf zabbix-5.0.5.tar.gz 
+
+  ]#  cd zabbix-5.0.5/
+
+  ]# ./configure --enable-server \
+  --with-mysql=/usr/bin/mysql_config \
+  --with-net-snmp --with-libcurl
+		
+  ]#  make install
+		
+		1.3  做zabbix 服务的初始化准备
+				1.3.1 创建存储监控数据的库和连接mysql服务的用户
+]# mysql
+> create database zabbix  default charset utf8;		
+> show  databases;
+> 
+MariaDB [(none)]> grant all on zabbix.*  to zabbix@"localhost"
+    -> identified by "zabbix";
+MariaDB [(none)]> exit;
+
+[root@zabbix-server ~]# mysql -uzabbix -pzabbix
+MariaDB [(none)]> exit
+				1.3.2 创建存储数据的表
+				      * 使用软件的备份文件创建
+]# cd zabbix-5.0.5/
+]# cd database/mysql/	
+]# mysql -uzabbix -pzabbix  zabbix < schema.sql	
+]# mysql -uzabbix -pzabbix  zabbix < image.sql
+]# mysql -uzabbix -pzabbix  zabbix < data.sql	
+
+]# mysql -uzabbix -pzabbix
+> use  zabbix;
+> show  tables;
+
+			1.3.3 上线zabbix的监控页面
+  363  cd zabbix-3.4.4/
+  369  cd frontends/php/
+  370  cp -a  *  /usr/local/nginx/html/
+  371  chmod  -R 777 /usr/local/nginx/html/*
+  372  ls /usr/local/nginx/html/
+
+
+		    1.3.4 安装初始化依赖的软件
+]#yum -y install php-gd php-xml php-ldap  php-bcmath php-mbstring
+	
+]# vim /etc/php.ini
+878 date.timezone = Asia/Shanghai	
+672	post_max_size = 16M	
+384max_execution_time = 300
+394 max_input_time = 300
+:wq
+	
+]#]# systemctl  restart php-fpm
+	
+	vim  /usr/local/nginx/conf/nginx.conf
+        fastcgi_buffers 8 16k;
+        fastcgi_buffer_size 32k;
+        fastcgi_connect_timeout 300;
+        fastcgi_send_timeout 300;
+        fastcgi_read_timeout 300;
+
+        location ~ \.php$ {
+	:wq
+
+]# systemctl restart  php-fpm
+	
+	
+			
+			1.3.5 访问web页面做初始化配置
+			配置信息保存在 /usr/local/nginx/html/conf/zabbix.conf.php文件里
+			
+	打开真机的浏览器在地址栏里输入网址
+http://192.168.4.5/index.php	
+		
+			登录管理页面
+	            用户  admin
+		        密码  zabbix 
+
+		
+
+二 zabbix 监控服务基本管理
+			2.1 
+			把监控页面改成中文
+            修改管理员登录密码
+			
+			查看已经被监控的主机
+			查看监控数据
+			
+			2.2  启动监控服务
+				  2.2.1 修改配置文件
+]# vim /usr/local/etc/zabbix_server.conf
+85 DBHost=localhost
+95 DBName=zabbix
+111 DBUser=zabbix
+119 DBPassword=zabbix
+38 LogFile=/tmp/zabbix_server.log
+:wq
+	  
+				  2.2.2 启动监控服务
+[root@zabbix ~]# useradd zabbix
+[root@zabbix ~]# /usr/local/sbin/zabbix_server 
+[root@zabbix ~]# netstat  -utnlp | grep 10051
+tcp        0      0 0.0.0.0:10051           0.0.0.0:*               LISTEN      23100/zabbix_server 
+[root@zabbix ~]# 
+				  
+				  
+[root@zabbix ~]# ls /tmp/zabbix_server.log 
+/tmp/zabbix_server.log
+[root@zabbix ~]# 				  
+				  
+三 监控远端主机（网站服务器   数据库服务器   存储服务器）
+		
+		3.1  配置被监控的主机 192.168.4.100 (web服务器)
+					运行zabbix_agentd服务，具体配置如下：
+						安装软件
+  273  tar -zxvf  zabbix-3.4.4.tar.gz 
+  274  ls
+  275  cd zabbix-3.4.4/
+  276  ls
+  279  yum -y install pcre-devel
+  280  ./configure  --enable-agent
+  281  make install
+						
+					修改配置文件
+]# vim /usr/local/etc/zabbix_agentd.conf
+Server=127.0.0.1,192.168.4.5
+ServerActive=192.168.4.5:10051					
+LogFile=/tmp/zabbix_agentd.log
+:wq
+					
+					启动服务
+[root@host100 ~]# useradd zabbix
+[root@host100 ~]# /usr/local/sbin/zabbix_agentd 
+[root@host100 ~]# 
+                      查看服务状态
+[root@host100 ~]# netstat  -utnlp  | grep  10050
+tcp        0      0 0.0.0.0:10050           0.0.0.0:*               LISTEN      12176/zabbix_agentd 
+[root@host100 ~]# 
+					
+					
+					
+		
+		3.2  登录监控服务的管理页面，添加要监控的主机192.168.4.100
+			  1 添加主机
+			  2 选择监控模版
+			  3 查看监控数据
+			  
+ 
+ 
+
+四 监控配置
+	4.1 自定义监控脚本 ， 具体配置如下：   休息到 15:30
+		配置被监控服务器 192.168.4.100
+				启用自定义监控项功能
+	]# vim /usr/local/etc/zabbix_agentd.conf			
+265 Include=/usr/local/etc/zabbix_agentd.conf.d/*.conf
+280 UnsafeUserParameters=1				
+	:wq			
+				定义监控命令
+vim  /usr/local/etc/zabbix_agentd.conf.d/a.conf
+UserParameter=get_sum_user,wc -l /etc/passwd | awk '{print $1}'
+:wq
+				重启zabbix_agentd服务
+			   ]# pkill -9 zabbix_agentd
+[root@host100 ~]# /usr/local/sbin/zabbix_agentd 
+[root@host100 ~]# netstat  -utnlp  | grep  10050
+tcp        0      0 0.0.0.0:10050   0.0.0.0:*  LISTEN      12382/zabbix_agentd 
+[root@host100 ~]#
+		        测试定义的监控命令
+[root@host100 ~]# /usr/local/bin/zabbix_get -s 127.0.0.1 -p 10050 -k  get_sum_user
+24
+[root@host100 ~]# 
+		
+		配置监控服务器 192.168.4.5
+				监控100主机时 ，调用100主机定义的监控命令，登录管理页面做如下配置：
+					
+					创建监控模板  ATMP
+					创建应用集    mon_web
+					创建监控项目  mon_user   指定对应命令  get_sum_user
+					监控100主机时，调用新创建的模板ATMP
+					查看监控数据
+					
+触发器： 监控到的总用户数量大于26个 触发器被触发 
+					登录管理页面做如下配置：
+							创建触发器  cfq1
+							设置比较条件
+							测试触发器：
+									在被监控主机100 添加2个新用户
+									监控服务器监控到的用户总数量 和 26 做>比较 是成立的
+									所以触发器被触发了。
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++			
+监控报警发监控邮件
+触发器被触发后执行发送邮件的动作    
+
+		
+		准备邮件服务器 
+					
+					邮件服务 
+]# rpm -q postfix || yum -y install postfix	
+[root@zabbix ~]# netstat  -utnlp  | grep 25
+tcp        0      0 127.0.0.1:25            0.0.0.0:*               LISTEN      25958/master        
+
+[root@zabbix ~]# hostname
+zabbix
+[root@zabbix ~]# echo "127.0.0.1 zabbix" >> /etc/hosts
+
+		
+		收件人邮箱  zabbix@localhost
+		发件人邮箱  root@localhost
+]# rpm  -q mailx  ||  yum  -y install mailx		
+]# mail  -s "test" zabbix < /etc/hostname
+[root@zabbix ~]# mail -u zabbix
+Heirloom Mail version 12.5 7/5/10.  Type ? for help.
+"/var/mail/zabbix": 1 message 1 new
+>N  1 root                  Sun May 23 16:26  18/590   "test"
+& exit
+[root@zabbix ~]#
+
+		创建触发器 cfq1  (已经建好了 )
+		指定邮件服务器
+		指定接收邮件的邮箱
+		创建动作  act1
+		测试： 触发器被触发后 指定的用户是否是否收到邮件
+[root@zabbix ~]# mail -u zabbix
+Heirloom Mail version 12.5 7/5/10.  Type ? for help.
+"/var/mail/zabbix": 2 messages 2 new
+>N  1 root                  Sun May 23 16:26  18/590   "test"
+ N  2 root@localhost.local  Sun May 23 16:44  20/793   "biguser26"
+& 2
+
+
+	
+自动发现  ： 发现网络中有于规则匹配的主机，执行定义的动作做处理
+		1 创建发现规则  rule1
+		
+		2 创建动作  cat2
+		
+		3 配置与规则配置的服务器
+		
+		4 查看已经监控的主机
+		
+把监控服务器配置为被动工作模式 看视频完成
