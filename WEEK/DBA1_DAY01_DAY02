@@ -207,3 +207,126 @@ desc  mysql.user;
 +-----------+--------+----------------+--------------+------------+--------+---------------+----------+--------------+
 | 庞丽静    |     58 | panglj@tedu.cn |         1958 | 2021-11-20 | 女     | 看电影,钱     | 30000.88 | 17:30:00     |
 +-----------+--------+----------------+--------------+------------+--------+---------------+--------------------------
+
+！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+3 mysql表结构
+		3.1 约束条件  指定的是查看表结构时的后4列  
+		desc  库.表;
+		  Null         | Key |  Default | Extra
+		是否允许为空   | 键值|   默认值 |  额外设置 （auto_increment）
+		
+	
+create table  student.t2( 
+class char(7) , 
+name  char(10) not null, 
+age int  default 19,
+likes set("a","b","c","d") not null  default "a,b" );
+
+mysql> desc student.t2;
++-------+----------------------+------+-----+---------+-------+
+| Field | Type                 | Null | Key | Default | Extra |
++-------+----------------------+------+-----+---------+-------+
+| class | char(7)              | YES  |     | NULL    |       |
+| name  | char(10)             | NO   |     | NULL    |       |
+| age   | int(11)              | YES  |     | 19      |       |
+| likes | set('a','b','c','d') | NO   |     | a,b     |       |
++-------+----------------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> insert into student.t2(class,name)values("nsd2012","yaya"); 没给值 使用默认值
+Query OK, 1 row affected (0.02 sec)
+
+mysql> select  * from student.t2;
++---------+------+------+-------+
+| class   | name | age  | likes |
++---------+------+------+-------+
+| nsd2012 | yaya |   19 | a,b   |
++---------+------+------+-------+
+1 row in set (0.00 sec)
+
+mysql> insert into student.t2(class,name,age,likes)
+values("nsd2009","plj",28,"c,d"); 给值 就不使用默认值了
+Query OK, 1 row affected (0.02 sec)
+
+mysql> select  * from student.t2;
++---------+------+------+-------+
+| nsd2012 | yaya |   19 | a,b   |
+| nsd2009 | plj  |   28 | c,d   |
++---------+------+------+-------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> insert into student.t2 values("nsd2103","",null,"a,c,d");
+Query OK, 1 row affected (0.04 sec)
+
+mysql> select  * from student.t2;
++---------+------+------+-------+
+| class   | name | age  | likes |
++---------+------+------+-------+
+| nsd2012 | yaya |   19 | a,b   |
+| nsd2009 | plj  |   28 | c,d   |
+| NULL    | null | NULL | a,c,d |
+| nsd2103 |      | NULL | a,c,d |
++---------+------+------+-------+
+4 rows in set (0.00 sec)
+
+mysql> 
+
+		3.2 修改表结构
+			alter table 库名.表名  执行动作；
+			执行动作包括：
+					1 添加新表头 add 
+					2 删除已有的表头 drop 
+					3 修改表头使用的数据类型  modify 
+					4 修改表头名称 change 
+					5 修改表名 rename
+					
+	    create table student.t3(name char(10));
+		desc  student.t3;
+		
+		mysql> alter table  student.t3  
+		add  age int not null default 19;
+
+		mysql> alter table  student.t3  add  stu_num  int first;
+			
+		mysql> alter table  student.t3  add  gender enum("m","w") after name;
+		
+mysql> alter table  student.t3 drop age ,drop stu_num;
+Query OK, 0 rows affected (0.23 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> desc student.t3;
++--------+---------------+------+-----+---------+-------+
+| Field  | Type          | Null | Key | Default | Extra |
++--------+---------------+------+-----+---------+-------+
+| name   | char(10)      | YES  |     | NULL    |       |
+| gender | enum('m','w') | YES  |     | NULL    |       |
++--------+---------------+------+-----+---------+-------+
+
+mysql> alter table student.t3 
+        modify  name  varchar(15) not null default "tarena";
+mysql> desc student.t3
+    -> ;
++--------+---------------+------+-----+---------+-------+
+| Field  | Type          | Null | Key | Default | Extra |
++--------+---------------+------+-----+---------+-------+
+| name   | varchar(15)   | NO   |     | tarena  |       |
+| gender | enum('m','w') | YES  |     | NULL    |       |
++--------+---------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> alter table  student.t3 change gender sex enum('m','w') null  default null;
+
+mysql> use student;
+mysql> alter table t3 rename teacher;
+
+mysql> show tables;
++-------------------+
+| Tables_in_student |
++-------------------+
+| stuinfo           |
+| t2                |
+| teacher           |
++-------------------+
+3 rows in set (0.00 sec)
