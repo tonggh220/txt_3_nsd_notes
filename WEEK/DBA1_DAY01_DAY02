@@ -81,3 +81,52 @@ validate_password_policy=0
 	10断开连接，
 	11使用新密码登录
 	12 配置新密码策略永久生效
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+搭建数据库服务器的目的是为了存储数据，存储数据到数据库的流程是怎么样的？
+
+1 连接数据库服务器 
+（连接数据库服务方式:mysql命令行连接  java/php/python脚本连接 使用图形工具连接）
+
+2 创建库(库：就是在服务器上创建的文件夹) 
+create database  库名； 创建文件夹
+create database  student;
+
+use  库名；  进入文件夹里
+use  student;
+
+
+3 创建表（表： 用存储数据的文件）
+create table  库名.表名(表头名  数据类型 ， 表头名  数据类型 ， ....);
+create table student.stuinfo(姓名  char , 年龄  int  , 学费  int );
+
+4 存储数据到表里
+insert into  库名.表名 values (值列表)；
+insert into  student.stuinfo values("A",19,28000),("b",21,18000);
+
+5 查看表记录 （查看文件的内容）
+select 表头名  from  库名.表名;
+mysql> select 姓名  from student.stuinfo;
++--------+
+| 姓名   |
++--------+
+| A      |
+| b      |
++--------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+mysql> select * from student.stuinfo;
++--------+--------+--------+
+| 姓名   | 年龄   | 学费   |
++--------+--------+--------+
+| A      |     19 |  28000 |
+| b      |     21 |  18000 |
++--------+--------+--------+
+2 rows in set (0.00 sec)
+
+
+6 断开连接  exit 
