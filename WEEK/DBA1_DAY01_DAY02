@@ -330,3 +330,252 @@ mysql> show tables;
 | teacher           |
 +-------------------+
 3 rows in set (0.00 sec)
+
+
+！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+
+		3.3 键值  (给表头加的标签 ，标签有不同功能)
+				普通索引 index   给表头的值排序  （自行开视频学习一下 ）
+				
+				主 键    primary key  表头的值不能为NULL 且值不重复
+				
+				存储各种证件编号：身份证号  护照  驾驶证  考试证编号
+				
+				创建主键并验证功能
+mysql> create table  student.t4(
+    -> stu_num int  primary key ,  name char(10));
+				
+				
+mysql> desc student.t4;
++---------+----------+------+-----+---------+-------+
+| Field   | Type     | Null | Key | Default | Extra |
++---------+----------+------+-----+---------+-------+
+| stu_num | int(11)  | NO   | PRI | NULL    |       |
+| name    | char(10) | YES  |     | NULL    |       |
++---------+----------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> insert into student.t4 values (1,"bob");
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into student.t4 values (1,"tom");
+ERROR 1062 (23000): Duplicate entry '1' for key 'PRIMARY'
+mysql> 
+mysql> insert into student.t4 values (null,"tom");
+ERROR 1048 (23000): Column 'stu_num' cannot be null
+mysql> 
+mysql> insert into student.t4 values (2,"tom");
+Query OK, 1 row affected (0.05 sec)
+
+mysql> select  * from student.t4;
++---------+------+
+| stu_num | name |
++---------+------+
+|       1 | bob  |
+|       2 | tom  |
++---------+------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+！！！！！！！！！！！！！！！！！！！！
+
+		主键primary key 与 auto_increment连用 
+				           
+	    auto_increment 自增长  让同通过 +1 计算结果给自己赋值 
+		
+mysql> create table  student.t5(
+       stu_num int  primary key  auto_increment ,  name char(10) );
+		
+mysql> desc student.t5;
++---------+----------+------+-----+---------+----------------+
+| Field   | Type     | Null | Key | Default | Extra          |
++---------+----------+------+-----+---------+----------------+
+| stu_num | int(11)  | NO   | PRI | NULL    | auto_increment |
+| name    | char(10) | YES  |     | NULL    |                |
++---------+----------+------+-----+---------+----------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> insert into student.t5(name) values ("bob") ;  
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into student.t5(name) values ("tom") ;  
+Query OK, 1 row affected (0.03 sec)
+
+mysql> select  * from student.t5;
++---------+------+
+| stu_num | name |
++---------+------+
+|       1 | bob  |
+|       2 | tom  |
++---------+------+
+mysql> insert into student.t5(name) values ("jim") ;
+Query OK, 1 row affected (0.04 sec)
+
+mysql> select  * from student.t5;
++---------+------+
+| stu_num | name |
++---------+------+
+|       1 | bob  |
+|       2 | tom  |
+|       3 | jim  |
++---------+------+
+3 rows in set (0.00 sec)
+
+mysql> 
+mysql> insert into student.t5(stu_num,name) values (2,"lcuy") ;
+ERROR 1062 (23000): Duplicate entry '2' for key 'PRIMARY'
+
+mysql> insert into student.t5(stu_num,name) values (7,"lcuy") ;
+Query OK, 1 row affected (0.02 sec)
+
+mysql> select  * from student.t5;
++---------+------+
+| stu_num | name |
++---------+------+
+|       1 | bob  |
+|       2 | tom  |
+|       3 | jim  |
+|       7 | lcuy |
++---------+------+
+4 rows in set (0.00 sec)
+
+mysql> 
+mysql> insert into student.t5(name) values ("john") ;
+Query OK, 1 row affected (0.04 sec)
+
+mysql> select  * from student.t5;
++---------+------+
+| stu_num | name |
++---------+------+
+|       1 | bob  |
+|       2 | tom  |
+|       3 | jim  |
+|       7 | lcuy |
+|       8 | john |
++---------+------+
+5 rows in set (0.00 sec)
+
+mysql> 
+		
+		复合主键 :表里的多个表头一起做主键 ,添加多行时只有只要复合主键表头的值
+		不同时重复就可以。
+				
+
+ PRI	        PRI
+客户端ip地址   服务端口号    客户端对服务的访问状态
+cip             sport         status
+1.1.1.1			22			 deny
+2.1.1.1			22		 	 deny 
+
+
+mysql> create table student.t6(
+    -> cip  varchar(15) ,   sport smallint , status enum("deny","allow"),
+    -> primary key(cip,sport)
+    -> );
+Query OK, 0 rows affected (0.23 sec)
+
+mysql> desc student.t6;
++--------+----------------------+------+-----+---------+-------+
+| Field  | Type                 | Null | Key | Default | Extra |
++--------+----------------------+------+-----+---------+-------+
+| cip    | varchar(15)          | NO   | PRI | NULL    |       |
+| sport  | smallint(6)          | NO   | PRI | NULL    |       |
+| status | enum('deny','allow') | YES  |     | NULL    |       |
++--------+----------------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> 
+	
+mysql> insert into student.t6 values ("1.1.1.1",22,"deny");
+Query OK, 1 row affected (0.03 sec)
+
+mysql> select  * from student.t6;
++---------+-------+--------+
+| cip     | sport | status |
++---------+-------+--------+
+| 1.1.1.1 |    22 | deny   |
++---------+-------+--------+
+1 row in set (0.00 sec)
+
+mysql> insert into student.t6 values ("1.1.1.1",22,"allow");
+ERROR 1062 (23000): Duplicate entry '1.1.1.1-22' for key 'PRIMARY'
+mysql> 
+mysql> insert into student.t6 values ("1.1.1.1",22,"deny");
+ERROR 1062 (23000): Duplicate entry '1.1.1.1-22' for key 'PRIMARY'
+mysql> 
+mysql> insert into student.t6 values ("1.1.1.1",80,"deny");
+Query OK, 1 row affected (0.07 sec)
+
+mysql> select  * from student.t6;
++---------+-------+--------+
+| cip     | sport | status |
++---------+-------+--------+
+| 1.1.1.1 |    22 | deny   |
+| 1.1.1.1 |    80 | deny   |
++---------+-------+--------+
+2 rows in set (0.00 sec)
+
+mysql> 
+				
+				
+				外 键    foreign key 
+				给表里的外键表头赋值时，值必须在参考表中指定的表头值列表里选择。
+				
+				在表中创建外键必须满足如下条件：
+					1 表的存储引擎必须是innodb 
+					2 字段类型必须匹配
+					3 被参考的字段必须是主键
+		
+				创建外键的命令格式
+				
+				create table  库.表A(表头列表 , foreign key(表头名 )
+				references 库.表B(表头名)  
+				on  update cascade  on delete cascade 
+				)engine=innodb;
+				
+					
+员工表 yg_tab
+编号   姓名 				
+  1     Bob			
+  2     tom 
+  3     jim 		
+
+create table student.yg_tab(
+yg_id int primary key  auto_increment,
+name char(10)
+)engine=innodb;
+	
+insert into  student.yg_tab(name)values("bob"),("tom"),("jim");
+
+select  * from student.yg_tab;
+mysql> select  * from student.yg_tab;
++-------+------+
+| yg_id | name |
++-------+------+
+|     1 | bob  |
+|     2 | tom  |
+|     3 | jim  |
++-------+------+
+3 rows in set (0.00 sec)
+
+mysql> 
+
+
+工资表 gz_tab
+编号     工资	
+gz_id     pay			
+
+create table student.gz_tab(gz_id int , pay int , foreign key(gz_id) 
+references  yg_tab(yg_id)  on update  cascade   on delete cascade
+)engine=innodb;
+
+mysql> use student;
+mysql> show  table  
+
+下次上课测试外键功能
+
+
+  
+需要知道的 标签： 唯一索引  全文索引 
