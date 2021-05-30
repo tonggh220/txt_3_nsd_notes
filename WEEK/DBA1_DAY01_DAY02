@@ -1,0 +1,83 @@
+数据库课程的 第1次 (DB1_DAY01 +  day02)
+完成学习任务
+1 搭建mysql数据库服务器
+如果有mariadb软件的话 要清除，
+[root@host50 ~]# systemctl  stop mariadb
+[root@host50 ~]# rpm -e --nodeps mariadb-server
+[root@host50 ~]# rpm -e --nodeps mariadb
+[root@host50 ~]# rm -rf /etc/my.cnf
+[root@host50 ~]# rm -rf /var/lib/mysql
+
+安装软件
+tar  -xvf  mysql-5.7.17.tar  解压软件
+yum -y  install mysql-community-.rpm  安装软件 
+
+[root@host50 ~]# systemctl start mysqld  启动服务 
+
+
+[root@host50 ~]# ps -C  mysqld  查进程
+  PID TTY          TIME CMD
+ 1137 ?        00:00:00 mysqld
+[root@host50 ~]# 
+[root@host50 ~]# netstat -utnlp  | grep mysqld 查看进程状态
+tcp6       0      0 :::3306                 :::*                    LISTEN      1137/mysqld         
+[root@host50 ~]# 
+[root@host50 ~]# ls /var/log/mysqld.log 
+/var/log/mysqld.log
+[root@host50 ~]# 
+[root@host50 ~]# grep  password /var/log/mysqld.log  查看初始密码
+2021-05-30T02:16:24.800445Z 1 [Note] A temporary password is generated for root@localhost: flOhqokz+6?b
+[root@host50 ~]# mysql -hlocalhost -uroot -p'flOhqokz+6?b'  使用初始密码登录
+
+mysql> alter user root@"localhost" identified by "123qqq...A" ; 修改管理员root 登录密码
+mysql> show databases; 查看已有的库
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql> exit  断开连接
+Bye
+[root@host50 ~]# 
+[root@host50 ~]# mysql -hlocalhost -uroot -p123qqq...A  使用修改后的密码登录
+
+
+修改mysql服务的密码策略
+[root@host50 ~]# mysql -hlocalhost -uroot -p123qqq...A
+mysql> show  variables like  "%password%" ;  查看与密码相关的配置
+
+mysql> set global validate_password_length=6;  修改密码长度
+mysql> set global validate_password_policy=0;  修改密码策略
+mysql> alter  user  root@"localhost" identified by "123456"; 修改新密码
+mysql> exit  断开连接
+]# mysql  -hlocalhost  -uroot -p123456 使用新密码登录
+mysql> 
+
+使修改永久生效
+]# vim /etc/my.cnf
+[mysqld]
+validate_password_length=6
+validate_password_policy=0
+:wq
+[root@host50 ~]# systemctl  restart mysqld 重启服务成功说明配置生效了 
+
+练习： 在ip地址是 192.168.4.51的主机上运行mysql服务
+并设置数据管理员本机登录密码为123456
+操作步骤：
+	1 安装软件
+	2 启动服务
+	3 查看初始密码
+	4 管理员使用初始密码登录
+	5 修改登录密码
+	6 断开连接
+	7 使用新密码登录
+	8 命令行修改密码策略
+	9 使用新的密码策略设置新密码
+	10断开连接，
+	11使用新密码登录
+	12 配置新密码策略永久生效
