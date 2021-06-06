@@ -574,7 +574,244 @@ references  yg_tab(yg_id)  on update  cascade   on delete cascade
 mysql> use student;
 mysql> show  table  
 
-下次上课测试外键功能
+mysql> insert into gz_tab values(1,35000);
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into gz_tab values(2,45000);
+Query OK, 1 row affected (0.04 sec)
+
+mysql> select  * from gz_tab;
++-------+----------+
+| gz_id | pay      |
++-------+----------+
+|     1 | 35000.00 |
+|     2 | 45000.00 |
++-------+----------+
+
+mysql> insert into gz_tab values(3,60000);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`db3`.`gz_tab`, CONSTRAINT `gz_tab_ibfk_1` FOREIGN KEY (`gz_id`) REFERENCES `yg_tab` (`yg_id`) ON DELETE CASCADE ON UPDATE CASCADE)
+mysql> 
+
+mysql> insert into yg_tab(name)values("lucy");
+Query OK, 1 row affected (0.04 sec)
+
+mysql> select  * from yg_tab;
++-------+------+
+| yg_id | name |
++-------+------+
+|     1 | bob  |
+|     2 | tom  |
+|     3 | lucy |
++-------+------+
+
+mysql> insert into gz_tab values(3,60000);
+Query OK, 1 row affected (0.04 sec)
+
+mysql> select  * from gz_tab;
++-------+----------+
+| gz_id | pay      |
++-------+----------+
+|     1 | 35000.00 |
+|     2 | 45000.00 |
+|     3 | 60000.00 |
++-------+----------+
+3 rows in set (0.00 sec)
+
+mysql> update db3.yg_tab 
+    -> set
+    -> yg_id=8
+    -> where
+    -> yg_id=2;
+
+mysql> select  * from yg_tab;
++-------+------+
+| yg_id | name |
++-------+------+
+|     1 | bob  |
+|     3 | lucy |
+|     8 | tom  |
++-------+------+
+	
+mysql> select  * from gz_tab;          
+| gz_id | pay      |
++-------+----------+
+|     1 | 35000.00 |
+|     8 | 45000.00 |
+|     3 | 60000.00 |
++-------+----------+
+3 rows in set (0.00 sec)
+
+
+mysql> delete from yg_tab 
+    -> where 
+    -> yg_id=8;
+Query OK, 1 row affected (0.02 sec)
+
+mysql> select  * from yg_tab;
++-------+------+
+| yg_id | name |
++-------+------+
+|     1 | bob  |
+|     3 | lucy |
++-------+------+
+
+mysql> select  * from gz_tab;         
+| gz_id | pay      |
++-------+----------+
+|     1 | 35000.00 |
+|     3 | 60000.00 |
++-------+----------+
+2 rows in set (0.00 sec)
+
+
+insert into  gz_tab  values(1,35000);
+insert into  gz_tab  values(3,80000);
+insert into  gz_tab  values(null,55000);
+
+
+mysql> delete from gz_tab;
+Query OK, 5 rows affected (0.03 sec)
+
+mysql> select  * from gz_tab;
+Empty set (0.00 sec)
+
+mysql> alter table gz_tab
+    -> add
+    -> primary key(gz_id);
+
+mysql> insert into gz_tab values(1,60000);
+Query OK, 1 row affected (0.02 sec)
+
+mysql> insert into gz_tab values(1,60000);
+ERROR 1062 (23000): Duplicate entry '1' for key 'PRIMARY'
+mysql> 
+mysql> insert into gz_tab values(null,60000);
+ERROR 1048 (23000): Column 'gz_id' cannot be null
+mysql> 
+mysql> select  * from gz_tab;
++-------+----------+
+| gz_id | pay      |
++-------+----------+
+|     1 | 60000.00 |
++-------+----------+
+1 row in set (0.00 sec)
+
+mysql> insert into gz_tab values(3,60000);
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into gz_tab values(3,60000);
+ERROR 1062 (23000): Duplicate entry '3' for key 'PRIMARY'
+mysql> 
+
+mysql> show create table gz_tab \G
+*************************** 1. row ***************************
+       Table: gz_tab
+Create Table: CREATE TABLE `gz_tab` (
+  `gz_id` int(11) NOT NULL,
+  `pay` float(7,2) DEFAULT NULL,
+  PRIMARY KEY (`gz_id`),
+  CONSTRAINT `gz_tab_ibfk_1` FOREIGN KEY (`gz_id`) REFERENCES `yg_tab` (`yg_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+1 row in set (0.00 sec)
+
+mysql> alter table db3.gz_tab  drop foreign key gz_tab_ibfk_1;  删除外键 
+
+mysql> show create table gz_tab \G
+*************************** 1. row ***************************   休息到 11:07 
+       Table: gz_tab
+Create Table: CREATE TABLE `gz_tab` (
+  `gz_id` int(11) NOT NULL,
+  `pay` float(7,2) DEFAULT NULL,
+  PRIMARY KEY (`gz_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+2数据导入、导出 （作用：批量处理数据)
+	
+	
+	导入和导出数据存放数据文件的目录 位置的设置
+	
+	查看默认目录  mysql>  show  variables ;
+				  mysql>  show  variables like "%file%";
+				  mysql>  show  variables like "secure_file_priv";
+
++------------------+-----------------------+
+| Variable_name    | Value                 |
++------------------+-----------------------+
+| secure_file_priv | /var/lib/mysql-files/ |
++------------------+-----------------------+
+1 row in set (0.01 sec)
+	
+[root@host50 ~]# ls /var/lib/mysql-files/ -ld
+drwxr-x--- 2 mysql mysql 6  29 2016 /var/lib/mysql-files/
+[root@host50 ~]# 	
+	
+	自定义目录
+	]# vim /etc/my.cnf
+	[mysqld]
+	secure_file_priv=/myload
+	:wq
+	
+[root@host50 ~]# mkdir /myload
+[root@host50 ~]# chown  mysql  /myload
+[root@host50 ~]# setenforce  0
+[root@host50 ~]# mysql -uroot -p123456 -e  ' show  variables like "secure_file_priv" '
++------------------+----------+
+| Variable_name    | Value    |
++------------------+----------+
+| secure_file_priv | /myload/ |
++------------------+----------+
+	2.1 导入:把系统文件的内容存储到数据库服务器的表里
+			 步骤如下：
+					1 创建存储文件内容的表（表结构要根据文件的内容创建）
+						create database db3;
+						create  table  db3.user(
+						name  char(50),password  char(1), uid  smallint , gid  smallint,
+						comment  char(80),homedir char(100) , shell  char(30) );				
+						
+					2 把系统文件拷贝到要求的目录下 
+mysql> system  cp /etc/passwd /myload/
+mysql> system ls /myload/
+passwd
+
+					3 数据库管理员root  执行导入数据的命令
+						命令格式？
+						mysql> load  data   infile "/目录名/文件名"  into table  库名.表名
+							   fields terminated by "列的间隔符号"  lines terminated by "\n"; 
+
+mysql> load data infile "/myload/passwd" into table db3.user
+       fields terminated by ":" lines terminated by "\n";
+
+							   
+				    4 查看表记录
+					   select  *  from  库名.表名;
+					   select  *  from  db3.user;
+					   
+					 
+					5 给导入的数据添加行号 便于管理
+mysql> alter table  db3.user
+    -> add
+    -> id int primary key auto_increment 
+    -> first;
+	
+mysql> select  *  from  db3.user where  id <= 10 ;	
+mysql> select  *  from  db3.user where  id = 1 ;				
+					   
+	2.2 导出:把数据库服务器的表里记录存放到系统文件里
+		命令格式？
+		select查询命令  into  outfile "/目录/文件名" ；
+		
+
+mysql> select * from db3.user where id <= 3  into outfile "/myload/a.txt" ;
+mysql> system cat /myload/a.txt
+1	root	x	0	0	root	/root	/bin/bash
+2	bin	x	1	1	bin	/bin	/sbin/nologin
+3	daemon	x	2	2	daemon	/sbin	/sbin/nologin
+mysql>
+
 
 
   
