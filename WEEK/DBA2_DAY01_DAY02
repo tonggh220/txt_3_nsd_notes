@@ -116,9 +116,7 @@ mysql> select  * from db1.a;
 |  102 |
 +------+
 				
-				
-				
-									   
+下次上课讲 									   
 									   
 				3.2 一主多从结构 ***
 				3.3 主从从结构
@@ -129,3 +127,10 @@ mysql> select  * from db1.a;
 
 dba2_day02
 	MySQL数据读写分离 和  MySQL多实例 
+	
+
+2021/06/27 上课内容  
+DBA2_DAY03 + DAY04 
+数据分片     mha集群					
+				
+									   
