@@ -216,3 +216,59 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | yg_tab        |
 +---------------+
 [root@host50 ~]# 
+
+
+
+优点：服务软件自带的备份程序，适合备份数据量小的数据，不适合线上服务器备份使用
+				  使用mysqldump 的 完全备份文件 恢复数据，只能把数据恢复到备份那一时刻的状态
+				  
+			缺点：命令执行过程中会锁表（锁在没有被释放之前 ，不允许用户访问表 ）
+		 
+
+每天 晚上 18：00  备份服务器上的所有数据
+00  18  * * *    mysqldump  -uroot  -p密码    --all-databases  >  /bakdir/`date +%F`_all.sql
+
+		 
+
+			2 使用binlog日志文件恢复数据(启用了binlog 日志就是对数据做时时备份)
+					注意：启用binlog日志，就能够实现对数据的时时增量备份，因为日志启用后，会自动记录对数据
+					做写操作的sql命令 (insert  update   delete )
+						
+					   使用日志文件恢复所有数据的命令格式
+					   ]#  mysqlbinlog  /目录/日志文件名  |    mysql  -uroot  -p密码 
+					
+		例子：
+mysql> select count(*) from  db3.user;
++----------+
+| count(*) |
++----------+
+|       28 |
++----------+
+1 row in set (0.00 sec)
+
+mysql>exit 
+[root@host50 ~]# mysqldump -uroot  -p123qqq...A  --flush-logs  db3 user > /bakdir/db3_user.sql
+
+mysql> show master status;
++------------+----------+--------------+------------------+-------------------+
+| File       | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------+----------+--------------+------------------+-------------------+
+| plj.000005 |      154 |              |                  |                   |
++------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> insert into db3.user(name,uid,gid) values("bbb",1,1);  多执行几遍
+		
+
+]#cp  /mylog/plj.000005  /opt/
+
+mysql> delete from  db3.user;
+MySQL》 select  * from  db3.user;   没有数据了
+
+使用完全文件 和 备份的binlog日志文件恢复数据
+]# [root@host50 ~]# mysql -uroot -p123qqq...A   db3  < /bakdir/db3_user.sql
+					
+[root@host50 ~]# mysqlbinlog  /opt/plj.000005  | mysql -uroot -p123qqq...A
+
+MySQL》 select  * from  db3.user;   有数据了
