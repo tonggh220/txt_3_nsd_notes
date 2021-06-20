@@ -272,3 +272,21 @@ MySQL》 select  * from  db3.user;   没有数据了
 [root@host50 ~]# mysqlbinlog  /opt/plj.000005  | mysql -uroot -p123qqq...A
 
 MySQL》 select  * from  db3.user;   有数据了
+
+
+使用binlog日志恢复部分数据的命令格式
+	]#  mysqlbinlog 选项 /目录/日志文件名  |    mysql  -uroot  -p密码
+	
+	选项：
+	#通过偏移量范围读取记录的sql命令
+	--start-position=起始偏移量 --stop-position=结束偏移量
+
+例子:
+]#mysqlbinlog --start-position=729 --stop-position=1088 /opt/plj.000006  | mysql  -uroot  -p123qqq...A	
+	
+	#通过时间点范围读取记录的sql命令
+	
+	--start-datetime=起始时间 --stop-datetime=结束时间
+
+例子:
+]#mysqlbinlog --start-position="2021/06/02 10:38:28" --stop-position="2021/06/02 14:38:28"  /opt/plj.000006  | mysql  -uroot  -p123qqq...A	
