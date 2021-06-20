@@ -522,4 +522,42 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 							mysql  -uroot  -p密码   -e  'show  databases'
 
 
+******************************************************************************************
+						使用innobackupex 对数据做差异备份和恢复
+						注意：首先也要有第一次备份，通常是 完全备份（不如没法判断新数据）
+						
+						差异备份命令格式
+						]# innobackupex  -u root   -p 密码  --incremental  /目录名  
+						--incremental-basedir=/完全文件存放的目录
+						
+						策略： 周一完全备份   周二~周日 差异备份 
+
+						周一  做完全备份
+						]# innobackupex  -u root  -p123qqq...A   /dball --no-timestamp 
+						   执行存储新数据的命令
+						   
+						周二 差异备份
+						]# innobackupex  -u root  -p123qqq...A --incremental  /dir1  
+						--incremental-basedir=/dball --no-timestamp 
+							执行存储新数据的命令
+							
+						周三
+						]# innobackupex  -u root  -p123qqq...A --incremental  /dir2  
+						--incremental-basedir=/dball --no-timestamp 
+							执行存储新数据的命令
+							
+						周四
+						]# innobackupex  -u root  -p123qqq...A --incremental  /dir3  
+						--incremental-basedir=/dball --no-timestamp
+						  执行存储新数据的命令
+							
+						周五
+						]# innobackupex  -u root  -p123qqq...A --incremental  /dir4  
+						--incremental-basedir=/dball --no-timestamp	
+						
+						
+				做差异备份恢复：
+					只需要最后1次的差异备份与第1次的完全备份合并即可，把合并后的数据拷贝到数据库目录下 
+
+
 
