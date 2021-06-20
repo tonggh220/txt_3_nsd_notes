@@ -1,0 +1,131 @@
+dba2_day01
+	mysql主从同步结构的配置
+		 1 mysql主从同步介绍
+				是对数据做存储的服务架构，由2种角色的mysql服务器组成分别是：
+				
+				主（master）数据库服务器 ： 接受客户端连接的服务器
+				从（slave）数据库服务器：   自动同步主服务器数据的服务器
+				
+				
+		主从同步的工作原理（背诵）
+				
+		
+		 2 主从同步结构模式： 一主一从  一主多从    主从从  主主结构 
+			
+		
+		 3 配置主从同步的步骤：
+				主服务器必须要做的配置： 必须启用binlog日志    必须做用户授权    查看binlog日志信息
+				
+				从服务器必须要做的配置： 没有成为从服务器之前必须和主服务完全数据一致 
+										 指定server_id 
+										 指定主服务器的信息（数据库管理员root用户有权限指定）
+										 启动slave进程
+										 查看SQL线程 和 IO线程的状态（要同时是YES状态 才是配置成功） 
+										 
+		 3 配置MySQL主从同步结构
+				3.1 一主一从结构 ***  例子1 
+									   把数据库服务器 192.168.4.52 配置为 数据库服务器 192.168.4.51 的从服务器
+									   具体配置如下：
+									   
+				主数据库服务器 192.168.4.51 的配置
+					1 必须启用binlog日志    
+[root@host51 ~]# vim /etc/my.cnf
+[mysqld]
+server_id=51
+log_bin=master51
+:wq
+
+[root@host51 ~]# 
+[root@host51 ~]# systemctl  restart mysqld
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master51.000001 |      154 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@host51 ~]# 
+[root@host51 ~]# ls /var/lib/mysql/master51.*
+/var/lib/mysql/master51.000001  /var/lib/mysql/master51.index
+[root@host51 ~]#					
+					2 必须做用户授权 
+[root@host51 ~]# mysql -uroot -p123qqq...A
+mysql> grant  replication slave  on *.*  to repluser@"%"  identified by "123qqq...A";
+
+					
+					3  查看binlog日志信息
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master51.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+					
+				
+				从数据库服务器192.168.4.52 的配置
+										 1 没有成为从服务器之前必须和主服务完全数据一致
+											如果主服务器的数据比从的数据多
+											在主服务器对数据做完全备份，把备份文件拷贝给从服务器
+											从服务器使用备份文件恢复数据即可
+											
+
+]# vim /etc/my.cnf										 2指定server_id 
+[mysqld]
+server_id=52
+:wq 		 
+[root@host52 ~]# systemctl  restart mysqld
+										 
+										 3指定主服务器的信息（数据库管理员root用户有权限指定）
+[root@host52 ~]# mysql -uroot -p123qqq...A 
+mysql> change master to  master_host="192.168.4.51" , master_user="repluser" ,  master_password="123qqq...A" , master_log_file="master51.000001" , master_log_pos=441 ;
+Query OK, 0 rows affected, 2 warnings (0.33 sec)
+
+										 4启动slave进程
+										 mysql> start slave ;
+
+										 5查看SQL线程 和 IO线程的状态（要同时是YES状态 才是配置成功）
+			mysql> show  slave status \G
+			Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+										 
+		 测试主从同步的配置
+				1 在主数据库服务器 建库 建表 插入记录
+				[root@host51 ~]# mysql -uroot -p123qqq...A
+mysql> create database  db1;
+mysql> create table db1.a(id int);
+mysql> insert into db1.a values(101)；
+mysql> insert into db1.a values(102);
+mysql> select  * from db1.a;
++------+
+| id   |
++------+
+|  101 |
+|  102 |
++------+
+				
+				2 在从服务器本机可以查看到同样的库表和记录
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'select * from db1.a'
++------+
+| id   |
++------+
+|  101 |
+|  102 |
++------+
+				
+				
+				
+									   
+									   
+				3.2 一主多从结构 ***
+				3.3 主从从结构
+				3.4 主主结构
+
+	
+    主从同步复制模式（自己看视屏）
+
+dba2_day02
+	MySQL数据读写分离 和  MySQL多实例 
