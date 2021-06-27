@@ -426,5 +426,110 @@ port = 3309
 pid-file = /dir2/mysqld2.pid
 log-error = /dir2/mysqld2.err
 :wq
+
+#####################################################
+启动实例的准备工作
+				[root@host58 ~]# rpm -q libaio ||  yum -y install libaio   #安装依赖
+		
+				[root@host58 ~]# id mysql || useradd mysql  #检查都没有mysql用户自动添加
+id: mysql: no such user
+[root@host58 ~]# grep  mysql /etc/passwd
+mysql:x:1000:1000::/home/mysql:/bin/bash
+[root@host58 ~]# 
+
+		启动实例1 数据库服务  （就是配置文件/etc/my.cnf  的 [mysqld1]  ）
+		
+[root@host58 ~]# mysqld_multi start 1      
+
+
+Installing new database in /dir1
+
+2021-06-27T08:07:56.601797Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2021-06-27T08:07:58.663520Z 0 [Warning] InnoDB: New log files created, LSN=45790
+2021-06-27T08:07:59.044010Z 0 [Warning] InnoDB: Creating foreign key constraint system tables.
+2021-06-27T08:07:59.231987Z 0 [Warning] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: c95e3f0f-d71e-11eb-afe4-5254007a8499.
+2021-06-27T08:07:59.288050Z 0 [Warning] Gtid table is not ready to be used. Table 'mysql.gtid_executed' cannot be opened.
+2021-06-27T08:07:59.289369Z 1 [Note] A temporary password is generated for root@localhost: wRr4DM#c5ll7
+[root@host58 ~]# 
+[root@host58 ~]# ls /dir1
+auto.cnf        ibdata1      ib_logfile1  mysql        mysqld1.pid   mysqld1.sock.lock   sys
+ib_buffer_pool  ib_logfile0  ibtmp1       mysqld1.err  mysqld1.sock  performance_schema
+[root@host58 ~]# 
+[root@host58 ~]# ss  -utnlp  | grep  :3308
+tcp    LISTEN     0      80       :::3308                 :::*                   users:(("mysqld",pid=1337,fd=20))
+[root@host58 ~]# 
+
+			#使用随机创建的密码  连接本机实例1服务
+			]# mysql  -uroot  -p'wRr4DM#c5ll7'  -S /dir1/mysqld1.sock
+mysql> alter user root@"localhost" identified by "123456"; 休息密码
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> SHOW  databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql> create database db1;  创建新库
+Query OK, 1 row affected (0.00 sec)
+
+mysql> exit 断开连接
+Bye
+[root@host58 ~]# ls /dir1  查看到数据库db1的目录
+auto.cnf  ib_buffer_pool  ib_logfile0  ibtmp1  mysqld1.err  mysqld1.sock       performance_schema
+db1       ibdata1         ib_logfile1  mysql   mysqld1.pid  mysqld1.sock.lock  sys
+[root@host58 ~]#
+[root@host58 ~]# mysql  -uroot  -p123456  -S /dir1/mysqld1.sock  使用新密码登录	
+
+
+			启动实例2 数据库服务  （就是配置文件/etc/my.cnf  的 [mysqld2]  ）
+[root@host58 ~]# mysqld_multi  start 2
+
+
+Installing new database in /dir2
+
+2021-06-27T08:16:02.085080Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2021-06-27T08:16:04.517265Z 0 [Warning] InnoDB: New log files created, LSN=45790
+2021-06-27T08:16:04.823685Z 0 [Warning] InnoDB: Creating foreign key constraint system tables.
+2021-06-27T08:16:04.887444Z 0 [Warning] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: ead7637a-d71f-11eb-8218-5254007a8499.
+2021-06-27T08:16:04.900484Z 0 [Warning] Gtid table is not ready to be used. Table 'mysql.gtid_executed' cannot be opened.
+2021-06-27T08:16:04.901137Z 1 [Note] A temporary password is generated for root@localhost: fez(jhtxX8j<
+[root@host58 ~]# 
+[root@host58 ~]# mysql -uroot -p'fez(jhtxX8j<'
+mysql> alter user root@"localhost"  identified by "654321";
+mysql> create database db2;
+mysql> exit
+Bye
+[root@host58 ~]# 		
+
+		现在58主机有2个mysqld进程
+[root@host58 ~]# ps -C  mysqld
+  PID TTY          TIME CMD
+ 1337 pts/0    00:00:00 mysqld
+ 1538 pts/0    00:00:00 mysqld
+[root@host58 ~]# 		
+
+[root@host58 ~]# netstat  -utnlp  | grep 3308
+tcp6       0      0 :::3308                 :::*                    LISTEN      1337/mysqld         
+[root@host58 ~]# 
+[root@host58 ~]# netstat  -utnlp  | grep 3309
+tcp6       0      0 :::3309                 :::*                    LISTEN      1538/mysqld         
+[root@host58 ~]#
+
+		停止本机的实例服务
+[root@host58 ~]# mysqld_multi  --user=root --password=123456  stop 1
+[root@host58 ~]# netstat  -utnlp  | grep 3308
+[root@host58 ~]# netstat  -utnlp  | grep 3309
+tcp6       0      0 :::3309                 :::*                    LISTEN      1538/mysqld         
+[root@host58 ~]# 
+[root@host58 ~]# mysqld_multi  --user=root --password=654321  stop 2
+[root@host58 ~]# netstat  -utnlp  | grep 3309
+[root@host58 ~]# 		
+
 				
 									   
