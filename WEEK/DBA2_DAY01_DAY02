@@ -404,7 +404,7 @@ ls: 无法访问/etc/my.cnf: 没有那个文件或目录
 [root@host58 ~]# 
 [root@host58 ~]# vim /etc/my.cnf
 #多实例服务的运行配置
-[mysqld_mulit]
+[mysqld_multi]
 user = root 
 mysqld = /usr/local/mysql/bin/mysqld_safe
 mysqladmin=/usr/local/mysql/bin/mysqladmin
