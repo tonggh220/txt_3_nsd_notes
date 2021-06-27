@@ -356,18 +356,16 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 
 
 
+	3.4 主主结构
+					需求  把主机  56 配置为 57主  ，再把56配置为57的从
+					课后练习 自己完成
+					
+					验证的结果：
+					56  57 都启用了binlog日志
+					56  57 都能查看到 slave进程的状态(IO线程和SQL线程都是YES 状态)
+		
+                主从同步复制模式（自己看视屏）
 
-				3.4 主主结构
-
-	
-    主从同步复制模式（自己看视屏）
-
-dba2_day02
-	MySQL数据读写分离 和  MySQL多实例 
-	
-
-2021/06/27 上课内容  
-DBA2_DAY03 + DAY04 
-数据分片     mha集群					
+				
 				
 									   
