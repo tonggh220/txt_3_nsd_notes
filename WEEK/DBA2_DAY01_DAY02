@@ -533,3 +533,95 @@ tcp6       0      0 :::3309                 :::*                    LISTEN      
 
 				
 									   
+	MySQL数据读写分离 
+			定义：把对数据库服务的查询访问select 和存储数据的访问insert 分别
+			给不同的数据库服务器处理
+			
+			
+			
+			数据读写分离的目的是什么？减轻服务的并发访问压力 
+			
+			如何实现： 
+					1 通常程序员写代码实现 （指定类型访问 连接固定的数据库器 ）
+					2 安装第3软件提供的读写分离服务实现（程序在脚本存储设查数据连接）
+					的不是数据库服务器本机，而是配置的数据读写分离服务器）
+					
+			MySQL中间件（架设在客户端和数据库直接的软件，能够提高不通的服务功能）
+					实现数据读写分离的软件: mysql-proxy   maxscale   mycat 
+					
+			配置MySQL数据读写分离：
+				一、配置存储数据的一主一从同步结构
+				      1 配置51 主数据库服务器
+					  
+					  2 配置52 从数据库服务器
+	
+				检查之前51 和 52 的主从配置是否正常
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'show slave status \G' | grep -i 'yes'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@host52 ~]# 
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'show slave status \G' | grep -i 'master_host'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.51
+[root@host52 ~]#				
+	
+	
+				二、在58 主机配置读写分离服务，具体步骤如下：
+					注 用58做个多实例的实验，把多实例服务全都停止就可以了
+				
+					1 安装软件
+[root@host58 ~]# ls maxscale-2.1.2-1.rhel.7.x86_64.rpm 
+maxscale-2.1.2-1.rhel.7.x86_64.rpm
+[root@host58 ~]# yum -y install maxscale-2.1.2-1.rhel.7.x86_64.rpm 					
+	
+					2 根据拓扑结构修改配置文件
+					[root@host58 ~]# vim /etc/maxscale.cnf
+[maxscale]  #指定maxscale服务启动后线程的数量
+threads=auto					
+					
+[server1]   #指定第1台数据库服务器的ip地址和名称
+type=server
+address=192.168.4.51
+port=3306
+protocol=MySQLBackend
+
+[server2]  #指定第2台数据库服务器的ip地址和名称
+type=server
+address=192.168.4.52
+port=3306
+protocol=MySQLBackend
+
+[MySQL Monitor]  
+type=monitor
+module=mysqlmon
+servers=server1,server2  #监视数据库服务器server 和server2
+user=mysqla  #(监控用户)监视数据库服务器时连接数据库服务的用户名
+passwd=123qqq...A  #连接密码
+monitor_interval=10000
+
+#[Read-Only Service]
+#type=service
+#router=readconnroute
+#servers=server1
+#user=myuser
+#passwd=mypwd
+#router_options=slave
+
+
+[Read-Write Service]  #定义读写分离服务
+type=service
+router=readwritesplit
+servers=server1,server2   #指定读写分离服务在server1和server2 之间进行
+user=mysqlb  #（路由用户） 检查数据库服务器是否创建了客户端连接数据库服务时使用的用户
+passwd=123qqq...A  #密码
+max_slave_connections=100%
+
+        没有配置完呢  ，下次上课从这里开始配置
+
+2021/06/27 上课内容  
+DBA2_DAY03 + DAY04 
+数据分片     mha集群	
+	
+7月4 号  Nosql_day01 + day02   
+
