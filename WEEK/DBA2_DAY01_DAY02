@@ -320,8 +320,41 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 
 				测试配置 ：
 
-						
-						3 配置主数据库服务器55	
+[root@host53 ~]# mysql -uroot -p123qqq...A    # 在主服务器 53 创建新库新表插入记录
+mysql> create database bbs;
+mysql> create table bbs.a(id int)；
+mysql> insert into bbs.a values(101);
+mysql> insert into bbs.a values(102);
+mysql> select * from bbs.a;
++------+
+| id   |
++------+
+|  101 |
+|  102 |
++------+
+
+# 在53的从服务器可以查看到 一样的数据
+[root@host54 ~]# mysql -uroot -p123qqq...A -e 'select  * from bbs.a'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  101 |
+|  102 |
++------+
+[root@host54 ~]#
+
+# 在54的从服务器 55上 也能够查看到一的数据。
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select  * from bbs.a'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| id   |
++------+
+|  101 |
+|  102 |
++------+
+
+
 
 
 				3.4 主主结构
