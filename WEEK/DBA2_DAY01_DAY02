@@ -216,8 +216,36 @@ relay-log.info
 [root@host53 mysql]# mysql -uroot -p123qqq...A 
 mysql> show slave status \G    #没有从的配置了 
 Empty set (0.00 sec)
+mysql>  drop   database  game ; #快速实现数据一致 (53  54 55)
+
+  
 				
-				保证主机54 和 55  运行mysqld服务  管理员root能够登录
+				准备新的数据库服务器（确保主机54 和 55  运行mysqld服务  管理员root能够登录)
+				
+				环境准备完毕
+			
+				主从从结构配置如下：
+						1 配置主数据库服务器53 
+							#启用binlog日志
+							host53]#  vim /etc/my.cnf	
+							[mysqld]
+							server_id=53
+							lob_bin=master53
+							:wq
+							]#systemctl  restart  mysqld
+							
+							
+							#用户授权
+							]# mysql  -uroot   -p密码
+							mysql>  grant  replication slave  on  *.*
+									to   repluser@"%" identified by "123qqq...A";
+							
+							
+							#查看日志信息
+							mysql> show  master status  #给从服务器使用
+						2 配置主数据库服务器54
+						
+						3 配置主数据库服务器55	
 
 
 				3.4 主主结构
