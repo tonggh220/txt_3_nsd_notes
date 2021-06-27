@@ -367,5 +367,64 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
                 主从同步复制模式（自己看视屏）
 
 				
+###########################################################################
+MySQL多实例 
+			在一台物理服务器上运行多个数据库服务。
+			
+			目的：提高硬件的利用率；节约运维成本 。
+
+	
+	准备工作：克隆1台新的虚拟机IP192.168.4.58   不需要安装任何版本的MySQL服务软件
+	把软件 mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz 拷贝虚拟机  并解压
+	  
+	 
+		安装提高多实例服务的mysql源码软件
+[root@host58 ~]# tar -zxvf mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz
+[root@host58 ~]# mv mysql-5.7.20-linux-glibc2.12-x86_64 /usr/local/mysql
+[root@host58 ~]# ls /usr/local/mysql/
+bin  COPYING  docs  include  lib  man  README  share  support-files
+[root@host58 ~]# 
+	
+		把源码包提高的数据库管理命令的路径添加到系统环境PATH变量里，便于我们对命令的使用
+]# vim /etc/bashrc 		
+export PATH=/usr/local/mysql/bin:$PATH  #在文件末尾添加
+:wq
+
+[root@host58 ~]# source /etc/bashrc 
+[root@host58 ~]# echo $PATH
+/usr/local/mysql/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
+[root@host58 ~]# 
+[root@host58 ~]# mysql 按2次tab键盘  可以补全所有mysql开头的命令
+
+	配置在58主机运行2个mysqld服务
+	需要自己创建配置文件并编辑内容
+	
+	[root@host58 ~]# ls /etc/my.cnf
+ls: 无法访问/etc/my.cnf: 没有那个文件或目录
+[root@host58 ~]# 
+[root@host58 ~]# vim /etc/my.cnf
+#多实例服务的运行配置
+[mysqld_mulit]
+user = root 
+mysqld = /usr/local/mysql/bin/mysqld_safe
+mysqladmin=/usr/local/mysql/bin/mysqladmin
+
+
+
+#socket文件  在数据库服务连接数据库服务时，通过socket建立连接
+[mysqld1] #定义编号为1 的实例服务
+datadir = /dir1
+port = 3308
+pid-file =  /dir1/mysqld1.pid
+log-error = /dir1/mysqld1.err
+socket = /dir1/mysqld1.sock
+
+[mysqld2] # 定义编号为2 的实例服务
+socket = /dir2/mysqld2.sock    
+datadir = /dir2
+port = 3309
+pid-file = /dir2/mysqld2.pid
+log-error = /dir2/mysqld2.err
+:wq
 				
 									   
