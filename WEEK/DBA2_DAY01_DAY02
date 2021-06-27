@@ -116,9 +116,62 @@ mysql> select  * from db1.a;
 |  102 |
 +------+
 				
-下次上课讲 									   
+##############################################################################							   
 									   
 				3.2 一主多从结构 ***
+把数据库服务器53 也配置为 51 的  从数据库服务器192
+				具体配置：
+						1 53 主机启动mysqld 服务  并且管理员能本机登录服务
+						2 53 主机 查看没有成为从服务器之前 要与主数据库服务器数据一致
+						   如果 53 比 51 的数据少的话，在主服务器对数据做备份，然后把
+						备份文件拷贝给 从服务器53  然后53 使用备份文件恢复数据
+						
+						[root@host51 ~]# mysqldump -uroot -p123qqq...A  -B game  > /root/game.sql
+						[root@host51 ~]# scp /root/game.sql 192.168.4.53:/root/
+
+[root@host53 ~]# ls /root/*.sql
+/root/game.sql
+[root@host53 ~]# mysql -uroot -p123qqq...A < /root/game.sql
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host53 ~]# 
+
+[root@host53 ~]# mysql -uroot -p123qqq...A				
+mysql> select  * from game.user;
+
+					  修改配置文件指定server_id
+
+
+					vim /etc/my.cnf
+					[mysqld]
+					 server_id=53
+					:wq
+					
+				  ]# systemctll restart  mysqld
+				  
+					 3  53 主机管理员登录指定主服务器信息
+							首先在51 主机查看binlog日志文件名和偏移量
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'show master status'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master51.000001 |     2811 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+[root@host51 ~]# 							
+							 再使用change master to  命令指定主服务器信息
+[root@host53 ~]# mysql -uroot -p123qqq...A
+mysql> change master to master_host="192.168.4.51" , 
+master_user="repluser",
+master_password="123qqq...A",
+master_log_file="master51.000001",
+master_log_pos=2811;
+mysq> start slave;
+mysql> show slave status \G
+	        Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+		
+
+    
 				3.3 主从从结构
 				3.4 主主结构
 
