@@ -243,7 +243,83 @@ mysql>  drop   database  game ; #快速实现数据一致 (53  54 55)
 							
 							#查看日志信息
 							mysql> show  master status  #给从服务器使用
+
+
+
 						2 配置主数据库服务器54
+
+						2 配置主数据库服务器54
+							  2.1 修改配置文件并重启mysqld服务
+							   ]# vim /etc/my.cnf
+[mysqld]
+server_id=54
+log_bin=master54
+:wq
+]# systemctl restart mysqld					
+							 2.2 54 做主数据库服务器的配置
+[root@host54 ~]# mysql -uroot -p123qqq...A	
+mysql> grant  replication  slave on  *.*  to   
+repluser1@"%" identified by "123qqq...A";						 
+
+mysql>  show  master status ;   #给从服务器 55 使用的 
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master54.000001 |      442 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+							  
+							  2.3 54 做从数据库服务器的配置
+mysql>  change master to master_host="192.168.4.53" ,  master_user="repluser" , 
+master_password="123qqq...A" , master_log_file="master51.000001",master_log_pos=441;
+Query OK, 0 rows affected, 2 warnings (0.26 sec)
+
+mysql> start slave;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> show slave status \G
+      Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+
+						 			  
+											
+						3 配置从数据库服务器55	
+								3.1  指定server_id并重启mysqld服务
+]# vim /etc/my.cnf						
+[mysqld]
+server_id=55
+:wq
+
+]# systemctl restart mysqld
+
+							
+								3.2  管理员root 登录指定主服务器信息
+[root@host55 ~]# mysql -uroot -p123qqq...A
+mysql> change master to  master_host="192.168.4.54" , 
+master_user="repluser1" , master_password="123qqq...A",
+master_log_file="master54.000001",master_log_pos=442;
+Query OK, 0 rows affected, 2 warnings (0.27 sec)
+								
+								3.3  启动slave进程
+mysql> start slave;
+Query OK, 0 rows affected (0.01 sec)
+								
+								3.4  查看状态信息
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'show slave status \G'| grep  -i 'yes'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@host55 ~]# 
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'show slave status \G'| grep  -i '192.168.4.54'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+                  Master_Host: 192.168.4.54
+[root@host55 ~]# 								
+					
+
+				测试配置 ：
+
 						
 						3 配置主数据库服务器55	
 
