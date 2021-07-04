@@ -444,10 +444,137 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@host55 ~]#				
 
 
-
-
-
-
-mha集群	
+###################################################################
+	MHA  是专门用来做  mysql服务  可用集群的软件  perl 脚本 编写软件
+			
 	
-7月4 号  Nosql_day01 + day02 
+	
+	高可用集群   客户端当前访问的数据库服务器宕机，备用的数据库服务器会自动接替工作，
+	这个过程对客户端是透明的。
+
+	环境准备
+		必须配置ssh免密登录
+				1 所有数据库服务器之间必须免密登录
+					51 ----> 52 / 53 
+host51]# ssh-keygen  #创建密钥对 有提示直接回车即可
+					 
+host51]# ssh-copy-id root@192.168.4.52		 #拷贝公钥给52			
+host51]# ssh-copy-id root@192.168.4.53       #拷贝公钥给53 
+
+#连接52和53 都不需要密码了
+]# ssh root@192.168.4.53
+]# ssh root@192.168.4.52
+
+					
+					52 ----> 51 / 53
+host52]# ssh-keygen  #创建密钥对 有提示直接回车即可
+					 
+host52]# ssh-copy-id root@192.168.4.51		 #拷贝公钥给51			
+host52]# ssh-copy-id root@192.168.4.53       #拷贝公钥给53 
+
+#连接52和53 都不需要密码了
+]# ssh root@192.168.4.53
+]# ssh root@192.168.4.51
+					
+					53 ----> 51 /  52
+host53]# ssh-keygen  #创建密钥对 有提示直接回车即可
+					 
+host53]# ssh-copy-id root@192.168.4.51		 #拷贝公钥给51			
+host53]# ssh-copy-id root@192.168.4.52       #拷贝公钥给52 
+
+#连接52和51 都不需要密码了
+]# ssh root@192.168.4.52
+]# ssh root@192.168.4.51					
+					
+					
+				2 管理主机能免密登录所有数据库服务器
+					58 ----> 51 / 52  /53
+host58]# ssh-keygen  #创建密钥对 有提示直接回车即可
+					 
+host58]# ssh-copy-id root@192.168.4.51		 #拷贝公钥给51			
+host58]# ssh-copy-id root@192.168.4.52       #拷贝公钥给52 
+host58]# ssh-copy-id root@192.168.4.53       #拷贝公钥给53 
+
+#连接52和51 / 53 都不需要密码了
+]# ssh root@192.168.4.52
+]# ssh root@192.168.4.53	
+]# ssh root@192.168.4.51	
+
+				
+				3 在管理主机58  和3台数据库服务器51 /52/53 安装依赖的软件包
+				  # 要配置好yum源
+				  #安装的是操作系统提供的yum源里没有的perl软件
+]#scp -r /linux-soft/4/mysql/mha-soft-student  root@192.168.4.51:/root/
+]#scp -r /linux-soft/4/mysql/mha-soft-student  root@192.168.4.52:/root/
+]#scp -r /linux-soft/4/mysql/mha-soft-student  root@192.168.4.53:/root/
+]#scp -r /linux-soft/4/mysql/mha-soft-student  root@192.168.4.58:/root/				  
+
+分别执行如下操作：
+]# cd mha-soft-student/	
+]# ls  perl-*
+]# yum -y install perl-*		
+				
+		三台数据库服务器公共配置51、52 、53 都做的配置
+					1 都启用binlog日志
+					2 禁止自动删除本机的中继日志文件    2份
+					3 都启用半同步复制功能
+
+host51]#  vim /etc/my.cnf
+[mysqld]
+servr_id=51
+log_bin=master51
+relay_log_purge=0#禁止自动删除本机的中继日志文件
+
+#加载模块	
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+
+rpl_semi_sync_master_enabled=1 #启用master模块
+rpl_semi_sync_slave_enabled=1 #启用slave模块
+:wq
+		
+		
+host52]#  vim /etc/my.cnf
+[mysqld]
+servr_id=52
+log_bin=master52
+relay_log_purge=0#禁止自动删除本机的中继日志文件
+
+#加载模块	
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+
+rpl_semi_sync_master_enabled=1 #启用master模块
+rpl_semi_sync_slave_enabled=1 #启用slave模块
+:wq
+
+
+host53]#  vim /etc/my.cnf
+[mysqld]		
+servr_id=53
+log_bin=master53
+
+relay_log_purge=0#禁止自动删除本机的中继日志文件
+
+#加载模块	
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+
+rpl_semi_sync_master_enabled=1 #启用master模块
+rpl_semi_sync_slave_enabled=1 #启用slave模块
+
+   07/11 号   讲课内容   
+   Nosql  day01 + day02   + mha集群剩的下配置
+	   
+   一主多从同步结构
+		
+		
+		
+  配置管理主机
+  
+  根据管理主机的设置配置数据库服务器
+  
+  
+  启动管理服务
+  
+  测试高可用集群
+
+
+
