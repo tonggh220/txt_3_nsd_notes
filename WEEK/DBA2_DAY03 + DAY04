@@ -302,7 +302,53 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +----+-------------+------+------+
 [root@host54 ~]# 
 
+]# mysql -h192.168.4.58 -P8066  -uroot -p123456					
+mysql> use  TESTDB;
+MySQL> 				
+mysql> create table  hotnews(
+    -> id  int  , title char(20) , worker  char(10) , comment varchar(200));
+Query OK, 0 rows affected (0.66 sec)
 
+mysql> insert into hotnews(id , title , worker , comment)
+    -> values
+    -> (7,"aa","aa","aaaaa"),(8,"bb","bb","bbbbb"),(9,"cc","ccc","ccccc");
+Query OK, 3 rows affected (0.15 sec)
+
+mysql> insert into hotnews(id , title , worker , comment) values (11,"dd","dd","dddd");
+Query OK, 1 row affected (0.04 sec)
+
+mysql> insert into hotnews(id , title , worker , comment) values (11,"dd","dd","dddd");
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into hotnews(id , title , worker , comment) values (11,"dd","dd","dddd");
+
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select  * from db1.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+--------+---------+
+| id   | title | worker | comment |
++------+-------+--------+---------+
+|    9 | cc    | ccc    | ccccc   |
++------+-------+--------+---------+
+[root@host53 ~]# 
+[root@host54 ~]# mysql -uroot -p123qqq...A  -e 'select  * from db2.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+--------+---------+
+| id   | title | worker | comment |
++------+-------+--------+---------+
+|    7 | aa    | aa     | aaaaa   |
++------+-------+--------+---------+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select  * from db3.hotnews'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+-------+--------+---------+
+| id   | title | worker | comment |
++------+-------+--------+---------+
+|    8 | bb    | bb     | bbbbb   |
+|   11 | dd    | dd     | dddd    |
+|   11 | dd    | dd     | dddd    |
+|   11 | dd    | dd     | dddd    |
+|   11 | dd    | dd     | dddd    |
++------+-------+--------+---------+
+[root@host55 ~]# 
 				
 				6    添加新库新表
 
