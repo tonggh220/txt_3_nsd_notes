@@ -617,7 +617,163 @@ user=mysqlb  #（路由用户） 检查数据库服务器是否创建了客户�
 passwd=123qqq...A  #密码
 max_slave_connections=100%
 
-        没有配置完呢  ，下次上课从这里开始配置
+[MaxAdmin Service]  定义管理服务
+type=service
+router=cli
+
+#[Read-Only Listener]  #因为只读服务没有定义  所有不需要指定指定服务监听的端口号
+#type=listener
+#service=Read-Only Service
+#protocol=MySQLClient
+#port=4008
+
+[Read-Write Listener]   #定义读写分离服务使用的端口号
+type=listener
+service=Read-Write Service
+protocol=MySQLClient
+port=4006    #使用默认配置的端口  4006
+
+[MaxAdmin Listener]   #定义管理服务使用的端口
+type=listener
+service=MaxAdmin Service
+protocol=maxscaled
+socket=default
+port=4016   #定义端口  没有使用默认的
+
+
+
+
+
+
+根据maxscle.cnf文件的配置 在数据库服务器创建对应的用户
+注 在主数据库服务器51 添加  从服务器52 会自动同步用户
+mysqla 监控用户   123qqq...A
+mysqlb 路由用户   123qqq...A
+
+mysql> grant  replication slave , replication client  on  *.*  to  mysqla@"%" identified by "123qqq...A";
+
+mysql> grant select on  mysql.* to  mysqlb@"%" identified by "123qqq...A";
+
+在从服务器查看用户 
+mysql> select user from mysql.user ;
++-----------+
+| user      |
++-----------+
+| mysqla    |
+| mysqlb    |
+| mysql.sys |
+| root      |
++-----------+
+
+启动服务 
+[root@host58 ~]# maxscale /etc/maxscale.cnf  启动maxscale服务
+    #停止服务的命令     pkill -9  maxscale 
+[root@host58 ~]# 
+[root@host58 ~]# netstat  -utnlp  | grep 4006    # 查看配置文件定义的读写分离服务使用的端口
+tcp6       0      0 :::4006                 :::*                    LISTEN      5752/maxscale       
+[root@host58 ~]# 
+[root@host58 ~]# netstat  -utnlp  | grep 4016  #查看配置文件中 管理服务使用的端口
+tcp6       0      0 :::4016                 :::*                    LISTEN      5752/maxscale       
+[root@host58 ~]# 
+[root@host58 ~]# ls /var/log/maxscale/  日志文件存放的目录
+maxscale.log
+[root@host58 ~]# grep  "error" /var/log/maxscale/maxscale.log   #如果没有查看到端口 说明服务没有启动， 通过查看日志内容 看报错信息排错
+[root@host58 ~]# 
+
+  
+验证配置
+		1 查看监控信息
+[root@host58 ~]# maxadmin  -uadmin -pmariadb -P4016
+MaxScale> list servers
+Servers.
+-------------------+-----------------+-------+-------------+--------------------
+Server             | Address         | Port  | Connections | Status              
+-------------------+-----------------+-------+-------------+--------------------
+server1            | 192.168.4.51    |  3306 |           0 | Master, Running
+server2            | 192.168.4.52    |  3306 |           0 | Slave, Running
+-------------------+-----------------+-------+-------------+--------------------
+MaxScale> exit                                                                
+[root@host58 ~]# 
+
+
+2 在主数据库创建存储数据库的库和表 并添加客户端连接数据库服务使用的用户
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create database buydb'
+ 
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'create table buydb.user(age  int)'
+
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'grant select ,insert on  buydb.* to yaya@"%" identified by "123qqq...A"'
+
+	 3 在客户端连接读写分离服务器访问数据库服务可以执行查询数据和存储数据的操作
+[root@host50 ~]# mysql -h192.168.4.58 -P4006 -uyaya -p123qqq...A 	 
+mysql> select  * from buydb.user;
+Empty set (0.00 sec)
+
+mysql> insert into  buydb.user values(19);
+Query OK, 1 row affected (0.06 sec)
+
+mysql> select  * from buydb.user;
++------+
+| age  |
++------+
+|   19 |
++------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+		4 验证读写分离服务器 是否把客户端的查和写请求分别给了不通服务器处理
+			4.1  在从服务器本机 向表里添加1条记录（主服务器不会同步从的数据）
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'insert into buydb.user values(888)'
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'select  * from  buydb.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| age  |
++------+
+|   19 |
+|  888 |
++------+
+[root@host52 ~]# 		
+
+	      4.2 客户端连接读写分离服务器58 执行查询操作
+[root@host50 ~]# mysql -h192.168.4.58 -P4006 -uyaya -p123qqq...A -e 'select * from buydb.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| age  |
++------+
+|   19 |
+|  888 |
++------+
+[root@host50 ~]# 
+
+		4.3客户端连接读写分离服务器58 执行存储操作
+[root@host50 ~]# mysql -h192.168.4.58 -P4006 -uyaya -p123qqq...A -e 'insert into buydb.user values(666)'	
+	
+		4.4 在主服务器本机查看数据 能够看到写入得数据
+[root@host51 ~]# mysql -uroot -p123qqq...A -e 'select  * from  buydb.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| age  |
++------+
+|   19 |
+|  666 |
++------+
+[root@host51 ~]# 
+
+	 4.5 客户端连接读写分离服务器58 执行查看操作 可以查看到 新写入得数据
+[root@host52 ~]# mysql -uroot -p123qqq...A -e 'select  * from  buydb.user'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+
+| age  |
++------+
+|   19 |
+|  888 |
+|  666 |
++------+
+[root@host52 ~]# 
+
+
+
+
 
 2021/06/27 上课内容  
 DBA2_DAY03 + DAY04 
