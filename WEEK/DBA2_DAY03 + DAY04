@@ -1,0 +1,72 @@
+数据分片（也称为分库分表）
+
+网上购物的账号 
+				14亿人口   （排除老人 小孩   不会上网的人 ） 还能剩下 7亿网民
+购物网站；  会使用1台数据库服务器的1张表存储所有的注册账号吗 ？
+京东
+天猫
+拼多多
+
+分库分表： 把存储在1台数据库服务器的里的数据 分别存储到多台数据库服务器的表里，
+来解决单台数据库服务器的访问压力和存储空间不足的问题。
+
+分库分表分割方式：
+			水平分割： 把1张表的的记录分别存储到不同服务器的表里
+			垂直分割： 把不同业务类型的数据，放到不同的数据库服务器存储
+			
+
+mysql 中间件 MyCat 软件提供分库分表服务：软件开发者 写好10种分配规则	
+
+
+分库分表存储结构的拓扑
+		50 客户端端
+		58 分库分表服务器 （之前 实验 maxscale  停止即可）
+		53、54、55  数据库服务器  （要是独立的数据库服务器  彼此之间没有主从关系）
+		
+MYCAT 服务的工作原理？
+
+		具体配置步骤如下：
+				1 配置读写分离服务器58
+						1.1  安装软件mycat
+[root@host58 ~]# tar -zxvf Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz
+[root@host58 ~]# mv mycat  /usr/local/
+[root@host58 ~]# ls /usr/local/mycat/
+bin  catlet  conf  lib  logs  version.txt
+[root@host58 ~]# 
+
+[root@host58 mycat]# echo  "host58" > /etc/hostname
+[root@host58 mycat]# vim /etc/hosts
+127.0.0.1  host58 .....
+:wq
+
+[root@host58 mycat]# yum -y install  java-1.8.0-openjdk.i686	
+
+					
+						1.2  修改配置文件
+							  1.2.1  配置连接Mycat服务使用的用户名和密码及权限和虚拟库名
+							  
+xml  扩张标记语言		配置项要成对出现 且要有开始和对应的闭合
+					  
+[root@host58 mycat]# vim /usr/local/mycat/conf/server.xml 						
+				
+				
+				2  配置数据库服务器 53 、54 、55
+						2.1 创建存储数据的库
+						2.2 添加授权用户
+						
+				3  启动58主机的mycat服务
+				
+				4   客户端连接 58  查看库和表 
+				
+				5   分片规则的使用
+				
+				6    添加新库新表
+
+
+
+
+
+
+mha集群	
+	
+7月4 号  Nosql_day01 + day02 
