@@ -406,10 +406,42 @@ mysql> show tables;
 2 rows in set (0.00 sec)
 
 mysql> 
-
-						6.5  向新表里存储数据
-                        
+6.5  向新表里存储数据
+							#根据分片规则建表 以 type='global'为例
+mysql> create table  reg(mame  char(10) , pass  char(6));
+Query OK, 0 rows affected (0.76 sec)
+								#存储数据
+mysql> insert into reg (mame,pass)values("bob","123456"),("tom","654321");
+Query OK, 2 rows affected (0.09 sec)
+						
 						6.6  在数据库服务器本机查看数据
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'select  * from db1.reg'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+--------+
+| mame | pass   |
++------+--------+
+| bob  | 123456 |
+| tom  | 654321 |
++------+--------+
+[root@host53 ~]#					
+[root@host54 ~]# mysql -uroot -p123qqq...A  -e 'select  * from db2.reg'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+--------+
+| mame | pass   |
++------+--------+
+| bob  | 123456 |
+| tom  | 654321 |
++------+--------+
+[root@host54 ~]# 
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select  * from db3.reg'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++------+--------+
+| mame | pass   |
++------+--------+
+| bob  | 123456 |
+| tom  | 654321 |
++------+--------+
+[root@host55 ~]#				
 
 
 
