@@ -350,7 +350,66 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +------+-------+--------+---------+
 [root@host55 ~]# 
 				
-				6    添加新库新表
+6    添加新库新表
+						6.1 添加新库
+[root@host58 ~]# vim /usr/local/mycat/conf/server.xml
+        <user name="root">
+                <property name="password">123456</property>
+                <property name="schemas">TESTDB,BUYDB</property>
+        </user>
+
+        <user name="user">
+                <property name="password">user</property>
+                <property name="schemas">TESTDB,BUYDB</property>
+                <property name="readOnly">true</property>
+        </user>
+:wq
+						
+						6.2 添加新表 
+[root@host58 ~]# vim /usr/local/mycat/conf/schema.xml
+.....
+<mycat:schema xmlns:mycat="http://io.mycat/">
+
+        <schema name="BUYDB" checkSQLschema="false" sqlMaxLimit="100">
+                <table name="user" dataNode="dn1,dn2,dn3" rule="auto-sharding-long" />
+                <table name="reg" dataNode="dn1,dn2,dn3" type="global" />
+        </schema>
+
+        <schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
+        .....
+:wq
+						6.3  重启mycat服务
+[root@host58 ~]# /usr/local/mycat/bin/mycat  restart
+Stopping Mycat-server...
+Stopped Mycat-server.
+Starting Mycat-server...
+[root@host58 ~]# 						
+						6.4  客户端连接mycat服务
+~]# mysql -h192.168.4.58 -P8066  -uroot -p123456
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| BUYDB    |
+| TESTDB   |
++----------+
+2 rows in set (0.01 sec)
+
+mysql> use BUYDB
+mysql> show tables;
++-----------------+
+| Tables in BUYDB |
++-----------------+
+| reg             |
+| user            |
++-----------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+
+						6.5  向新表里存储数据
+                        
+						6.6  在数据库服务器本机查看数据
 
 
 
