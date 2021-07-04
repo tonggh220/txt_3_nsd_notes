@@ -132,9 +132,45 @@ xml  扩张标记语言		配置项要成对出现 且要有开始和对应的闭
 mysql: [Warning] Using a password on the command line interface can be insecure.
 [root@host55 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.*  to adminplj@"%" identified by "123qqq...A"'
 						
-				3  启动58主机的mycat服务
-				
+3  启动58主机的mycat服务    
+[root@host58 mycat]# /usr/local/mycat/bin/mycat start				
+[root@host58 ~]# netstat  -utnlp  | grep  8066
+tcp6       0      0 :::8066                 :::*                    LISTEN      1533/java           
+[root@host58 ~]#				
+	
+查看错误信息 [root@host58 ~]# vim /usr/local/mycat/logs/wrapper.log
+
+	
 				4   客户端连接 58  查看库和表 
+host50]#  mysql   -h192.168.4.58  -u用户   -p密码
+]# mysql -h192.168.4.58 -P8066  -uroot -p123456
+mysql> show databases;  #看到了虚拟库
++----------+
+| DATABASE |
++----------+
+| TESTDB   |
++----------+
+1 row in set (0.00 sec)
+
+mysql> use  TESTDB;
+mysql> show tables;  #看到了虚拟表
++------------------+
+| Tables in TESTDB |
++------------------+
+| company          |
+| customer         |
+| customer_addr    |
+| employee         |
+| goods            |
+| hotnews          |
+| orders           |
+| order_items      |
+| travelrecord     |
++------------------+
+9 rows in set (0.00 sec)
+
+mysql> 
+
 				
 				5   分片规则的使用
 				
