@@ -181,10 +181,11 @@ mysql>
 						计算规则： 把表中分片字段的值与指定的数字做取余计算，根据计算结果存储数据
 					
 					查看那张表使用分片规则  vim  schema.xml
-<table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
-                           rule="sharding-by-intfile" />
-<table name="hotnews" primaryKey="ID" autoIncrement="true" dataNode="dn1,dn2,dn3"
-                           rule="mod-long" />
+<table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"   rule="sharding-by-intfile" />
+                          
+
+<table name="hotnews"  dataNode="dn1,dn2,dn3"  rule="mod-long" />
+                           
 						   
 					
 					查看分片规则要求表必须创建的字段名  rule.xml
