@@ -39,7 +39,7 @@ bin  catlet  conf  lib  logs  version.txt
 127.0.0.1  host58 .....
 :wq
 
-[root@host58 mycat]# yum -y install  java-1.8.0-openjdk.i686	
+[root@host58 mycat]# yum -y install  java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64
 
 					
 						1.2  修改配置文件
