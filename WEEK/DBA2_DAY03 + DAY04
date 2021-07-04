@@ -46,13 +46,91 @@ bin  catlet  conf  lib  logs  version.txt
 							  1.2.1  配置连接Mycat服务使用的用户名和密码及权限和虚拟库名
 							  
 xml  扩张标记语言		配置项要成对出现 且要有开始和对应的闭合
+注释符号  <!--        -->
 					  
-[root@host58 mycat]# vim /usr/local/mycat/conf/server.xml 						
-				
+[root@host58 mycat]# vim /usr/local/mycat/conf/server.xml 
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mycat:server SYSTEM "server.dtd">
+<mycat:server xmlns:mycat="http://io.mycat/">
+        <user name="root"> 用户名
+                <property name="password">123456</property> 密码
+                <property name="schemas">TESTDB</property> 虚拟库名
+        </user>
+        
+        <user name="user">
+                <property name="password">user</property>
+                <property name="schemas">TESTDB</property>
+                <property name="readOnly">true</property> 只读(select)
+        </user> 
+</mycat:server>
+						1.2.2 指定对哪些表的数据做分片存储
+						
+[root@host58 mycat]# cp  /usr/local/mycat/conf/schema.xml  /root/	
+[root@host58 mycat]# sed  -i  '56,77d' /usr/local/mycat/conf/schema.xml
+					
+[root@host58 mycat]# vim /usr/local/mycat/conf/schema.xml						
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+	
+	#定义分片存储数据的表名
+	<schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
+			#<table>....</table> 指定表信息的标签（双标签）
+			#<table ....  />指定表信息的标签（单标签）
+			
+            <table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+            
+			<table name="goods" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+
+            <table name="customer" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile">
+		
+	</schema>
+
+	#指定数据库服务器的主机名及用来存储数据的库名
+	
+        <dataNode name="dn1" dataHost="mysqla" database="db1" />
+        <dataNode name="dn2" dataHost="mysqlb" database="db2" />
+        <dataNode name="dn3" dataHost="mysqlc" database="db3" />
+
+	
+	#指定主机名对应的数据库服务器的ip地址
+ <dataHost name="mysqla" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM1" url="192.168.4.53:3306" user="adminplj" password="123qqq...A">
+                </writeHost>
+       </dataHost>
+
+       <dataHost name="mysqlb" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM2" url="192.168.4.54:3306" user="adminplj" password="123qqq...A">
+                </writeHost>
+       </dataHost>	
+	   
+	    <dataHost name="mysqlc" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM3" url="192.168.4.55:3306" user="adminplj" password="123qqq...A">
+                </writeHost>
+       </dataHost>
+	
+</mycat:schema>
+:wq
 				
 				2  配置数据库服务器 53 、54 、55
-						2.1 创建存储数据的库
-						2.2 添加授权用户
+						2.1 创建存储数据的库并 添加授权用户
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'create database db1'
+[root@host53 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.*  to adminplj@"%" identified by "123qqq...A"'
+
+[root@host54 mysql]# mysql -uroot -p123qqq...A -e 'create database db2'
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.*  to adminplj@"%" identified by "123qqq...A"'
+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'create database db3'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'grant all on *.*  to adminplj@"%" identified by "123qqq...A"'
 						
 				3  启动58主机的mycat服务
 				
