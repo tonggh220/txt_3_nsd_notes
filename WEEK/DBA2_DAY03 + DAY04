@@ -172,7 +172,136 @@ mysql> show tables;  #看到了虚拟表
 mysql> 
 
 				
-				5   分片规则的使用
+	
+				5   分片规则的使用（常用的水平分割 分片规则的使用）
+					5.1  sharding-by-intfile 枚举分片规则
+					     计算规则：表中分片字段的值 必须在指定配置文件的内容里选择
+
+					5.2  mod-long  求模分片规则
+						计算规则： 把表中分片字段的值与指定的数字做取余计算，根据计算结果存储数据
+					
+					查看那张表使用分片规则  vim  schema.xml
+<table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+<table name="hotnews" primaryKey="ID" autoIncrement="true" dataNode="dn1,dn2,dn3"
+                           rule="mod-long" />
+						   
+					
+					查看分片规则要求表必须创建的字段名  rule.xml
+		<tableRule name="sharding-by-intfile">   分片规则名
+                <rule>
+                        <columns>sharding_id</columns>  分片字段名
+                        <algorithm>hash-int</algorithm> 计算规则（算法）
+                </rule>
+        </tableRule>
+		
+		
+
+		<tableRule name="mod-long"> 分片规则名
+                <rule>
+                        <columns>id</columns>  分片字段名
+                        <algorithm>mod-long</algorithm>  计算规则（算法）
+                </rule>
+        </tableRule>	
+
+
+		
+					查看分片规则使用的算法
+					
+<function name="hash-int"  #hash-int算法
+                class="io.mycat.route.function.PartitionByFileMap"> 算法调用的java程序
+                <property name="mapFile">partition-hash-int.txt</property> 分pain规则配置文件
+        </function>
+
+[root@host58 ~]# vim  /usr/local/mycat/conf/partition-hash-int.txt  （修改文件内容 要重启服务）
+10000=0   #0代表 dn1
+10010=1    # 1 代表dn2
+10020=2   #2  代表 dn3   （自己手动添加）
+:wq										
+
+[root@host58 ~]# /usr/local/mycat/bin/mycat  restart
+Stopping Mycat-server...
+Stopped Mycat-server.
+Starting Mycat-server...
+[root@host58 ~]#
+
+ <function name="mod-long" class="io.mycat.route.function.PartitionByMod">  算法调用的程序
+                <!-- how many data nodes -->
+                <property name="count">3</property> 指定取余的数字
+        </function>
+
+					
+					
+					
+					根据分配规则建表存储数据
+[root@host54 ~]# mysql -h192.168.4.58 -P8066  -uroot -p123456
+mysql> use TESTDB;
+mysql> create table employee(ID  int primary key auto_increment,sharding_id  int ,
+    -> name char(10),sex  enum("m","w"));
+Query OK, 0 rows affected (0.85 sec)
+
+mysql> desc employee;
++-------------+---------------+------+-----+---------+----------------+
+| Field       | Type          | Null | Key | Default | Extra          |
++-------------+---------------+------+-----+---------+----------------+
+| ID          | int(11)       | NO   | PRI | NULL    | auto_increment |
+| sharding_id | int(11)       | YES  |     | NULL    |                |
+| name        | char(10)      | YES  |     | NULL    |                |
+| sex         | enum('m','w') | YES  |     | NULL    |                |
++-------------+---------------+------+-----+---------+----------------+
+4 rows in set (0.01 sec)
+
+mysql> 
+mysql> insert into employee(sharding_id,name,sex)values(10030,"bob","m");
+ERROR 1064 (HY000): can't find any valid datanode :EMPLOYEE -> SHARDING_ID -> 10030
+mysql> 
+mysql> insert into employee(sharding_id,name,sex)values(10000,"bob","m");
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into employee(sharding_id,name,sex)values(10010,"bobA","m");
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into employee(sharding_id,name,sex)values(10020,"bobc","m");
+Query OK, 1 row affected (0.04 sec)
+
+mysql> select  * from employee;
++----+-------------+------+------+
+| ID | sharding_id | name | sex  |
++----+-------------+------+------+
+|  1 |       10000 | bob  | m    |
+|  1 |       10010 | bobA | m    |
+|  1 |       10020 | bobc | m    |
++----+-------------+------+------+
+3 rows in set (0.05 sec)
+
+mysql> 
+
+[root@host55 ~]# mysql -uroot -p123qqq...A -e 'select  * from db3.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | sex  |
++----+-------------+------+------+
+|  1 |       10020 | bobc | m    |
++----+-------------+------+------+
+[root@host55 ~]# 
+[root@host54 ~]# mysql -uroot -p123qqq...A  -e 'select  * from db2.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | sex  |
++----+-------------+------+------+
+|  1 |       10010 | bobA | m    |
++----+-------------+------+------+
+[root@host54 ~]# 
+[root@host53 ~]# mysql -uroot -p123qqq...A  -e 'select  * from db1.employee'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+------+------+
+| ID | sharding_id | name | sex  |
++----+-------------+------+------+
+|  1 |       10000 | bobA | m    |
++----+-------------+------+------+
+[root@host54 ~]# 
+
+
 				
 				6    添加新库新表
 
