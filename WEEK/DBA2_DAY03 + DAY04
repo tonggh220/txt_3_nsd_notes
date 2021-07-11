@@ -564,12 +564,264 @@ rpl_semi_sync_slave_enabled=1 #启用slave模块
    Nosql  day01 + day02   + mha集群剩的下配置
 	   
    一主多从同步结构
+            配置主数据库服务器192.168.4.51
+                启用binlog日志  （公共配置已经启用了 ）
+        
+
+                用户授权
+        ]# mysql -uroot -p123qqq...A                
+mysql> grant  replication slave on  *.*  to  repluser@"%" identified by "123qqq...A";
+
+                查看日志信息
+mysql> reset master;
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master51.000001 |      154 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+            配置从数据库服务器192.168.4.52
+                    指定server_id   (在公共配置里已经设置了 )
+                    指定主服务器信息
+]# mysql -uroot -p123qqq...A
+mysql> change master to  master_host="192.168.4.51" , master_user="repluser" ,
+master_password="123qqq...A",master_log_file="master51.000001",master_log_pos=154;
+
+mysql> show slave status \G
+*************************** 1. row ***************************
+               Slave_IO_State: Waiting for master to send event
+                  Master_Host: 192.168.4.51
+                  Master_User: repluser
+                  Master_Port: 3306
+                Connect_Retry: 60
+              Master_Log_File: master51.000001
+          Read_Master_Log_Pos: 154
+               Relay_Log_File: host52-relay-bin.000002
+                Relay_Log_Pos: 319
+        Relay_Master_Log_File: master51.000001
+             Slave_IO_Running: Yes   #正常
+            Slave_SQL_Running: Yes   #正常
+              Replicate_Do_DB: 
+          Replicate_Ignore_DB: 
+           Replicate_Do_Table: 
+       Replicate_Ignore_Table: 
+      Replicate_Wild_Do_Table: 
+  Replicate_Wild_Ignore_Table: 
+                   Last_Errno: 0
+                   Last_Error: 
+                 Skip_Counter: 0
+          Exec_Master_Log_Pos: 154
+              Relay_Log_Space: 527
+              Until_Condition: None
+               Until_Log_File: 
+                Until_Log_Pos: 0
+           Master_SSL_Allowed: No
+           Master_SSL_CA_File: 
+           Master_SSL_CA_Path: 
+              Master_SSL_Cert: 
+            Master_SSL_Cipher: 
+               Master_SSL_Key: 
+        Seconds_Behind_Master: 0
+Master_SSL_Verify_Server_Cert: No
+                Last_IO_Errno: 0
+                Last_IO_Error: 
+               Last_SQL_Errno: 0
+               Last_SQL_Error: 
+  Replicate_Ignore_Server_Ids: 
+             Master_Server_Id: 51
+                  Master_UUID: ab291720-d6e9-11eb-9634-525400b1cc3b
+             Master_Info_File: /var/lib/mysql/master.info
+                    SQL_Delay: 0
+          SQL_Remaining_Delay: NULL
+      Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+           Master_Retry_Count: 86400
+                  Master_Bind: 
+      Last_IO_Error_Timestamp: 
+     Last_SQL_Error_Timestamp: 
+               Master_SSL_Crl: 
+           Master_SSL_Crlpath: 
+           Retrieved_Gtid_Set: 
+            Executed_Gtid_Set: 
+                Auto_Position: 0
+         Replicate_Rewrite_DB: 
+                 Channel_Name: 
+           Master_TLS_Version: 
+1 row in set (0.00 sec)
+
+mysql> 
+
+
+            配置从数据库服务器192.168.4.53
+                    指定server_id (公共配置已经配置过了 )
+                    指定主服务器信息
+                    ]# mysql -uroot -p123qqq...A
+
+mysql> change master to  master_host="192.168.4.51" , master_user="repluser" ,
+    -> master_password="123qqq...A",master_log_file="master51.000001",master_log_pos=154;
+Query OK, 0 rows affected, 2 warnings (0.44 sec)
+
+mysql> start slave;
+mysql> show slave status \G
+*************************** 1. row ***************************
+               Slave_IO_State: Waiting for master to send event
+                  Master_Host: 192.168.4.51
+                  Master_User: repluser
+                  Master_Port: 3306
+                Connect_Retry: 60
+              Master_Log_File: master51.000001
+          Read_Master_Log_Pos: 154
+               Relay_Log_File: host53-relay-bin.000002
+                Relay_Log_Pos: 319
+        Relay_Master_Log_File: master51.000001
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+              Replicate_Do_DB: 
+          Replicate_Ignore_DB: 
+           Replicate_Do_Table: 
+       Replicate_Ignore_Table: 
+      Replicate_Wild_Do_Table: 
+  Replicate_Wild_Ignore_Table: 
+                   Last_Errno: 0
+                   Last_Error: 
+                 Skip_Counter: 0
+          Exec_Master_Log_Pos: 154
+              Relay_Log_Space: 527
+              Until_Condition: None
+               Until_Log_File: 
+                Until_Log_Pos: 0
+           Master_SSL_Allowed: No
+           Master_SSL_CA_File: 
+           Master_SSL_CA_Path: 
+              Master_SSL_Cert: 
+            Master_SSL_Cipher: 
+               Master_SSL_Key: 
+        Seconds_Behind_Master: 0
+Master_SSL_Verify_Server_Cert: No
+                Last_IO_Errno: 0
+                Last_IO_Error: 
+               Last_SQL_Errno: 0
+               Last_SQL_Error: 
+  Replicate_Ignore_Server_Ids: 
+             Master_Server_Id: 51
+                  Master_UUID: ab291720-d6e9-11eb-9634-525400b1cc3b
+             Master_Info_File: /var/lib/mysql/master.info
+                    SQL_Delay: 0
+          SQL_Remaining_Delay: NULL
+      Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+           Master_Retry_Count: 86400
+                  Master_Bind: 
+      Last_IO_Error_Timestamp: 
+     Last_SQL_Error_Timestamp: 
+               Master_SSL_Crl: 
+           Master_SSL_Crlpath: 
+           Retrieved_Gtid_Set: 
+            Executed_Gtid_Set: 
+                Auto_Position: 0
+         Replicate_Rewrite_DB: 
+                 Channel_Name: 
+           Master_TLS_Version: 
+1 row in set (0.00 sec)
+
+mysql>
 		
 		
 		
-  配置管理主机
+  配置管理主机 192.168.4.58
+            安装提供管理服务的软件
+                ]# cd mha-soft-student/
+                ]# yum -y install perl-*
+                ]# yum  -y install  mha4mysql-node-0.56-0.el6.noarch.rpm
+                ]# yum   -y  install perl-ExtUtils-*   perl-CPAN* 
+
+                #上边是安装依赖的软件
+
+                ]# tar -zxvf mha4mysql-manager-0.56.tar.gz
+]# cd mha4mysql-manager-0.56/
+
+[root@host58 mha4mysql-manager-0.56]# perl Makefile.PL  
+*** Module::AutoInstall version 1.03
+*** Checking for Perl dependencies...
+[Core Features]
+- DBI                   ...loaded. (1.627)
+- DBD::mysql            ...loaded. (4.023)
+- Time::HiRes           ...loaded. (1.9725)
+- Config::Tiny          ...loaded. (2.14)
+- Log::Dispatch         ...loaded. (2.41)
+- Parallel::ForkManager ...loaded. (1.18)
+- MHA::NodeConst        ...loaded. (0.56)
+*** Module::AutoInstall configuration finished.
+Checking if your kit is complete...
+Looks good
+Writing Makefile for mha4mysql::manager
+Writing MYMETA.yml and MYMETA.json
+[root@host58 mha4mysql-manager-0.56]# make && make install
+[root@host58 mha4mysql-manager-0.56]# masterha_  按2次 tab 键可以补全所有命令
+masterha_check_repl       masterha_conf_host        masterha_master_switch
+masterha_check_ssh        masterha_manager          masterha_secondary_check
+masterha_check_status     masterha_master_monitor   masterha_stop
+[root@host58 mha4mysql-manager-0.56]#
+
+            创建并编辑服务的主配置文件 （可以在源码目录下拷贝模板文件，然后根据自己的环境准备做配置）
+#创建工作目录
+]# mkdir /etc/mha
+
+#拷贝模板文件 
+[root@host58 ~]# cp mha4mysql-manager-0.56/samples/conf/app1.cnf /etc/mha/
+[root@host58 ~]# ls /etc/mha/
+app1.cnf
+
+
+#编辑文件
+[root@host58 ~]# vim /etc/mha/app1.cnf 
+[server default]  #管理服务的运行配置
+
+
+manager_workdir=/etc/mha    #管理服务的工作目录
+manager_log=/etc/mha/manager.log   #管理服务的日志文件
+master_ip_failover_script=/etc/mha/master_ip_failover   #故障切换脚本
+
+
+ssh_user=root    #ssh免密登录对方主机使用的用户
+ssh_port=22      #用户对应的密码
+
+repl_user=repluser   # 从服务器到主服务器拷贝sql命令时连接主数据库服务器的用户
+repl_password=123qqq...A  # 密码 
+
+user=plj  #管理主机监控 server1  server2 server3 时连接 使用的用户
+password=123qqq...A  # 密码
+
+
+
+
+#指定数据库服务器
+[server1]  #指定管理的第1台数据库服务器
+hostname=192.168.4.51
+port=3306
+candidate_master=1
+
+[server2]  #指定管理的第2台数据库服务器
+hostname=192.168.4.52
+port=3306
+candidate_master=1
+
+[server3] #指定管理的第3台数据库服务器
+hostname=192.168.4.53
+port=3306
+candidate_master=1
+
+休息一下到  11：00   
+
+            创建故障切换脚本
+
+            把vip地址配置在当前的主从结构中的主数据库服务器上
+
   
-  根据管理主机的设置配置数据库服务器
+  根据管理主机的设置配置数据库服务器  192.168.4.51/52/53
   
   
   启动管理服务
