@@ -181,8 +181,52 @@ tcp    LISTEN     0      128    192.168.4.51:6351   *:*    users:(("redis-server
 :wq
 
 /etc/init.d/redis_6379  start
-/etc/init.d/redis_6379  stop 
+/etc/init.d/redis_6379  stop   #可以使用脚本停止服务了 
 
+二  LNP  +  redis服务    
+（把网站的数据存储在内存服务器里）
 
+	2.1  部署LNP （192.168.4.58）
+			#  安装源码的nginx软件
+  486  yum -y install gcc  pcre-devel  zlib-devel
+  487  tar -zxvf nginx-1.12.2.tar.gz 
+  488  cd nginx-1.12.2/
+  489  ./configure 
+  492  make 
+  493  make install			
+[root@host58 nginx-1.12.2]# ls /usr/local/nginx/
+conf  html  logs  sbin
+			
+			#  安装php
+[root@host58 ~]# yum -y install  php  php-fpm  php-devel
+
+			#  启动服务
+[root@host58 ~]# vim +65 /usr/local/nginx/conf/nginx.conf			
+        location ~ \.php$ {
+            root           html;
+            fastcgi_pass   127.0.0.1:9000; #把访问php网页的请求给本机的9000端口
+            fastcgi_index  index.php;
+        #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+            include        fastcgi.conf;
+        }
+:wq
+
+[root@host58 ~]# /usr/local/nginx/sbin/nginx  
+[root@host58 ~]# netstat  -utnlp  | grep  80
+tcp        0      0 0.0.0.0:80              0.0.0.0:*   LISTEN      17107/nginx: master
+		
+[root@host58 ~]# netstat  -utnlp  | grep  9000
+tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      17055/php-fpm: mast 
+[root@host58 ~]# 			
+			#  编写php脚本
+[root@host58 ~]# vim /usr/local/nginx/html/test.php
+<?php
+echo  "hello world!!!";
+?>
+:wq
+			
+			#  访问网站php脚本
+[root@host58 ~]# curl  http://localhost/test.php
+hello world!!!
 
 
