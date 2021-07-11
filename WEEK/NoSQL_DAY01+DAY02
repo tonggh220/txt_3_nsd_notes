@@ -296,7 +296,61 @@ save ok
 1) "beijing"
 2) "plj@tedu.cn"
 192.168.4.51:6351> 
+
+
+搭建redis集群（多台服务器一起提供存储服务）
+	集群环境准备(至少需要6台redis服务器) 51  ~ 56 
+	51 已经有了 ，但要修改51的配置才可以用51 做集群。 
+[root@host51 ~]# /etc/init.d/redis_6379 stop
+[root@host51 ~]# vim +501 /etc/redis/6379.conf 
+#requirepass 123456
+cluster-enabled yes
+cluster-config-file nodes-6379.conf	
+cluster-node-timeout 5000
+:wq
+[root@host51 ~]# rm  -rf /var/lib/redis/6379/*
+[root@host51 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host51 ~]# netstat  -utnlp  | grep redis-server
+tcp        0      0 192.168.4.51:16351      0.0.0.0:*               LISTEN      10746/redis-server  
+tcp        0      0 192.168.4.51:6351       0.0.0.0:*               LISTEN      10746/redis-server  
+[root@host51 ~]# 
+	
+	准备52 到 56具体操作如下  
+			1 安装软件
+			
 		
+  355  rpm -q gcc  || yum -y install gcc 
+  356  tar -zxvf redis-4.0.8.tar.gz 
+  357  cd redis-4.0.8/
+  358  make && make install
+  	2 初始化配置 
+		
+  359  ./utils/install_server.sh 
+  360  ss -utnlp  | grep  6379
+  
+			3 停止服务
+  362  /etc/init.d/redis_6379 stop
+			
+			
+			4 修改配置文件(改服务使用的ip地址 及启用集群功能)
+]# vim /etc/redis/6379.conf 
+
+bind 192.168.4.52
+cluster-enabled yes
+cluster-config-file nodes-6379.conf	
+cluster-node-timeout 5000
+:wq
+		
+			5 启动服务
+[root@host52 redis-4.0.8]# /etc/init.d/redis_6379  start
+Starting Redis server...
+
+			6 查看服务端口
+[root@host52 redis-4.0.8]# netstat  -utnlp  | grep redis-server
+tcp        0      0 192.168.4.52:6379       0.0.0.0:*               LISTEN      9720/redis-server 1 
+tcp        0      0 192.168.4.52:16379      0.0.0.0:*               LISTEN      9720/redis-server 1 
+[root@host52 redis-4.0.8]# 					
 
 
 
