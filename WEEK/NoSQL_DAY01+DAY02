@@ -352,6 +352,90 @@ tcp        0      0 192.168.4.52:6379       0.0.0.0:*               LISTEN      
 tcp        0      0 192.168.4.52:16379      0.0.0.0:*               LISTEN      9720/redis-server 1 
 [root@host52 redis-4.0.8]# 					
 
+配置管理主机192.168.4.57 (管理主机用来管理redis集群的)
+		在57主机做如下配置：
+		#准备ruby脚本运行环境
+[root@host57 ~]# rpm -q ruby
+未安装软件包 ruby 
+[root@host57 ~]# yum -y install ruby
+[root@host57 ~]# gem  install  redis-3.2.1.gem 
+Successfully installed redis-3.2.1
+Parsing documentation for redis-3.2.1
+Installing ri documentation for redis-3.2.1
+1 gem installed
+[root@host57 ~]# 
+		
+		#创建ruby脚本
+  276  rpm -q ruby
+  277  yum -y install ruby
+  282  gem  install  redis-3.2.1.gem 
+  285  tar -zxvf redis-4.0.8.tar.gz 
+
+  287  cd redis-4.0.8/
+  292  cp src/redis-trib.rb  /usr/local/sbin/
+
+  294  chmod  +x  /usr/local/sbin/redis-trib.rb 
+		
+		
+		#查看脚本的帮助信息
+[root@host57 ~]# redis-trib.rb help
+		
+		
+		#使用脚本创建集群
+>>> Creating cluster
+>>> Performing hash slots allocation on 6 nodes...
+Using 3 masters:
+192.168.4.51:6351
+192.168.4.52:6379
+192.168.4.53:6379
+Adding replica 192.168.4.55:6379 to 192.168.4.51:6351
+Adding replica 192.168.4.56:6379 to 192.168.4.52:6379
+Adding replica 192.168.4.54:6379 to 192.168.4.53:6379
+M: 4916e695e4e42d32fcbfc2bed03cf288b10abf42 192.168.4.51:6351
+   slots:0-5460 (5461 slots) master
+M: 3cb10727bff948e454051ef4a9e45981f5558d8b 192.168.4.52:6379
+   slots:5461-10922 (5462 slots) master
+M: eae91de0cfc451d187e31e7e0821710d4e5ad6d3 192.168.4.53:6379
+   slots:10923-16383 (5461 slots) master
+S: f14c464c18ecec458ef5181054fab389bf8b21ad 192.168.4.54:6379
+   replicates eae91de0cfc451d187e31e7e0821710d4e5ad6d3
+S: b163dcb7e0dfc61e1ad68583d30fdd6284cea327 192.168.4.55:6379
+   replicates 4916e695e4e42d32fcbfc2bed03cf288b10abf42
+S: d43e490620cec40be4a01ab9b64f93393ddbb06a 192.168.4.56:6379
+   replicates 3cb10727bff948e454051ef4a9e45981f5558d8b
+Can I set the above configuration? (type 'yes' to accept): yes  同意
+.....
+.....
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+[root@host57 ~]# 
+		
+		#查看集群状态
+[root@host57 ~]# redis-trib.rb  info 192.168.4.51:6351
+192.168.4.51:6351 (4916e695...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.4.52:6379 (3cb10727...) -> 0 keys | 5462 slots | 1 slaves.
+192.168.4.53:6379 (eae91de0...) -> 0 keys | 5461 slots | 1 slaves.
+[OK] 0 keys in 3 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+
+
+7月18  redis集群管理
+
+7月25  nosql_day03
+
+8月1号  上新课程 
+
+
+
+
+
+
+
+
+
 
 
 
