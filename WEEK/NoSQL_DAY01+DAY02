@@ -230,3 +230,75 @@ echo  "hello world!!!";
 hello world!!!
 
 
+2.2 把数据存储在redis服务器里 ，具体配置如下：
+		# 在网站服务器安装连接redis服务的模块
+[root@host58 ~]# rpm -q gcc  || yum -y install gcc
+gcc-4.8.5-28.el7.x86_64
+[root@host58 ~]# 
+[root@host58 ~]# tar -zxvf redis-cluster-4.3.0.tgz
+[root@host58 ~]# cd redis-4.3.0/
+[root@host58 redis-4.3.0]# phpize 
+Configuring for:
+PHP Api Version:         20100412
+Zend Module Api No:      20100525
+Zend Extension Api No:   220100525
+[root@host58 redis-4.3.0]# 
+[root@host58 redis-4.3.0]# ./configure --with-php-config=/usr/bin/php-config
+[root@host58 redis-4.3.0]# make
+	
+[root@host58 redis-4.3.0]# make install
+Installing shared extensions:     /usr/lib64/php/modules/  模块的安装位置
+[root@host58 redis-4.3.0]# 
+[root@host58 redis-4.3.0]# ls /usr/lib64/php/modules/ 查看模块文件redis.so
+curl.so  fileinfo.so  json.so  phar.so  redis.so  zip.so
+[root@host58 redis-4.3.0]# 
+
+		# 配置php进程调用模块
+		
+]# vim +728  /etc/php.ini		
+extension_dir = "/usr/lib64/php/modules/"  #模块的存放目录
+extension = "redis.so"   #模块名
+:wq
+
+[root@host58 redis-4.3.0]# systemctl  restart php-fpm
+[root@host58 redis-4.3.0]# 
+[root@host58 redis-4.3.0]# php  -m   | grep redis   查看支持的模块
+redis
+[root@host58 redis-4.3.0]#
+
+		# 编写存储数据的php脚本 ，并访问脚本
+		
+vim  /usr/local/nginx/html/set.php
+<?php
+$redis = new redis(); //定义连接命令
+
+$redis->connect("192.168.4.51","6351"); #连接redis服务器
+
+$redis->auth("123456"); #连接密码
+
+$redis->set("address","beijing"); #存储数据
+$redis->set("mail","plj@tedu.cn");#存储数据
+
+echo  "save ok"; #提示信息
+?>   
+:wq
+
+~]# curl http://192.168.4.58/set.php
+save ok 
+		
+		# 在redis服务器本机，命令行登录，查看数据（看到php脚本存储的数据为成功）
+		
+[root@host51 ~]# redis-cli  -h 192.168.4.51 -p 6351 -a 123456
+192.168.4.51:6351> keys *
+1) "address"
+2) "mail"
+192.168.4.51:6351> mget address mail
+1) "beijing"
+2) "plj@tedu.cn"
+192.168.4.51:6351> 
+		
+
+
+
+
+
