@@ -1,0 +1,188 @@
+7月11 号 上午 完成 mha 的配置	
+7月11 号 下午  Nosql_day01 + day02(redis环境准备)
+
+			   NoSQL  一类数据库服务软件的统称(非关系型数据库)
+			   非关系型数据库的特点：不用建表  数据通过key  values方式存储
+									 大多数软件是把数据存储在内存里
+									 
+			  非关系型数据库服务软件有哪些?					 
+			  Memcached  Redis(学这个)  MogoDB
+
+			  Redis  实现数据分布式存储的内存存储服务，同时能够实现数据的永久存储
+					 也支持主从同步结构 也有集群结构 支持各种数据类型
+						
+搭建redis服务器 （在主机 192.168.4.51 上运行redis服务）
+	具体步骤：
+		1 安装软件
+[root@host51 ~]# rpm -q gcc
+未安装软件包 gcc 
+[root@host51 ~]# yum  -y install gcc	
+[root@host51 ~]# tar -zxvf redis-4.0.8.tar.gz 
+[root@host51 ~]# cd redis-4.0.8
+[root@host51 ~]# make
+[root@host51 ~]# make install
+	
+		2 初始化配置
+[root@host51 redis-4.0.8]# ./utils/install_server.sh   #执行shell 脚本
+Welcome to the redis service installer
+This script will help you easily set up a running redis server
+
+Please select the redis port for this instance: [6379] 确认服务使用的端口
+Selecting default: 6379
+Please select the redis config file name [/etc/redis/6379.conf] 主配置文件
+Selected default - /etc/redis/6379.conf
+Please select the redis log file name [/var/log/redis_6379.log]  日志文件
+Selected default - /var/log/redis_6379.log
+Please select the data directory for this instance [/var/lib/redis/6379] 数据库目录
+Selected default - /var/lib/redis/6379
+Please select the redis executable path [/usr/local/bin/redis-server] 服务程序
+Selected config: 输出确认的统计信息
+Port           : 6379
+Config file    : /etc/redis/6379.conf
+Log file       : /var/log/redis_6379.log
+Data dir       : /var/lib/redis/6379
+Executable     : /usr/local/bin/redis-server
+Cli Executable : /usr/local/bin/redis-cli   客户端连接命令
+Is this ok? Then press ENTER to go on or Ctrl-C to abort.
+Copied /tmp/6379.conf => /etc/init.d/redis_6379
+Installing service...
+Successfully added to chkconfig!
+Successfully added to runlevels 345!  并设置了开机运行
+Starting Redis server...  启动服务 
+Installation successful!
+
+              3  查看服务状态
+				
+[root@host51 redis-4.0.8]# ss -utnlp  | grep 6379  查看服务端口
+tcp    LISTEN     0      128    127.0.0.1:6379                  *:*                   users:(("redis-server",pid=10453,fd=6))
+[root@host51 redis-4.0.8]# 
+		
+		
+		4 连接服务
+[root@host51 ~]# redis-cli 
+127.0.0.1:6379> 
+ 		
+		5  存/读数据
+127.0.0.1:6379> set school tarena   #存
+OK
+127.0.0.1:6379> keys *  #查看已经存储变量
+1) "school"
+127.0.0.1:6379> get school #获取变量值
+"tarena"
+127.0.0.1:6379> 
+		
+		6 断开连接
+127.0.0.1:6379> exit
+
+管理redis服务 
+	停止服务
+[root@host51 ~]# /etc/init.d/redis_6379 stop
+Stopping ...
+Redis stopped
+[root@host51 ~]# /etc/init.d/redis_6379 status   #查看服务状态
+cat: /var/run/redis_6379.pid: 没有那个文件或目录
+Redis is running ()
+[root@host51 ~]# 
+[root@host51 ~]# /etc/init.d/redis_6379 start  启动服务
+Starting Redis server...
+[root@host51 ~]# /etc/init.d/redis_6379 status  #再查看状态
+Redis is running (10479)
+[root@host51 ~]# 
+	
+	  常用命令的使用（对已经存储的变量做管理）
+	  set / get  
+	  
+	  mset / mget
+[root@host51 ~]# redis-cli 
+127.0.0.1:6379> keys *
+1) "school"
+127.0.0.1:6379> 
+127.0.0.1:6379> mset  name bob  age 19  gender man
+OK
+127.0.0.1:6379> keys *
+1) "name"
+2) "gender"
+3) "age"
+4) "school"
+127.0.0.1:6379> mget name  age  school
+1) "bob"
+2) "19"
+3) "tarena"
+127.0.0.1:6379> 
+	
+127.0.0.1:6379[1]> select 2  切换到2号库里
+OK
+127.0.0.1:6379[2]> keys *
+(empty list or set)
+127.0.0.1:6379[2]> mset a  1  b 2  c 3
+OK
+127.0.0.1:6379[2]> keys *
+1) "a"
+2) "c"
+3) "b"
+127.0.0.1:6379[2]>	
+127.0.0.1:6379[2]> keys *
+1) "a"
+2) "c"
+3) "b"
+127.0.0.1:6379[2]> del a   删除变量a 
+(integer) 1
+127.0.0.1:6379[2]> keys *
+1) "c"
+2) "b"
+127.0.0.1:6379[2]> 
+
+127.0.0.1:6379[2]> MOVE c 0  把变量c移动到0号库里
+
+127.0.0.1:6379> EXPIRE name 20  设置name变量的过期时间是20秒
+
+
+127.0.0.1:6379> ttl name 
+(integer) -2  #变量已经过期被删除
+
+127.0.0.1:6379> ttl age
+(integer) -1   表示变量没有设置过期时间
+127.0.0.1:6379>
+LNP+Redis (1台提供存储服务)
+
+127.0.0.1:6379> FLUSHDB  清空所在库的所有数据
+ 
+127.0.0.1:6379> FLUSHALL  清空内存里的所有数据
+
+
+		修改服务使用的ip地址(默认是lo网卡的地址)
+		注意修改了服务的ip地址 端口号 和 连接密码 中的任意一项配置后 ，都不能
+		使用脚本停止服务，要写还有脚本停止服务需要修改脚本的代码不然就得使用命令
+		停止服务
+		
+[root@host51 ~]# /etc/init.d/redis_6379 stop
+[root@host51 ~]# vim /etc/redis/6379.conf		
+port 6351  端口号
+bind 192.168.4.51  服务使用ip地址
+requirepass 123456  服务的连接密码
+:wq
+
+[root@host51 ~]# /etc/init.d/redis_6379 start
+[root@host51 ~]# ss -utnlp | grep 6351
+tcp    LISTEN     0      128    192.168.4.51:6351   *:*    users:(("redis-server",pid=10525,fd=6))
+[root@host51 ~]# 
+					
+			修改配置之后的连接 
+[root@host51 ~]# redis-cli -h 192.168.4.51  -p 6351 -a 123456
+192.168.4.51:6351> keys *
+(empty list or set)
+192.168.4.51:6351>exit 
+
+[root@host51 ~]# redis-cli -h 192.168.4.51  -p 6351 -a 123456   shutdown  使用命令停止服务
+
+在脚本里调用停止服务的命令，就可以用脚本停止服务了 
+[root@host51 ~]# vim  /etc/init.d/redis_6379
+ 43     $CLIEXEC -h 192.168.4.51 -p 6351 -a 123456  shutdown
+:wq
+
+/etc/init.d/redis_6379  start
+/etc/init.d/redis_6379  stop 
+
+
+
+
