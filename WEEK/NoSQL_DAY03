@@ -1,0 +1,93 @@
+
+redis服务 数据的手动备份和恢复 （在没有主从自动备份数据的情况下  运维人员 手动对数据做备份和恢复）
+Redis服务 实现数据持久化的 2种方式：  RDB  和   AOF
+
+数据持久化 : 就是可以把数据 永久的保存在硬盘里
+
+先介绍RDB的使用 : 指的就是数据库目录 /var/lib/redis/6379 下的 dump.rdb 文件
+Redis服务在运行过程中 会根据主配置文件里的定义，定期把内存里的数据复制一份保存到 dump.rdb文件里 
+
+]# vim /etc/redis/6379.conf
+#把内存里的数据保存到硬盘1份的存盘频率
+
+save 900 1      # 900秒内且有大于等于1个key发生就执行存放操作
+save 300 10      # 300秒内且有大于等于10个key发生就执行存放操作
+save 60 10000     # 60秒内且有大于等于10000个key发生就执行存放操作
+
+dbfilename dump.rdb  用来存储数据的文件名
+
+:wq
+
+192.168.4.56:6379> save   #手动执行存盘的命令 马上把内存里数据 把内存里的数据保存到硬盘 
+
+
+
+通过拷贝 dump.rdb 文件 实现对  redis 数据的备份 
+[root@host56 ~]# redis-cli  -h 192.168.4.56 -p 6379
+192.168.4.56:6379> keys *
+1) "v999"
+2) "name"
+3) "age"
+4) "x"
+5) "y"
+6) "z"
+7) "v7"
+192.168.4.56:6379> save
+192.168.4.56:6379> exit
+[root@host56 ~]# cp /var/lib/redis/6379/dump.rdb  /opt/dump.rdb.bak
+[root@host56 ~]# ls /opt/dump.rdb.bak 
+/opt/dump.rdb.bak
+
+模拟数据误删除 ，然后使用备份/opt/dump.rdb.bak文件恢复数据
+192.168.4.56:6379> FLUSHALL
+OK
+192.168.4.56:6379> keys *
+(empty list or set)
+192.168.4.56:6379> exit
+
+
+使用备份的文件恢复
+[root@host56 ~]# redis-cli  -h 192.168.4.56 -p 6379  shutdown   停止服务
+[root@host56 ~]# ls /var/lib/redis/6379/
+dump.rdb
+[root@host56 ~]# cp /opt/dump.rdb.bak /var/lib/redis/6379/dump.rdb  覆盖没有数据的dump.rdb文件
+cp：是否覆盖"/var/lib/redis/6379/dump.rdb"？ y
+[root@host56 ~]# 
+[root@host56 ~]# ls /var/lib/redis/6379/    现在看到的文件是有数据
+dump.rdb
+[root@host56 ~]# /etc/init.d/redis_6379 start 加载有数据的文件启动服务
+Starting Redis server...
+[root@host56 ~]# redis-cli  -h 192.168.4.56 -p 6379  连接服务 后可以查看到数据 
+192.168.4.56:6379> keys *
+1) "z"
+2) "v7"
+3) "x"
+4) "name"
+5) "y"
+6) "age"
+7) "v999"
+192.168.4.56:6379>
+
+
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+08月1 号  换老师  讲新课程
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
