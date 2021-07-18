@@ -511,7 +511,32 @@ OK
 "tarena"
 192.168.4.52:6379> exit
 [root@host58 redis-4.0.8]# 
+           诉求:把ip地址是 192.168.4.59的主机添加到集群里做slave角色服务器 来实现redis服务高可靠性 
+                 1  准备工作 ： 创建1台新的虚拟机 IP 192.168.4.59     安装redis服务 并启用集群功能  
 
+                 2 在管理主机做如下操作：
+                    说明slave 服务器的数据是在主服务器自动同步的，所以从服务器不需要分配hash slosts  ，只需要把他添加到集群里
+                    指定 做那台主服务器的从 就可以了 
+                    **** 不指定主服务器添加slave 角色的主机，默认 做从服务器个数最少的 maser的slave 
+                    **** 如果所有的master服务器 slave角色主机的台数个数一样 不指定做谁的slave 时 随机选择master 
+                    **** 运维管理者 可以在添加的slave 角色主机是，强制指定 做那台 master 的 slave 
+                    **** 在特殊情况下 集群会自动分配每个master 主机 slave角色主机的个数 
+
+                   2.1  把新redis服务器添加到集群里 
+
+            [root@host57 ~]# redis-trib.rb add-node --slave 192.168.4.59:6379 192.168.4.51:6351 
+
+
+                   2.2  查看集群信息 
+[root@host57 ~]# redis-trib.rb   info 192.168.4.51:6351
+192.168.4.51:6351 (4916e695...) -> 0 keys | 4096 slots | 1 slaves.
+192.168.4.52:6379 (3cb10727...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.58:6379 (e218620d...) -> 3 keys | 4096 slots | 1 slaves.  # 58 主机有一个salve服务器了  
+192.168.4.54:6379 (f14c464c...) -> 2 keys | 4096 slots | 1 slaves.
+[OK] 7 keys in 4 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+                   
 
 
 7月25  nosql_day03
