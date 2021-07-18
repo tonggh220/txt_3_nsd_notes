@@ -536,6 +536,93 @@ OK
 [OK] 7 keys in 4 masters.
 0.00 keys per slot on average.
 [root@host57 ~]# 
+
+
+
+
+############## 把redis服务器从集群中移除##############################
+一、 移除slave角色的redis服务器,比较简单 因为slave角色的服务器不占用hash slosts ，在管理主机 执行删除操作即可
+    诉求： 把ip 地址 是  192.168.4.56  slave 角色的主机移除集群
+    在管理主机执行移除命令
+   
+    # 查看被移除的slave 服务器的ID 
+    [root@host57 ~]# redis-trib.rb  check 192.168.4.51:6351  | grep  192.168.4.56
+S: d43e490620cec40be4a01ab9b64f93393ddbb06a 192.168.4.56:6379
+[root@host57 ~]# 
+
+执行移除主机的命令
+[root@host57 ~]# redis-trib.rb  del-node 192.168.4.51:6351 d43e490620cec40be4a01ab9b64f93393ddbb06a  
+>>> Removing node d43e490620cec40be4a01ab9b64f93393ddbb06a from cluster 192.168.4.51:6351
+>>> Sending CLUSTER FORGET messages to the cluster...
+>>> SHUTDOWN the node.  被移除集群主机上的redis会自动停止
+[root@host57 ~]#
+
+[root@host57 ~]# redis-trib.rb   info 192.168.4.51:6351
+192.168.4.51:6351 (4916e695...) -> 0 keys | 4096 slots | 1 slaves.
+192.168.4.52:6379 (3cb10727...) -> 2 keys | 4096 slots | 0 slaves.   从服务的台数 变成O 
+192.168.4.58:6379 (e218620d...) -> 3 keys | 4096 slots | 1 slaves.
+192.168.4.54:6379 (f14c464c...) -> 2 keys | 4096 slots | 1 slaves.
+[OK] 7 keys in 4 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+
+
+
+二、移除master角色的redis服务器 
+    诉求:把没有slave 主机的 master服务器  192.168.4.52移除集群
+    2.1 在管理主机释放占用的hash slots 
+        #查看52主机占用hash slots 集群中主机的个数
+        [root@host57 ~]# redis-trib.rb   check  192.168.4.51:6351 
+
+.....
+M: 3cb10727bff948e454051ef4a9e45981f5558d8b 192.168.4.52:6379
+   slots:6827-10922 (4096 slots) master   #占4096 
+   0 additional replica(s)
+......
+    
+       #通过执行分片操作 释放占用的hash slots 
+       [root@host57 ~]# redis-trib.rb   reshard 192.168.4.51:6351 
+
+       How many slots do you want to move (from 1 to 16384)? 4096   #释放hash  slots 的个数
+       What is the receiving node ID? 4916e695e4e42d32fcbfc2bed03cf288b10abf42  #接收 释放hash  slots 的个数 master服务器ID
+       Source node #1: #释放hash  slots 的个数 master服务器ID
+       Source node #2:done  #结束填写ID 
+Do you want to proceed with the proposed reshard plan (yes/no)? yes 同意以上配置
+
+      #查看集群信息 
+[root@host57 ~]# redis-trib.rb   info 192.168.4.51:6351   
+192.168.4.51:6351 (4916e695...) -> 2 keys | 8192 slots | 1 slaves.    #hash slots变多了 
+192.168.4.52:6379 (3cb10727...) -> 0 keys | 0 slots | 0 slaves.  #没有hash slots 了
+192.168.4.58:6379 (e218620d...) -> 3 keys | 4096 slots | 1 slaves.
+192.168.4.54:6379 (f14c464c...) -> 2 keys | 4096 slots | 1 slaves.
+[OK] 7 keys in 4 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+
+
+    2.2 在管理主机执行移除操作
+        #查被删除主机的ID
+ [root@host57 ~]# redis-trib.rb   check  192.168.4.51:6351 | grep  192.168.4.52
+M: 3cb10727bff948e454051ef4a9e45981f5558d8b 192.168.4.52:6379
+
+         #执行删除命令
+[root@host57 ~]# redis-trib.rb   del-node  192.168.4.51:6351 3cb10727bff948e454051ef4a9e45981f5558d8b
+>>> Removing node 3cb10727bff948e454051ef4a9e45981f5558d8b from cluster 192.168.4.51:6351
+>>> Sending CLUSTER FORGET messages to the cluster...
+>>> SHUTDOWN the node.
+[root@host57 ~]# 
+        #查看集群信息 （没有主机192.168.4.52 了）
+[root@host57 ~]# redis-trib.rb   info 192.168.4.51:6351 
+192.168.4.51:6351 (4916e695...) -> 2 keys | 8192 slots | 1 slaves.
+192.168.4.58:6379 (e218620d...) -> 3 keys | 4096 slots | 1 slaves.
+192.168.4.54:6379 (f14c464c...) -> 2 keys | 4096 slots | 1 slaves.
+[OK] 7 keys in 3 masters.
+0.00 keys per slot on average.
+[root@host57 ~]#        
+       
+
+
+
                    
 
 
