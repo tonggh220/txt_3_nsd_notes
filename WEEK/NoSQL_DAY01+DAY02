@@ -412,7 +412,7 @@ Can I set the above configuration? (type 'yes' to accept): yes  同意
 [OK] All 16384 slots covered.
 [root@host57 ~]# 
 		
-		#查看集群状态
+		#在管理主机查看集群状态
 [root@host57 ~]# redis-trib.rb  info 192.168.4.51:6351
 192.168.4.51:6351 (4916e695...) -> 0 keys | 5461 slots | 1 slaves.
 192.168.4.52:6379 (3cb10727...) -> 0 keys | 5462 slots | 1 slaves.
@@ -421,8 +421,98 @@ Can I set the above configuration? (type 'yes' to accept): yes  同意
 0.00 keys per slot on average.
 [root@host57 ~]# 
 
+      #在管理主机查看集群详细信息
+      
+[root@host57 ~]# redis-trib.rb  check  192.168.4.53:6379
 
-7月18  redis集群管理
+
+redis 集群能够实现 数据的自动备份 和数据的分布式存储 、redis服务的高可用 
+
+数据的自动备份 怎么实现的？ 在创建集群的时候 会自动设置主从库关系,从角色的服务器自动同步master角色服务器的数据。
+
+数据的分布式存储 怎么实现的？ 整个集群默认有16384个 hash slots  范围是0 -  16383 ，在创建集群时 会平均的把hash slots
+平均的分配给 master 角色的数据库服务器  在存储数据的时候根据集群的算法CRC16 计算结果存储数据
+
+怎么实现redis服务的高可用的? 当集群中的master角色的主机宕机后 对应的slave角色 主机会自动升级为master 并接管他的hash slots 
+                            宕机的master 修复后 会自动加入集群 并同步宕机期间的数据 自动做当前master的slave主机
+
+注意： 如果集群中没有slave主机的  master 服务器 宕机里 ，那么整个集群也坏了.
+
+
+
+
+
+客户端连接集群中的任意一台  redis服务器  都可以 存储和查看数据 
+]# redis-cli  -c -h 192.168.4.51 -p 6379 
+192.168.4.51:6379> set addr  bj  存储数据
+-> Redirected to slot [12790] located at 192.168.4.53:6379
+OK
+192.168.4.53:6379>  info replication 查看主从信息
+192.168.4.53:6379>  get   addr   查看数据
+
+在Redis服务器本机 查看集群新 
+[root@host53 ~]# redis-cli  -h 192.168.4.53 -p 6379
+192.168.4.53:6379> cluster info
+cluster_state:ok   表示在集群里
+cluster_known_nodes:6  集群中主机的个数
+cluster_size:3  表示主服务器的台数
+
+查看本机角色  
+> info replication
+role:master
+connected_slaves:1
+slave0:ip=192.168.4.54,port=6379,state=online,offset=809996,lag=0
+
+查看集群成员信息
+> cluster nodes
+或 查看  cat  /var/lib/redis/6379/nodes-6379.conf
+
+
+
+7月18  redis集群管理  
+        一 、向集群中添加新的redis服务器（添加新服务器的情况： 1  扩大内存 存储容量   2 提高服务的可靠性）
+
+             诉求:把ip地址是 192.168.4.58的主机添加到集群里做master角色服务器 来扩大集群存储容量 
+             1  准备工作 ： 创建1台新的虚拟机 IP 192.168.4.58     安装redis服务 并启用集群功能  
+             2  在管理主机把 58添加到集群里 做master服务器,具体操作如下：
+                    2.1 添加主机到集群
+ [root@host57 ~]# redis-trib.rb   add-node 192.168.4.58:6379  192.168.4.51:6351     
+
+                    2.2 分配hash slots 
+
+How many slots do you want to move (from 1 to 16384)? 4096   #给新主机分配hash slots 
+What is the receiving node ID? e218620d051945e825c753dd25a8f26f94ce1173   #接收hash slosts 的 master 服务器ID 
+Source node #1:all    # 在当前所有的master 角色的服务器 获取 4096个 hash slosts
+Do you want to proceed with the proposed reshard plan (yes/no)? yes 同意 
+
+
+                    2.3 查看集群信息
+[root@host57 ~]# redis-trib.rb   info 192.168.4.51:6351
+192.168.4.51:6351 (4916e695...) -> 0 keys | 4096 slots | 1 slaves.
+192.168.4.52:6379 (3cb10727...) -> 2 keys | 4096 slots | 1 slaves.
+192.168.4.58:6379 (e218620d...) -> 2 keys | 4096 slots | 0 slaves.  有hash slots  
+192.168.4.54:6379 (f14c464c...) -> 2 keys | 4096 slots | 1 slaves.
+[OK] 6 keys in 4 masters.
+0.00 keys per slot on average.
+[root@host57 ~]#
+                    2.4 客户端连接新的主服务器58 可以存储数据和查看数据 
+]# redis-cli  -c  -h 192.168.4.58 -p 6379
+192.168.4.58:6379> keys *
+1) "age"
+2) "name"
+192.168.4.58:6379> set v1  99
+OK
+192.168.4.58:6379> keys *
+1) "age"
+2) "v1"
+3) "name"
+192.168.4.58:6379> get school
+-> Redirected to slot [8455] located at 192.168.4.52:6379
+"tarena"
+192.168.4.52:6379> exit
+[root@host58 redis-4.0.8]# 
+
+
 
 7月25  nosql_day03
 
