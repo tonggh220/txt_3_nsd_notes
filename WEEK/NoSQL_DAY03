@@ -68,8 +68,27 @@ Starting Redis server...
 7) "v999"
 192.168.4.56:6379>
 
+AOF 为了弥补RDB的不足 ， 而产生了AOF  (Append  Only   File)
+记录客户端连接redis服务后，执行的所有写操作命令，是以追加的方式记录命令的
+默认没有启用。需要手动启动
+
+#修改配置文件启用aof文件
+
+适合线上服务器启用
+192.168.4.56:6379> config set appendonly yes  修改配置文件里的配置项
+192.168.4.56:6379> config rewrite   永久保存修改
 
 
+[root@host56 ~]# ls /var/lib/redis/6379/  数据库目录下多出.aof结尾的文件
+appendonly.aof  dump.rdb
+[root@host56 ~]# 
+
+
+通过拷贝 记录 命令的 aof 文件  实现对数据的备份 
+]# cp /var/lib/redis/6379/appendonly.aof  /opt/appendonly.aof.bak
+
+7月25 号 在最后 数据库结束 
+适合线下服务器启用
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 08月1 号  换老师  讲新课程
