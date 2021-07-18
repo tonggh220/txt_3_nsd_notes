@@ -620,10 +620,94 @@ M: 3cb10727bff948e454051ef4a9e45981f5558d8b 192.168.4.52:6379
 0.00 keys per slot on average.
 [root@host57 ~]#        
        
+########### 把当前集群中 master 主机占用的hash slots  平均分配
+[root@host57 ~]# redis-trib.rb   info 192.168.4.51:6351 
+192.168.4.51:6351 (4916e695...) -> 2 keys | 8192 slots | 1 slaves.  #占的最多  
+192.168.4.58:6379 (e218620d...) -> 3 keys | 4096 slots | 1 slaves.
+192.168.4.54:6379 (f14c464c...) -> 2 keys | 4096 slots | 1 slaves.
+[OK] 7 keys in 3 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+
+[root@host57 ~]# redis-trib.rb   rebalance  192.168.4.51:6351   平均分配hash slots 
+
+再次查看                    
+[root@host57 ~]# redis-trib.rb   info 192.168.4.51:6351 
+192.168.4.51:6351 (4916e695...) -> 2 keys | 5461 slots | 1 slaves.   都是一样多 
+192.168.4.58:6379 (e218620d...) -> 3 keys | 5462 slots | 1 slaves.
+192.168.4.54:6379 (f14c464c...) -> 2 keys | 5461 slots | 1 slaves.
+[OK] 7 keys in 3 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
 
 
+把移除的redis服务器 再次添加到集群里  (把移除的51 主机再添加到集群里做master服务器)
 
-                   
+        #在被移除的主机上运行redis服务  （因为移除集群时服务会被停止）
+         ]# /etc/init.d/redis_6379 start
+         [root@host52 ~]# netstat  -utnlp  | grep  redis-server
+tcp        0      0 192.168.4.52:6379       0.0.0.0:*               LISTEN      4211/redis-server 1 
+tcp        0      0 192.168.4.52:16379      0.0.0.0:*               LISTEN      4211/redis-server 1 
+[root@host59 ~]# 
+
+
+        [root@host52 ~]# redis-cli  -h 192.168.4.52 -p 6379
+        192.168.4.52:6379> cluster reset   #清除上次的集群信息
+        OK
+192.168.4.52:6379> cluster info  #查看集群信息
+cluster_state:fail  #状态是 fail 表示没有在集群里
+
+        #在管理主机执行添加的命令 
+        [root@host57 ~]# redis-trib.rb  add-node   192.168.4.52:6379   192.168.4.58:6379
+ 
+        [root@host57 ~]# redis-trib.rb  info 192.168.4.53:6379  #查看集群信息
+192.168.4.52:6379 (3cb10727...) -> 0 keys | 0 slots | 0 slaves.   # 需要配置slave服务器   和 分配hash slots 
+192.168.4.58:6379 (e218620d...) -> 3 keys | 5462 slots | 1 slaves.
+192.168.4.51:6351 (4916e695...) -> 2 keys | 5461 slots | 1 slaves.
+192.168.4.54:6379 (f14c464c...) -> 2 keys | 5461 slots | 1 slaves.
+[OK] 7 keys in 4 masters.
+0.00 keys per slot on average.
+[root@host57 ~]# 
+
+
+        把移除集群的主机恢复为独立的数据库服务器 
+            #从集群中移除主机
+            [root@host57 ~]# redis-trib.rb  del-node  192.168.4.51:6351  b163dcb7e0dfc61e1ad68583d30fdd6284cea327
+>>> Removing node b163dcb7e0dfc61e1ad68583d30fdd6284cea327 from cluster 192.168.4.51:6351
+>>> Sending CLUSTER FORGET messages to the cluster...
+>>> SHUTDOWN the node.
+[root@host57 ~]# 
+
+            #停止服务 （被移除集群后服务就是停止的）
+]# netstat  -utnlp  | grep redis-server
+]#
+            #清空数据库目录
+]# rm -rf  /var/lib/redis/6379/*
+
+            #禁用集群
+[root@host55 ~]# sed -i '815s/^/#/' /etc/redis/6379.conf 
+[root@host55 ~]# sed -i '823s/^/#/' /etc/redis/6379.conf 
+[root@host55 ~]# sed -i '829s/^/#/' /etc/redis/6379.conf 
+[root@host55 ~]# sed -n '829p;815p;823p' /etc/redis/6379.conf 
+#cluster-enabled yes
+#cluster-config-file nodes-6379.conf
+#cluster-node-timeout 5000
+
+    #启动服务
+]# /etc/init.d/redis_6379 start
+Starting Redis server...
+           
+          
+            #查看集群信息
+[root@host56 ~]# redis-cli  -h 192.168.4.56 -p 6379
+192.168.4.56:6379> cluster info
+ERR This instance has cluster support disabled  禁用的
+192.168.4.56:6379> keys *  没有数据
+(empty list or set)
+192.168.4.56:6379> info replication 
+# Replication
+role:master  默认是 master 服务器
+connected_slaves:0  没有从服务器
 
 
 7月25  nosql_day03
