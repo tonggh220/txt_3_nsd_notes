@@ -304,6 +304,72 @@ slave0:ip=192.168.4.53,port=6379,state=online,offset=3794,lag=1  从服务器的
 6) "name"
 192.168.4.53:6379> 
 
+
+哨兵服务: 实现redis服务的高可用
+哨兵服务运行后，监视redis主从结构中的master 服务器， 发现master服务器宕机后，把对应的slave服务器升级为master服务器。
+
+哨兵服务可以监视一主一从  一主多从  主从从  结构中的主
+
+案例需要 监视主从从结构的中的主数据库服务器 192.168.4.51 发现192.168.4.51 坏掉后把对应的从服务器  192.168.4.52 发现master服务器宕机后，把对应的slave服务器升级为master服务器。
+注意,如果主从从结构的master 服务器设置的连接密码 ，那么其他服务器也要设置连接密码并且密码要和主服务器的一样，反之 就都不设置密码。
+
+我们当前主从从结构   中的  51  设置了连接密码 666888  所以 52 和  53  也要实在一样的连接密码
+
+        具体配置如下：
+        设置52主机redis服务的连接密码为  666888
+[root@host52 ~]# redis-cli  -h 192.168.4.52 -p 6379 shutdown
+[root@host52 ~]# vim +501 /etc/redis/6379.conf
+slaveof 192.168.4.51 6351  主服务器Ip he 端口号
+masterauth 666888      主服务器连接密码 
+requirepass 666888  自己本机redis服务的密码 
+:wq
+[root@host52 ~]# /etc/init.d/redis_6379 start  
+Starting Redis server...
+[root@host52 ~]# redis-cli  -h 192.168.4.52 -p 6379 -a 666888    连接 
+192.168.4.52:6379> info replication  查看复制信息 
+# Replication
+role:slave
+master_host:192.168.4.51
+master_port:6351
+master_link_status:up
+
+
+        设置53主机redis服务的连接密码为  666888
+[root@host53 ~]# redis-cli  -h 192.168.4.53 -p 6379 shutdown
+[root@host53 ~]# vim  /etc/redis/6379.conf
+slaveof 192.168.4.52 6379  主服务器Ip he 端口号
+masterauth 666888      主服务器连接密码 
+requirepass 666888  自己本机redis服务的连接密码
+:wq
+[root@host53 ~]# /etc/init.d/redis_6379 start
+
+[root@host53 ~]# redis-cli  -h 192.168.4.53 -p 6379 -a 666888    连接自己
+192.168.4.53:6379> info replication  查看复制信息
+# Replication
+role:slave
+master_host:192.168.4.52
+master_port:6379
+master_link_status:up
+
+        配置哨兵服务器192.168.4.57 ，具体配置如下：
+               1  安装redis服务软件（不需要做初始化配置，因为安装软件的目的是提供哨兵服务）
+[root@host57 ~]# rpm -q gcc  ||  yum -y install gcc 
+[root@host57 ~]# tar -zxvf redis-4.0.8.tar.gz
+[root@host57 ~]# cd redis-4.0.8/
+[root@host57 redis-4.0.8]# make && make install
+
+               2  编写哨兵服务额主配置文件（需要根据主从复制结构的准备，自己编写）
+
+               
+               3  启动哨兵服务
+
+        测试配置
+
+
+     
+
+
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 08月1 号  换老师  讲新课程
 
