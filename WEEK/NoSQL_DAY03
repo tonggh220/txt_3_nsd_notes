@@ -202,6 +202,108 @@ master_link_status:up
 (error) READONLY You can't write against a read only slave.
 192.168.4.52:6379>
 
+配置一主多从复制结构
+需求把数据库服务器 192.168.4.53 也配置为 192.168.4.51 主机的从服务器
+
+准备：  在192.168.4.53主机 主机运行redis服务 
+在 192.168.4.53 主机做如下配置
+ redis-cli  -h 192.168.4.53 -p 6379 shutdown  停止服务
+
+修改配置文件（永久配置）
+vim /etc/redis/6379.conf
+slaveof 192.168.4.51 6351  指定主服务器ip和端口
+masterauth 666888  指定主服务器密码
+:wq
+
+/etc/init.d/redis_6379 start 启动服务 
+
+redis-cli  -h 192.168.4.53 -p 6379 连接服务查看复制信息
+
+在主数据库服务器查看复制信息
+192.168.4.51:6351> info replication
+# Replication
+role:master
+connected_slaves:2
+slave0:ip=192.168.4.52,port=6379,state=online,offset=2151,lag=0
+slave1:ip=192.168.4.53,port=6379,state=online,offset=2151,lag=0
+
+
+
+配置主从从结构 （把一主多从  改变为 主从从结构）
+    准备： 
+    1 把192.168.4.53 恢复为独立的数据库服务器
+    [root@host53 ~]# redis-cli  -h 192.168.4.53 -p 6379 shutdown
+vim /etc/redis/6379.conf
+#slaveof 192.168.4.51 6351  指定主服务器ip和端口
+#masterauth 666888  指定主服务器密码
+:wq
+
+/etc/init.d/redis_6379 start 启动服务 
+
+redis-cli  -h 192.168.4.53 -p 6379 连接服务查看复制信息
+[root@host53 ~]# redis-cli  -h 192.168.4.53 -p 6379
+192.168.4.53:6379> info replication
+# Replication
+role:master
+
+    2 把192.168.4.53 配置为 192.168.4.52 的从服务器 
+[root@host53 ~]# vim /etc/redis/6379.conf    
+slaveof 192.168.4.52 6379
+:wq
+
+重启redis服务
+[root@host53 ~]# redis-cli  -h 192.168.4.53 -p 6379 shutdown
+[root@host53 ~]# /etc/init.d/redis_6379  start
+Starting Redis server...
+[root@host53 ~]# 
+
+#查看复制信息
+[root@host53 ~]# redis-cli  -h 192.168.4.53 -p 6379
+192.168.4.53:6379> info replication
+# Replication
+role:slave  角色
+master_host:192.168.4.52  主服务器 IP  
+master_port:6379
+master_link_status:up  连接状态
+
+
+在192.168.4.52 主机查看复制信息 （有2种角色的信息）
+[root@host52 ~]# redis-cli  -h 192.168.4.52 -p 6379
+192.168.4.52:6379> info replication
+# Replication
+role:slave
+master_host:192.168.4.51
+master_port:6351
+master_link_status:up
+.....
+.....
+connected_slaves:1  连接自己的从服务器有1台 
+slave0:ip=192.168.4.53,port=6379,state=online,offset=3794,lag=1  从服务器的信息 
+
+
+测试:   在主服务器 192.168.4.51  存储数据   在 52 和 53 主机都可以查看到
+[root@host51 ~]# redis-cli  -h 192.168.4.51 -p 6351  -a 666888
+ 192.168.4.51:6351> mset v1  99 name plj   gender girl 
+
+
+192.168.4.52:6379> keys *
+1) "gender"
+2) "name"
+3) "y"
+4) "school"
+5) "v1"
+6) "x"
+192.168.4.52:6379> 
+
+192.168.4.53:6379> keys *
+1) "gender"
+2) "school"
+3) "x"
+4) "v1"
+5) "y"
+6) "name"
+192.168.4.53:6379> 
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 08月1 号  换老师  讲新课程
 
