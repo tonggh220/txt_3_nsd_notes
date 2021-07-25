@@ -692,16 +692,175 @@ OK
 OK
 192.168.4.58:6379> 
 
+++++++++++++++++++++++++++++++++++++++++++++
+对列表类型数据管理命令
+    列表 ： 一个变量名 可以存储多个数据
+    特点 ： 后进先出
 
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-08月1 号  换老师  讲新课程
+lpush  变量名   值列表
+
+192.168.4.58:6379> lpush  teacher nb  wk  dmy  plj zhzg lx
+(integer) 6
+192.168.4.58:6379> type  teacher
+list   
+192.168.4.58:6379> 
+
+192.168.4.58:6379> get teacher  报错
+(error) WRONGTYPE Operation against a key holding the wrong kind of value
+192.168.4.58:6379> 
+
+查看列表变量里的数据
+192.168.4.58:6379> lrange teacher 0 -1
+1) "lx"
+2) "zhzg"
+3) "plj"
+4) "dmy"
+5) "wk"
+6) "nb"
+192.168.4.58:6379> 
+
+当变量已经存在时  lpush  是追加数据
+192.168.4.58:6379> lpush  teacher xb  ds
+(integer) 8
+192.168.4.58:6379> lrange teacher 0 -1  后进先出
+1) "ds"
+2) "xb"
+3) "lx"
+4) "zhzg"
+5) "plj"
+6) "dmy"
+7) "wk"
+8) "nb"
+192.168.4.58:6379> 
+
+192.168.4.58:6379> lrange teacher 2  4  输出下标是2到4的元素
+1) "lx"
+2) "zhzg"
+3) "plj"
+192.168.4.58:6379> 
+
+192.168.4.58:6379> LINDEX teacher 0  输出下标是0的元素
+"ds"
+192.168.4.58:6379> LINDEX teacher 4  输出下标是4的元素
+"plj"
+192.168.4.58:6379> LINDEX teacher -1 输出下标是-1的元素  （倒数第1个元素）
+"nb"
+192.168.4.58:6379> 
+
+192.168.4.58:6379> llen teacher  统计列表元素的个数
+(integer) 8
+192.168.4.58:6379> 
 
 
+192.168.4.58:6379> lpop teacher  删除列表的第1个元素，会输出被删除的元素
+"ds"   
+
+192.168.4.58:6379> rpop teacher  删除队尾的元素 会输出被删除的元素
+"nb"
+
+192.168.4.58:6379> lpush teacher  A B C     把新数据追加在队头
+
+192.168.4.58:6379> rpush teacher  A1 B1 C1  把新数据追加在队尾 
+
+192.168.4.58:6379> LINDEX teacher 0
+"C"
+192.168.4.58:6379> lset teacher 0 HAHA  修改下标是0的元素的值 
+OK
+192.168.4.58:6379> LINDEX teacher 0
+"HAHA"
+192.168.4.58:6379> 
 
 
++++++++++++++++++++++++++++++++++++++++++++++
+hash表类型数据的管理命令
+    hash表：让一个变量可以存储多列，每列对应一个值， 节省内存存储的空间
+
+书名   嘻嘻嘻
+作者   嘤嘤嘤
+价格   啧啧啧
+版本   v2 
+销量   50万
+
+hset  书名   作者   嘤嘤嘤
+hset  书名   价格   啧啧啧
+hset  书名   版本   v2
+hset  书名   销量   50万
+type  书名
+
+192.168.4.58:6379> hset site tarena  www.tedu.cn   创建hash表类型变量
+(integer) 1
+192.168.4.58:6379> type site
+hash
+192.168.4.58:6379>
+
+92.168.4.58:6379> get site  报错
+(error) WRONGTYPE Operation against a key holding the wrong kind of value
+192.168.4.58:6379> 
+192.168.4.58:6379> HGETALL site  获取hash类型变量的所有信息
+1) "tarena"
+2) "www.tedu.cn"
+192.168.4.58:6379> 
+
+hmset  一起存储多列
+192.168.4.58:6379> hmset site  163  www.163.com  jd  www.jd.com   tmall  www.taobao.com 
+OK
+192.168.4.58:6379> 
+
+获取变量的所有列的名字
+192.168.4.58:6379> hkeys site
+1) "tarena"
+2) "163"
+3) "jd"
+4) "tmall"
+
+值获取1列的值
+192.168.4.58:6379> hget site jd
+"www.jd.com"
+
+一起获取多列的值
+192.168.4.58:6379> hmget site jd 163 
+1) "www.jd.com"
+2) "www.163.com"
+192.168.4.58:6379> 
+
+一起获取所有列的值
+192.168.4.58:6379> HVALS  site
+1) "www.tedu.cn"
+2) "www.163.com"
+3) "www.jd.com"
+4) "www.taobao.com"
+192.168.4.58:6379>
+
+192.168.4.58:6379> hdel site jd  163
+(integer) 2
+192.168.4.58:6379> hkeys site
+1) "tarena"
+2) "tmall"
+192.168.4.58:6379> 
 
 
+redis 的官方网站  www.redis.cn 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+数据库课课程总结
+主要学习的是 
+        关系型数据库(RDBMS) MySQL服务的使用
+        非关系型数据库(NoSQL) Redis服务的使用
+都要掌握集群的搭建（MHA集群  redis集群） 目的实现服务打高可用 数据的自动备份
+但成本比较高 维护难度也大。
 
+当公司的业务量没有那么大的时候, 可以配置主从实现数据的自动备份+第三方软件实现
+一下功能。比如分库分表  读写分离  哨兵服务 
+
+都要掌握数据的备份和恢复  
+
+都要掌握数据类型的管理 （select insert  delete update  list string  hash set ）
+
+都要掌握服务搭建(搭建 mysql服务器  和   Redis 服务器)
+
+都要掌握与网站服务连用怎么配置（lnmp   PHP+Redis）
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+08月1 号  换老师  讲新课
 
 
 
