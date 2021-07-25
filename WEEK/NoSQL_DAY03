@@ -87,8 +87,120 @@ appendonly.aof  dump.rdb
 通过拷贝 记录 命令的 aof 文件  实现对数据的备份 
 ]# cp /var/lib/redis/6379/appendonly.aof  /opt/appendonly.aof.bak
 
-7月25 号 在最后 数据库结束 
-适合线下服务器启用
+三 、Redis主从复制：实现数据自动备份的一种存储架构，分为2种角色的数据库服务器
+    master(主数据库服务器)  接受客户端访问的服务器
+    slave（从数据库服务器） 自动同步主服务器数据的
+
+    主从复制包括：
+        一主一从 ： 主从服务器各有1台  （结构存在风险  单点故障）
+
+        一主多从 ： 给1台主服务器配置多个从服务器  （解决从服务器的单点故障问题）
+
+        主从从  ： 给主从结构中的从服务器也配置1台从服务器 （主从从结构+烧饼服务可以解决 主服务器的单点故障问题）
+
+    配置主从复制： 
+        配置一主一从存储结构
+        需求 把数据库服务器 52 配置为  51 主从服务器
+        准备： 在 51 和  52 主机分别运行redis服务
+
+        配置从服务器（默认运行的redis服务器的角色 都master ）
+
+        >info  replication  #查看主从复制信息
+        >slaveof  主服务器IP  主服务器端口号    #命令行临时指定为从服务器
+
+        #在52主机的登录状态下执行
+        > slaveof   192.168.4.51  6351
+        192.168.4.52:6379> info replication
+# Replication
+role:slave   角色
+master_host:192.168.4.51  ip地址
+master_port:6351  端口号
+master_link_status:up  连接状态
+
+
+      #在51主机查看复制信息
+[root@host51 ~]# redis-cli  -h 192.168.4.51 -p 6351 
+192.168.4.51:6351> info replication
+# Replication
+role:master  角色
+connected_slaves:1  有1个从服务器
+slave0:ip=192.168.4.52,port=6379,state=online,offset=126,lag=1  从服务器的信息
+      
+验证：在主服务器存储数据 在从服务器本机也可以查看到同样的数据
+192.168.4.51:6351> keys *
+(empty list or set)
+192.168.4.51:6351> mset x 1  name bob  age 19
+OK
+192.168.4.51:6351> 
+
+192.168.4.52:6379> keys *
+1) "x"
+2) "name"
+3) "age"
+192.168.4.52:6379> 
+
+
+        修改配置文件永久设置为从服务器（命令行配置临时有效重启服务会失效）
+        修改52主机的配置文件，通过重启redis服务测试
+
+        [root@host52 ~]# vim /etc/redis/6379.conf
+        282 slaveof 192.168.4.51  6351
+        :wq
+        [root@host52 ~]# redis-cli  -h 192.168.4.52 -p 6379 shutdown
+[root@host52 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host52 ~]# redis-cli  -h 192.168.4.52 -p 6379
+192.168.4.52:6379> info replication
+# Replication
+role:slave
+master_host:192.168.4.51
+master_port:6351
+master_link_status:up
+
+192.168.4.52:6379> slaveof no one  临时恢复为master服务器,永久恢复需要给配置文件
+OK
+192.168.4.52:6379> info replication
+# Replication
+role:master
+
+    带验证的主从复制结构
+    主服务器的redis服务有连接密码， 从连接主服务器也要指定连接密码，配置如下：
+
+    给主服务器51 设置连接密码
+[root@host51 ~]# redis-cli  -h 192.168.4.51 -p 6351  shutdown
+    
+[root@host51 ~]# vim +501 /etc/redis/6379.conf     
+requirepass 666888   设置密码
+:wq
+[root@host51 ~]# /etc/init.d/redis_6379 start
+Starting Redis server...
+[root@host51 ~]# redis-cli  -h 192.168.4.51 -p 6351  -a 666888
+192.168.4.51:6351> keys *
+1) "x"
+192.168.4.51:6351> 
+
+    52主机指定连接密码
+[root@host52 ~]# redis-cli  -h 192.168.4.52 -p 6379 shutdown
+
+282 slaveof 192.168.4.51  6351  主服务器51
+289 masterauth 666888 指定连接主服务器的密码
+:wq
+[root@host52 ~]# /etc/init.d/redis_6379 start
+[root@host52 ~]# redis-cli  -h 192.168.4.52 -p 6379 
+192.168.4.52:6379> info replication
+# Replication
+role:slave
+master_host:192.168.4.51
+master_port:6351
+master_link_status:up
+192.168.4.52:6379> keys *
+1) "y"
+2) "x"
+192.168.4.52:6379> get y
+"99"
+192.168.4.52:6379> set i 77  默认是只读权限 不能做写操作
+(error) READONLY You can't write against a read only slave.
+192.168.4.52:6379>
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 08月1 号  换老师  讲新课程
