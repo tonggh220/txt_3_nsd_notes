@@ -493,6 +493,19 @@ appendonly yes
 
 
 
+
+修复损坏的AOF文件 （aof 文件损坏回导致redis服务启动失败）
+
+[root@host58 6379]# redis-check-aof --fix /var/lib/redis/6379/appendonly.aof 
+0x             1bc: Expected prefix '*', got: 'a'
+AOF analyzed: size=485, ok_up_to=444, diff=41
+This will shrink the AOF from 485 bytes, with 41 bytes, to 444 bytes
+Continue? [y/N]: y 同意
+Successfully truncated AOF
+[root@host58 6379]# 
+
+
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 08月1 号  换老师  讲新课程
 
