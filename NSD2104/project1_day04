@@ -82,7 +82,7 @@ please wait ...  try agine.....
  :wq
  ]# /usr/local/nginx/sbin/nginx -s reload  重启服务
  
-[root@localhost nginx-1.17.6]# curl  http://localhost/status   #查看状态信息
+[root@localhost nginx-1.17.6]# curl  http://192.168.2.11/status   #查看状态信息
 Active connections: 1 
 server accepts handled requests
  12 12 12 
