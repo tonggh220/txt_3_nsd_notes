@@ -88,3 +88,59 @@ server accepts handled requests
  12 12 12 
 Reading: 0 Writing: 1 Waiting: 0 
 [root@localhost nginx-1.17.6]# 
+
+
+步骤三：编写日志切割脚本 （用周期性计划任务+脚本）								    
+		(nginx服务日志文件存放的目录安装目录下logs  和日志的类型 错误日志和访问日志)
+[root@localhost nginx]# cd /usr/local/nginx/logs/
+[root@localhost logs]# ls
+access.log  error.log  nginx.pid
+
+访问日志： 记录客户端访问nginx服务的信息	  
+错误日志   记录nginx服务的报错信息   
+进程pid号文件   存放nginx进程的pid号
+
+[root@localhost logs]# cat /usr/local/nginx/logbak.sh
+#!/bin/bash
+date=`date +%F`
+logpath=/usr/local/nginx/logs
+mv $logpath/access.log $logpath/access-$date.log
+mv $logpath/error.log $logpath/error-$date.log
+kill -USR1 $(cat $logpath/nginx.pid)  # 只创建新的日志文件 不重启服务
+[root@localhost logs]# 
+[root@localhost logs]# chmod  +x /usr/local/nginx/logbak.sh 
+
+[root@localhost logs]# crontab  -e
+03 03  * * 5  /usr/local/nginx/logbak.sh
+:wq
+
+步骤四：对页面进行压缩处理
+]# vim  nginx.conf
+
+http {
+.....
+gzip on;                            //开启压缩
+gzip_min_length 1000;                //小文件不压缩
+gzip_comp_level 4;                //压缩比率
+gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+                                    //对特定文件压缩，类型参考mime.types	
+
+
+
+	
+如果需要处理大量静态文件，可以将文件缓存在内存，下次访问会更快。	
+
+        open_file_cache          max=2000  inactive=20s;
+        open_file_cache_valid    60s;
+        open_file_cache_min_uses 5;
+        open_file_cache_errors   off;
+//设置服务器最大缓存2000个文件句柄，关闭20秒内无请求的文件句柄
+//文件句柄的有效时间是60秒，60秒后过期
+//只有访问次数超过5次会被缓存
+} 
+  
+[root@localhost logs]# /usr/local/nginx/sbin/nginx -t
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+[root@localhost logs]#
+
