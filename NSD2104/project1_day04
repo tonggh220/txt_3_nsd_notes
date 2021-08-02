@@ -57,3 +57,34 @@ please wait ...  try agine.....
 [root@localhost ~]# curl http://192.168.2.11/b.html
 please wait ...  try agine.....
 [root@localhost ~]# 
+
+2 升级nginx版本，开启status模块 和加密模块
+	（在不停止nginx服务的情况下升级nginx软件版本和启用新的功能模块）
+	  1  查看当前服务的版本 和 安装配置项
+	  2  解压高版本的源码软件并进入源目录
+	  3  配置(配置 加载原有的配置项)
+	  4  编译
+	  5  把低版本的启动命令改名
+	  6  把源码目录下objs里的高版本软件提供的启动命令拷贝了 系统安装目录下
+	  7  执行平滑升级命令
+	  8  查看软件版本
+	  
+	  9  验证启用的功能模块(状态模块)
+	  vim nginx.conf
+	   server {
+
+        location /status {  #定义访问模块的目录
+                stub_status on;   启用状态模块
+			#不限制客户端访问
+                #allow 192.168.4.0/24;
+                #deny all;
+        }
+ :wq
+ ]# /usr/local/nginx/sbin/nginx -s reload  重启服务
+ 
+[root@localhost nginx-1.17.6]# curl  http://localhost/status   #查看状态信息
+Active connections: 1 
+server accepts handled requests
+ 12 12 12 
+Reading: 0 Writing: 1 Waiting: 0 
+[root@localhost nginx-1.17.6]# 
